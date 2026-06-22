@@ -13,12 +13,16 @@ matplotlib.use("Agg")  # headless: no display needed in CI
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.dates import DateFormatter  # noqa: E402
 
-from fetchers import capital_premium, credit_spread, flights, grid_frequency  # noqa: E402
+from fetchers import (capital_premium, cnh_cny, credit_spread, flights,  # noqa: E402
+                      grid_frequency)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")
 CHARTS = os.path.join(ROOT, "charts")
-LINES = [flights, credit_spread, capital_premium, grid_frequency]
+# Only tier-1 (primary) lines get committed PNGs; tier-2 watchlist lines are
+# collected as data but not charted until they are promoted.
+LINES = [m for m in (flights, credit_spread, capital_premium, grid_frequency, cnh_cny)
+         if getattr(m, "TIER", 1) == 1]
 
 
 def _load(path):
