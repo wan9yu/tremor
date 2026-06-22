@@ -221,6 +221,22 @@ const LINES = [
     explain:{
       en:"Emerging-market sovereigns defend access to dollar funding — reserves, IMF lines, rate hikes to keep capital home. A spike in the EM corporate option-adjusted spread leaks a systemic loss of dollar access across the developing world: capital flight and dollar shortage the local guards cannot offset. It watches a different population of borrowers than the US high-yield line — a distinct guard, a distinct signal.",
       zh:"新兴市场主权国家死守美元融资的通道——外汇储备、IMF 额度、加息留住资本。新兴市场企业债 OAS 飙升，就泄露整个发展中世界系统性地失去美元通道：本地守护力抵不住的资本外逃与美元荒。它盯的是与美国高收益线完全不同的一批借款人——不同的守护力，不同的信号。"} },
+  { id:"port_throughput", color:"#cd853f", alarm:"down", tier:2,
+    unit:{en:"port calls",zh:"靠港次数"},
+    domain:{en:"Trade (global)",zh:"贸易（全球）"},
+    label:{en:"Global port calls",zh:"全球港口靠港量"},
+    source:{en:"IMF PortWatch — 2065 ports",zh:"IMF PortWatch — 2065 个港口"},
+    explain:{
+      en:"Ports, shippers, and the economies behind them keep cargo moving — idle berths and unworked cargo burn money. A sustained drop in global port calls leaks a strike, lockdown, blockade, war damage, sanctions, or a demand collapse. This is the PORT side of PortWatch (2065 ports from satellite AIS), distinct from the chokepoint line; watch a single strategically-sensitive port for a sudden silence, or the global total for a broad trade shock.",
+      zh:"港口、船东和背后的经济体让货物持续流动——空泊位和压港货物都在烧钱。全球靠港量持续下滑，就泄露罢工、封锁、战争破坏、制裁或需求崩塌。这是 PortWatch 的港口侧（卫星 AIS 覆盖 2065 个港口），与咽喉点线互补；可盯单个战略敏感港口的突然沉默，或看全球总量的大面积贸易冲击。"} },
+  { id:"net_outages", color:"#8fbf6f", alarm:"up", tier:2,
+    unit:{en:"countries",zh:"国"},
+    domain:{en:"Infrastructure (global)",zh:"基础设施（全球）"},
+    label:{en:"Countries with internet outages",zh:"断网国家数"},
+    source:{en:"IODA (Georgia Tech)",zh:"IODA（佐治亚理工）"},
+    explain:{
+      en:"ISPs and states defend a country's internet connectivity as critical infrastructure. When a country goes dark, a larger force overwhelmed that — a censorship shutdown, a war, a major cable cut, a grid failure. Counting how many countries are in outage at once turns local incidents into a global breadth-of-disruption signal. Outages persist hours–days, so daily sampling is honest.",
+      zh:"运营商和政府把一国的互联网连通性当作关键基础设施来守护。当一个国家陷入黑暗，就是有更大的力量压垮了它——审查式断网、战争、大型海缆断裂、电网崩溃。数有多少国家同时断网，就把局部事件变成了全球的「失序广度」信号。断网持续数小时到数天，所以日频采样是诚实的。"} },
 ];
 
 const T = {
