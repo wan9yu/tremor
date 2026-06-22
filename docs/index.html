@@ -22,15 +22,27 @@
   .count .n{font-size:54px;font-weight:700;line-height:1}
   .count .of{color:var(--muted);font-size:20px}
   .count .label{color:var(--muted);font-size:14px}
-  .asof{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .asof{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .sysstatus{border-radius:10px;padding:11px 15px;margin:0 0 18px;font-size:13px;
+    border:1px solid var(--line);background:var(--panel)}
+  .sysstatus .h{font-weight:600}
+  .sysstatus.ok{border-color:rgba(63,178,127,.4)}
+  .sysstatus.ok .h{color:var(--calm)}
+  .sysstatus.warn{border-color:rgba(224,123,57,.5);background:rgba(224,123,57,.08)}
+  .sysstatus.warn .h{color:var(--orange)}
+  .sysstatus.alarm{border-color:var(--alarm);background:rgba(214,69,69,.12)}
+  .sysstatus.alarm .h{color:#ff6b6b}
   .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 18px}
   @media(max-width:680px){.strip{grid-template-columns:1fr 1fr}}
   .inst{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
     border-left:3px solid var(--dot,#7f8696)}
+  .inst.dark{border-left-color:var(--alarm);background:rgba(214,69,69,.07)}
   .inst .domain{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px}
   .inst .now{font-size:20px;font-weight:600;margin:6px 0 1px}
   .inst .now .u{font-size:12px;color:var(--muted);font-weight:400}
+  .inst .nodata{color:#ff6b6b;font-size:15px;font-weight:600}
   .inst .sub{color:var(--muted);font-size:11px}
+  .count .darknote{color:#ff6b6b;font-size:13px}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 16px 10px}
   .panel h2{font-size:14px;margin:0;font-weight:600}
   .panel .hint{color:var(--muted);font-size:12px;margin:2px 0 10px}
@@ -55,6 +67,8 @@
     <span class="label" id="count-label">lines trembling today</span>
   </div>
   <p class="asof" id="asof"></p>
+
+  <div class="sysstatus" id="sysstatus" hidden></div>
 
   <div class="strip" id="strip"></div>
 
@@ -127,21 +141,57 @@ function displayZ(values){
   return values.map(v=> (v==null||isNaN(v)) ? null : (scale>0 ? (v-med)/scale : 0));
 }
 
+function utcMidnight(dstr){ const p=dstr.split("-").map(Number); return Date.UTC(p[0],p[1]-1,p[2]); }
+function nowUtcMidnight(){ const t=new Date(); return Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); }
+
+// A missing reading is not invisible: a sustained collection gap (the scraper
+// itself silenced by war/outage) or several lines going dark at once is its own
+// disorder, surfaced here in red rather than left blank.
+function renderStatus(gapDays, darkCount, darkNames, last){
+  const el = document.getElementById("sysstatus");
+  el.hidden = false;
+  if(!last){ el.className="sysstatus alarm";
+    el.innerHTML=`<span class="h">No data yet.</span> The instrument has not produced a reading.`; return; }
+  let cls, html;
+  if(gapDays>=2){
+    cls="alarm";
+    html=`<span class="h">System disruption.</span> No successful collection since ${last.date} (${gapDays} days ago). `
+        +`The recording apparatus itself may be down — and a prolonged silence is its own kind of tremor.`;
+  } else if(darkCount>=3){
+    cls="alarm";
+    html=`<span class="h">${darkCount} of 4 instruments dark.</span> No reading today from ${darkNames.join(", ")}. `
+        +`Widespread source failure is itself a signal, not just an absence.`;
+  } else if(darkCount>=1){
+    cls="warn";
+    html=`<span class="h">${darkCount} instrument${darkCount>1?"s":""} dark today.</span> No reading from ${darkNames.join(", ")}. `
+        +`Recorded as a gap, never filled in.`;
+  } else {
+    cls="ok";
+    html=`<span class="h">All four instruments reporting.</span>`
+        +(gapDays>=1?` Awaiting today's collection (last: ${last.date}).`:"");
+  }
+  el.className="sysstatus "+cls; el.innerHTML=html;
+}
+
 async function main(){
   const summary = await getCSV("data/summary.csv");
   const dates = summary.map(r=>r.date);
   const last = summary[summary.length-1];
+  const gapDays = last ? Math.floor((nowUtcMidnight()-utcMidnight(last.date))/86400000) : null;
+  const darkCount = last ? (parseInt(last.dark_count||"0",10)||0) : 0;
   if(last){
     const n = parseInt(last.trembling_count||"0",10)||0;
     const el = document.getElementById("count-n");
     el.textContent = n; el.style.color = countColor(n);
-    document.getElementById("count-label").textContent =
-      n===0 ? "lines trembling today — calm" : (n===1?"line":"lines")+" trembling today";
+    document.getElementById("count-label").innerHTML =
+      (n===0 ? "lines trembling today — calm" : (n===1?"line":"lines")+" trembling today")
+      + (darkCount ? ` <span class="darknote">· ${darkCount} line${darkCount>1?"s":""} dark</span>` : "");
     document.getElementById("asof").textContent = "as of "+last.date+" (UTC)";
   }
 
   const strip = document.getElementById("strip");
   const datasets = [];
+  const darkNames = [];
 
   for(const L of LINES){
     const rows = await getCSV("data/"+L.id+".csv");
@@ -150,15 +200,31 @@ async function main(){
     const raw = dates.map(d => { const r=byDate[d]; const v=r?parseFloat(r.raw_value):NaN; return isNaN(v)?null:v; });
     const tremble = dates.map(d => byDate[d] && byDate[d].trembling==="1");
     const z = displayZ(raw);
-    const cur = [...rows].reverse().find(r=>r.raw_value!=="");
-    const isTrembling = cur && cur.trembling==="1";
+    const todayRow = last ? byDate[last.date] : null;
+    const hasToday = todayRow && todayRow.raw_value!=="";
+    const lastGood = [...rows].reverse().find(r=>r.raw_value!=="");
+    const isTrembling = hasToday && todayRow.trembling==="1";
+    const isDark = !hasToday;
+    if(isDark) darkNames.push(L.domain);
 
-    // instrument chip
-    const chip=document.createElement("div"); chip.className="inst"; chip.style.setProperty("--dot",L.color);
+    // instrument chip — a dark line reads red "NO DATA", never blank
+    const chip=document.createElement("div");
+    chip.className = "inst"+(isDark?" dark":"");
+    chip.style.setProperty("--dot",L.color);
+    let nowHtml, subHtml;
+    if(hasToday){
+      nowHtml = `${fmt(todayRow.raw_value)} <span class="u">${L.unit}</span>`
+              + (isTrembling?'<span class="pill trembling">trembling</span>':'');
+      subHtml = `${L.label} · alarming when ${L.alarm}`;
+    } else {
+      nowHtml = `<span class="nodata">NO DATA</span>`;
+      const reason = todayRow ? todayRow.source_note : "no collection this day";
+      subHtml = `${reason}${lastGood?` · last: ${fmt(lastGood.raw_value)} ${L.unit} on ${lastGood.date}`:""}`;
+    }
     chip.innerHTML =
       `<div class="domain">${L.domain}</div>
-       <div class="now">${cur?fmt(cur.raw_value)+' <span class="u">'+L.unit+'</span>':'<span class="u">no data</span>'}${isTrembling?'<span class="pill trembling">trembling</span>':''}</div>
-       <div class="sub">${L.label} · alarming when ${L.alarm}</div>`;
+       <div class="now">${nowHtml}</div>
+       <div class="sub">${subHtml}</div>`;
     strip.appendChild(chip);
 
     // unified-chart dataset (one normalized line per instrument)
@@ -170,6 +236,8 @@ async function main(){
       pointBorderColor:tremble.map(t=>t?"#d64545":L.color),
     });
   }
+
+  renderStatus(gapDays, darkCount, darkNames, last);
 
   // ±3 trembling threshold as dashed reference lines
   const thr = v => ({label:v>0?"trembling +3":"trembling -3", data:dates.map(()=>v),

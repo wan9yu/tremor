@@ -9,9 +9,11 @@ tremor watches a few **tension indicators**: guarded equilibria that something p
 - **Flights airborne** — airspace (community ADS-B)
 - **US high-yield credit spread** — financial system (FRED)
 - **Korea BTC premium** — capital controls (Upbit + Coinbase)
-- **Grid frequency** — infrastructure (Statnett, Nordic grid)
+- **Grid frequency** — infrastructure (Nordic grid: Fingrid / Statnett)
 
-Each line is normalized on its own; they are never combined into a single doom score. What matters is **resonance** — how many lines are trembling at once. Several independent instruments screaming together is what "actually more disordered" looks like; one moving alone is just a local event.
+Each line is normalized on its own (robust z-score, de-cycled so routine daily/weekly rhythms don't false-trigger); they are never combined into a single doom score. What matters is **resonance** — how many lines are trembling at once. Several independent instruments screaming together is what "actually more disordered" looks like; one moving alone is just a local event.
+
+Missing data is never faked or hidden: a source going dark is recorded as a gap, and a prolonged collection blackout is shown as its own "system disruption" — because the instrument itself falling silent is a kind of tremor.
 
 Data is collected daily by a GitHub Actions cron and committed back to the repo (git-scraping). A static dashboard reads the CSVs directly:
 
