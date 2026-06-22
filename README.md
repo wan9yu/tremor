@@ -9,7 +9,7 @@ tremor watches a few **tension indicators**: guarded equilibria that something p
 - **Flights airborne** — airspace (OpenSky)
 - **US high-yield credit spread** — financial system (FRED)
 - **Korea BTC premium** — capital controls (Upbit + Coinbase)
-- **Grid frequency** — infrastructure (Fingrid)
+- **Grid frequency** — infrastructure (Statnett, Nordic grid)
 
 Each line is normalized on its own; they are never combined into a single doom score. What matters is **resonance** — how many lines are trembling at once. Several independent instruments screaming together is what "actually more disordered" looks like; one moving alone is just a local event.
 
@@ -24,4 +24,4 @@ pip install -r requirements.txt
 python collect.py && python render.py
 ```
 
-Flights and the Korea premium need no keys. Add free `FRED_API_KEY` and `FINGRID_API_KEY` as repo Secrets to light up the other two lines.
+Three lines need no keys (flights, Korea premium, grid frequency). Add a free `FRED_API_KEY` as a repo Secret to light up the credit-spread line too.
