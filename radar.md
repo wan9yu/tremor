@@ -39,38 +39,36 @@ history (~20 days).
 
 ---
 
-## Tier 1 — primary  (5 / 4 · over capacity → converging to 4, see log)
+## Tier 1 — primary  (4 / 4 ✅)
 
-Steady-state target (4 global, domain-diverse): **flights · credit_spread ·
-chokepoint_transit · cnh_cny**. Decided round 3.
+The four displayed, counted instruments — four distinct domains. Decided round 3,
+applied round 4.
 
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | Orthog | status |
 |---|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
-| flights | airspace (EU/US/JP) | 3 | 3 | 2 | — | — | — | ✅ keep |
-| credit_spread | financial (US→global) | 3 | 3 | 3 | — | — | — | ✅ keep (global) |
-| cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ keep — slot 4 (user-decided R3) |
-| capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | — | ⬇ demote → tier-2 (redundant capital domain, lowest reach) |
-| grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | — | ⬇ demote → tier-2 (regional; slot went to China) |
+| flights | airspace (EU/US/JP) | 3 | 3 | 2 | — | — | — | ✅ |
+| credit_spread | financial (US→global) | 3 | 3 | 3 | — | — | — | ✅ global bellwether |
+| cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ slot 4 (user-decided) |
+| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | — | ✅ promoted R4 (28 straits) |
 
-Incoming to tier-1: **chokepoint_transit** (trade, global 3/3/3) — must build as tier-2
-and accrue history first. The two demotions land once it is online so tier-1 never drops
-below 4.
-
-## Tier 2 — watchlist  (8 / 8 · full)
+## Tier 2 — watchlist  (8 candidates + 1 contrast)
 
 Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
-are tier-1 challengers banking evidence.
+are tier-1 challengers banking evidence. (gdelt sits outside the 8 candidate slots — it
+fails the guard gate and can never promote; it rides along only as the "felt vs real"
+contrast.)
 
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | note |
 |---|---|:--:|:--:|:--:|:--:|:--:|---|
-| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810 transits/day (Hormuz blockaded) — tier-1 bound |
 | port_throughput | trade (global) | 3 | 3 | 3 | — | — | ~4729 global port calls/day (2065 ports) |
 | gnss_interference | navigation (global) | 3 | 3 | 3 | — | — | GPS-jam share ~0.43% — new domain, fingerprints EW |
 | sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | SOFR−IORB ~−2bps (calm) — keyless FRED |
 | em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | EM corp OAS ~1.38pp — orthogonal to US HY |
 | net_outages | infrastructure (global) | 2 | 2 | 3 | — | — | ~3 countries in outage now (IODA) — breadth of disruption |
+| capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | demoted R4 (redundant with China); kept on watch |
+| grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | demoted R4 (regional); kept on watch — may re-challenge on orthogonality |
 | cn_flights | airspace (China) | 3 | 3 | 1 | — | — | sparse ADS-B coverage; observing if signal survives |
-| gdelt | attention (global) | 1 | 0 | 3 | — | — | no guard → can never reach tier-1; "felt vs real" contrast only |
+| — gdelt | attention (global) | 1 | 0 | 3 | — | — | contrast line only (guard gate) — not a candidate slot |
 
 ## Tier 3 — candidate ideas  (7 / 16)
 
@@ -206,3 +204,17 @@ wait for a tier-2 slot to open — i.e. a watchlist line graduating to tier-1 or
 - **Moves applied:** tier-3 → tier-2 for the two. No tier-1 change.
 - **Tier-2 is full**, so further tier-3 builds wait for a slot to open (a watchlist line graduating
   to tier-1 or washing out on poor Reliability/Responsiveness once history accrues).
+
+### Round 4 — 2026-06-22 (apply the decided tier-1 = 4)
+- **Applied the standing decision** (always 4 primary; slot 4 = China). Tier-1 is now
+  **flights · credit_spread · cnh_cny · chokepoint_breadth** — four distinct domains (airspace,
+  financial, capital, trade). The dashboard and resonance count now read 4/4.
+- **Moves:** promoted `chokepoint_breadth` (tier-2 → tier-1); demoted `capital_premium` (Korea)
+  and `grid_frequency` (Nordic) (tier-1 → tier-2). All still collected daily.
+- **Note on discipline:** this is a user-directed promotion ahead of the orthogonality-history
+  gate. Justified on the rubric — chokepoint_breadth is global 3/3/3 vs the two demoted national/
+  regional lines (Korea redundant with China; Nordic regional). When ~20 days of history exist,
+  Orthogonality/Responsiveness can confirm or revise (e.g. Nordic grid may re-challenge if it
+  proves more independent than a tier-1 incumbent).
+- **Capacity:** tier-2 candidate slots stay at 8 (Korea + Nordic in, chokepoint out); gdelt is
+  counted separately as the contrast line. tier-3 = 7/16.
