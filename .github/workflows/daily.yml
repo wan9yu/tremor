@@ -27,12 +27,13 @@ jobs:
 
       - name: Collect today's readings
         env:
-          # Three of four lines need no key (flights anonymous, Korea premium and
-          # grid frequency keyless). Add the one free key below as a repo Secret
-          # to light up the credit-spread line too.
+          # FRED_API_KEY (credit spread) and FINGRID_API_KEY (grid frequency, with
+          # a keyless Statnett fallback) are read from repo Secrets. Flights work
+          # anonymously and the Korea premium is keyless.
           OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
           OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          FINGRID_API_KEY: ${{ secrets.FINGRID_API_KEY }}
         run: python collect.py
 
       - name: Render charts
