@@ -1,0 +1,14 @@
+# Internal documentation (not for public repo)
+internal/
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs and temp
+*.log
+tmp/
