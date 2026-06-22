@@ -19,9 +19,14 @@ trembling count; the lines are never multiplied into a single doom score.
 import csv
 import os
 import shutil
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from core import normalize
+
+# Rows are dated in China time (UTC+8, no DST): the daily run fires at 06:00
+# China, so a row dated D was collected on the morning of D, China time — which
+# matches how the (China-based) project reads the calendar.
+CHINA_TZ = timezone(timedelta(hours=8))
 from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
                       credit_spread, em_oas, flights, gdelt, gnss,
                       grid_frequency, net_outages, ports, sofr_iorb)
@@ -93,7 +98,7 @@ def _fmt(value):
 
 
 def collect():
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(CHINA_TZ).strftime("%Y-%m-%d")
     summary = {"date": today}
     trembling_count = 0
     dark_count = 0

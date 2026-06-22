@@ -246,7 +246,7 @@ const T = {
     tremblingOne:"line trembling today", tremblingMany:"lines trembling today",
     darkNote:n=>" · "+n+" line"+(n>1?"s":"")+" dark",
     countQ:"what is this? ›",
-    asof:d=>"as of "+d+" (UTC)",
+    asof:d=>"as of "+d+" (China time)",
     panelTitle:"Tension lines, normalized",
     panelHint:"Each line on its own robust z-score, so different units share one axis. Dashed band = the ±3 trembling threshold.",
     statusOk:"All instruments reporting.",
@@ -273,7 +273,7 @@ const T = {
     tremblingOne:"根线今天在颤抖", tremblingMany:"根线今天在颤抖",
     darkNote:n=>" · "+n+" 根线无数据",
     countQ:"这是什么？›",
-    asof:d=>"截至 "+d+"（UTC）",
+    asof:d=>"截至 "+d+"（北京时间）",
     panelTitle:"张力线（已归一化）",
     panelHint:"每根线各用稳健 z 分数，不同单位因此能共用一根纵轴。虚线带 = ±3 颤抖阈值。",
     statusOk:"全部仪器在正常上报。",
@@ -327,7 +327,8 @@ function displayZ(values){
 function fmt(v){ const n=parseFloat(v); return Math.abs(n)>=1000?n.toLocaleString():(""+v); }
 function countColor(n){ return n>=3?"var(--alarm)":n===2?"var(--orange)":n===1?"var(--amber)":"var(--calm)"; }
 function utcMidnight(d){ const p=d.split("-").map(Number); return Date.UTC(p[0],p[1]-1,p[2]); }
-function nowUtcMidnight(){ const t=new Date(); return Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); }
+// Rows are dated in China time (UTC+8), so compute "today" the same way for the staleness gap.
+function nowChinaMidnight(){ const t=new Date(Date.now()+8*3600*1000); return Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); }
 
 // ---------- modal ----------
 function openModal(html){ document.getElementById("modal-body").innerHTML=html; document.getElementById("modal").hidden=false; }
@@ -369,7 +370,7 @@ function render(){
   const TIER2=LINES.filter(L=>(L.tier||1)===2);
   document.getElementById("count-of").textContent=TIER1.length;
   const last=summary[summary.length-1];
-  const gapDays=last?Math.floor((nowUtcMidnight()-utcMidnight(last.date))/86400000):null;
+  const gapDays=last?Math.floor((nowChinaMidnight()-utcMidnight(last.date))/86400000):null;
   const darkCount=last?(parseInt(last.dark_count||"0",10)||0):0;
 
   if(last){
