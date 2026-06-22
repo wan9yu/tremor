@@ -189,6 +189,38 @@ const LINES = [
     explain:{
       en:"The share of all global news coverage about crisis, war, conflict, protest, or sanctions (GDELT). Deliberately NOT a tension indicator and never counted: news has no guard, spikes are cheap (everyone reporting ≠ more disorder), and counts inflate as media densifies. It rides the watchlist as the future 'felt vs real' contrast — how disordered the world is *reported* to be, set against the objective lines; the gap between them is the anxiety premium of the age.",
       zh:"全球新闻里关于危机、战争、冲突、抗议、制裁的报道占比（GDELT）。它刻意不是张力指标、永不计数：新闻没有守护力，spike 很廉价（大家都在报 ≠ 世界更乱），而且报道量本身逐年通胀。它待在观察名单上，是未来的「真实 vs 感觉」对照——世界被*报道*得有多乱，与客观线对比，二者的缺口就是这个时代的焦虑溢价。"} },
+  { id:"chokepoint_breadth", color:"#d98a5b", alarm:"down", tier:2,
+    unit:{en:"vessels",zh:"艘"},
+    domain:{en:"Trade (global)",zh:"贸易（全球）"},
+    label:{en:"Chokepoint vessel transits",zh:"海上咽喉点航运量"},
+    source:{en:"IMF PortWatch — 28 chokepoints",zh:"IMF PortWatch — 28 个咽喉点"},
+    explain:{
+      en:"Trade economics and the littoral states keep ships flowing through each of 28 maritime chokepoints — Suez, Hormuz, Bab-el-Mandeb, the Bosporus, Malacca, Panama, the Taiwan Strait. A drop in total transits leaks a blockade, war, drought, or attack at one of them. The live data already shows the thesis working — Hormuz fell to a couple of transits a day under blockade, the Red Sea cut Suez far below normal. Like the flights line, but for sea trade.",
+      zh:"贸易经济和沿岸国家让船流持续通过 28 个海上咽喉点——苏伊士、霍尔木兹、曼德海峡、博斯普鲁斯、马六甲、巴拿马、台湾海峡。总航运量骤降，就泄露其中某处的封锁、战争、干旱或袭击。实时数据已经验证了这套逻辑——霍尔木兹在封锁下塌到每天几艘，红海危机把苏伊士压到远低于常态。像航班线，但测的是海上贸易。"} },
+  { id:"gnss_interference", color:"#56b6c2", alarm:"up", tier:2,
+    unit:{en:"%",zh:"%"},
+    domain:{en:"Navigation (global)",zh:"导航（全球）"},
+    label:{en:"GPS interference",zh:"GPS 干扰"},
+    source:{en:"GPSJam (ADS-B Exchange)",zh:"GPSJam（基于 ADS-B Exchange）"},
+    explain:{
+      en:"Aviation and military authorities guard usable, jam-free GPS as a public good the whole air-traffic and timing system leans on. A rise in the share of aircraft reporting bad GPS leaks deliberate jamming or spoofing — electronic warfare, war fronts, border conflict (the Black Sea, Baltic and Eastern Mediterranean have run hot for a while). A globally-aggregated side-channel that directly fingerprints state-level conflict.",
+      zh:"民航和军方把「可用、不被干扰的 GPS」当作整个空管与授时系统都依赖的公共品来守护。报告 GPS 异常的飞机占比上升，就泄露蓄意干扰或欺骗——电子战、战争前线、边境冲突（黑海、波罗的海、东地中海已热了一阵）。一个全球聚合的侧信道，直接指认国家级冲突。"} },
+  { id:"sofr_iorb_spread", color:"#c9a227", alarm:"up", tier:2,
+    unit:{en:"bps",zh:"基点"},
+    domain:{en:"Financial plumbing (US→global)",zh:"金融管道（美国→全球）"},
+    label:{en:"SOFR − IORB spread",zh:"SOFR−IORB 利差"},
+    source:{en:"FRED (keyless)",zh:"FRED（无需密钥）"},
+    explain:{
+      en:"The Fed pins overnight secured rates inside its administered corridor — the IORB ceiling, the reverse-repo floor, the standing repo backstop. When SOFR pushes above the IORB ceiling the Fed defends, bank reserves have grown scarce and the repo market is seizing — dollar-funding stress the guardrails can no longer absorb (the Sept-2019 repo spike forced the Fed back into balance-sheet expansion). Differencing against the defended ceiling isolates the guard deviation, not the rate level.",
+      zh:"美联储把隔夜有担保利率按在它设定的走廊里——IORB 上限、逆回购下限、常备回购后盾。当 SOFR 顶破美联储死守的 IORB 上限，说明银行准备金变稀缺、回购市场在卡死——这是护栏再也吸收不住的美元融资压力（2019 年 9 月的回购飙升逼得美联储重新扩表）。用它减去被守护的上限，隔离出的正是守护偏离，而不是利率水平本身。"} },
+  { id:"em_corp_oas", color:"#b5651d", alarm:"up", tier:2,
+    unit:{en:"pp",zh:"个百分点"},
+    domain:{en:"EM financial (global)",zh:"新兴市场金融（全球）"},
+    label:{en:"EM corporate credit spread",zh:"新兴市场企业债利差"},
+    source:{en:"FRED — ICE BofA EM corp OAS",zh:"FRED — ICE BofA 新兴市场企业债 OAS"},
+    explain:{
+      en:"Emerging-market sovereigns defend access to dollar funding — reserves, IMF lines, rate hikes to keep capital home. A spike in the EM corporate option-adjusted spread leaks a systemic loss of dollar access across the developing world: capital flight and dollar shortage the local guards cannot offset. It watches a different population of borrowers than the US high-yield line — a distinct guard, a distinct signal.",
+      zh:"新兴市场主权国家死守美元融资的通道——外汇储备、IMF 额度、加息留住资本。新兴市场企业债 OAS 飙升，就泄露整个发展中世界系统性地失去美元通道：本地守护力抵不住的资本外逃与美元荒。它盯的是与美国高收益线完全不同的一批借款人——不同的守护力，不同的信号。"} },
 ];
 
 const T = {
