@@ -19,7 +19,7 @@ because the z-score reacts to a line's deviation from its own baseline, not its
 absolute level. The region set is fixed: if any region has no data, the day is
 written empty (a partial sum would look like a flight drop).
 """
-import requests
+from core import adsb
 
 LINE = "flights"
 LABEL = "Aircraft airborne (major airspaces)"
@@ -27,7 +27,6 @@ UNIT = "aircraft"
 ANOMALY_DIRECTION = "down"  # a drop in flight volume is the alarming move
 WEEKLY_CYCLE = True  # flight volume has a strong weekday rhythm; de-cycle by weekday
 
-_RADIUS_NM = 250
 # Fixed, non-overlapping regions with dense community ADS-B coverage.
 _REGIONS = [
     ("W/C Europe", 48.5, 9.0),
@@ -35,65 +34,8 @@ _REGIONS = [
     ("US West", 36.0, -116.0),
     ("E Asia/Japan", 35.0, 137.0),
 ]
-# Keyless providers, tried in this order per region (stable order -> stable counts).
-_PROVIDERS = [
-    ("airplanes.live", "https://api.airplanes.live/v2/point/{lat}/{lon}/{r}"),
-    ("adsb.fi", "https://opendata.adsb.fi/api/v2/lat/{lat}/lon/{lon}/dist/{r}"),
-    ("adsb.lol", "https://api.adsb.lol/v2/lat/{lat}/lon/{lon}/dist/{r}"),
-]
-_HEADERS = {
-    "User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)",
-    "Accept": "application/json",
-}
-
-
-def _region_airborne(lat, lon):
-    """Airborne aircraft in one region as (count, provider), or (None, None)."""
-    for name, template in _PROVIDERS:
-        url = template.format(lat=lat, lon=lon, r=_RADIUS_NM)
-        try:
-            r = requests.get(url, headers=_HEADERS, timeout=15)
-        except requests.RequestException:
-            continue
-        if r.status_code != 200:
-            continue
-        try:
-            payload = r.json()
-        except ValueError:
-            continue
-        aircraft = payload.get("ac") or payload.get("aircraft") or []
-        # alt_baro == "ground" marks a parked/taxiing aircraft; count the rest.
-        airborne = sum(
-            1 for a in aircraft if isinstance(a, dict) and a.get("alt_baro") != "ground"
-        )
-        return airborne, name
-    return None, None
 
 
 def fetch_daily():
     """Return {"raw_value": float | None, "source_note": str}."""
-    total = 0
-    providers = []
-    missing = []
-    for name, lat, lon in _REGIONS:
-        airborne, provider = _region_airborne(lat, lon)
-        if airborne is None:
-            missing.append(name)
-        else:
-            total += airborne
-            providers.append(provider)
-
-    if missing:
-        return {
-            "raw_value": None,
-            "source_note": (
-                "ADS-B coverage incomplete, no data for: "
-                + ", ".join(missing)
-                + " (count needs every region to stay comparable)"
-            ),
-        }
-    used = ", ".join(sorted(set(providers)))
-    return {
-        "raw_value": float(total),
-        "source_note": f"ADS-B airborne over {len(_REGIONS)} regions via {used}",
-    }
+    return adsb.airborne_over(_REGIONS, "regions")
