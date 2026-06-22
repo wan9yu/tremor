@@ -6,7 +6,7 @@
 
 tremor watches a few **tension indicators**: guarded equilibria that something powerful normally holds still. When one moves anyway, a larger — often hidden — force has overpowered its guard. Four lines, each guarding a different domain:
 
-- **Flights airborne** — airspace (OpenSky)
+- **Flights airborne** — airspace (community ADS-B)
 - **US high-yield credit spread** — financial system (FRED)
 - **Korea BTC premium** — capital controls (Upbit + Coinbase)
 - **Grid frequency** — infrastructure (Statnett, Nordic grid)
