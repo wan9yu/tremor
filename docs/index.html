@@ -58,6 +58,9 @@
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 16px 10px}
   .panel h2{font-size:14px;margin:0;font-weight:600}
   .panel .hint{color:var(--muted);font-size:12px;margin:2px 0 10px}
+  .watchlist{color:var(--muted);font-size:12px;margin:14px 2px 0;line-height:1.5}
+  .watchlist b{color:#9aa1ad;font-weight:600}
+  .watchlist .dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:#5b616d;margin-right:5px;vertical-align:middle}
   footer{color:var(--muted);font-size:13px;margin-top:34px;border-top:1px solid var(--line);padding-top:18px}
   footer a{color:#9fb6ff}
   code{background:#1d2129;padding:1px 5px;border-radius:5px;font-size:12px}
@@ -93,7 +96,7 @@
 
   <div class="count" id="count">
     <span class="n" id="count-n">–</span>
-    <span class="of">/ 4</span>
+    <span class="of">/ <span id="count-of">4</span></span>
     <span class="label" id="count-label"></span>
     <span class="q" id="count-q"></span>
   </div>
@@ -108,6 +111,8 @@
     <p class="hint" id="panel-hint"></p>
     <canvas id="chart" height="150"></canvas>
   </div>
+
+  <p class="watchlist" id="watchlist" hidden></p>
 
   <footer id="footer"></footer>
 </div>
@@ -159,6 +164,22 @@ const LINES = [
     explain:{
       en:"Grid operators defend 50 Hz second by second — one of the most fiercely guarded balances humans maintain. Any deviation means supply and demand were overwhelmed: a blackout precursor, a fuel shortage, a system under shock. We track the largest deviation from 50 Hz over the day. Source is Fingrid (Finland), with a keyless Statnett (Norway) fallback — both read the same Nordic synchronous grid.",
       zh:"电网运营商以秒为单位死守 50 赫兹——这是人类守得最凶的平衡之一。任何偏离都意味着供需被压垮：停电前兆、燃料短缺、系统受冲击。我们记录当天对 50 赫兹的最大偏离。数据来自芬兰 Fingrid，并以挪威 Statnett（无需密钥）作为备份——两者读的是同一张北欧同步电网。"} },
+  { id:"cnh_cny", color:"#e0617d", alarm:"up", tier:1,
+    unit:{en:"pips",zh:"点"},
+    domain:{en:"Capital controls (China)",zh:"资本管制（中国）"},
+    label:{en:"Offshore−onshore yuan spread",zh:"离岸−在岸人民币价差"},
+    source:{en:"Yahoo Finance — USDCNH vs USDCNY",zh:"Yahoo Finance — USDCNH 对比 USDCNY"},
+    explain:{
+      en:"China's central bank manages the onshore yuan (CNY) inside a tight daily band, spending FX reserves to defend it; the offshore yuan (CNH) trades freely with no such guard. When CNH stays weaker than CNY, the market is pricing a depreciation the managed onshore rate won't yet admit — capital-flight pressure, tightening controls, a managed devaluation building. Measured as the CNH − CNY spread in pips (1 pip = 0.0001 yuan/USD) from Yahoo Finance.",
+      zh:"中国央行把在岸人民币（CNY）管在很窄的每日波动区间内，烧外汇储备死守；离岸人民币（CNH）自由交易，没有这层守护。当 CNH 持续弱于 CNY，市场就在给在岸还不肯承认的贬值定价——资本外逃压力、管制收紧、一场有管理的贬值在酝酿。用 Yahoo Finance 的 CNH−CNY 价差（pips，1 pip = 0.0001 元/美元）衡量。"} },
+  { id:"cn_flights", color:"#6f7686", alarm:"down", tier:2,
+    unit:{en:"aircraft",zh:"架"},
+    domain:{en:"Airspace (China)",zh:"空域（中国）"},
+    label:{en:"China aircraft airborne",zh:"中国在飞航班量"},
+    source:{en:"Community ADS-B — Beijing, Shanghai, Guangzhou",zh:"社区 ADS-B — 北京、上海、广州"},
+    explain:{
+      en:"The same airspace logic as the main flights line, scoped to China's three busiest metros. On the watchlist, not yet a live instrument: free community ADS-B coverage over China is sparse and feeder-dependent (~30–60 aircraft per metro vs ~800 over Europe), so the count partly tracks receiver availability, not real traffic. Collected daily to build history; promoted if it proves to carry signal.",
+      zh:"和主航班线一样的空域逻辑，范围缩到中国三个最繁忙的都会区。它在观察名单上，还不是正式仪器：免费社区 ADS-B 在中国覆盖稀疏、依赖志愿接收器（每个都会区约 30–60 架，而欧洲约 800 架），所以这个数部分反映的是接收器多少、而非真实流量。每天照常采集以累积历史；一旦证明有信号，就升为一级。"} },
 ];
 
 const T = {
@@ -171,11 +192,13 @@ const T = {
     asof:d=>"as of "+d+" (UTC)",
     panelTitle:"Tension lines, normalized",
     panelHint:"Each line on its own robust z-score, so different units share one axis. Dashed band = the ±3 trembling threshold.",
-    statusOk:"All four instruments reporting.",
+    statusOk:"All instruments reporting.",
     awaiting:d=>" Awaiting today's collection (last: "+d+").",
     warnH:n=>n+" instrument"+(n>1?"s":"")+" dark today.",
     warnB:names=>" No reading from "+names+". Recorded as a gap, never filled in.",
-    alarmDarkH:n=>n+" of 4 instruments dark.",
+    alarmDarkH:(n,m)=>n+" of "+m+" instruments dark.",
+    watchTitle:"On the radar — collected daily, not displayed or counted:",
+    watchDays:n=>n+(n===1?" day":" days"),
     alarmDarkB:names=>" No reading today from "+names+". Widespread source failure is itself a signal, not just an absence.",
     disruptH:"System disruption.",
     disruptB:(d,g)=>" No successful collection since "+d+" ("+g+" days ago). The recording apparatus itself may be down — and a prolonged silence is its own kind of tremor.",
@@ -196,11 +219,13 @@ const T = {
     asof:d=>"截至 "+d+"（UTC）",
     panelTitle:"张力线（已归一化）",
     panelHint:"每根线各用稳健 z 分数，不同单位因此能共用一根纵轴。虚线带 = ±3 颤抖阈值。",
-    statusOk:"四台仪器全部在正常上报。",
+    statusOk:"全部仪器在正常上报。",
     awaiting:d=>"正在等待今天的采集（最近："+d+"）。",
     warnH:n=>"今天有 "+n+" 台仪器无数据。",
     warnB:names=>"以下来源无读数："+names+"。记为缺口，绝不填补。",
-    alarmDarkH:n=>"4 台中有 "+n+" 台仪器无数据。",
+    alarmDarkH:(n,m)=>m+" 台中有 "+n+" 台仪器无数据。",
+    watchTitle:"雷达观察中 — 每天采集，不显示、不计数：",
+    watchDays:n=>n+" 天",
     alarmDarkB:names=>"今天以下来源无读数："+names+"。大面积的来源失效本身就是信号，而不只是缺席。",
     disruptH:"系统紊乱。",
     disruptB:(d,g)=>"自 "+d+" 起已 "+g+" 天没有成功采集。记录装置本身可能已经瘫痪——而长久的沉默，本身就是一种颤抖。",
@@ -283,6 +308,9 @@ function render(){
   document.getElementById("count-q").textContent=T[lang].countQ;
 
   const {summary,dates,lines}=DATA;
+  const TIER1=LINES.filter(L=>(L.tier||1)===1);
+  const TIER2=LINES.filter(L=>(L.tier||1)===2);
+  document.getElementById("count-of").textContent=TIER1.length;
   const last=summary[summary.length-1];
   const gapDays=last?Math.floor((nowUtcMidnight()-utcMidnight(last.date))/86400000):null;
   const darkCount=last?(parseInt(last.dark_count||"0",10)||0):0;
@@ -299,7 +327,7 @@ function render(){
 
   const strip=document.getElementById("strip"); strip.innerHTML="";
   const datasets=[]; const darkNames=[];
-  for(const L of LINES){
+  for(const L of TIER1){
     const rows=lines[L.id]||[]; const byDate={}; rows.forEach(r=>byDate[r.date]=r);
     const raw=dates.map(d=>{ const r=byDate[d]; const v=r?parseFloat(r.raw_value):NaN; return isNaN(v)?null:v; });
     const tremble=dates.map(d=>byDate[d]&&byDate[d].trembling==="1");
@@ -339,7 +367,7 @@ function render(){
   const st=document.getElementById("sysstatus"); st.hidden=false;
   if(!last){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].nodata}</span>`; }
   else if(gapDays>=2){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].disruptH}</span>${T[lang].disruptB(last.date,gapDays)}`; }
-  else if(darkCount>=3){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].alarmDarkH(darkCount)}</span>${T[lang].alarmDarkB(darkNames.join(", "))}`; }
+  else if(darkCount>=3){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].alarmDarkH(darkCount,TIER1.length)}</span>${T[lang].alarmDarkB(darkNames.join(", "))}`; }
   else if(darkCount>=1){ st.className="sysstatus warn"; st.innerHTML=`<span class="h">${T[lang].warnH(darkCount)}</span>${T[lang].warnB(darkNames.join(", "))}`; }
   else { st.className="sysstatus ok"; st.innerHTML=`<span class="h">${T[lang].statusOk}</span>`+(gapDays>=1?T[lang].awaiting(last.date):""); }
 
@@ -360,6 +388,16 @@ function render(){
         y:{title:{display:true,text:lang==="zh"?"稳健 z 分数":"robust z-score",color:"#8a909c",font:{size:11}},
            ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"}} } }
   });
+
+  // watchlist — tier-2 candidates: collected daily, not scored or charted
+  const wl=document.getElementById("watchlist");
+  if(TIER2.length){
+    wl.hidden=false;
+    wl.innerHTML=`<b>${T[lang].watchTitle}</b> `+TIER2.map(L=>{
+      const days=(lines[L.id]||[]).filter(r=>r.raw_value!=="").length;
+      return `<span class="dot"></span>${L.label[lang]} <span style="opacity:.7">(${T[lang].watchDays(days)})</span>`;
+    }).join("&nbsp;&nbsp;&nbsp;");
+  } else wl.hidden=true;
 }
 
 document.querySelectorAll("#langtoggle button").forEach(b=>b.onclick=()=>{ setLang(b.dataset.lang); render(); });

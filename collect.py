@@ -1,8 +1,16 @@
-"""tremor — daily collector.
+"""tremor — daily collector (an indicator radar).
 
-Calls each tension-line fetcher, appends today's reading to ``data/<line>.csv``
+Calls every tension-line fetcher, appends today's reading to ``data/<line>.csv``
 with a robust z-score and a trembling flag, then rewrites ``data/summary.csv``
 with the day's trembling count.
+
+Two tiers (each fetcher sets ``TIER``; absent means 1):
+  - TIER 1 — primary instruments: displayed, and counted in the trembling
+    resonance and the dark-line count.
+  - TIER 2 — watchlist: scraped every day so history and z-score accumulate, but
+    NOT counted and NOT shown. Candidates under observation; promote by setting
+    ``TIER = 1``. This lets the set of instruments diverge (add candidates) and
+    converge (graduate the good ones) over time.
 
 Honest by construction: a failed fetch writes an EMPTY value with a stated
 reason — never a fabricated or forward-filled number. The only composite is the
@@ -14,26 +22,25 @@ import shutil
 from datetime import datetime, timezone
 
 from core import normalize
-from fetchers import capital_premium, credit_spread, flights, grid_frequency
+from fetchers import (capital_premium, cn_flights, cnh_cny, credit_spread,
+                      flights, grid_frequency)
 
-# Fixed order. Each line guards a DIFFERENT domain (airspace / financial system /
-# capital controls / infrastructure), so several trembling at once means more
-# than any one of them moving alone.
-LINES = [flights, credit_spread, capital_premium, grid_frequency]
+# Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
+# (airspace / financial system / capital controls / infrastructure), so several
+# trembling at once means more than any one moving alone. Tier-2 lines ride along
+# to build history until they earn promotion.
+LINES = [flights, credit_spread, capital_premium, grid_frequency,  # tier 1
+         cnh_cny,                                                   # tier 1 (China)
+         cn_flights]                                                # tier 2 (watchlist)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")
 DOCS_DATA = os.path.join(ROOT, "docs", "data")
 
 LINE_HEADER = ["date", "raw_value", "z_score", "trembling", "direction", "source_note"]
-SUMMARY_HEADER = ["date", "flights_z", "credit_z", "capital_z", "grid_z",
-                  "trembling_count", "dark_count"]
-SUMMARY_KEYS = {
-    "flights": "flights_z",
-    "credit_spread": "credit_z",
-    "capital_premium": "capital_z",
-    "grid_frequency": "grid_z",
-}
+# Summary holds only the tier-1 aggregates; each line's own z lives in its CSV, so
+# the schema stays stable as indicators are added, promoted, or demoted.
+SUMMARY_HEADER = ["date", "trembling_count", "dark_count"]
 
 
 def _read_rows(path):
@@ -46,7 +53,9 @@ def _read_rows(path):
 def _write_rows(path, header, rows):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=header)
+        # ignore extra keys so shrinking a schema (e.g. dropping per-line columns
+        # from the summary) never trips on rows written under an older header.
+        writer = csv.DictWriter(f, fieldnames=header, extrasaction="ignore")
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
@@ -98,8 +107,7 @@ def collect():
                       "source_note": f"fetcher crashed: {type(e).__name__}"}
         raw = result["raw_value"]
         note = result["source_note"]
-        if raw is None:
-            dark_count += 1
+        tier = getattr(mod, "TIER", 1)
 
         history, hist_dates = _history(rows, today)
         z = normalize.robust_z(
@@ -107,7 +115,11 @@ def collect():
             weekday_cycle=getattr(mod, "WEEKLY_CYCLE", False),
         )
         trembling, direction = normalize.classify(z)
-        trembling_count += trembling
+        # Only tier-1 instruments count toward the live resonance and dark count.
+        if tier == 1:
+            trembling_count += trembling
+            if raw is None:
+                dark_count += 1
 
         row = {
             "date": today,
@@ -120,11 +132,11 @@ def collect():
         rows = _upsert(rows, row, today)
         _write_rows(path, LINE_HEADER, rows)
 
-        summary[SUMMARY_KEYS[mod.LINE]] = "" if z is None else f"{z:.3f}"
         flag = "  TREMBLING" if trembling else ""
+        mark = "  ·watch" if tier != 1 else ""
         print(
-            f"[{mod.LINE:16}] raw={row['raw_value'] or 'NA':>10}  "
-            f"z={row['z_score'] or 'NA':>7}{flag}  ({note})"
+            f"[{mod.LINE:16} t{tier}] raw={row['raw_value'] or 'NA':>10}  "
+            f"z={row['z_score'] or 'NA':>7}{flag}{mark}  ({note})"
         )
 
     summary["trembling_count"] = str(trembling_count)
