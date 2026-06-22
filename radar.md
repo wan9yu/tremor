@@ -39,15 +39,22 @@ history (~20 days).
 
 ---
 
-## Tier 1 — primary  (5 / 4 · over capacity, see log)
+## Tier 1 — primary  (5 / 4 · over capacity → converging to 4, see log)
 
-| indicator | domain | Lev | Guard | Reach | Reliab | Respons | Orthog | note |
+Steady-state target (4 global, domain-diverse): **flights · credit_spread ·
+chokepoint_transit · cnh_cny**. Decided round 3.
+
+| indicator | domain | Lev | Guard | Reach | Reliab | Respons | Orthog | status |
 |---|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
-| flights | airspace (EU/US/JP) | 3 | 3 | 2 | — | — | — | archetype side-channel; semi-global |
-| credit_spread | financial (US→global) | 3 | 3 | 3 | — | — | — | global bellwether; locked |
-| capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | — | national; demotion candidate |
-| grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | — | regional; demotion candidate |
-| cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | national but globally weighty |
+| flights | airspace (EU/US/JP) | 3 | 3 | 2 | — | — | — | ✅ keep |
+| credit_spread | financial (US→global) | 3 | 3 | 3 | — | — | — | ✅ keep (global) |
+| cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ keep — slot 4 (user-decided R3) |
+| capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | — | ⬇ demote → tier-2 (redundant capital domain, lowest reach) |
+| grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | — | ⬇ demote → tier-2 (regional; slot went to China) |
+
+Incoming to tier-1: **chokepoint_transit** (trade, global 3/3/3) — must build as tier-2
+and accrue history first. The two demotions land once it is online so tier-1 never drops
+below 4.
 
 ## Tier 2 — watchlist  (2 / 8)
 
@@ -56,27 +63,36 @@ history (~20 days).
 | cn_flights | airspace (China) | 3 | 3 | 1 | — | — | sparse ADS-B coverage; observing if signal survives |
 | gdelt | attention (global) | 1 | 0 | 3 | — | — | no guard → can never reach tier-1; "felt vs real" contrast only |
 
-## Tier 3 — candidate ideas  (5 / 16 · under target, fills over rounds)
+## Tier 3 — candidate ideas  (13 / 16 · near target)
 
-All must clear the cadence gate (daily-persistent or daily-aggregated). Sorted by readiness.
+All clear both gates (real guard; daily-persistent or daily-aggregatable). Sorted by strength.
+Data sources marked ✅ were live-verified keyless+daily.
 
-| candidate | domain | hypothesis (guard → leaking hand) | Lev | Guard | Reach | data source (free, daily) |
+| candidate | domain | hypothesis (guard → leak) | L | G | R | data source (free, daily) |
 |---|---|---|:--:|:--:|:--:|---|
-| chokepoint_transit | trade | trade economics + the canal authorities keep ships flowing → a drop in Suez/Hormuz/Panama transits leaks blockade, war, drought, attack | 3 | 3 | 3 | ✅ **IMF PortWatch** `Daily_Chokepoints_Data` (Suez 26–39/day now — already depressed by Red Sea) |
-| sofr_stress | financial | the Fed defends the policy rate → a SOFR spike leaks dollar-funding seizure (cf. Sept 2019 repo) | 3 | 3 | 3 | ✅ FRED `SOFR` (key in CI) |
-| net_outages | infrastructure | ISPs/states defend routing → a spike in national internet outages leaks censorship, war, cable cuts | 2 | 2 | 3 | ✅ **IODA** (Georgia Tech), keyless |
-| ar_blue | capital controls | the central bank burns reserves to defend the official peso → a blue-dollar premium leaks capital flight, controls, devaluation | 2 | 3 | 1 | ✅ dolarapi (premium ~0% now) |
-| ve_parallel | capital controls | same as ar_blue, Venezuela → a parallel-rate gap leaks hyperinflation / controls | 2 | 3 | 1 | ✅ ve.dolarapi (parallel ~768/USD) |
+| chokepoint_breadth | trade | littoral states + trade economics guard EACH of 28 chokepoints → a drop fingerprints invasion/blockade/attack at that strait | 3 | 3 | 3 | ✅ IMF PortWatch `Daily_Chokepoints_Data` (Hormuz now ~2/day under blockade, Taiwan Strait 249) |
+| port_throughput | trade | ports + economies keep cargo moving → a port's sudden silence leaks strike, war, sanctions, blockade | 3 | 3 | 3 | ✅ IMF PortWatch `Daily_Ports_Data` (2065 ports) |
+| sofr_iorb_spread | financial | the Fed defends its rate corridor → SOFR rising above the IORB ceiling leaks repo seizure (Sept 2019) | 3 | 3 | 3 | ✅ FRED keyless `SOFR`−`IORB` (fredgraph.csv) |
+| gnss_interference | navigation / PNT | aviation + military guard usable GPS → a jump in aircraft reporting bad GPS leaks jamming / electronic warfare / war fronts | 3 | 3 | 3 | ✅ GPSJam daily CSV (good/bad aircraft per hex) |
+| em_corp_oas | financial (EM) | EM sovereigns defend dollar access (reserves, IMF, hikes) → an EM corporate OAS spike leaks dollar-shortage / capital flight | 3 | 2 | 3 | ✅ FRED keyless `BAMLEMCBPIOAS` |
+| net_outages | infrastructure | ISPs / states defend routing → an outage spike leaks censorship, war, cable cuts | 2 | 2 | 3 | ✅ IODA (Georgia Tech) |
+| bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | 2 | 2 | 3 | ✅ RIPEstat (RIPE NCC) |
+| euro_fragmentation | financial (EU) | the ECB defends cohesion → a widening periphery-core 10y spread leaks euro-breakup stress | 3 | 3 | 2 | ✅ ECB SDMX API |
+| hkd_aggr_balance | capital (HK) | HKMA's currency board defends the peg → a collapse in the aggregate balance leaks capital flight | 3 | 3 | 2 | ✅ HKMA Open API |
+| entsog_gas_flow | energy (EU) | pipelines + economies keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | 3 | 3 | 2 | ✅ ENTSOG API |
+| fx_parallel_premium | capital (multi) | central banks defend the official rate → a black-market / crypto premium leaks capital flight (AR, VE, NG, …) | 2 | 3 | 2 | ✅ CriptoYa / dolarapi (keyless) |
+| euro_hy_spread | financial (EU) | ECB + banks press EU spreads down → a spike leaks European credit fear | 3 | 2 | 2 | ✅ FRED keyless `BAMLHE00EHYIOAS` |
+| cp_funding_spread | financial | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | 2 | 2 | 2 | ✅ FRED keyless `CPFF` |
 
-The two 3/3/3 candidates (chokepoint_transit, sofr_stress) are **global, strongly guarded,
-high-leverage, daily, free** — stronger on the rubric than the three national/regional tier-1
-lines. They are the top build targets: once they accumulate history they can challenge for
-tier-1.
+Standouts: the four global **3/3/3** lines — `chokepoint_breadth`, `port_throughput`,
+`sofr_iorb_spread`, `gnss_interference` — are tier-1-grade and span four distinct domains
+(trade, trade, financial-plumbing, navigation). They are the top build targets.
 
 ### Rejected
 | candidate | reason |
 |---|---|
-| stablecoin_peg | **fails the cadence gate** — depegs are intraday-transient (recover in minutes–hours), so a once-daily snapshot aliases past the event. Would need an intraday daily-min source. |
+| stablecoin_peg | fails the **cadence gate** — depegs are intraday-transient, a daily snapshot aliases past them. |
+| tail_risk_market | fails the **guard gate** — prediction-market prices are a free-floating read with no defended equilibrium (Guard ~1). Interesting, but not a tension indicator. |
 
 ---
 
@@ -147,3 +163,26 @@ tier-1.
      new global challengers; demote the most-redundant national line to reach tier-1 = 4.
   3. Keep filling tier-3 toward 16 (next hunts: a free daily Baltic Dry / freight source; a
      daily sovereign-spread source).
+
+### Round 3 — 2026-06-22 (tier-1 decided + 6-domain candidate hunt)
+- **Tier-1 decision (user):** slot 4 = `cnh_cny` (China). Steady-state tier-1 target is
+  **flights · credit_spread · chokepoint_breadth · cnh_cny**. `capital_premium` (Korea, redundant
+  capital domain) and `grid_frequency` (Nordic, regional) demote to tier-2 once the trade line is
+  built and online (so tier-1 never drops below 4).
+- **Hunt (diverge):** ran a parallel 6-domain search (financial, trade, infrastructure, capital,
+  geopolitical, wildcard) → 29 candidates; curated tier-3 to 13. Key outcomes:
+  - **Discovery:** FRED serves a **keyless** CSV (`fredgraph.csv?id=…`) — live-verified — so SOFR,
+    IORB, EM/EU OAS, CP spreads are all free without a key.
+  - **Refined two existing candidates into sharper forms:** `sofr_stress` → `sofr_iorb_spread`
+    (SOFR minus the defended IORB ceiling = the actual guard deviation, not the rate level);
+    `chokepoint_transit` → `chokepoint_breadth` (the full 28-chokepoint panel, each a geopolitical
+    tripwire — the live data already shows Hormuz at ~2/day under blockade).
+  - **New 3/3/3 global candidates:** `port_throughput` (PortWatch ports), `gnss_interference`
+    (GPSJam GPS-jamming — a NEW navigation/PNT domain that fingerprints electronic warfare),
+    `em_corp_oas` (EM dollar-funding stress, orthogonal to US HY).
+  - **Live-verified keyless sources:** FRED CSV, GPSJam, RIPEstat (BGP), IODA, CriptoYa.
+  - **Rejected `tail_risk_market`** (Polymarket): fails the guard gate — a free-floating market read.
+- **Moves applied:** none (still thin history). The tier-1 demotions are recorded as decided but
+  execute when `chokepoint_breadth` is built and online.
+- **Proposed for next round:** build the four global 3/3/3 lines as tier-2 to bank history —
+  priority `chokepoint_breadth` + `sofr_iorb_spread`, then `gnss_interference` + `port_throughput`.
