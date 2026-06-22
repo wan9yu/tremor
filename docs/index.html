@@ -343,14 +343,19 @@ function render(){
   else if(darkCount>=1){ st.className="sysstatus warn"; st.innerHTML=`<span class="h">${T[lang].warnH(darkCount)}</span>${T[lang].warnB(darkNames.join(", "))}`; }
   else { st.className="sysstatus ok"; st.innerHTML=`<span class="h">${T[lang].statusOk}</span>`+(gapDays>=1?T[lang].awaiting(last.date):""); }
 
-  const thr=v=>({label:String(v), data:dates.map(()=>v), borderColor:"rgba(214,69,69,.55)",
-    borderWidth:1, borderDash:[5,4], pointRadius:0, fill:false, tension:0});
+  // Dashed ±3 trembling-threshold guides — visual reference only, kept out of
+  // the legend and the hover tooltip so only the four real lines are listed.
+  const thr=v=>({label:(v>0?"+":"")+v, _threshold:true, data:dates.map(()=>v),
+    borderColor:"rgba(214,69,69,.45)", borderWidth:1, borderDash:[5,4],
+    pointRadius:0, pointHoverRadius:0, fill:false, tension:0});
   if(chart) chart.destroy();
   chart=new Chart(document.getElementById("chart"),{
     type:"line", data:{ labels:dates, datasets:[...datasets, thr(3), thr(-3)] },
     options:{ responsive:true, animation:false, interaction:{mode:"index",intersect:false},
-      plugins:{ legend:{labels:{color:"#c7ccd6",boxWidth:14,font:{size:11},filter:i=>i.text!=="3"&&i.text!=="-3"}},
-        tooltip:{callbacks:{label:c=>c.parsed.y==null?null:`${c.dataset.label}: z=${c.parsed.y.toFixed(2)}`}} },
+      plugins:{ legend:{labels:{color:"#c7ccd6",boxWidth:14,font:{size:11},
+                  filter:(item,data)=>!data.datasets[item.datasetIndex]._threshold}},
+        tooltip:{ filter:item=>!item.dataset._threshold,
+          callbacks:{label:c=>c.parsed.y==null?null:`${c.dataset.label}: z=${c.parsed.y.toFixed(2)}`}} },
       scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
         y:{title:{display:true,text:lang==="zh"?"稳健 z 分数":"robust z-score",color:"#8a909c",font:{size:11}},
            ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"}} } }
