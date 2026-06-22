@@ -22,7 +22,7 @@ LINE = "gnss_interference"
 LABEL = "GPS interference (% aircraft)"
 UNIT = "%"
 ANOMALY_DIRECTION = "up"
-TIER = 2
+TIER = 1  # primary (the 4th instrument): global, ~1-day lag, fingerprints conflict
 
 _URL = "https://gpsjam.org/data/{date}-h3_4.csv"
 _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
