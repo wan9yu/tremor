@@ -1,103 +1,98 @@
-"""OpenSky Network — airspace tension line (flight-volume proxy).
+"""Community ADS-B — airspace tension line (flight-volume proxy). The origin line.
 
 Guarded equilibrium: airlines' profit motive keeps planes flying on schedule.
 The leaking hand: a sharp drop in airborne volume betrays a larger force that
 overwhelmed that motive — closed airspace, severe weather, pandemics, control
 lockdowns. Military airspace closures are not announced; they leave a shadow
-only in how many aircraft are actually in the air. Flights become a side
-channel for the otherwise invisible.
+only in how many aircraft are actually in the air. Flights become a side channel
+for the otherwise invisible.
 
-Reading: number of aircraft currently airborne worldwide (a daily snapshot).
-A sudden DROP is the alarming direction.
+Reading: number of aircraft airborne across a FIXED set of busy, densely-fed
+airspaces, sampled at the same time each day. A sudden DROP is the alarming move.
 
-Source: OpenSky REST API /states/all.
-  - Works anonymously (rate-limited). With OAuth2 client credentials
-    (OPENSKY_CLIENT_ID / OPENSKY_CLIENT_SECRET) it draws on a higher daily
-    credit budget. Basic auth was retired in 2026-03; this uses the
-    client_credentials grant.
+Source: keyless community ADS-B aggregators (airplanes.live / adsb.fi / adsb.lol),
+which — unlike OpenSky's anonymous endpoint — respond reliably from shared cloud
+IPs and need no key or registration. Each region is tried against the providers
+in order, so counts normally come from one provider and stay comparable. Coverage
+is volunteer-based, so this is a regional proxy, not a global census; that's fine
+because the z-score reacts to a line's deviation from its own baseline, not its
+absolute level. The region set is fixed: if any region has no data, the day is
+written empty (a partial sum would look like a flight drop).
 """
-import os
-import time
-
 import requests
 
 LINE = "flights"
-LABEL = "Aircraft airborne (OpenSky)"
+LABEL = "Aircraft airborne (major airspaces)"
 UNIT = "aircraft"
 ANOMALY_DIRECTION = "down"  # a drop in flight volume is the alarming move
 
-_STATES_URL = "https://opensky-network.org/api/states/all"
-_TOKEN_URL = (
-    "https://auth.opensky-network.org/auth/realms/"
-    "opensky-network/protocol/openid-connect/token"
-)
+_RADIUS_NM = 250
+# Fixed, non-overlapping regions with dense community ADS-B coverage.
+_REGIONS = [
+    ("W/C Europe", 48.5, 9.0),
+    ("US East", 39.0, -77.0),
+    ("US West", 36.0, -116.0),
+    ("E Asia/Japan", 35.0, 137.0),
+]
+# Keyless providers, tried in this order per region (stable order -> stable counts).
+_PROVIDERS = [
+    ("airplanes.live", "https://api.airplanes.live/v2/point/{lat}/{lon}/{r}"),
+    ("adsb.fi", "https://opendata.adsb.fi/api/v2/lat/{lat}/lon/{lon}/dist/{r}"),
+    ("adsb.lol", "https://api.adsb.lol/v2/lat/{lat}/lon/{lon}/dist/{r}"),
+]
+_HEADERS = {
+    "User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)",
+    "Accept": "application/json",
+}
 
 
-def _bearer_token():
-    """Exchange client credentials for a short-lived bearer token, or None."""
-    cid = os.environ.get("OPENSKY_CLIENT_ID")
-    secret = os.environ.get("OPENSKY_CLIENT_SECRET")
-    if not (cid and secret):
-        return None
-    try:
-        r = requests.post(
-            _TOKEN_URL,
-            timeout=10,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": cid,
-                "client_secret": secret,
-            },
-        )
-    except requests.RequestException:
-        return None
-    if r.status_code == 200:
+def _region_airborne(lat, lon):
+    """Airborne aircraft in one region as (count, provider), or (None, None)."""
+    for name, template in _PROVIDERS:
+        url = template.format(lat=lat, lon=lon, r=_RADIUS_NM)
         try:
-            return r.json().get("access_token")
+            r = requests.get(url, headers=_HEADERS, timeout=15)
+        except requests.RequestException:
+            continue
+        if r.status_code != 200:
+            continue
+        try:
+            payload = r.json()
         except ValueError:
-            return None
-    return None
+            continue
+        aircraft = payload.get("ac") or payload.get("aircraft") or []
+        # alt_baro == "ground" marks a parked/taxiing aircraft; count the rest.
+        airborne = sum(
+            1 for a in aircraft if isinstance(a, dict) and a.get("alt_baro") != "ground"
+        )
+        return airborne, name
+    return None, None
 
 
 def fetch_daily():
     """Return {"raw_value": float | None, "source_note": str}."""
-    headers = {}
-    auth_mode = "anonymous"
-    token = _bearer_token()
-    if token:
-        headers["Authorization"] = "Bearer " + token
-        auth_mode = "oauth"
-    # OpenSky's public endpoint is occasionally slow to connect from shared cloud
-    # IPs; retry a couple of times so one cold timeout doesn't blank the line.
-    r = None
-    last_err = None
-    for attempt in range(3):
-        try:
-            r = requests.get(_STATES_URL, headers=headers, timeout=30)
-            break
-        except requests.RequestException as e:
-            last_err = type(e).__name__
-            if attempt < 2:
-                time.sleep(3)
-    if r is None:
+    total = 0
+    providers = []
+    missing = []
+    for name, lat, lon in _REGIONS:
+        airborne, provider = _region_airborne(lat, lon)
+        if airborne is None:
+            missing.append(name)
+        else:
+            total += airborne
+            providers.append(provider)
+
+    if missing:
         return {
             "raw_value": None,
-            "source_note": f"OpenSky /states/all request failed after retries: {last_err}",
+            "source_note": (
+                "ADS-B coverage incomplete, no data for: "
+                + ", ".join(missing)
+                + " (count needs every region to stay comparable)"
+            ),
         }
-    if r.status_code != 200:
-        return {
-            "raw_value": None,
-            "source_note": f"OpenSky /states/all HTTP {r.status_code} ({auth_mode})",
-        }
-    try:
-        states = r.json().get("states") or []
-    except ValueError:
-        return {"raw_value": None, "source_note": "OpenSky returned a non-JSON body"}
-    # In a state vector, index 8 is on_ground (bool). Count those explicitly
-    # flying; guard the index so a short/malformed vector is skipped, not raised,
-    # and so an unknown (None) ground status is not miscounted as airborne.
-    airborne = sum(1 for s in states if s and len(s) > 8 and s[8] is False)
+    used = ", ".join(sorted(set(providers)))
     return {
-        "raw_value": float(airborne),
-        "source_note": f"OpenSky /states/all airborne count ({auth_mode}); {len(states)} states total",
+        "raw_value": float(total),
+        "source_note": f"ADS-B airborne over {len(_REGIONS)} regions via {used}",
     }

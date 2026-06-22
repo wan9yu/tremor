@@ -28,10 +28,8 @@ jobs:
       - name: Collect today's readings
         env:
           # FRED_API_KEY (credit spread) and FINGRID_API_KEY (grid frequency, with
-          # a keyless Statnett fallback) are read from repo Secrets. Flights work
-          # anonymously and the Korea premium is keyless.
-          OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
-          OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}
+          # a keyless Statnett fallback) are read from repo Secrets. Flights (keyless
+          # community ADS-B) and the Korea premium need no key.
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           FINGRID_API_KEY: ${{ secrets.FINGRID_API_KEY }}
         run: python collect.py
