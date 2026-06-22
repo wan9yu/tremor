@@ -26,7 +26,8 @@ DATA = os.path.join(ROOT, "data")
 DOCS_DATA = os.path.join(ROOT, "docs", "data")
 
 LINE_HEADER = ["date", "raw_value", "z_score", "trembling", "direction", "source_note"]
-SUMMARY_HEADER = ["date", "flights_z", "credit_z", "capital_z", "grid_z", "trembling_count"]
+SUMMARY_HEADER = ["date", "flights_z", "credit_z", "capital_z", "grid_z",
+                  "trembling_count", "dark_count"]
 SUMMARY_KEYS = {
     "flights": "flights_z",
     "credit_spread": "credit_z",
@@ -59,14 +60,16 @@ def _upsert(rows, new_row, date):
     return rows
 
 
-def _history_values(rows, today):
-    out = []
+def _history(rows, today):
+    """Prior (values, dates) aligned, excluding today; empty cells become None."""
+    values, dates = [], []
     for r in rows:
         if r.get("date") == today:
             continue
         v = r.get("raw_value")
-        out.append(float(v) if v not in (None, "") else None)
-    return out
+        values.append(float(v) if v not in (None, "") else None)
+        dates.append(r.get("date"))
+    return values, dates
 
 
 def _fmt(value):
@@ -82,6 +85,7 @@ def collect():
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     summary = {"date": today}
     trembling_count = 0
+    dark_count = 0
 
     for mod in LINES:
         path = os.path.join(DATA, mod.LINE + ".csv")
@@ -94,9 +98,14 @@ def collect():
                       "source_note": f"fetcher crashed: {type(e).__name__}"}
         raw = result["raw_value"]
         note = result["source_note"]
+        if raw is None:
+            dark_count += 1
 
-        history = _history_values(rows, today)
-        z = normalize.robust_z(history, raw)
+        history, hist_dates = _history(rows, today)
+        z = normalize.robust_z(
+            history, raw, dates=hist_dates, today_date=today,
+            weekday_cycle=getattr(mod, "WEEKLY_CYCLE", False),
+        )
         trembling, direction = normalize.classify(z)
         trembling_count += trembling
 
@@ -119,13 +128,15 @@ def collect():
         )
 
     summary["trembling_count"] = str(trembling_count)
+    summary["dark_count"] = str(dark_count)
     summary_path = os.path.join(DATA, "summary.csv")
     srows = _upsert(_read_rows(summary_path), summary, today)
     for r in srows:  # keep every row schema-complete even across format changes
         for k in SUMMARY_HEADER:
             r.setdefault(k, "")
     _write_rows(summary_path, SUMMARY_HEADER, srows)
-    print(f"\n== {today}: {trembling_count} line(s) trembling ==")
+    dark_note = f", {dark_count} dark" if dark_count else ""
+    print(f"\n== {today}: {trembling_count} line(s) trembling{dark_note} ==")
 
     # Mirror the data into docs/ so the GitHub Pages dashboard is self-contained.
     os.makedirs(DOCS_DATA, exist_ok=True)

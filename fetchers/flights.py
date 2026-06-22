@@ -25,6 +25,7 @@ LINE = "flights"
 LABEL = "Aircraft airborne (major airspaces)"
 UNIT = "aircraft"
 ANOMALY_DIRECTION = "down"  # a drop in flight volume is the alarming move
+WEEKLY_CYCLE = True  # flight volume has a strong weekday rhythm; de-cycle by weekday
 
 _RADIUS_NM = 250
 # Fixed, non-overlapping regions with dense community ADS-B coverage.
