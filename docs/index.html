@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tremor — is the world actually more disordered?</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0e0f12; --panel:#16181d; --line:#23262e; --ink:#e7e9ee; --muted:#8a909c;
+    --calm:#3fb27f; --amber:#e0a83d; --orange:#e07b39; --alarm:#d64545;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 64px}
+  header h1{font-size:30px;margin:0;letter-spacing:.5px}
+  header p.tag{color:var(--muted);margin:.3em 0 0;font-size:15px}
+  .count{display:flex;align-items:baseline;gap:14px;margin:26px 0 8px;
+    padding:18px 22px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+  .count .n{font-size:54px;font-weight:700;line-height:1}
+  .count .of{color:var(--muted);font-size:20px}
+  .count .label{color:var(--muted);font-size:14px}
+  .asof{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .note{color:var(--muted);font-size:13px;border-left:2px solid var(--line);
+    padding:6px 0 6px 14px;margin:0 0 26px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card h2{font-size:15px;margin:0 0 2px}
+  .card .domain{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+  .card .now{font-size:22px;font-weight:600;margin:8px 0 2px}
+  .card .meta{color:var(--muted);font-size:12px;min-height:2.6em}
+  .card canvas{margin-top:8px}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;
+    border:1px solid var(--line);color:var(--muted);margin-left:8px;vertical-align:middle}
+  .pill.trembling{color:#fff;background:var(--alarm);border-color:var(--alarm)}
+  footer{color:var(--muted);font-size:13px;margin-top:34px;border-top:1px solid var(--line);padding-top:18px}
+  footer a{color:#9fb6ff}
+  code{background:#1d2129;padding:1px 5px;border-radius:5px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>tremor</h1>
+    <p class="tag">An honest, long-running instrument for one question: is the world actually getting more disordered — or does it only feel that way?</p>
+  </header>
+
+  <div class="count" id="count">
+    <span class="n" id="count-n">–</span>
+    <span class="of">/ 4</span>
+    <span class="label" id="count-label">lines trembling today</span>
+  </div>
+  <p class="asof" id="asof"></p>
+
+  <p class="note">
+    tremor measures a handful of <b>tension indicators</b> — guarded equilibria that something powerful normally holds still.
+    Each line is normalized on its own (robust z-score); they are never multiplied into a single doom score.
+    The only thing that matters is <b>resonance</b>: several independent instruments trembling at once.
+    A blank line means the source was unavailable that day — tremor leaves it empty rather than inventing a number.
+  </p>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    <p>tremor doesn't predict the end — nobody can. It only makes <b>now</b> readable. It's a seismograph, not a prophet,
+       and it's blind to instantaneous shocks; it listens for the slow, systemic, trace-leaving kind of disorder.</p>
+    <p>Data is collected daily by a GitHub Actions cron and committed back to the repo
+       (<a href="https://github.com/wan9yu/tremor">git-scraping</a>). Charts read <code>data/*.csv</code> directly — no backend.</p>
+  </footer>
+</div>
+
+<script>
+const LINES = [
+  {id:"flights",         label:"Aircraft airborne",        domain:"Airspace",          unit:"aircraft", alarm:"down"},
+  {id:"credit_spread",   label:"US HY credit spread (OAS)", domain:"Financial system",  unit:"pp",       alarm:"up"},
+  {id:"capital_premium", label:"Korea BTC premium",        domain:"Capital controls",  unit:"%",        alarm:"up"},
+  {id:"grid_frequency",  label:"Grid freq. max |dev|",     domain:"Infrastructure",    unit:"mHz",      alarm:"up"},
+];
+
+function splitCSVLine(line){
+  const out=[]; let cur="", q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c==='"') q=true; else if(c===",") {out.push(cur);cur="";} else cur+=c; }
+  }
+  out.push(cur); return out;
+}
+function parseCSV(text){
+  const rows=text.replace(/﻿/,"").trim().split(/\r?\n/);
+  if(rows.length<2) return [];
+  const head=splitCSVLine(rows[0]);
+  return rows.slice(1).filter(r=>r.length).map(r=>{
+    const cells=splitCSVLine(r), o={};
+    head.forEach((h,i)=>o[h]=cells[i]??""); return o;
+  });
+}
+async function getCSV(path){
+  try{ const r=await fetch(path,{cache:"no-store"}); if(!r.ok) return []; return parseCSV(await r.text()); }
+  catch(e){ return []; }
+}
+function countColor(n){ return n>=3?"var(--alarm)":n===2?"var(--orange)":n===1?"var(--amber)":"var(--calm)"; }
+
+async function main(){
+  const summary = await getCSV("data/summary.csv");
+  const last = summary[summary.length-1];
+  if(last){
+    const n = parseInt(last.trembling_count||"0",10)||0;
+    const el = document.getElementById("count-n");
+    el.textContent = n; el.style.color = countColor(n);
+    document.getElementById("count-label").textContent =
+      n===0 ? "lines trembling today — calm" : (n===1?"line":"lines")+" trembling today";
+    document.getElementById("asof").textContent = "as of "+last.date+" (UTC)";
+  }
+
+  const grid=document.getElementById("grid");
+  for(const L of LINES){
+    const rows=(await getCSV("data/"+L.id+".csv")).filter(r=>r.raw_value!=="");
+    const cur = rows[rows.length-1];
+    const lastTremble = [...rows].reverse().find(r=>r.trembling==="1");
+    const isTrembling = cur && cur.trembling==="1";
+
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML =
+      `<div class="domain">${L.domain}</div>
+       <h2>${L.label}${isTrembling?'<span class="pill trembling">trembling</span>':''}</h2>
+       <div class="now">${cur?fmt(cur.raw_value)+' <span style="font-size:13px;color:var(--muted)">'+L.unit+'</span>':'<span style="color:var(--muted);font-size:14px">no data</span>'}</div>
+       <div class="meta">${cur?cur.source_note:""}<br>
+         alarming when <b>${L.alarm}</b> · last trembled: ${lastTremble?lastTremble.date:"—"}</div>
+       <canvas height="120"></canvas>`;
+    grid.appendChild(card);
+
+    const labels=rows.map(r=>r.date), data=rows.map(r=>parseFloat(r.raw_value));
+    const pt=rows.map(r=>r.trembling==="1");
+    new Chart(card.querySelector("canvas"),{
+      type:"line",
+      data:{labels,datasets:[{
+        data, borderColor:"#7f8696", borderWidth:1.5, tension:.25,
+        pointRadius:pt.map(t=>t?4:0), pointBackgroundColor:pt.map(t=>t?"#d64545":"#7f8696"),
+        pointBorderColor:pt.map(t=>t?"#d64545":"#7f8696"), fill:false,
+      }]},
+      options:{responsive:true,animation:false,
+        plugins:{legend:{display:false},tooltip:{intersect:false,mode:"index"}},
+        scales:{x:{ticks:{color:"#8a909c",maxTicksLimit:5,font:{size:10}},grid:{color:"#20232b"}},
+                y:{ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#20232b"}}}}
+    });
+  }
+}
+function fmt(v){ const n=parseFloat(v); return Math.abs(n)>=1000?n.toLocaleString():(""+v); }
+main();
+</script>
+</body>
+</html>

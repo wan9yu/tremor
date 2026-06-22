@@ -1,6 +1,13 @@
 # Internal documentation (not for public repo)
 internal/
 
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
 # macOS
 .DS_Store
 
