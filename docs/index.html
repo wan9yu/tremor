@@ -189,7 +189,7 @@ const LINES = [
     explain:{
       en:"The share of all global news coverage about crisis, war, conflict, protest, or sanctions (GDELT). Deliberately NOT a tension indicator and never counted: news has no guard, spikes are cheap (everyone reporting ≠ more disorder), and counts inflate as media densifies. It rides the watchlist as the future 'felt vs real' contrast — how disordered the world is *reported* to be, set against the objective lines; the gap between them is the anxiety premium of the age.",
       zh:"全球新闻里关于危机、战争、冲突、抗议、制裁的报道占比（GDELT）。它刻意不是张力指标、永不计数：新闻没有守护力，spike 很廉价（大家都在报 ≠ 世界更乱），而且报道量本身逐年通胀。它待在观察名单上，是未来的「真实 vs 感觉」对照——世界被*报道*得有多乱，与客观线对比，二者的缺口就是这个时代的焦虑溢价。"} },
-  { id:"chokepoint_breadth", color:"#d98a5b", alarm:"down", tier:1,
+  { id:"chokepoint_breadth", color:"#d98a5b", alarm:"down", tier:2,
     unit:{en:"vessels",zh:"艘"},
     domain:{en:"Trade (global)",zh:"贸易（全球）"},
     label:{en:"Chokepoint vessel transits",zh:"海上咽喉点航运量"},
@@ -197,7 +197,7 @@ const LINES = [
     explain:{
       en:"Trade economics and the littoral states keep ships flowing through each of 28 maritime chokepoints — Suez, Hormuz, Bab-el-Mandeb, the Bosporus, Malacca, Panama, the Taiwan Strait. A drop in total transits leaks a blockade, war, drought, or attack at one of them. The live data already shows the thesis working — Hormuz fell to a couple of transits a day under blockade, the Red Sea cut Suez far below normal. Like the flights line, but for sea trade.",
       zh:"贸易经济和沿岸国家让船流持续通过 28 个海上咽喉点——苏伊士、霍尔木兹、曼德海峡、博斯普鲁斯、马六甲、巴拿马、台湾海峡。总航运量骤降，就泄露其中某处的封锁、战争、干旱或袭击。实时数据已经验证了这套逻辑——霍尔木兹在封锁下塌到每天几艘，红海危机把苏伊士压到远低于常态。像航班线，但测的是海上贸易。"} },
-  { id:"gnss_interference", color:"#56b6c2", alarm:"up", tier:2,
+  { id:"gnss_interference", color:"#56b6c2", alarm:"up", tier:1,
     unit:{en:"%",zh:"%"},
     domain:{en:"Navigation (global)",zh:"导航（全球）"},
     label:{en:"GPS interference",zh:"GPS 干扰"},

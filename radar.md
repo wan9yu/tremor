@@ -33,6 +33,11 @@ data exists):
   deviation). Intraday-transient phenomena that recover within a day — stablecoin
   flash-depegs, a momentary FX wick — are aliased away by a daily snapshot and rejected.
 
+**Freshness rule for tier-1:** a displayed instrument must be FRESH (low publication lag). A
+line that is daily but lags a week (e.g. IMF PortWatch, ~8 days) only shows a disruption long
+after it began — fine for tier-2 (history accumulates, the lag washes out in the rolling
+baseline), but too stale to be a live tier-1 instrument. Prefer ≤ ~2-day lag for tier-1.
+
 4-8-16 is a steady-state target, not a forced cut: a line is never demoted without
 evidence. Rubric scores are 0–3; computed metrics show `—` until there is enough
 history (~20 days).
@@ -49,7 +54,7 @@ applied round 4.
 | flights | airspace (EU/US/JP) | 3 | 3 | 2 | — | — | — | ✅ |
 | credit_spread | financial (US→global) | 3 | 3 | 3 | — | — | — | ✅ global bellwether |
 | cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ slot 4 (user-decided) |
-| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | — | ✅ promoted R4 (28 straits) |
+| gnss_interference | navigation/EW (global) | 3 | 3 | 3 | — | — | — | ✅ slot for trade swapped R5 — ~1-day lag, fingerprints conflict |
 
 ## Tier 2 — watchlist  (8 candidates + 1 contrast)
 
@@ -61,7 +66,7 @@ contrast.)
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | note |
 |---|---|:--:|:--:|:--:|:--:|:--:|---|
 | port_throughput | trade (global) | 3 | 3 | 3 | — | — | ~4729 global port calls/day (2065 ports) |
-| gnss_interference | navigation (global) | 3 | 3 | 3 | — | — | GPS-jam share ~0.43% — new domain, fingerprints EW |
+| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810/day (Hormuz blockaded) — strong, but PortWatch lags ~8 days: too stale to display live |
 | sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | SOFR−IORB ~−2bps (calm) — keyless FRED |
 | em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | EM corp OAS ~1.38pp — orthogonal to US HY |
 | net_outages | infrastructure (global) | 2 | 2 | 3 | — | — | ~3 countries in outage now (IODA) — breadth of disruption |
@@ -218,3 +223,14 @@ wait for a tier-2 slot to open — i.e. a watchlist line graduating to tier-1 or
   proves more independent than a tier-1 incumbent).
 - **Capacity:** tier-2 candidate slots stay at 8 (Korea + Nordic in, chokepoint out); gdelt is
   counted separately as the contrast line. tier-3 = 7/16.
+
+### Round 5 — 2026-06-22 (freshness rule; swap chokepoint → gnss in tier-1)
+- **New rule:** added the **freshness rule** — a tier-1 (displayed) instrument must have low
+  publication lag. `chokepoint_breadth` is a strong 3/3/3 signal but IMF PortWatch lags ~8 days,
+  so it shows a disruption a week late — too stale to be a live instrument.
+- **Swap:** demoted `chokepoint_breadth` back to tier-2 (still collected — the lag washes out in a
+  rolling baseline), promoted `gnss_interference` (GPSJam, ~1-day lag, global 3/3/3, a fresh
+  navigation/electronic-warfare signal that directly fingerprints conflict) into tier-1.
+- **Tier-1 now:** flights · credit_spread · cnh_cny · **gnss_interference** — airspace, financial,
+  capital, navigation/EW. All ≤ ~3-day lag.
+- **Moves:** gnss tier-2 → tier-1; chokepoint tier-1 → tier-2. No other change.
