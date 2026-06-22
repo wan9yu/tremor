@@ -40,7 +40,7 @@
   .sysstatus.warn .h{color:var(--orange)}
   .sysstatus.alarm{border-color:var(--alarm);background:rgba(214,69,69,.12)}
   .sysstatus.alarm .h{color:#ff6b6b}
-  .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 18px}
+  .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin:0 0 18px}
   @media(max-width:680px){.strip{grid-template-columns:1fr 1fr}}
   .inst{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
     border-left:3px solid var(--dot,#7f8696);cursor:pointer;transition:border-color .12s}
@@ -372,7 +372,7 @@ function render(){
   else { st.className="sysstatus ok"; st.innerHTML=`<span class="h">${T[lang].statusOk}</span>`+(gapDays>=1?T[lang].awaiting(last.date):""); }
 
   // Dashed ±3 trembling-threshold guides — visual reference only, kept out of
-  // the legend and the hover tooltip so only the four real lines are listed.
+  // the legend and the hover tooltip so only the real lines are listed.
   const thr=v=>({label:(v>0?"+":"")+v, _threshold:true, data:dates.map(()=>v),
     borderColor:"rgba(214,69,69,.45)", borderWidth:1, borderDash:[5,4],
     pointRadius:0, pointHoverRadius:0, fill:false, tension:0});
