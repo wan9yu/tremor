@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from core import normalize
 from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
                       credit_spread, em_oas, flights, gdelt, gnss,
-                      grid_frequency, sofr_iorb)
+                      grid_frequency, net_outages, ports, sofr_iorb)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
 # (airspace / financial system / capital controls / infrastructure), so several
@@ -33,7 +33,8 @@ from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
 LINES = [flights, credit_spread, capital_premium, grid_frequency,  # tier 1
          cnh_cny,                                                   # tier 1 (China)
          cn_flights, gdelt,                                         # tier 2 (watchlist)
-         chokepoint, gnss, sofr_iorb, em_oas]                       # tier 2 (radar builds)
+         chokepoint, gnss, sofr_iorb, em_oas,                       # tier 2 (radar builds)
+         ports, net_outages]                                        # tier 2 (fills to 8)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")
