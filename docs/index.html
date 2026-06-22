@@ -149,7 +149,7 @@ const LINES = [
     explain:{
       en:"Banks want to lend to each other to earn, and central banks press credit spreads down — so this spread is normally held low. When it spikes, fear has overpowered greed: banks suddenly don't trust each other. This is the fuse that lit 2008. The source is one number — the ICE BofA US High-Yield option-adjusted spread — that compresses the whole high-yield market's fear into a single daily reading.",
       zh:"银行天生想互相拆借赚钱，央行也在压低信用利差——所以这个利差平时被按得很低。一旦飙升，就是恐惧压倒了贪婪：银行突然不敢相信彼此。这正是 2008 年的引信。数据是一个数——ICE BofA 美国高收益债 OAS——把整个高收益市场的恐惧压缩成每日一个读数。"} },
-  { id:"capital_premium", color:"#c678dd", alarm:"up",
+  { id:"capital_premium", color:"#c678dd", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Capital controls",zh:"资本管制"},
     label:{en:"Korea BTC premium",zh:"韩国比特币溢价"},
@@ -157,7 +157,7 @@ const LINES = [
     explain:{
       en:"The same Bitcoin should cost the same everywhere — arbitrage erases price gaps — so a local premium should sit near zero. When Korea's BTC price stays persistently above the global price, capital is trapped inside the country: tightening controls, capital flight, a devaluation brewing. The 'kimchi premium' is the classic case. Computed from Upbit (Korean won) against Coinbase (US dollar) at the official exchange rate.",
       zh:"同一枚比特币在哪都该是一个价——套利会抹平价差——所以本地溢价本应接近零。当韩国的 BTC 价格持续高于全球价，说明资本被困在国内：管制收紧、资本外逃、贬值在酝酿。「泡菜溢价」是经典案例。用 Upbit（韩元）对比 Coinbase（美元），按官方汇率折算。"} },
-  { id:"grid_frequency", color:"#3fb27f", alarm:"up",
+  { id:"grid_frequency", color:"#3fb27f", alarm:"up", tier:2,
     unit:{en:"mHz",zh:"mHz"},
     domain:{en:"Infrastructure",zh:"基础设施"},
     label:{en:"Grid freq. max |dev|",zh:"电网频率最大偏离"},
@@ -189,7 +189,7 @@ const LINES = [
     explain:{
       en:"The share of all global news coverage about crisis, war, conflict, protest, or sanctions (GDELT). Deliberately NOT a tension indicator and never counted: news has no guard, spikes are cheap (everyone reporting ≠ more disorder), and counts inflate as media densifies. It rides the watchlist as the future 'felt vs real' contrast — how disordered the world is *reported* to be, set against the objective lines; the gap between them is the anxiety premium of the age.",
       zh:"全球新闻里关于危机、战争、冲突、抗议、制裁的报道占比（GDELT）。它刻意不是张力指标、永不计数：新闻没有守护力，spike 很廉价（大家都在报 ≠ 世界更乱），而且报道量本身逐年通胀。它待在观察名单上，是未来的「真实 vs 感觉」对照——世界被*报道*得有多乱，与客观线对比，二者的缺口就是这个时代的焦虑溢价。"} },
-  { id:"chokepoint_breadth", color:"#d98a5b", alarm:"down", tier:2,
+  { id:"chokepoint_breadth", color:"#d98a5b", alarm:"down", tier:1,
     unit:{en:"vessels",zh:"艘"},
     domain:{en:"Trade (global)",zh:"贸易（全球）"},
     label:{en:"Chokepoint vessel transits",zh:"海上咽喉点航运量"},

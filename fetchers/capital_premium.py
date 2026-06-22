@@ -19,6 +19,7 @@ LINE = "capital_premium"
 LABEL = "Korea BTC premium (%)"
 UNIT = "%"
 ANOMALY_DIRECTION = "up"  # a widening premium is the alarming move
+TIER = 2  # demoted to watchlist (redundant with the China capital line; lowest reach)
 
 
 def _korea_btc_krw():

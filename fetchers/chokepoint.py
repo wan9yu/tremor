@@ -17,7 +17,7 @@ LINE = "chokepoint_breadth"
 LABEL = "Chokepoint vessel transits (28 straits)"
 UNIT = "vessels"
 ANOMALY_DIRECTION = "down"
-TIER = 2
+TIER = 1  # promoted to primary (user decision): global trade, the 4th instrument
 
 
 def fetch_daily():
