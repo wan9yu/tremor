@@ -108,6 +108,7 @@ def collect():
         raw = result["raw_value"]
         note = result["source_note"]
         tier = getattr(mod, "TIER", 1)
+        primary = tier == 1
 
         history, hist_dates = _history(rows, today)
         z = normalize.robust_z(
@@ -116,7 +117,7 @@ def collect():
         )
         trembling, direction = normalize.classify(z)
         # Only tier-1 instruments count toward the live resonance and dark count.
-        if tier == 1:
+        if primary:
             trembling_count += trembling
             if raw is None:
                 dark_count += 1
@@ -133,10 +134,9 @@ def collect():
         _write_rows(path, LINE_HEADER, rows)
 
         flag = "  TREMBLING" if trembling else ""
-        mark = "  ·watch" if tier != 1 else ""
         print(
             f"[{mod.LINE:16} t{tier}] raw={row['raw_value'] or 'NA':>10}  "
-            f"z={row['z_score'] or 'NA':>7}{flag}{mark}  ({note})"
+            f"z={row['z_score'] or 'NA':>7}{flag}  ({note})"
         )
 
     summary["trembling_count"] = str(trembling_count)

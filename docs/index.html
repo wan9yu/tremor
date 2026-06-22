@@ -61,6 +61,7 @@
   .watchlist{color:var(--muted);font-size:12px;margin:14px 2px 0;line-height:1.5}
   .watchlist b{color:#9aa1ad;font-weight:600}
   .watchlist .dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:#5b616d;margin-right:5px;vertical-align:middle}
+  .watchlist .days{opacity:.7}
   footer{color:var(--muted);font-size:13px;margin-top:34px;border-top:1px solid var(--line);padding-top:18px}
   footer a{color:#9fb6ff}
   code{background:#1d2129;padding:1px 5px;border-radius:5px;font-size:12px}
@@ -395,7 +396,7 @@ function render(){
     wl.hidden=false;
     wl.innerHTML=`<b>${T[lang].watchTitle}</b> `+TIER2.map(L=>{
       const days=(lines[L.id]||[]).filter(r=>r.raw_value!=="").length;
-      return `<span class="dot"></span>${L.label[lang]} <span style="opacity:.7">(${T[lang].watchDays(days)})</span>`;
+      return `<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)})</span>`;
     }).join("&nbsp;&nbsp;&nbsp;");
   } else wl.hidden=true;
 }
