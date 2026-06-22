@@ -1,21 +1,21 @@
-"""Fingrid — infrastructure tension line (grid frequency).
+"""Statnett — infrastructure tension line (grid frequency).
 
 Guarded equilibrium: grid operators defend 50 Hz second by second — one of the
 most fiercely guarded balances humans maintain. The leaking hand: any deviation
 means supply/demand was overwhelmed — a blackout precursor, a fuel shortage, a
 system under shock.
 
-Reading: the day's maximum absolute deviation from 50 Hz, in millihertz. A
-larger deviation is the alarming direction. (Max deviation captures "stress"
-far better than a daily average, which washes the spikes out.)
+Reading: the maximum absolute deviation from 50 Hz in the latest ~60-second
+window, in millihertz. A larger deviation is the alarming direction. (Max
+deviation captures "stress" far better than an average, which washes the spikes
+out.)
 
-Source: Fingrid Open Data (Finland, Nordic synchronous grid), dataset 177
-(real-time frequency). Needs a free api key in env FINGRID_API_KEY (sent as the
-x-api-key header).
+Source: Statnett (Norway TSO) real-time frequency REST API. Statnett sits on the
+Nordic synchronous grid — the same 50 Hz balance Finland's Fingrid measures — but
+its endpoint is fully public: no key, no login, no registration. That keeps this
+line running out of the box. (Fingrid dataset 177 is an equivalent alternative
+if a key is ever preferred.)
 """
-import os
-from datetime import datetime, timedelta, timezone
-
 import requests
 
 LINE = "grid_frequency"
@@ -23,51 +23,31 @@ LABEL = "Grid freq. max |dev| from 50Hz (mHz)"
 UNIT = "mHz"
 ANOMALY_DIRECTION = "up"  # a larger deviation is the alarming move
 
-_DATASET = 177
-_URL = f"https://data.fingrid.fi/api/datasets/{_DATASET}/data"
+_URL = "https://driftsdata.statnett.no/restapi/Frequency/BySecond"
 
 
 def fetch_daily():
     """Return {"raw_value": float | None, "source_note": str}."""
-    key = os.environ.get("FINGRID_API_KEY")
-    if not key:
-        return {"raw_value": None, "source_note": "missing FINGRID_API_KEY"}
-    end = datetime.now(timezone.utc)
-    start = end - timedelta(hours=24)
-    fmt = "%Y-%m-%dT%H:%M:%SZ"
     try:
-        r = requests.get(
-            _URL,
-            timeout=20,
-            headers={"x-api-key": key, "Accept": "application/json"},
-            params={
-                "startTime": start.strftime(fmt),
-                "endTime": end.strftime(fmt),
-                "pageSize": 20000,
-            },
-        )
+        r = requests.get(_URL, timeout=15, headers={"Accept": "application/json"})
     except requests.RequestException as e:
-        return {"raw_value": None, "source_note": f"Fingrid request failed: {type(e).__name__}"}
+        return {"raw_value": None, "source_note": f"Statnett request failed: {type(e).__name__}"}
     if r.status_code != 200:
-        return {"raw_value": None, "source_note": f"Fingrid HTTP {r.status_code}"}
+        return {"raw_value": None, "source_note": f"Statnett HTTP {r.status_code}"}
     try:
-        body = r.json()
+        measurements = r.json().get("Measurements") or []
     except ValueError:
-        return {"raw_value": None, "source_note": "Fingrid returned a non-JSON body"}
+        return {"raw_value": None, "source_note": "Statnett returned a non-JSON body"}
 
-    rows = body.get("data", []) if isinstance(body, dict) else body
     deviations = []
-    for row in rows or []:
-        value = row.get("value") if isinstance(row, dict) else None
-        if value is None:
-            continue
+    for value in measurements:
         try:
             deviations.append(abs(float(value) - 50.0) * 1000.0)  # Hz -> mHz
         except (TypeError, ValueError):
             continue
     if not deviations:
-        return {"raw_value": None, "source_note": "Fingrid dataset 177 returned no points"}
+        return {"raw_value": None, "source_note": "Statnett frequency window was empty"}
     return {
         "raw_value": round(max(deviations), 2),
-        "source_note": f"Fingrid dataset 177 max |dev| over {len(deviations)} points",
+        "source_note": f"Statnett Nordic grid max |dev|, ~60s snapshot, {len(deviations)} points",
     }
