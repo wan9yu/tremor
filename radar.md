@@ -26,6 +26,13 @@ data exists):
 - **Orthogonality** — how uncorrelated it is from the live tier-1 set; the gate that
   keeps the primary four independent. *(computed, tier-1 gate)*
 
+**Two absolute gates** (fail either → not a counted indicator):
+- **Guard gate** — no real guard → never tier-1 (watchlist / "felt vs real" contrast only).
+- **Cadence gate** — collection samples once a day, so the disorder must persist at daily
+  resolution, OR be aggregated intraday→daily (as `grid_frequency` takes the day's MAX
+  deviation). Intraday-transient phenomena that recover within a day — stablecoin
+  flash-depegs, a momentary FX wick — are aliased away by a daily snapshot and rejected.
+
 4-8-16 is a steady-state target, not a forced cut: a line is never demoted without
 evidence. Rubric scores are 0–3; computed metrics show `—` until there is enough
 history (~20 days).
@@ -51,12 +58,19 @@ history (~20 days).
 
 ## Tier 3 — candidate ideas  (4 / 16 · under target, fills over rounds)
 
-| candidate | hypothesis (guard → leaking hand) | Lev | Guard | Reach | data source | source free? |
+All must clear the cadence gate (daily-persistent or daily-aggregated).
+
+| candidate | hypothesis (guard → leaking hand) | Lev | Guard | Reach | cadence | data source |
 |---|---|:--:|:--:|:--:|---|---|
-| stablecoin_peg | issuer reserves + arbitrage hold USDT≈$1 → a break leaks crypto/dollar-liquidity stress | 2 | 2 | 3 | Coinbase USDT-USD spot | ✅ verified keyless (USDT 0.9988 now) |
-| sofr_stress | the Fed defends the policy rate → a SOFR spike leaks dollar-funding seizure (cf. Sept 2019 repo) | 3 | 3 | 3 | FRED `SOFR` | ✅ FRED (key already in CI) |
-| chokepoint_transit | trade economics keep ships moving → a drop in Suez/Hormuz transits leaks blockade, war, drought | 3 | 2 | 3 | AIS (Suez/Hormuz) | ⚠️ no free source verified yet |
-| net_outages | ISPs defend routing → a spike in national internet outages leaks censorship, war, cable cuts | 2 | 2 | 3 | Cloudflare Radar | ⚠️ needs auth token (not keyless) |
+| sofr_stress | the Fed defends the policy rate → a SOFR spike leaks dollar-funding seizure (cf. Sept 2019 repo) | 3 | 3 | 3 | ✅ daily fixing, persists days | ✅ FRED `SOFR` (key in CI) |
+| chokepoint_transit | trade economics keep ships moving → a drop in Suez/Hormuz transits leaks blockade, war, drought | 3 | 2 | 3 | ✅ daily flow, persists | ⚠️ no free AIS source verified |
+| ar_blue | the central bank burns reserves to defend the official peso → a blue-dollar premium leaks capital flight, controls, devaluation | 2 | 3 | 1 | ✅ premium persists weeks | ✅ dolarapi (keyless; premium ~0% now) |
+| net_outages | ISPs defend routing → a spike in national internet outages leaks censorship, war, cable cuts | 2 | 2 | 3 | ◻ outages persist hrs–days | ⚠️ Cloudflare Radar needs token |
+
+### Rejected this round
+| candidate | reason |
+|---|---|
+| stablecoin_peg | **fails the cadence gate** — depegs are intraday-transient (recover in minutes–hours), so a once-daily snapshot aliases past the event. Would need an intraday daily-min source to qualify. |
 
 ---
 
@@ -85,3 +99,16 @@ history (~20 days).
      a strong global candidate to start accumulating history. *(needs approval — new code)*
   3. Build `sofr_stress` as tier-2 (FRED, global dollar-funding stress). *(needs approval)*
   4. Keep exploring toward 16 tier-3 ideas; hunt a free AIS source for chokepoint_transit.
+
+### Round 1.1 — 2026-06-22 (cadence gate added)
+- **New gate:** added the **cadence gate** to the methodology — an indicator must persist
+  at daily resolution or be aggregated intraday→daily, because collection samples once a
+  day. A daily snapshot of an intraday-transient phenomenon is dishonest (aliasing).
+- **Rejected `stablecoin_peg`:** depegs recover in minutes–hours, so a daily snapshot
+  almost always catches it back at $1 and misses the event. Removed from candidates.
+- **Added `ar_blue`** (Argentina blue-dollar premium): web-verified keyless on dolarapi;
+  a black-market FX premium persists for weeks, so daily sampling is honest. Capital-control
+  domain, national reach.
+- **Strongest standing candidate is `sofr_stress`** — global, guarded, high-leverage, daily,
+  free. The top build target for tier-2.
+- **Moves applied:** none (candidate-list refinement only).
