@@ -56,21 +56,27 @@ history (~20 days).
 | cn_flights | airspace (China) | 3 | 3 | 1 | — | — | sparse ADS-B coverage; observing if signal survives |
 | gdelt | attention (global) | 1 | 0 | 3 | — | — | no guard → can never reach tier-1; "felt vs real" contrast only |
 
-## Tier 3 — candidate ideas  (4 / 16 · under target, fills over rounds)
+## Tier 3 — candidate ideas  (5 / 16 · under target, fills over rounds)
 
-All must clear the cadence gate (daily-persistent or daily-aggregated).
+All must clear the cadence gate (daily-persistent or daily-aggregated). Sorted by readiness.
 
-| candidate | hypothesis (guard → leaking hand) | Lev | Guard | Reach | cadence | data source |
-|---|---|:--:|:--:|:--:|---|---|
-| sofr_stress | the Fed defends the policy rate → a SOFR spike leaks dollar-funding seizure (cf. Sept 2019 repo) | 3 | 3 | 3 | ✅ daily fixing, persists days | ✅ FRED `SOFR` (key in CI) |
-| chokepoint_transit | trade economics keep ships moving → a drop in Suez/Hormuz transits leaks blockade, war, drought | 3 | 2 | 3 | ✅ daily flow, persists | ⚠️ no free AIS source verified |
-| ar_blue | the central bank burns reserves to defend the official peso → a blue-dollar premium leaks capital flight, controls, devaluation | 2 | 3 | 1 | ✅ premium persists weeks | ✅ dolarapi (keyless; premium ~0% now) |
-| net_outages | ISPs defend routing → a spike in national internet outages leaks censorship, war, cable cuts | 2 | 2 | 3 | ◻ outages persist hrs–days | ⚠️ Cloudflare Radar needs token |
+| candidate | domain | hypothesis (guard → leaking hand) | Lev | Guard | Reach | data source (free, daily) |
+|---|---|---|:--:|:--:|:--:|---|
+| chokepoint_transit | trade | trade economics + the canal authorities keep ships flowing → a drop in Suez/Hormuz/Panama transits leaks blockade, war, drought, attack | 3 | 3 | 3 | ✅ **IMF PortWatch** `Daily_Chokepoints_Data` (Suez 26–39/day now — already depressed by Red Sea) |
+| sofr_stress | financial | the Fed defends the policy rate → a SOFR spike leaks dollar-funding seizure (cf. Sept 2019 repo) | 3 | 3 | 3 | ✅ FRED `SOFR` (key in CI) |
+| net_outages | infrastructure | ISPs/states defend routing → a spike in national internet outages leaks censorship, war, cable cuts | 2 | 2 | 3 | ✅ **IODA** (Georgia Tech), keyless |
+| ar_blue | capital controls | the central bank burns reserves to defend the official peso → a blue-dollar premium leaks capital flight, controls, devaluation | 2 | 3 | 1 | ✅ dolarapi (premium ~0% now) |
+| ve_parallel | capital controls | same as ar_blue, Venezuela → a parallel-rate gap leaks hyperinflation / controls | 2 | 3 | 1 | ✅ ve.dolarapi (parallel ~768/USD) |
 
-### Rejected this round
+The two 3/3/3 candidates (chokepoint_transit, sofr_stress) are **global, strongly guarded,
+high-leverage, daily, free** — stronger on the rubric than the three national/regional tier-1
+lines. They are the top build targets: once they accumulate history they can challenge for
+tier-1.
+
+### Rejected
 | candidate | reason |
 |---|---|
-| stablecoin_peg | **fails the cadence gate** — depegs are intraday-transient (recover in minutes–hours), so a once-daily snapshot aliases past the event. Would need an intraday daily-min source to qualify. |
+| stablecoin_peg | **fails the cadence gate** — depegs are intraday-transient (recover in minutes–hours), so a once-daily snapshot aliases past the event. Would need an intraday daily-min source. |
 
 ---
 
@@ -112,3 +118,32 @@ All must clear the cadence gate (daily-persistent or daily-aggregated).
 - **Strongest standing candidate is `sofr_stress`** — global, guarded, high-leverage, daily,
   free. The top build target for tier-2.
 - **Moves applied:** none (candidate-list refinement only).
+
+### Round 2 — 2026-06-22 (re-probe + rethink)
+- **Explored (diverge):** re-probed data sources live and unblocked two strong candidates:
+  - `chokepoint_transit` — found **IMF PortWatch** `Daily_Chokepoints_Data` (free, keyless,
+    daily vessel counts per chokepoint; Suez at 26–39/day, already depressed by the Red Sea
+    crisis). Upgraded Guard 2→3 and marked data verified. Now a 3/3/3 candidate.
+  - `net_outages` — found **IODA** (Georgia Tech) free outage signals (bgp / active-probing /
+    Google-transparency). Data verified, replacing the token-gated Cloudflare source.
+  - Added `ve_parallel` (Venezuela parallel FX), keyless via dolarapi.
+- **Rethink of tier-1 (the deeper ask):** two structural problems surfaced, both pointing the
+  same way:
+  1. **Domain redundancy** — tier-1 holds TWO capital-control lines (capital_premium/Korea and
+     cnh_cny/China). The original thesis wants four DIFFERENT domains; two in one domain is
+     likely redundant (an Orthogonality question, pending history).
+  2. **Global imbalance** — three of five tier-1 lines are national/regional (Korea, Nordic,
+     China); only credit_spread and flights are global. The "tier-1 should be global" principle
+     favors demoting a national line.
+  Both point to demoting one of the national/regional lines — and the natural replacement is a
+  **global 3/3/3** line (chokepoint_transit or sofr_stress), which would also add a genuinely
+  new domain (trade) or strengthen financial.
+- **Moves applied:** none — chokepoint/sofr have no history yet, so per the gates they can't
+  jump to tier-1. The honest path is to BUILD them as tier-2 first.
+- **Proposed for next round:**
+  1. Build `chokepoint_transit` (IMF PortWatch) and `sofr_stress` (FRED) as **tier-2** fetchers
+     so CI starts banking their daily history. *(needs approval — new code)*
+  2. After ~20 days, compute Orthogonality of the national tier-1 lines vs each other and vs the
+     new global challengers; demote the most-redundant national line to reach tier-1 = 4.
+  3. Keep filling tier-3 toward 16 (next hunts: a free daily Baltic Dry / freight source; a
+     daily sovereign-spread source).
