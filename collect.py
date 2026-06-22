@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 
 from core import normalize
 from fetchers import (capital_premium, cn_flights, cnh_cny, credit_spread,
-                      flights, grid_frequency)
+                      flights, gdelt, grid_frequency)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
 # (airspace / financial system / capital controls / infrastructure), so several
@@ -31,7 +31,7 @@ from fetchers import (capital_premium, cn_flights, cnh_cny, credit_spread,
 # to build history until they earn promotion.
 LINES = [flights, credit_spread, capital_premium, grid_frequency,  # tier 1
          cnh_cny,                                                   # tier 1 (China)
-         cn_flights]                                                # tier 2 (watchlist)
+         cn_flights, gdelt]                                         # tier 2 (watchlist)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")
