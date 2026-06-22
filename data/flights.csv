@@ -1,2 +1,2 @@
 date,raw_value,z_score,trembling,direction,source_note
-2026-06-22,,,0,,OpenSky /states/all request failed: ConnectTimeout
+2026-06-22,,,0,,OpenSky /states/all request failed after retries: ConnectTimeout
