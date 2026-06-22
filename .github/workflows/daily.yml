@@ -2,7 +2,7 @@ name: tremor daily
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # daily at 06:00 UTC
+    - cron: "0 22 * * *"  # daily at 22:00 UTC = 06:00 China (after the onshore FX close)
   workflow_dispatch: {}    # allow manual runs
 
 permissions:
