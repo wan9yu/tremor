@@ -17,6 +17,7 @@ Source: OpenSky REST API /states/all.
     client_credentials grant.
 """
 import os
+import time
 
 import requests
 
@@ -66,12 +67,22 @@ def fetch_daily():
     if token:
         headers["Authorization"] = "Bearer " + token
         auth_mode = "oauth"
-    try:
-        r = requests.get(_STATES_URL, headers=headers, timeout=30)
-    except requests.RequestException as e:
+    # OpenSky's public endpoint is occasionally slow to connect from shared cloud
+    # IPs; retry a couple of times so one cold timeout doesn't blank the line.
+    r = None
+    last_err = None
+    for attempt in range(3):
+        try:
+            r = requests.get(_STATES_URL, headers=headers, timeout=30)
+            break
+        except requests.RequestException as e:
+            last_err = type(e).__name__
+            if attempt < 2:
+                time.sleep(3)
+    if r is None:
         return {
             "raw_value": None,
-            "source_note": f"OpenSky /states/all request failed: {type(e).__name__}",
+            "source_note": f"OpenSky /states/all request failed after retries: {last_err}",
         }
     if r.status_code != 200:
         return {
