@@ -31,6 +31,7 @@ LINE = "grid_frequency"
 LABEL = "Grid freq. max |dev| from 50Hz (mHz)"
 UNIT = "mHz"
 ANOMALY_DIRECTION = "up"  # a larger deviation is the alarming move
+TIER = 2  # demoted to watchlist (Nordic-only; slot went to the global trade line)
 
 _FINGRID_URL = "https://data.fingrid.fi/api/datasets/177/data"
 _STATNETT_URL = "https://driftsdata.statnett.no/restapi/Frequency/BySecond"

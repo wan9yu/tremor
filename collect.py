@@ -30,11 +30,10 @@ from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
 # (airspace / financial system / capital controls / infrastructure), so several
 # trembling at once means more than any one moving alone. Tier-2 lines ride along
 # to build history until they earn promotion.
-LINES = [flights, credit_spread, capital_premium, grid_frequency,  # tier 1
-         cnh_cny,                                                   # tier 1 (China)
-         cn_flights, gdelt,                                         # tier 2 (watchlist)
-         chokepoint, gnss, sofr_iorb, em_oas,                       # tier 2 (radar builds)
-         ports, net_outages]                                        # tier 2 (fills to 8)
+LINES = [flights, credit_spread, cnh_cny, chokepoint,   # tier 1 (primary, displayed)
+         capital_premium, grid_frequency,               # tier 2 (demoted from tier 1)
+         cn_flights, gdelt,                             # tier 2 (watchlist + contrast)
+         gnss, sofr_iorb, em_oas, ports, net_outages]   # tier 2 (radar builds)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")
