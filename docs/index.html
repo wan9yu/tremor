@@ -23,18 +23,19 @@
   .count .of{color:var(--muted);font-size:20px}
   .count .label{color:var(--muted);font-size:14px}
   .asof{color:var(--muted);font-size:13px;margin:0 0 22px}
-  .note{color:var(--muted);font-size:13px;border-left:2px solid var(--line);
-    padding:6px 0 6px 14px;margin:0 0 26px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:680px){.grid{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
-  .card h2{font-size:15px;margin:0 0 2px}
-  .card .domain{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px}
-  .card .now{font-size:22px;font-weight:600;margin:8px 0 2px}
-  .card .meta{color:var(--muted);font-size:12px;min-height:2.6em}
-  .card canvas{margin-top:8px}
-  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;
-    border:1px solid var(--line);color:var(--muted);margin-left:8px;vertical-align:middle}
+  .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 18px}
+  @media(max-width:680px){.strip{grid-template-columns:1fr 1fr}}
+  .inst{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+    border-left:3px solid var(--dot,#7f8696)}
+  .inst .domain{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+  .inst .now{font-size:20px;font-weight:600;margin:6px 0 1px}
+  .inst .now .u{font-size:12px;color:var(--muted);font-weight:400}
+  .inst .sub{color:var(--muted);font-size:11px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 16px 10px}
+  .panel h2{font-size:14px;margin:0;font-weight:600}
+  .panel .hint{color:var(--muted);font-size:12px;margin:2px 0 10px}
+  .pill{display:inline-block;font-size:10px;padding:1px 7px;border-radius:999px;
+    border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:middle}
   .pill.trembling{color:#fff;background:var(--alarm);border-color:var(--alarm)}
   footer{color:var(--muted);font-size:13px;margin-top:34px;border-top:1px solid var(--line);padding-top:18px}
   footer a{color:#9fb6ff}
@@ -55,14 +56,13 @@
   </div>
   <p class="asof" id="asof"></p>
 
-  <p class="note">
-    tremor measures a handful of <b>tension indicators</b> — guarded equilibria that something powerful normally holds still.
-    Each line is normalized on its own (robust z-score); they are never multiplied into a single doom score.
-    The only thing that matters is <b>resonance</b>: several independent instruments trembling at once.
-    A blank line means the source was unavailable that day — tremor leaves it empty rather than inventing a number.
-  </p>
+  <div class="strip" id="strip"></div>
 
-  <div class="grid" id="grid"></div>
+  <div class="panel">
+    <h2>Tension lines, normalized</h2>
+    <p class="hint">Each line on its own robust z-score, so different units share one axis. Dashed band = the ±3 trembling threshold.</p>
+    <canvas id="chart" height="150"></canvas>
+  </div>
 
   <footer>
     <p>tremor doesn't predict the end — nobody can. It only makes <b>now</b> readable. It's a seismograph, not a prophet,
@@ -74,10 +74,10 @@
 
 <script>
 const LINES = [
-  {id:"flights",         label:"Aircraft airborne",        domain:"Airspace",          unit:"aircraft", alarm:"down"},
-  {id:"credit_spread",   label:"US HY credit spread (OAS)", domain:"Financial system",  unit:"pp",       alarm:"up"},
-  {id:"capital_premium", label:"Korea BTC premium",        domain:"Capital controls",  unit:"%",        alarm:"up"},
-  {id:"grid_frequency",  label:"Grid freq. max |dev|",     domain:"Infrastructure",    unit:"mHz",      alarm:"up"},
+  {id:"flights",         label:"Aircraft airborne",        domain:"Airspace",          unit:"aircraft", alarm:"down", color:"#5aa9e6"},
+  {id:"credit_spread",   label:"US HY credit spread (OAS)", domain:"Financial system",  unit:"pp",       alarm:"up",   color:"#e0a83d"},
+  {id:"capital_premium", label:"Korea BTC premium",        domain:"Capital controls",  unit:"%",        alarm:"up",   color:"#c678dd"},
+  {id:"grid_frequency",  label:"Grid freq. max |dev|",     domain:"Infrastructure",    unit:"mHz",      alarm:"up",   color:"#3fb27f"},
 ];
 
 function splitCSVLine(line){
@@ -103,9 +103,33 @@ async function getCSV(path){
   catch(e){ return []; }
 }
 function countColor(n){ return n>=3?"var(--alarm)":n===2?"var(--orange)":n===1?"var(--amber)":"var(--calm)"; }
+function fmt(v){ const n=parseFloat(v); return Math.abs(n)>=1000?n.toLocaleString():(""+v); }
+
+// median of a numeric array (already free of nulls)
+function median(a){
+  if(!a.length) return null;
+  const b=[...a].sort((x,y)=>x-y), m=b.length>>1;
+  return b.length%2 ? b[m] : (b[m-1]+b[m])/2;
+}
+// Display normalization: robust z (median + MAD, MAD->stdev fallback), mirroring
+// the Python core so the on-page shape matches the committed z-scores. Used only
+// to render the comparable overlay; the official trembling flag comes from the CSV.
+function displayZ(values){
+  const present=values.filter(v=>v!=null && !isNaN(v));
+  const med=median(present);
+  if(med==null) return values.map(()=>null);
+  const mad=median(present.map(v=>Math.abs(v-med)));
+  let scale=mad>0 ? 1.4826*mad : 0;
+  if(scale===0){
+    const mean=present.reduce((a,b)=>a+b,0)/present.length;
+    scale=Math.sqrt(present.reduce((a,b)=>a+(b-mean)**2,0)/present.length);
+  }
+  return values.map(v=> (v==null||isNaN(v)) ? null : (scale>0 ? (v-med)/scale : 0));
+}
 
 async function main(){
   const summary = await getCSV("data/summary.csv");
+  const dates = summary.map(r=>r.date);
   const last = summary[summary.length-1];
   if(last){
     const n = parseInt(last.trembling_count||"0",10)||0;
@@ -116,40 +140,54 @@ async function main(){
     document.getElementById("asof").textContent = "as of "+last.date+" (UTC)";
   }
 
-  const grid=document.getElementById("grid");
+  const strip = document.getElementById("strip");
+  const datasets = [];
+
   for(const L of LINES){
-    const rows=(await getCSV("data/"+L.id+".csv")).filter(r=>r.raw_value!=="");
-    const cur = rows[rows.length-1];
-    const lastTremble = [...rows].reverse().find(r=>r.trembling==="1");
+    const rows = await getCSV("data/"+L.id+".csv");
+    const byDate = {}; rows.forEach(r=>byDate[r.date]=r);
+    // align each line to the authoritative date list from summary.csv
+    const raw = dates.map(d => { const r=byDate[d]; const v=r?parseFloat(r.raw_value):NaN; return isNaN(v)?null:v; });
+    const tremble = dates.map(d => byDate[d] && byDate[d].trembling==="1");
+    const z = displayZ(raw);
+    const cur = [...rows].reverse().find(r=>r.raw_value!=="");
     const isTrembling = cur && cur.trembling==="1";
 
-    const card=document.createElement("div"); card.className="card";
-    card.innerHTML =
+    // instrument chip
+    const chip=document.createElement("div"); chip.className="inst"; chip.style.setProperty("--dot",L.color);
+    chip.innerHTML =
       `<div class="domain">${L.domain}</div>
-       <h2>${L.label}${isTrembling?'<span class="pill trembling">trembling</span>':''}</h2>
-       <div class="now">${cur?fmt(cur.raw_value)+' <span style="font-size:13px;color:var(--muted)">'+L.unit+'</span>':'<span style="color:var(--muted);font-size:14px">no data</span>'}</div>
-       <div class="meta">${cur?cur.source_note:""}<br>
-         alarming when <b>${L.alarm}</b> · last trembled: ${lastTremble?lastTremble.date:"—"}</div>
-       <canvas height="120"></canvas>`;
-    grid.appendChild(card);
+       <div class="now">${cur?fmt(cur.raw_value)+' <span class="u">'+L.unit+'</span>':'<span class="u">no data</span>'}${isTrembling?'<span class="pill trembling">trembling</span>':''}</div>
+       <div class="sub">${L.label} · alarming when ${L.alarm}</div>`;
+    strip.appendChild(chip);
 
-    const labels=rows.map(r=>r.date), data=rows.map(r=>parseFloat(r.raw_value));
-    const pt=rows.map(r=>r.trembling==="1");
-    new Chart(card.querySelector("canvas"),{
-      type:"line",
-      data:{labels,datasets:[{
-        data, borderColor:"#7f8696", borderWidth:1.5, tension:.25,
-        pointRadius:pt.map(t=>t?4:0), pointBackgroundColor:pt.map(t=>t?"#d64545":"#7f8696"),
-        pointBorderColor:pt.map(t=>t?"#d64545":"#7f8696"), fill:false,
-      }]},
-      options:{responsive:true,animation:false,
-        plugins:{legend:{display:false},tooltip:{intersect:false,mode:"index"}},
-        scales:{x:{ticks:{color:"#8a909c",maxTicksLimit:5,font:{size:10}},grid:{color:"#20232b"}},
-                y:{ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#20232b"}}}}
+    // unified-chart dataset (one normalized line per instrument)
+    datasets.push({
+      label:L.label, data:z, borderColor:L.color, backgroundColor:L.color,
+      borderWidth:1.8, tension:.25, spanGaps:false,
+      pointRadius:tremble.map(t=>t?4:2), pointHoverRadius:5,
+      pointBackgroundColor:tremble.map(t=>t?"#d64545":L.color),
+      pointBorderColor:tremble.map(t=>t?"#d64545":L.color),
     });
   }
+
+  // ±3 trembling threshold as dashed reference lines
+  const thr = v => ({label:v>0?"trembling +3":"trembling -3", data:dates.map(()=>v),
+    borderColor:"rgba(214,69,69,.55)", borderWidth:1, borderDash:[5,4],
+    pointRadius:0, fill:false, tension:0});
+
+  new Chart(document.getElementById("chart"),{
+    type:"line",
+    data:{ labels:dates, datasets:[...datasets, thr(3), thr(-3)] },
+    options:{ responsive:true, animation:false, interaction:{mode:"index",intersect:false},
+      plugins:{ legend:{labels:{color:"#c7ccd6",boxWidth:14,font:{size:11},
+                  filter:i=>!i.text.startsWith("trembling")}},
+                tooltip:{callbacks:{label:c=> c.parsed.y==null?null:`${c.dataset.label}: z=${c.parsed.y.toFixed(2)}`}} },
+      scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
+               y:{title:{display:true,text:"robust z-score",color:"#8a909c",font:{size:11}},
+                  ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"}} } }
+  });
 }
-function fmt(v){ const n=parseFloat(v); return Math.abs(n)>=1000?n.toLocaleString():(""+v); }
 main();
 </script>
 </body>
