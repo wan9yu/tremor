@@ -1,2 +1,2 @@
 date,raw_value,z_score,trembling,direction,source_note
-2026-06-22,5969,,0,,OpenSky /states/all airborne count (anonymous); 6746 states total
+2026-06-22,,,0,,OpenSky /states/all request failed: ConnectTimeout
