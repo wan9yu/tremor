@@ -56,40 +56,37 @@ Incoming to tier-1: **chokepoint_transit** (trade, global 3/3/3) — must build 
 and accrue history first. The two demotions land once it is online so tier-1 never drops
 below 4.
 
-## Tier 2 — watchlist  (6 / 8)
+## Tier 2 — watchlist  (8 / 8 · full)
 
-Collected daily by CI, building history; not shown or counted. The four global lines
+Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
 are tier-1 challengers banking evidence.
 
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | note |
 |---|---|:--:|:--:|:--:|:--:|:--:|---|
-| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | built R3; 28 straits, ~1810 transits/day (Hormuz blockaded) — tier-1 bound |
-| gnss_interference | navigation (global) | 3 | 3 | 3 | — | — | built R3; GPS-jam share ~0.43% now — new domain, fingerprints EW |
-| sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | built R3; SOFR−IORB ~−2bps (calm) — keyless FRED |
-| em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | built R3; EM corp OAS ~1.38pp — orthogonal to US HY |
+| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810 transits/day (Hormuz blockaded) — tier-1 bound |
+| port_throughput | trade (global) | 3 | 3 | 3 | — | — | ~4729 global port calls/day (2065 ports) |
+| gnss_interference | navigation (global) | 3 | 3 | 3 | — | — | GPS-jam share ~0.43% — new domain, fingerprints EW |
+| sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | SOFR−IORB ~−2bps (calm) — keyless FRED |
+| em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | EM corp OAS ~1.38pp — orthogonal to US HY |
+| net_outages | infrastructure (global) | 2 | 2 | 3 | — | — | ~3 countries in outage now (IODA) — breadth of disruption |
 | cn_flights | airspace (China) | 3 | 3 | 1 | — | — | sparse ADS-B coverage; observing if signal survives |
 | gdelt | attention (global) | 1 | 0 | 3 | — | — | no guard → can never reach tier-1; "felt vs real" contrast only |
 
-## Tier 3 — candidate ideas  (9 / 16)
+## Tier 3 — candidate ideas  (7 / 16)
 
 All clear both gates (real guard; daily-persistent or daily-aggregatable). Sorted by strength.
-Data sources marked ✅ were live-verified keyless+daily. (Four 3/3/3 lines were promoted to
-tier-2 and built in round 3 — see Tier 2.)
+Data sources marked ✅ were live-verified keyless+daily. (Tier 2 is now full at 8/8, so these
+wait for a tier-2 slot to open — i.e. a watchlist line graduating to tier-1 or washing out.)
 
 | candidate | domain | hypothesis (guard → leak) | L | G | R | data source (free, daily) |
 |---|---|---|:--:|:--:|:--:|---|
-| port_throughput | trade | ports + economies keep cargo moving → a port's sudden silence leaks strike, war, sanctions, blockade | 3 | 3 | 3 | ✅ IMF PortWatch `Daily_Ports_Data` (2065 ports) |
 | euro_fragmentation | financial (EU) | the ECB defends cohesion → a widening periphery-core 10y spread leaks euro-breakup stress | 3 | 3 | 2 | ✅ ECB SDMX API |
 | hkd_aggr_balance | capital (HK) | HKMA's currency board defends the peg → a collapse in the aggregate balance leaks capital flight | 3 | 3 | 2 | ✅ HKMA Open API |
 | entsog_gas_flow | energy (EU) | pipelines + economies keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | 3 | 3 | 2 | ✅ ENTSOG API |
-| net_outages | infrastructure | ISPs / states defend routing → an outage spike leaks censorship, war, cable cuts | 2 | 2 | 3 | ✅ IODA (Georgia Tech) |
 | bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | 2 | 2 | 3 | ✅ RIPEstat (RIPE NCC) |
 | fx_parallel_premium | capital (multi) | central banks defend the official rate → a black-market / crypto premium leaks capital flight (AR, VE, NG, …) | 2 | 3 | 2 | ✅ CriptoYa / dolarapi (keyless) |
 | euro_hy_spread | financial (EU) | ECB + banks press EU spreads down → a spike leaks European credit fear | 3 | 2 | 2 | ✅ FRED keyless `BAMLHE00EHYIOAS` |
 | cp_funding_spread | financial | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | 2 | 2 | 2 | ✅ FRED keyless `CPFF` |
-
-Next build targets (toward tier-2 = 8): `port_throughput` (trade, 3/3/3) and one infrastructure
-line (`net_outages` or `bgp_instability`).
 
 ### Rejected
 | candidate | reason |
@@ -200,3 +197,12 @@ line (`net_outages` or `bgp_instability`).
 - **Moves applied:** tier-3 → tier-2 for the four (built). No tier-1 change.
 - **Next:** they bank history; after ~20 days, Orthogonality decides which challenges into tier-1
   (chokepoint_breadth is the slot-3 incumbent-elect, displacing Korea/Nordic).
+
+### Round 3.3 — 2026-06-22 (tier-2 filled to 8/8)
+- **Built two more tier-2 lines** to fill the watchlist: `port_throughput` (IMF PortWatch global
+  port calls, ~4729/day) and `net_outages` (IODA, ~3 countries currently in outage). Extracted a
+  shared `core/portwatch.py` so chokepoint + ports don't duplicate the ArcGIS query.
+- **Tier 2 is now full: 8/8.** Funnel snapshot — tier-1 5 (target 4), tier-2 8/8, tier-3 7/16.
+- **Moves applied:** tier-3 → tier-2 for the two. No tier-1 change.
+- **Tier-2 is full**, so further tier-3 builds wait for a slot to open (a watchlist line graduating
+  to tier-1 or washing out on poor Reliability/Responsiveness once history accrues).
