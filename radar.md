@@ -56,37 +56,40 @@ Incoming to tier-1: **chokepoint_transit** (trade, global 3/3/3) — must build 
 and accrue history first. The two demotions land once it is online so tier-1 never drops
 below 4.
 
-## Tier 2 — watchlist  (2 / 8)
+## Tier 2 — watchlist  (6 / 8)
+
+Collected daily by CI, building history; not shown or counted. The four global lines
+are tier-1 challengers banking evidence.
 
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | note |
 |---|---|:--:|:--:|:--:|:--:|:--:|---|
+| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | built R3; 28 straits, ~1810 transits/day (Hormuz blockaded) — tier-1 bound |
+| gnss_interference | navigation (global) | 3 | 3 | 3 | — | — | built R3; GPS-jam share ~0.43% now — new domain, fingerprints EW |
+| sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | built R3; SOFR−IORB ~−2bps (calm) — keyless FRED |
+| em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | built R3; EM corp OAS ~1.38pp — orthogonal to US HY |
 | cn_flights | airspace (China) | 3 | 3 | 1 | — | — | sparse ADS-B coverage; observing if signal survives |
 | gdelt | attention (global) | 1 | 0 | 3 | — | — | no guard → can never reach tier-1; "felt vs real" contrast only |
 
-## Tier 3 — candidate ideas  (13 / 16 · near target)
+## Tier 3 — candidate ideas  (9 / 16)
 
 All clear both gates (real guard; daily-persistent or daily-aggregatable). Sorted by strength.
-Data sources marked ✅ were live-verified keyless+daily.
+Data sources marked ✅ were live-verified keyless+daily. (Four 3/3/3 lines were promoted to
+tier-2 and built in round 3 — see Tier 2.)
 
 | candidate | domain | hypothesis (guard → leak) | L | G | R | data source (free, daily) |
 |---|---|---|:--:|:--:|:--:|---|
-| chokepoint_breadth | trade | littoral states + trade economics guard EACH of 28 chokepoints → a drop fingerprints invasion/blockade/attack at that strait | 3 | 3 | 3 | ✅ IMF PortWatch `Daily_Chokepoints_Data` (Hormuz now ~2/day under blockade, Taiwan Strait 249) |
 | port_throughput | trade | ports + economies keep cargo moving → a port's sudden silence leaks strike, war, sanctions, blockade | 3 | 3 | 3 | ✅ IMF PortWatch `Daily_Ports_Data` (2065 ports) |
-| sofr_iorb_spread | financial | the Fed defends its rate corridor → SOFR rising above the IORB ceiling leaks repo seizure (Sept 2019) | 3 | 3 | 3 | ✅ FRED keyless `SOFR`−`IORB` (fredgraph.csv) |
-| gnss_interference | navigation / PNT | aviation + military guard usable GPS → a jump in aircraft reporting bad GPS leaks jamming / electronic warfare / war fronts | 3 | 3 | 3 | ✅ GPSJam daily CSV (good/bad aircraft per hex) |
-| em_corp_oas | financial (EM) | EM sovereigns defend dollar access (reserves, IMF, hikes) → an EM corporate OAS spike leaks dollar-shortage / capital flight | 3 | 2 | 3 | ✅ FRED keyless `BAMLEMCBPIOAS` |
-| net_outages | infrastructure | ISPs / states defend routing → an outage spike leaks censorship, war, cable cuts | 2 | 2 | 3 | ✅ IODA (Georgia Tech) |
-| bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | 2 | 2 | 3 | ✅ RIPEstat (RIPE NCC) |
 | euro_fragmentation | financial (EU) | the ECB defends cohesion → a widening periphery-core 10y spread leaks euro-breakup stress | 3 | 3 | 2 | ✅ ECB SDMX API |
 | hkd_aggr_balance | capital (HK) | HKMA's currency board defends the peg → a collapse in the aggregate balance leaks capital flight | 3 | 3 | 2 | ✅ HKMA Open API |
 | entsog_gas_flow | energy (EU) | pipelines + economies keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | 3 | 3 | 2 | ✅ ENTSOG API |
+| net_outages | infrastructure | ISPs / states defend routing → an outage spike leaks censorship, war, cable cuts | 2 | 2 | 3 | ✅ IODA (Georgia Tech) |
+| bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | 2 | 2 | 3 | ✅ RIPEstat (RIPE NCC) |
 | fx_parallel_premium | capital (multi) | central banks defend the official rate → a black-market / crypto premium leaks capital flight (AR, VE, NG, …) | 2 | 3 | 2 | ✅ CriptoYa / dolarapi (keyless) |
 | euro_hy_spread | financial (EU) | ECB + banks press EU spreads down → a spike leaks European credit fear | 3 | 2 | 2 | ✅ FRED keyless `BAMLHE00EHYIOAS` |
 | cp_funding_spread | financial | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | 2 | 2 | 2 | ✅ FRED keyless `CPFF` |
 
-Standouts: the four global **3/3/3** lines — `chokepoint_breadth`, `port_throughput`,
-`sofr_iorb_spread`, `gnss_interference` — are tier-1-grade and span four distinct domains
-(trade, trade, financial-plumbing, navigation). They are the top build targets.
+Next build targets (toward tier-2 = 8): `port_throughput` (trade, 3/3/3) and one infrastructure
+line (`net_outages` or `bgp_instability`).
 
 ### Rejected
 | candidate | reason |
@@ -186,3 +189,14 @@ Standouts: the four global **3/3/3** lines — `chokepoint_breadth`, `port_throu
   execute when `chokepoint_breadth` is built and online.
 - **Proposed for next round:** build the four global 3/3/3 lines as tier-2 to bank history —
   priority `chokepoint_breadth` + `sofr_iorb_spread`, then `gnss_interference` + `port_throughput`.
+
+### Round 3.2 — 2026-06-22 (build)
+- **Built four global tier-2 watchlist lines** (user: keep the dashboard tier-1-only, but collect
+  tier-1 AND tier-2 data continuously): `chokepoint_breadth` (IMF PortWatch), `gnss_interference`
+  (GPSJam), `sofr_iorb_spread` and `em_corp_oas` (keyless FRED via a new `core/fred.py` helper).
+  All four span distinct domains (trade / navigation / financial-plumbing / EM-financial).
+- **Live values on build day:** chokepoint ~1810 transits/day; GPS-jam share ~0.43%; SOFR−IORB
+  ~−2 bps (calm); EM corp OAS ~1.38pp (calm). Tier 2 is now 6/8; dashboard unchanged (5 tier-1).
+- **Moves applied:** tier-3 → tier-2 for the four (built). No tier-1 change.
+- **Next:** they bank history; after ~20 days, Orthogonality decides which challenges into tier-1
+  (chokepoint_breadth is the slot-3 incumbent-elect, displacing Korea/Nordic).
