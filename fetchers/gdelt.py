@@ -1,61 +1,72 @@
-"""GDELT global crisis-coverage share — airspace-of-attention WATCHLIST (tier 2).
+"""GDELT global conflict-event share — "felt vs real" WATCHLIST (tier 2).
 
-NOT a tension indicator, by the project's own rule: news coverage has no guard,
-spikes are cheap, and raw counts inflate as media densifies. So it is kept on the
-watchlist — scraped daily to build history and observed, never counted in the
-trembling resonance. Its natural eventual role is the "felt vs real" contrast:
-how disordered the world is *reported* to be, set against the objective lines.
+NOT a tension indicator, by the project's own rule: event tallies have no guard
+and inflate as media coverage densifies. So it stays on the watchlist as the
+"felt vs real" contrast — how much conflict the world's news is reporting, set
+against the objective lines; the gap is the anxiety premium of the age.
 
-Reading: the share of all global news coverage matching a fixed crisis/conflict
-query, in percent (GDELT timelinevol — a fraction, which partly resists the
-raw-count inflation trap). A rising share is the notable direction.
+Reading: the share of GDELT events coded as MATERIAL CONFLICT (QuadClass 4 —
+assault, fight, mass violence) in the latest 15-minute global event file, in
+percent. A rising share is the notable direction.
 
-Source: GDELT DOC 2.0 API. Free, keyless, but rate-limited (~1 request / 5s),
-which is fine for a once-daily scrape.
+Source: GDELT 2.0 raw event files at data.gdeltproject.org — static downloads,
+no API and no rate limit (the GDELT DOC API is unreliable). The lastupdate
+pointer gives the newest export.CSV.zip; we read its events and take the share.
 """
+import io
+import zipfile
+
 import requests
 
 LINE = "gdelt"
-LABEL = "Global crisis-coverage share (GDELT)"
+LABEL = "Global conflict-event share (GDELT)"
 UNIT = "%"
 ANOMALY_DIRECTION = "up"
-TIER = 2  # watchlist — collected daily, not displayed, not counted
+TIER = 2
 
-_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
-_QUERY = "(crisis OR war OR conflict OR protest OR sanctions OR collapse)"
+_LASTUPDATE = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
 _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_QUADCLASS_COL = 29  # 0-based column in the GDELT 2.0 event row; "4" == material conflict
 
 
 def fetch_daily():
-    """Return {"raw_value": float | None, "source_note": str}."""
     try:
-        r = requests.get(
-            _URL,
-            timeout=30,
-            headers=_HEADERS,
-            params={"query": _QUERY, "mode": "timelinevol",
-                    "timespan": "5d", "format": "json"},
-        )
+        lu = requests.get(_LASTUPDATE, headers=_HEADERS, timeout=20)
     except requests.RequestException as e:
-        return {"raw_value": None, "source_note": f"GDELT request failed: {type(e).__name__}"}
-    if r.status_code != 200:
-        return {"raw_value": None, "source_note": f"GDELT HTTP {r.status_code}"}
+        return {"raw_value": None, "source_note": f"GDELT lastupdate failed: {type(e).__name__}"}
+    if lu.status_code != 200:
+        return {"raw_value": None, "source_note": f"GDELT lastupdate HTTP {lu.status_code}"}
+    url = None
+    for line in lu.text.strip().splitlines():
+        parts = line.split()
+        if len(parts) >= 3 and parts[2].endswith("export.CSV.zip"):
+            url = parts[2]
+            break
+    if not url:
+        return {"raw_value": None, "source_note": "GDELT export file not listed"}
     try:
-        timeline = r.json().get("timeline") or []
-    except ValueError:
-        return {"raw_value": None, "source_note": "GDELT returned a non-JSON body"}
-    if not timeline:
-        return {"raw_value": None, "source_note": "GDELT returned no timeline"}
-    points = timeline[0].get("data") or []
-    # Most recent daily point with a usable value.
-    for point in reversed(points):
-        value = point.get("value")
-        if value is not None:
-            try:
-                return {
-                    "raw_value": round(float(value), 4),
-                    "source_note": f"GDELT crisis-coverage share {point.get('date')}",
-                }
-            except (TypeError, ValueError):
-                continue
-    return {"raw_value": None, "source_note": "GDELT returned no usable point"}
+        z = requests.get(url, headers=_HEADERS, timeout=40)
+    except requests.RequestException as e:
+        return {"raw_value": None, "source_note": f"GDELT download failed: {type(e).__name__}"}
+    if z.status_code != 200:
+        return {"raw_value": None, "source_note": f"GDELT download HTTP {z.status_code}"}
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(z.content))
+        rows = zf.read(zf.namelist()[0]).decode("utf-8", "replace").splitlines()
+    except (zipfile.BadZipFile, IndexError, KeyError):
+        return {"raw_value": None, "source_note": "GDELT file unreadable"}
+
+    total = conflict = 0
+    for row in rows:
+        cols = row.split("\t")
+        if len(cols) > _QUADCLASS_COL:
+            total += 1
+            if cols[_QUADCLASS_COL] == "4":
+                conflict += 1
+    if total == 0:
+        return {"raw_value": None, "source_note": "GDELT file had no usable events"}
+    stamp = url.split("/")[-1][:14]  # YYYYMMDDHHMMSS of the file
+    return {
+        "raw_value": round(conflict / total * 100.0, 3),
+        "source_note": f"GDELT material-conflict share {conflict}/{total} events @ {stamp}",
+    }
