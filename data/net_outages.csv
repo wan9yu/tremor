@@ -13,3 +13,4 @@ date,raw_value,z_score,trembling,direction,source_note
 2026-07-03,2,-0.674,0,down,IODA 2 countries with outage events (24h)
 2026-07-04,0,-3.372,1,down,IODA 0 countries with outage events (24h)
 2026-07-05,1,-0.674,0,down,IODA 1 countries with outage events (24h)
+2026-07-06,2,0.000,0,flat,IODA 2 countries with outage events (24h)
