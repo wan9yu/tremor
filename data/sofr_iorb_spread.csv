@@ -14,3 +14,4 @@ date,raw_value,z_score,trembling,direction,source_note
 2026-07-04,1,5.396,1,up,FRED SOFR 3.66 (2026-07-01) − IORB 3.65
 2026-07-05,1,2.698,0,up,FRED SOFR 3.66 (2026-07-01) − IORB 3.65
 2026-07-06,1,2.023,0,up,FRED SOFR 3.66 (2026-07-01) − IORB 3.65
+2026-07-07,-1,0.000,0,flat,FRED SOFR 3.64 (2026-07-02) − IORB 3.65
