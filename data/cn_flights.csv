@@ -15,3 +15,4 @@ date,raw_value,z_score,trembling,direction,source_note
 2026-07-05,72,-0.202,0,down,ADS-B airborne over 3 China metros via airplanes.live
 2026-07-06,60,-0.958,0,down,ADS-B airborne over 3 China metros via airplanes.live
 2026-07-07,76,0.225,0,up,"ADS-B airborne over 3 China metros via adsb.fi, adsb.lol"
+2026-07-08,67,-0.461,0,down,ADS-B airborne over 3 China metros via airplanes.live
