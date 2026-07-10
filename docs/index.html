@@ -252,7 +252,7 @@ const T = {
     countQ:"what is this? ›",
     asof:d=>"as of "+d+" (China time)",
     panelTitle:"Tension lines, normalized",
-    panelHint:"Each line on its own robust z-score, so different units share one axis. Dashed band = the ±3 trembling threshold.",
+    panelHint:"Each line's recorded robust z-score, so different units share one axis. Dashed band = the ±3 trembling threshold; gaps = warming up or no new observation.",
     statusOk:"All instruments reporting.",
     awaiting:d=>" Awaiting today's collection (last: "+d+").",
     warnH:n=>n+" instrument"+(n>1?"s":"")+" dark today.",
@@ -281,7 +281,7 @@ const T = {
     countQ:"这是什么？›",
     asof:d=>"截至 "+d+"（北京时间）",
     panelTitle:"张力线（已归一化）",
-    panelHint:"每根线各用稳健 z 分数，不同单位因此能共用一根纵轴。虚线带 = ±3 颤抖阈值。",
+    panelHint:"画的是每根线记录在案的稳健 z 分数，不同单位因此能共用一根纵轴。虚线带 = ±3 颤抖阈值；空缺 = 校准中或无新观测。",
     statusOk:"全部仪器在正常上报。",
     awaiting:d=>"正在等待今天的采集（最近："+d+"）。",
     warnH:n=>"今天有 "+n+" 台仪器无数据。",
@@ -321,16 +321,16 @@ function parseCSV(text){
 }
 async function getCSV(path){ try{ const r=await fetch(path,{cache:"no-store"}); if(!r.ok) return []; return parseCSV(await r.text()); }catch(e){ return []; } }
 
-// ---------- normalization for display ----------
-function median(a){ if(!a.length) return null; const b=[...a].sort((x,y)=>x-y), m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; }
-function displayZ(values){
-  const present=values.filter(v=>v!=null && !isNaN(v));
-  const med=median(present); if(med==null) return values.map(()=>null);
-  const mad=median(present.map(v=>Math.abs(v-med)));
-  let scale=mad>0?1.4826*mad:0;
-  if(scale===0){ const mean=present.reduce((a,b)=>a+b,0)/present.length;
-    scale=Math.sqrt(present.reduce((a,b)=>a+(b-mean)**2,0)/present.length); }
-  return values.map(v=>(v==null||isNaN(v))?null:(scale>0?(v-med)/scale:0));
+// wrap a long annotation into tooltip-sized lines (Chart.js renders string arrays as multiline)
+function wrapNote(s,width=48,maxLines=4){
+  const words=s.split(" "), lines=[]; let cur="";
+  for(const w of words){
+    if((cur+" "+w).trim().length>width){ lines.push(cur.trim()); cur=w;
+      if(lines.length===maxLines){ lines[maxLines-1]+=" …"; return lines; } }
+    else cur+=" "+w;
+  }
+  if(cur.trim()) lines.push(cur.trim());
+  return lines;
 }
 function fmt(v){ const n=parseFloat(v); return Math.abs(n)>=1000?n.toLocaleString():(""+v); }
 function countColor(n){ return n>=3?"var(--alarm)":n===2?"var(--orange)":n===1?"var(--amber)":"var(--calm)"; }
@@ -415,12 +415,14 @@ function render(){
   const datasets=[]; const darkNames=[];
   for(const L of TIER1){
     const rows=lines[L.id]||[]; const byDate={}; rows.forEach(r=>byDate[r.date]=r);
-    const raw=dates.map(d=>{ const r=byDate[d]; const v=r?parseFloat(r.raw_value):NaN; return isNaN(v)?null:v; });
     // per-date tremble state: "alarm" reads red, "benign" (guard reasserting) reads calm
     const tstate=dates.map(d=>{const r=byDate[d];
       return r&&r.trembling==="1"?(r.direction===L.alarm?"alarm":"benign"):null;});
     const ptColor=tstate.map(t=>t==="alarm"?"#d64545":t==="benign"?"#3fb27f":L.color);
-    const z=displayZ(raw);
+    // plot the RECORDED z_score — the instrument's actual verdicts — so the ±3
+    // band and the marked trembles line up exactly; blank z (warm-up, stale
+    // observation) is an honest gap the line spans
+    const z=dates.map(d=>{ const r=byDate[d]; const v=r?parseFloat(r.z_score):NaN; return isNaN(v)?null:v; });
     const todayRow=last?byDate[last.date]:null;
     const hasToday=todayRow&&todayRow.raw_value!=="";
     const lastGood=[...rows].reverse().find(r=>r.raw_value!=="");
@@ -453,7 +455,7 @@ function render(){
     strip.appendChild(chip);
 
     datasets.push({ label:L.label[lang], _lineId:L.id, data:z, borderColor:L.color, backgroundColor:L.color,
-      borderWidth:1.8, tension:.25, spanGaps:false,
+      borderWidth:1.8, tension:.25, spanGaps:true,
       pointRadius:tstate.map(t=>t?4:2), pointHoverRadius:5,
       pointBackgroundColor:ptColor, pointBorderColor:ptColor });
   }
@@ -480,7 +482,7 @@ function render(){
         tooltip:{ filter:item=>!item.dataset._threshold,
           callbacks:{label:c=>c.parsed.y==null?null:`${c.dataset.label}: z=${c.parsed.y.toFixed(2)}`,
             afterLabel:c=>{ const a=c.dataset._lineId&&annoOn(c.dataset._lineId,c.label);
-              return a?("• "+a.note.slice(0,120)+(a.note.length>120?"…":"")):null; }}} },
+              return a?wrapNote("• "+a.note):null; }}} },
       scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
         y:{title:{display:true,text:lang==="zh"?"稳健 z 分数":"robust z-score",color:"#8a909c",font:{size:11}},
            ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"}} } }
