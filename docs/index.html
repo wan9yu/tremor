@@ -55,6 +55,10 @@
   .pill{display:inline-block;font-size:10px;padding:1px 7px;border-radius:999px;
     border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:middle}
   .pill.trembling{color:#fff;background:var(--alarm);border-color:var(--alarm)}
+  .pill.benign{color:#0e0f12;background:var(--calm);border-color:var(--calm)}
+  .pill.calib{color:var(--muted);border-color:var(--line);background:transparent}
+  .modal-card .annoh{font-size:13px;margin:16px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .modal-card .anno{font-size:13px;line-height:1.5;margin:0 0 8px;color:#c7ccd6}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 16px 10px}
   .panel h2{font-size:14px;margin:0;font-weight:600}
   .panel .hint{color:var(--muted);font-size:12px;margin:2px 0 10px}
@@ -233,7 +237,7 @@ const LINES = [
     unit:{en:"countries",zh:"国"},
     domain:{en:"Infrastructure (global)",zh:"基础设施（全球）"},
     label:{en:"Countries with internet outages",zh:"断网国家数"},
-    source:{en:"IODA (Georgia Tech)",zh:"IODA（佐治亚理工）"},
+    source:{en:"IODA (Georgia Tech) — ping-slash24 only",zh:"IODA（佐治亚理工）— 仅 ping-slash24 源"},
     explain:{
       en:"ISPs and states defend a country's internet connectivity as critical infrastructure. When a country goes dark, a larger force overwhelmed that — a censorship shutdown, a war, a major cable cut, a grid failure. Counting how many countries are in outage at once turns local incidents into a global breadth-of-disruption signal. Outages persist hours–days, so daily sampling is honest.",
       zh:"运营商和政府把一国的互联网连通性当作关键基础设施来守护。当一个国家陷入黑暗，就是有更大的力量压垮了它——审查式断网、战争、大型海缆断裂、电网崩溃。数有多少国家同时断网，就把局部事件变成了全球的「失序广度」信号。断网持续数小时到数天，所以日频采样是诚实的。"} },
@@ -260,6 +264,8 @@ const T = {
     disruptH:"System disruption.",
     disruptB:(d,g)=>" No successful collection since "+d+" ("+g+" days ago). The recording apparatus itself may be down — and a prolonged silence is its own kind of tremor.",
     nodata:"NO DATA", more:"tap to learn what it measures ›",
+    benignShift:"benign shift", calibrating:"calibrating",
+    annoTitle:"Recent trembles, attributed",
     alarmingWhen:dir=>"alarming when "+dir, dirUp:"up", dirDown:"down",
     last:(v,u,d)=>" · last: "+v+" "+u+" on "+d, noCollect:"no collection this day",
     source:"Source", alarmTag:dir=>"alarming when "+dir,
@@ -287,6 +293,8 @@ const T = {
     disruptH:"系统紊乱。",
     disruptB:(d,g)=>"自 "+d+" 起已 "+g+" 天没有成功采集。记录装置本身可能已经瘫痪——而长久的沉默，本身就是一种颤抖。",
     nodata:"无数据", more:"点击了解它测的是什么 ›",
+    benignShift:"良性异动", calibrating:"校准中",
+    annoTitle:"近期颤抖及归因",
     alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下跌",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
     source:"数据来源", alarmTag:dir=>dir+"时为异常",
@@ -339,10 +347,15 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
 
 function lineModal(L,lang){
   const dir = L.alarm==="down"?T[lang].dirDown:T[lang].dirUp;
+  const annos=annosFor(L.id).slice(-3).reverse();
+  const annoHtml=annos.length
+    ? `<h4 class="annoh">${T[lang].annoTitle}</h4>`+annos.map(a=>
+        `<p class="anno"><b>${a.date}</b> <span class="tag2">${a.verdict}</span> ${a.note}</p>`).join("")
+    : "";
   return `<div class="mdomain">${L.domain[lang]}</div>
     <h3>${L.label[lang]}</h3>
     <div class="tags"><span class="tag2">${T[lang].alarmTag(dir)}</span><span class="tag2">${T[lang].source}: ${L.source[lang]}</span></div>
-    <p>${L.explain[lang]}</p>`;
+    <p>${L.explain[lang]}</p>${annoHtml}`;
 }
 function resoModal(lang){ return `<h3>${T[lang].resoTitle}</h3><p>${T[lang].resoBody}</p>`; }
 
@@ -352,7 +365,18 @@ async function load(){
   const summary=await getCSV("data/summary.csv");
   const lines={};
   for(const L of LINES) lines[L.id]=await getCSV("data/"+L.id+".csv");
-  DATA={summary, dates:summary.map(r=>r.date), lines};
+  const annotations=await getCSV("data/annotations.csv");
+  DATA={summary, dates:summary.map(r=>r.date), lines, annotations};
+}
+// annotation lookup: notes live in data/annotations.csv (date,line,verdict,note)
+function annoOn(lineId,date){ return (DATA.annotations||[]).find(a=>a.line===lineId&&a.date===date); }
+function annosFor(lineId){ return (DATA.annotations||[]).filter(a=>a.line===lineId&&a.verdict!=="method"); }
+// count unique observations (dedup by obs_date; rows without obs_date all count)
+function uniqueObs(rows){
+  const seen=new Set(); let n=0;
+  for(const r of rows){ if(r.raw_value==="")continue;
+    const o=r.obs_date||""; if(o){ if(seen.has(o))continue; seen.add(o); } n++; }
+  return n;
 }
 
 function render(){
@@ -388,19 +412,27 @@ function render(){
   for(const L of TIER1){
     const rows=lines[L.id]||[]; const byDate={}; rows.forEach(r=>byDate[r.date]=r);
     const raw=dates.map(d=>{ const r=byDate[d]; const v=r?parseFloat(r.raw_value):NaN; return isNaN(v)?null:v; });
-    const tremble=dates.map(d=>byDate[d]&&byDate[d].trembling==="1");
+    // alarm-direction trembles read red; benign-direction (guard reasserting) read calm
+    const alarmT=dates.map(d=>{const r=byDate[d]; return r&&r.trembling==="1"&&r.direction===L.alarm;});
+    const benignT=dates.map(d=>{const r=byDate[d]; return r&&r.trembling==="1"&&r.direction!==L.alarm;});
     const z=displayZ(raw);
     const todayRow=last?byDate[last.date]:null;
     const hasToday=todayRow&&todayRow.raw_value!=="";
     const lastGood=[...rows].reverse().find(r=>r.raw_value!=="");
-    const isTrembling=hasToday&&todayRow.trembling==="1";
     const isDark=!hasToday; if(isDark) darkNames.push(L.domain[lang]);
+    const calibrating=uniqueObs(rows)<30;
 
     const chip=document.createElement("div");
     chip.className="inst"+(isDark?" dark":""); chip.style.setProperty("--dot",L.color);
     let nowHtml, subHtml;
     if(hasToday){
-      nowHtml=`${fmt(todayRow.raw_value)} <span class="u">${L.unit[lang]}</span>`+(isTrembling?`<span class="pill trembling">${lang==="zh"?"颤抖":"trembling"}</span>`:"");
+      let pill="";
+      if(todayRow.trembling==="1")
+        pill = todayRow.direction===L.alarm
+          ? `<span class="pill trembling">${lang==="zh"?"颤抖":"trembling"}</span>`
+          : `<span class="pill benign">${T[lang].benignShift}</span>`;
+      else if(calibrating) pill=`<span class="pill calib">${T[lang].calibrating}</span>`;
+      nowHtml=`${fmt(todayRow.raw_value)} <span class="u">${L.unit[lang]}</span>`+pill;
       subHtml=`${L.label[lang]} · ${T[lang].alarmingWhen(L.alarm==="down"?T[lang].dirDown:T[lang].dirUp)}`;
     } else {
       nowHtml=`<span class="nodata">${T[lang].nodata}</span>`;
@@ -414,11 +446,11 @@ function render(){
     chip.onclick=()=>openModal(lineModal(L,lang));
     strip.appendChild(chip);
 
-    datasets.push({ label:L.label[lang], data:z, borderColor:L.color, backgroundColor:L.color,
+    datasets.push({ label:L.label[lang], _lineId:L.id, data:z, borderColor:L.color, backgroundColor:L.color,
       borderWidth:1.8, tension:.25, spanGaps:false,
-      pointRadius:tremble.map(t=>t?4:2), pointHoverRadius:5,
-      pointBackgroundColor:tremble.map(t=>t?"#d64545":L.color),
-      pointBorderColor:tremble.map(t=>t?"#d64545":L.color) });
+      pointRadius:dates.map((d,i)=>alarmT[i]||benignT[i]?4:2), pointHoverRadius:5,
+      pointBackgroundColor:dates.map((d,i)=>alarmT[i]?"#d64545":benignT[i]?"#3fb27f":L.color),
+      pointBorderColor:dates.map((d,i)=>alarmT[i]?"#d64545":benignT[i]?"#3fb27f":L.color) });
   }
 
   // system status banner
@@ -441,7 +473,9 @@ function render(){
       plugins:{ legend:{labels:{color:"#c7ccd6",boxWidth:14,font:{size:11},
                   filter:(item,data)=>!data.datasets[item.datasetIndex]._threshold}},
         tooltip:{ filter:item=>!item.dataset._threshold,
-          callbacks:{label:c=>c.parsed.y==null?null:`${c.dataset.label}: z=${c.parsed.y.toFixed(2)}`}} },
+          callbacks:{label:c=>c.parsed.y==null?null:`${c.dataset.label}: z=${c.parsed.y.toFixed(2)}`,
+            afterLabel:c=>{ const a=c.dataset._lineId&&annoOn(c.dataset._lineId,c.label);
+              return a?("• "+a.note.slice(0,120)+(a.note.length>120?"…":"")):null; }}} },
       scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
         y:{title:{display:true,text:lang==="zh"?"稳健 z 分数":"robust z-score",color:"#8a909c",font:{size:11}},
            ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"}} } }

@@ -7,9 +7,10 @@ COUNT of how many lines are trembling on a given day.
 """
 import math
 import statistics
-from datetime import datetime
+from datetime import datetime, timedelta
 
 WINDOW = 90        # rolling baseline: the last 90 available readings
+MAX_AGE_DAYS = 180  # calendar cap: slow sources must not build baselines across seasons
 THRESHOLD = 3.0    # |z| above this counts as "trembling"
 MIN_POINTS = 10    # need at least this much clean history to judge honestly
 _MAD_TO_SD = 1.4826  # scales MAD to a standard-deviation equivalent
@@ -38,7 +39,7 @@ def _weekday(date_str):
 
 
 def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
-             window=WINDOW, min_points=MIN_POINTS):
+             window=WINDOW, min_points=MIN_POINTS, max_age_days=MAX_AGE_DAYS):
     """Robust z-score of ``today`` against the trailing ``window`` of history.
 
     ``history`` is the list of prior raw values (oldest..newest) and may contain
@@ -60,6 +61,17 @@ def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
     """
     if today is None:
         return None
+    # Calendar cap: for slow/deduped sources, "the last 90 observations" could
+    # otherwise span seasons or regimes; drop anything older than max_age_days.
+    if dates is not None and today_date is not None and max_age_days:
+        try:
+            cutoff = (datetime.strptime(today_date, "%Y-%m-%d")
+                      - timedelta(days=max_age_days)).strftime("%Y-%m-%d")
+            pairs = [(v, d) for v, d in zip(history, dates) if not d or d >= cutoff]
+            history = [v for v, _ in pairs]
+            dates = [d for _, d in pairs]
+        except (ValueError, TypeError):
+            pass
     if weekday_cycle and dates is not None and today_date is not None:
         try:
             target = _weekday(today_date)
@@ -83,3 +95,39 @@ def classify(z, threshold=THRESHOLD):
     direction = "up" if z > 0 else ("down" if z < 0 else "flat")
     trembling = 1 if abs(z) > threshold else 0
     return trembling, direction
+
+
+def weekday_range_veto(history, dates, today, today_date,
+                       min_samples=3, max_samples=MIN_POINTS, margin=0.05):
+    """Warm-up veto for weekly-cycle lines, nonparametric by design.
+
+    Until a line has ``max_samples`` same-weekday readings (when the proper
+    weekday baseline engages in ``robust_z``), a full-window tremble can be a
+    routine weekend dip read against a weekday-heavy window. With as few as
+    ``min_samples`` same-weekday readings we can still ask a scale-free
+    question: has this LEVEL been seen on this weekday before? If today lies
+    inside the same-weekday [min, max] envelope (widened by ``margin`` of the
+    span), the tremble is suppressed. No dispersion estimate is used — a
+    genuine crisis value falls outside every previously seen same-weekday
+    value and can never be vetoed.
+
+    Returns ``(vetoed: bool, detail: str)``; detail is auditable and should be
+    recorded wherever the suppression is applied.
+    """
+    if today is None or not dates or today_date is None:
+        return False, ""
+    try:
+        target = _weekday(today_date)
+        same = [v for v, d in zip(history, dates)
+                if v is not None and d and _weekday(d) == target]
+    except (ValueError, TypeError):
+        return False, ""
+    n = len(same)
+    if not (min_samples <= n < max_samples):
+        return False, ""
+    lo, hi = min(same), max(same)
+    pad = (hi - lo) * margin
+    if lo - pad <= today <= hi + pad:
+        return True, (f"suppressed: within same-weekday range "
+                      f"[{lo:g}, {hi:g}] (n={n})")
+    return False, ""

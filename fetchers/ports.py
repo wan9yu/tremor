@@ -27,4 +27,5 @@ def fetch_daily():
     return {
         "raw_value": total,
         "source_note": f"IMF PortWatch global port calls {date}",
+        "obs_date": date,
     }

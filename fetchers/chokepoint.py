@@ -27,4 +27,5 @@ def fetch_daily():
     return {
         "raw_value": total,
         "source_note": f"IMF PortWatch 28 chokepoints, total transits {date}",
+        "obs_date": date,
     }

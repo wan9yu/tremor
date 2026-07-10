@@ -59,6 +59,7 @@ def fetch_daily():
                 return {
                     "raw_value": float(value),
                     "source_note": f"FRED {_SERIES} OAS {obs.get('date')}",
+                    "obs_date": obs.get("date"),
                 }
             except ValueError:
                 continue
