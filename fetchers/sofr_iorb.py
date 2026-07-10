@@ -33,4 +33,5 @@ def fetch_daily():
     return {
         "raw_value": round(bps, 1),
         "source_note": f"FRED SOFR {sofr} ({sofr_date}) − IORB {iorb}",
+        "obs_date": sofr_date,
     }

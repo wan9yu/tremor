@@ -259,3 +259,34 @@ wait for a tier-2 slot to open — i.e. a watchlist line graduating to tier-1 or
      alarm-direction trembles?
 - **Moves applied:** none — no evidence against any tier placement yet; Orthogonality unlocks
   around ~20 days of z history (mid-July).
+
+### Round 6.1 — 2026-07-10 (methodology batch from the live-signal review)
+Adjustments approved after a three-lens panel review (statistician / thesis-guardian /
+minimalist); all recorded as `method` rows in `data/annotations.csv`, applied FORWARD ONLY
+(no committed z/trembling value was rewritten).
+- **Observation dedup:** rows gained an `obs_date` column; the z baseline uses only the first
+  occurrence of each observation, a republished observation scores no new z and raises no flag,
+  and baselines cap at 180 calendar days. Backtest over the 19-day history: the six
+  publication-step trembles (chokepoint ×3, port ×1, sofr ×2) would not have fired.
+- **Direction-aware resonance:** `trembling_count` now counts only alarm-direction trembles;
+  benign-direction moves (a guard reasserting itself, e.g. Hormuz reopening) are recorded and
+  shown as "benign shift", not disorder. Under the new rule the July history would have counted
+  1 tremble (flights 07-05), not 3.
+- **Weekly-cycle warm-up veto:** with 3–9 same-weekday samples, a full-window tremble whose
+  level lies inside the same-weekday min–max envelope is suppressed, auditable in source_note.
+  Nonparametric by design — a genuine crisis value cannot be vetoed.
+- **net_outages v2:** count restricted to IODA's ping-slash24 datasource (v1 counted every
+  datasource and measured IODA's sensor rollout, not disorder — live check: v2 reads 3
+  countries where v1 read 17). v1 archived at `data/archive/net_outages_v1.csv`; v2 restarts
+  under warm-up.
+- **ADS-B region floor:** under-floor (<30 aircraft) from one provider = suspected degraded
+  feed, try the next; two providers agreeing under-floor = accepted as a real reading
+  (corroboration keeps the instrument from blinding itself during a genuine collapse).
+  Per-region counts now recorded in source_note.
+- **Dashboard:** trembled points now carry their attribution notes from annotations.csv
+  (tooltip + per-line modal); alarm-direction trembles read red, benign shifts read calm green;
+  lines with <30 unique observations show a "calibrating" badge.
+- **CHANGE FREEZE:** methodology is now frozen until the next radar round (~30 days of clean
+  history), barring a correctness-critical failure. Open items parked for that round: MAD is
+  ill-suited to low-count integer lines (net_outages); a small holiday calendar as annotation;
+  a false-positive budget review of the |z|>3 threshold at ~90 days.

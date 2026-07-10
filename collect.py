@@ -44,7 +44,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")
 DOCS_DATA = os.path.join(ROOT, "docs", "data")
 
-LINE_HEADER = ["date", "raw_value", "z_score", "trembling", "direction", "source_note"]
+LINE_HEADER = ["date", "raw_value", "z_score", "trembling", "direction", "source_note",
+               "obs_date"]
 # Summary holds only the tier-1 aggregates; each line's own z lives in its CSV, so
 # the schema stays stable as indicators are added, promoted, or demoted.
 SUMMARY_HEADER = ["date", "trembling_count", "dark_count"]
@@ -77,15 +78,28 @@ def _upsert(rows, new_row, date):
 
 
 def _history(rows, today):
-    """Prior (values, dates) aligned, excluding today; empty cells become None."""
+    """Prior (values, dates) aligned, excluding today; empty cells become None.
+
+    Rows that repeat an already-seen observation (same ``obs_date`` — lagged
+    sources republish the same reading until they update) are excluded from the
+    statistical history: duplicates are pseudo-replication that shrinks MAD and
+    inflates the z of genuine moves. Rows without an obs_date (real-time lines)
+    always count.
+    """
     values, dates = [], []
+    seen_obs = set()
     for r in rows:
         if r.get("date") == today:
             continue
+        obs = r.get("obs_date") or ""
+        if obs:
+            if obs in seen_obs:
+                continue
+            seen_obs.add(obs)
         v = r.get("raw_value")
         values.append(float(v) if v not in (None, "") else None)
         dates.append(r.get("date"))
-    return values, dates
+    return values, dates, seen_obs
 
 
 def _fmt(value):
@@ -114,18 +128,41 @@ def collect():
                       "source_note": f"fetcher crashed: {type(e).__name__}"}
         raw = result["raw_value"]
         note = result["source_note"]
+        obs_date = result.get("obs_date") or ""
         tier = getattr(mod, "TIER", 1)
         primary = tier == 1
 
-        history, hist_dates = _history(rows, today)
-        z = normalize.robust_z(
-            history, raw, dates=hist_dates, today_date=today,
-            weekday_cycle=getattr(mod, "WEEKLY_CYCLE", False),
-        )
-        trembling, direction = normalize.classify(z)
-        # Only tier-1 instruments count toward the live resonance and dark count.
+        history, hist_dates, seen_obs = _history(rows, today)
+        stale = bool(obs_date) and obs_date in seen_obs
+        if stale:
+            # The source republished an observation already scored on an earlier
+            # day. Keep the raw value for chart continuity, but score no z and
+            # raise no flag: one observation gets one verdict, not one per day.
+            z = None
+            trembling, direction = 0, ""
+            note += " [stale: observation already recorded]"
+        else:
+            z = normalize.robust_z(
+                history, raw, dates=hist_dates, today_date=today,
+                weekday_cycle=getattr(mod, "WEEKLY_CYCLE", False),
+            )
+            trembling, direction = normalize.classify(z)
+            # Warm-up veto for weekly-cycle lines: while the proper same-weekday
+            # baseline lacks samples, suppress a full-window tremble whose level
+            # has already been seen on this weekday. Auditable via the note.
+            if trembling and getattr(mod, "WEEKLY_CYCLE", False):
+                vetoed, detail = normalize.weekday_range_veto(
+                    history, hist_dates, raw, today)
+                if vetoed:
+                    trembling = 0
+                    note += f" [{detail}]"
+        # Only tier-1 instruments count toward the live resonance and dark count,
+        # and only trembles in the line's declared ALARM direction feed the count
+        # — a guard visibly reasserting itself (a benign-direction move) is
+        # recorded but is not disorder.
         if primary:
-            trembling_count += trembling
+            if trembling and direction == mod.ANOMALY_DIRECTION:
+                trembling_count += 1
             if raw is None:
                 dark_count += 1
 
@@ -136,6 +173,7 @@ def collect():
             "trembling": str(trembling),
             "direction": direction,
             "source_note": note,
+            "obs_date": obs_date,
         }
         rows = _upsert(rows, row, today)
         _write_rows(path, LINE_HEADER, rows)

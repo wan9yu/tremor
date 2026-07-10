@@ -6,9 +6,16 @@ country goes dark, a larger force overwhelmed that — a censorship shutdown, a 
 a major cable cut, a grid failure. Counting how many countries are in outage at
 once turns local incidents into a global breadth-of-disruption signal.
 
-Reading: number of countries with a detected internet outage in the trailing 24h.
-A rise is the alarming move. Outages persist hours–days, so daily sampling is
-honest.
+Reading: number of countries with a ping-slash24-detected outage in the trailing
+24h. A rise is the alarming move.
+
+Measurement definition (v2, fixed 2026-07-10): count ONLY outages detected by
+IODA's ping-slash24 (active probing) datasource. The v1 series counted events
+from every datasource, and IODA activating new detectors mid-series (gtr on
+2026-07-01, bgp/merit-nt on 2026-07-05) inflated the count against the old
+baseline — sensor inflation, exactly the trap this project bans. Pinning the
+datasource makes the definition stable and auditable; the v1 series is archived
+at data/archive/net_outages_v1.csv and this series starts fresh.
 
 Source: IODA (Georgia Tech) outages summary API. Keyless.
 """
@@ -17,13 +24,14 @@ from datetime import datetime, timezone
 import requests
 
 LINE = "net_outages"
-LABEL = "Countries with internet outages (IODA)"
+LABEL = "Countries with internet outages (IODA ping)"
 UNIT = "countries"
 ANOMALY_DIRECTION = "up"
 TIER = 2
 
 _URL = "https://api.ioda.inetintel.cc.gatech.edu/v2/outages/summary"
 _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_DATASOURCE = "ping-slash24"  # the one stable detector; see module docstring
 
 
 def fetch_daily():
@@ -45,8 +53,12 @@ def fetch_daily():
         return {"raw_value": None, "source_note": "IODA returned a non-JSON body"}
     if data is None:
         return {"raw_value": None, "source_note": "IODA returned no data field"}
-    # The summary lists only entities that had an outage event in the window.
+    # Count only countries whose outage was seen by the pinned datasource.
+    count = sum(
+        1 for d in data
+        if any(k.startswith(_DATASOURCE) for k in (d.get("scores") or {}))
+    )
     return {
-        "raw_value": float(len(data)),
-        "source_note": f"IODA {len(data)} countries with outage events (24h)",
+        "raw_value": float(count),
+        "source_note": f"IODA {count} countries with {_DATASOURCE} outages (24h)",
     }

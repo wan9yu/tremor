@@ -56,5 +56,6 @@ def fetch_daily():
         return {
             "raw_value": round(bad / total * 100.0, 4),
             "source_note": f"GPSJam {day}: {bad}/{total} aircraft with bad GPS",
+            "obs_date": day,
         }
     return {"raw_value": None, "source_note": f"GPSJam unavailable ({last_status})"}
