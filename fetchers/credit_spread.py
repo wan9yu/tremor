@@ -27,7 +27,7 @@ _URL = "https://api.stlouisfed.org/fred/series/observations"
 
 
 def fetch_daily():
-    """Return {"raw_value": float | None, "source_note": str}."""
+    """Return {"raw_value": float | None, "source_note": str, "obs_date": str}."""
     key = os.environ.get("FRED_API_KEY")
     if not key:
         return {"raw_value": None, "source_note": "missing FRED_API_KEY"}

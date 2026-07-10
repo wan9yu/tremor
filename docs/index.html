@@ -361,15 +361,19 @@ function resoModal(lang){ return `<h3>${T[lang].resoTitle}</h3><p>${T[lang].reso
 
 // ---------- data + render ----------
 let DATA=null, chart=null;
+// display-side hedge: MIN_POINTS=10 is the scoring floor, but MAD baselines
+// stay structurally jumpy until roughly this many unique observations exist
+const CALIBRATING_OBS=30;
 async function load(){
-  const summary=await getCSV("data/summary.csv");
-  const lines={};
-  for(const L of LINES) lines[L.id]=await getCSV("data/"+L.id+".csv");
-  const annotations=await getCSV("data/annotations.csv");
-  DATA={summary, dates:summary.map(r=>r.date), lines, annotations};
+  const [summary, annotations, ...lineArr]=await Promise.all([
+    getCSV("data/summary.csv"), getCSV("data/annotations.csv"),
+    ...LINES.map(L=>getCSV("data/"+L.id+".csv"))]);
+  const lines={}; LINES.forEach((L,i)=>lines[L.id]=lineArr[i]);
+  const annoMap=new Map(annotations.map(a=>[a.line+"|"+a.date,a]));
+  DATA={summary, dates:summary.map(r=>r.date), lines, annotations, annoMap};
 }
 // annotation lookup: notes live in data/annotations.csv (date,line,verdict,note)
-function annoOn(lineId,date){ return (DATA.annotations||[]).find(a=>a.line===lineId&&a.date===date); }
+function annoOn(lineId,date){ return DATA.annoMap&&DATA.annoMap.get(lineId+"|"+date); }
 function annosFor(lineId){ return (DATA.annotations||[]).filter(a=>a.line===lineId&&a.verdict!=="method"); }
 // count unique observations (dedup by obs_date; rows without obs_date all count)
 function uniqueObs(rows){
@@ -412,23 +416,25 @@ function render(){
   for(const L of TIER1){
     const rows=lines[L.id]||[]; const byDate={}; rows.forEach(r=>byDate[r.date]=r);
     const raw=dates.map(d=>{ const r=byDate[d]; const v=r?parseFloat(r.raw_value):NaN; return isNaN(v)?null:v; });
-    // alarm-direction trembles read red; benign-direction (guard reasserting) read calm
-    const alarmT=dates.map(d=>{const r=byDate[d]; return r&&r.trembling==="1"&&r.direction===L.alarm;});
-    const benignT=dates.map(d=>{const r=byDate[d]; return r&&r.trembling==="1"&&r.direction!==L.alarm;});
+    // per-date tremble state: "alarm" reads red, "benign" (guard reasserting) reads calm
+    const tstate=dates.map(d=>{const r=byDate[d];
+      return r&&r.trembling==="1"?(r.direction===L.alarm?"alarm":"benign"):null;});
+    const ptColor=tstate.map(t=>t==="alarm"?"#d64545":t==="benign"?"#3fb27f":L.color);
     const z=displayZ(raw);
     const todayRow=last?byDate[last.date]:null;
     const hasToday=todayRow&&todayRow.raw_value!=="";
     const lastGood=[...rows].reverse().find(r=>r.raw_value!=="");
     const isDark=!hasToday; if(isDark) darkNames.push(L.domain[lang]);
-    const calibrating=uniqueObs(rows)<30;
+    const calibrating=uniqueObs(rows)<CALIBRATING_OBS;
 
     const chip=document.createElement("div");
     chip.className="inst"+(isDark?" dark":""); chip.style.setProperty("--dot",L.color);
     let nowHtml, subHtml;
     if(hasToday){
       let pill="";
-      if(todayRow.trembling==="1")
-        pill = todayRow.direction===L.alarm
+      const t=tstate[dates.length-1];
+      if(t)
+        pill = t==="alarm"
           ? `<span class="pill trembling">${lang==="zh"?"颤抖":"trembling"}</span>`
           : `<span class="pill benign">${T[lang].benignShift}</span>`;
       else if(calibrating) pill=`<span class="pill calib">${T[lang].calibrating}</span>`;
@@ -448,9 +454,8 @@ function render(){
 
     datasets.push({ label:L.label[lang], _lineId:L.id, data:z, borderColor:L.color, backgroundColor:L.color,
       borderWidth:1.8, tension:.25, spanGaps:false,
-      pointRadius:dates.map((d,i)=>alarmT[i]||benignT[i]?4:2), pointHoverRadius:5,
-      pointBackgroundColor:dates.map((d,i)=>alarmT[i]?"#d64545":benignT[i]?"#3fb27f":L.color),
-      pointBorderColor:dates.map((d,i)=>alarmT[i]?"#d64545":benignT[i]?"#3fb27f":L.color) });
+      pointRadius:tstate.map(t=>t?4:2), pointHoverRadius:5,
+      pointBackgroundColor:ptColor, pointBorderColor:ptColor });
   }
 
   // system status banner
