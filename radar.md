@@ -234,3 +234,28 @@ wait for a tier-2 slot to open — i.e. a watchlist line graduating to tier-1 or
 - **Tier-1 now:** flights · credit_spread · cnh_cny · **gnss_interference** — airspace, financial,
   capital, navigation/EW. All ≤ ~3-day lag.
 - **Moves:** gnss tier-2 → tier-1; chokepoint tier-1 → tier-2. No other change.
+
+### Round 6 — 2026-07-10 (first live-signal review, 19 days of history)
+- **System:** 17 consecutive scheduled runs, zero failures, zero dark days across all 13 lines.
+  z-scores active since ~07-01. First trembles observed; every one was attributed (see
+  `data/annotations.csv`) — none was a resonance (never more than 1 tier-1 line on a day).
+- **Signals attributed:** quarter-end repo turn caught by `sofr_iorb_spread` exactly on 06-30
+  (mild, benign — the line's first validation); `cnh_cny` flipped negative twice on offshore-yuan
+  strength (07-07 coincided to the day with the PBOC's Hong Kong offshore-yuan package); `flights`
+  dipped on the July-4 Sunday (holiday + US storms + Italy ATC strike); Hormuz REOPENED (~2/day
+  → 22-42/day), driving chokepoint's benign up-tremble; Super Typhoon Bavi took out Guam's grid.
+- **Calibration findings for next rounds:**
+  1. `net_outages` z≈10 was mostly a MONITORING ARTIFACT — IODA activated new datasources
+     (gtr 07-01, bgp/merit-nt 07-05), inflating the country count against a quiet baseline
+     (52/89 spike events were merit-nt micro-events in North Macedonia alone). Consider filtering
+     by outage score or datasource for a stabler count before this line can be trusted.
+  2. `flights` weekday de-cycling cannot engage until ~10 same-weekday samples (~10 weeks);
+     until then weekend/holiday dips can soft-false-positive. Self-heals by ~Sep 2026.
+  3. ADS-B provider flakiness (fallbacks fired on 07-04/07-07): a provider returning HTTP 200
+     with a degraded aircraft list passes the require-all-regions guard silently. Consider a
+     per-region sanity floor.
+  4. Trembles in the benign direction (chokepoint up, outages down) count toward the flag; the
+     `direction` column disambiguates. Open question: should tier-1 resonance count only
+     alarm-direction trembles?
+- **Moves applied:** none — no evidence against any tier placement yet; Orthogonality unlocks
+  around ~20 days of z history (mid-July).
