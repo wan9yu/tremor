@@ -40,8 +40,8 @@ from core import normalize
 # matches how the (China-based) project reads the calendar.
 CHINA_TZ = timezone(timedelta(hours=8))
 from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
-                      credit_spread, em_oas, flights, gdelt, gnss,
-                      grid_frequency, net_outages, ports, sofr_iorb)
+                      credit_spread, em_oas, flights, gdelt, gdelt_tone, gnss,
+                      grid_frequency, net_outages, ports, sofr_iorb, vix)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
 # (airspace / financial system / capital controls / navigation-EW), so several
@@ -49,8 +49,9 @@ from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
 # to build history until they earn promotion.
 LINES = [flights, credit_spread, cnh_cny, gnss,         # tier 1 (primary, displayed)
          capital_premium, grid_frequency, chokepoint,   # tier 2 (lagged/demoted)
-         cn_flights, gdelt,                             # tier 2 (watchlist + contrast)
-         sofr_iorb, em_oas, ports, net_outages]         # tier 2 (radar builds)
+         cn_flights, sofr_iorb, em_oas, ports,          # tier 2 (candidates)
+         net_outages,
+         gdelt, gdelt_tone, vix]                        # tier 2 (feel contrast, never promotable)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")

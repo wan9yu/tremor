@@ -73,7 +73,9 @@ contrast.)
 | capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | demoted R4 (redundant with China); kept on watch |
 | grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | demoted R4 (regional); kept on watch — may re-challenge on orthogonality |
 | cn_flights | airspace (China) | 3 | 3 | 1 | — | — | sparse ADS-B coverage; observing if signal survives |
-| — gdelt | attention (global) | 1 | 0 | 3 | — | — | contrast line only (guard gate) — not a candidate slot |
+| — gdelt | feel: conflict share (global) | 1 | 0 | 3 | — | — | contrast line (guard gate) — v2 full-day aggregation, not a candidate slot |
+| — gdelt_tone | feel: news tone (global) | 1 | 0 | 3 | — | — | contrast line — full-day average tone, same pass as gdelt |
+| — vix | feel: priced fear (global) | 1 | 0 | 3 | — | — | contrast line — keyless FRED VIXCLS, seeded 180d from archive |
 
 ## Tier 3 — candidate ideas  (7 / 16)
 
@@ -290,3 +292,21 @@ minimalist); all recorded as `method` rows in `data/annotations.csv`, applied FO
   history), barring a correctness-critical failure. Open items parked for that round: MAD is
   ill-suited to low-count integer lines (net_outages); a small holiday calendar as annotation;
   a false-positive budget review of the |z|>3 threshold at ~90 days.
+
+### Round 6.2 — 2026-07-10 (the "feels" half, rendered)
+The mission audit scored the second clause of the founding question ("或只是感觉更乱了")
+3/10: the feel side was collected but 0% displayed. This round builds it out:
+- **gdelt v2:** conflict share now aggregates the entire previous UTC day (~96 files,
+  ~100k events) instead of one 15-minute sample that swung 8→23% in a week; obs_date set;
+  v1 archived. **gdelt_tone** added from the same download pass (news valence vs event mix).
+- **vix** added as the priced-fear channel (keyless FRED VIXCLS), seeded with 180 days of
+  archive scored through the standard pipeline — feel z is live immediately (13 archive
+  trembles, incl. the Mar-2026 VIX-31 episode). Contrast lines are exempt from the guard
+  gate by design and can never be counted or promoted.
+- **Dashboard:** a "Real vs felt — the anxiety premium" panel now renders trembling_count
+  history as bars (the real side — also the first trend view of the headline number)
+  against the feel lines' z toward their alarm direction, with amber columns marking days
+  when feeling runs hot (feel z ≥ 2) while every instrument reads calm — the anxiety
+  premium, visible. Earlier same-day fixes: stale tier-1 lists in README/resonance modal
+  corrected, comparator disclosed, calibrating qualifier added to the headline.
+- The founding question's two halves are now both on the page.

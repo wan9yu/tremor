@@ -132,6 +132,12 @@
     <canvas id="chart" height="150"></canvas>
   </div>
 
+  <div class="panel" style="margin-top:16px">
+    <h2 id="feel-title"></h2>
+    <p class="hint" id="feel-hint"></p>
+    <canvas id="feelchart" height="120"></canvas>
+  </div>
+
   <p class="watchlist" id="watchlist" hidden></p>
 
   <footer id="footer"></footer>
@@ -207,10 +213,26 @@ const LINES = [
     unit:{en:"%",zh:"%"},
     domain:{en:"Conflict events (global)",zh:"冲突事件（全球）"},
     label:{en:"Global conflict-event share",zh:"全球冲突事件占比"},
-    source:{en:"GDELT 2.0 raw event files",zh:"GDELT 2.0 原始事件文件"},
+    source:{en:"GDELT 2.0 — full previous day, ~96 files",zh:"GDELT 2.0 — 前一整天约 96 个文件聚合"},
     explain:{
-      en:"The share of the world's news-coded events that are MATERIAL CONFLICT — assault, fight, mass violence (GDELT's QuadClass 4). Deliberately NOT a tension indicator and never counted: event tallies have no guard and inflate as media coverage densifies. It rides the watchlist as the 'felt vs real' contrast — how much conflict the world is reporting, set against the objective lines; the gap between them is the anxiety premium of the age. Read from GDELT's raw 15-minute event files (its API is unreliable).",
-      zh:"全球被编码的新闻事件里，属于「物质性冲突」（袭击、交火、大规模暴力，GDELT 的 QuadClass 4）的占比。它刻意不是张力指标、永不计数：事件计数没有守护力，且随媒体覆盖逐年通胀。它待在观察名单上，是「真实 vs 感觉」对照——世界在报道多少冲突，与客观线对比，二者的缺口就是这个时代的焦虑溢价。数据读自 GDELT 每 15 分钟的原始事件文件（其 API 不稳）。"} },
+      en:"The share of the world's news-coded events that are MATERIAL CONFLICT — assault, fight, mass violence (GDELT's QuadClass 4). Deliberately NOT a tension indicator and never counted: event tallies have no guard and inflate as media coverage densifies. It rides the watchlist as the 'felt vs real' contrast — how much conflict the world is reporting, set against the objective lines; the gap between them is the anxiety premium of the age. Aggregated over the entire previous day's ~96 raw event files (~100k events), so the daily value is no longer single-file noise.",
+      zh:"全球被编码的新闻事件里，属于「物质性冲突」（袭击、交火、大规模暴力，GDELT 的 QuadClass 4）的占比。它刻意不是张力指标、永不计数：事件计数没有守护力，且随媒体覆盖逐年通胀。它待在观察名单上，是「真实 vs 感觉」对照——世界在报道多少冲突，与客观线对比，二者的缺口就是这个时代的焦虑溢价。聚合前一整天约 96 个原始事件文件（约 10 万事件），日值不再是单文件噪声。"} },
+  { id:"gdelt_tone", color:"#9b8ec4", alarm:"down", tier:2,
+    unit:{en:"tone",zh:"tone"},
+    domain:{en:"Feel (news tone)",zh:"感觉（新闻情绪）"},
+    label:{en:"Global news tone",zh:"全球新闻情绪"},
+    source:{en:"GDELT 2.0 — full-day average tone",zh:"GDELT 2.0 — 全天平均情绪"},
+    explain:{
+      en:"The average emotional tone of the entire previous day's global news-coded events (GDELT AvgTone). More negative = the world's coverage reads grimmer. This is the feel side's news-valence channel: where the conflict share measures WHAT is reported, tone measures HOW it is told. Not a tension indicator (no guard) — contrast only, never counted.",
+      zh:"前一整天全球新闻事件的平均情绪值（GDELT AvgTone）。越负 = 报道读起来越阴沉。这是「感觉」侧的新闻情绪通道：冲突占比测的是报道了什么，情绪测的是怎么讲的。不是张力指标（无守护力）——仅作对照，永不计数。"} },
+  { id:"vix", color:"#d98fb0", alarm:"up", tier:2,
+    unit:{en:"index",zh:"点"},
+    domain:{en:"Feel (priced fear)",zh:"感觉（恐惧定价）"},
+    label:{en:"VIX (fear priced)",zh:"VIX（恐惧定价）"},
+    source:{en:"FRED — VIXCLS (keyless), seeded from archive",zh:"FRED — VIXCLS（无需密钥），由历史存档播种"},
+    explain:{
+      en:"Implied equity volatility — the cleanest daily price on collective fear. The spec excluded VIX as a tension indicator (a passive read, no guard) and that stands; the contrast line is exempt because its whole job is measuring how disordered the world FEELS. Together with the GDELT lines the feel side has two independent modalities: what the news reports, and what hedgers pay. Seeded with 180 days of archive so its baseline needed no warm-up.",
+      zh:"股指期权隐含波动率——给集体恐惧标价最干净的日频数。spec 把 VIX 排除在张力指标外（被动读数、无守护力），这仍然成立；但对照线豁免于守护闸门——它的职责就是测世界「感觉」有多乱。与 GDELT 两条线一起，感觉侧有了两个独立通道：新闻在报什么，对冲者在付什么。创建时用 180 天历史存档播种，基线无需预热。"} },
   { id:"chokepoint_breadth", color:"#d98a5b", alarm:"down", tier:2,
     unit:{en:"vessels",zh:"艘"},
     domain:{en:"Trade (global)",zh:"贸易（全球）"},
@@ -287,6 +309,9 @@ const T = {
     notCounted:"watchlist — not counted in the resonance",
     calibNote:(n,m)=>" · "+n+" of "+m+" lines still calibrating",
     range_30:"30d", range_90:"90d", range_365:"1y", range_all:"all",
+    feelTitle:"Real vs felt — the anxiety premium",
+    feelHint:"Bars: how many primary instruments trembled that day (the real side). Lines: how disordered the world FEELS — priced fear (VIX) and global news tone/conflict share — shown as z toward each line's alarming direction. Feel lines are contrast only, never counted. Amber columns mark days when feeling ran hot while every instrument stayed calm — the anxiety premium.",
+    feelBars:"trembling count (real)",
     alarmingWhen:dir=>"alarming when "+dir, dirUp:"up", dirDown:"down",
     last:(v,u,d)=>" · last: "+v+" "+u+" on "+d, noCollect:"no collection this day",
     source:"Source", alarmTag:dir=>"alarming when "+dir,
@@ -319,6 +344,9 @@ const T = {
     notCounted:"观察名单 — 不计入共振",
     calibNote:(n,m)=>"（"+n+"/"+m+" 根线校准中）",
     range_30:"30天", range_90:"90天", range_365:"1年", range_all:"全部",
+    feelTitle:"真实 vs 感觉 — 焦虑溢价",
+    feelHint:"柱：当天一级仪器的颤抖根数（真实侧）。线：世界「感觉」有多乱——恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自报警方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 感觉发烫而仪器全部平静的日子——这就是焦虑溢价。",
+    feelBars:"颤抖根数（真实）",
     alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下跌",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
     source:"数据来源", alarmTag:dir=>dir+"时为异常",
@@ -385,7 +413,7 @@ function lineModal(L,lang){
 function resoModal(lang){ return `<h3>${T[lang].resoTitle}</h3><p>${T[lang].resoBody}</p>`; }
 
 // ---------- data + render ----------
-let DATA=null, chart=null;
+let DATA=null, chart=null, feelChart=null;
 // display-side hedge: MIN_POINTS=10 is the scoring floor, but MAD baselines
 // stay structurally jumpy until roughly this many unique observations exist
 const CALIBRATING_OBS=30;
@@ -530,6 +558,50 @@ function render(){
       scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
         y:{title:{display:true,text:lang==="zh"?"稳健 z 分数":"robust z-score",color:"#8a909c",font:{size:11}},
            ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"}} } }
+  });
+
+  // ---- real vs felt: the answer to the question's second half ----
+  document.getElementById("feel-title").textContent=T[lang].feelTitle;
+  document.getElementById("feel-hint").textContent=T[lang].feelHint;
+  const sumBy={}; summary.forEach(r=>sumBy[r.date]=r);
+  const counts=viewDates.map(d=>{const r=sumBy[d];
+    return r&&r.trembling_count!==""?(parseInt(r.trembling_count,10)||0):null;});
+  const FEEL_IDS=["vix","gdelt_tone","gdelt"];
+  let feelMax=viewDates.map(()=>null);
+  const feelSets=FEEL_IDS.map(id=>{
+    const L=LINES.find(l=>l.id===id); if(!L) return null;
+    const byD={}; (lines[id]||[]).forEach(r=>byD[r.date]=r);
+    // z toward the line's alarming direction, so "up" always reads "feels worse"
+    const zA=viewDates.map((d,i)=>{const r=byD[d]; const v=r?parseFloat(r.z_score):NaN;
+      if(isNaN(v)) return null;
+      const t=L.alarm==="down"?-v:v;
+      if(feelMax[i]===null||t>feelMax[i]) feelMax[i]=t;
+      return t;});
+    return { type:"line", label:L.label[lang], data:zA, yAxisID:"y2",
+      borderColor:L.color, backgroundColor:L.color, borderWidth:1.6, tension:.25,
+      spanGaps:true, pointRadius:0, pointHoverRadius:4, order:1 };
+  }).filter(Boolean);
+  // anxiety premium: feeling hot (any feel z>=2) while the instruments read 0
+  const gapCol=viewDates.map((d,i)=>(counts[i]===0&&feelMax[i]!==null&&feelMax[i]>=2)?4:null);
+  if(feelChart) feelChart.destroy();
+  feelChart=new Chart(document.getElementById("feelchart"),{
+    data:{ labels:viewDates, datasets:[
+      { type:"bar", label:T[lang].feelBars, data:counts, yAxisID:"y",
+        backgroundColor:"rgba(214,69,69,.55)", order:3 },
+      { type:"bar", label:"gap", _gap:true, data:gapCol, yAxisID:"y",
+        backgroundColor:"rgba(224,168,61,.13)", barPercentage:1, categoryPercentage:1, order:4 },
+      ...feelSets ]},
+    options:{ responsive:true, animation:false, interaction:{mode:"index",intersect:false},
+      plugins:{ legend:{labels:{color:"#c7ccd6",boxWidth:14,font:{size:11},
+                  filter:(item,data)=>!data.datasets[item.datasetIndex]._gap}},
+        tooltip:{ filter:item=>!item.dataset._gap,
+          callbacks:{label:c=>c.parsed.y==null?null:
+            (c.dataset.type==="bar"?`${c.dataset.label}: ${c.parsed.y}`:`${c.dataset.label}: z=${c.parsed.y.toFixed(2)}`)}} },
+      scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
+        y:{min:0,max:4,ticks:{stepSize:1,color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"},
+           title:{display:true,text:lang==="zh"?"颤抖根数":"trembles",color:"#8a909c",font:{size:10}}},
+        y2:{position:"right",grid:{drawOnChartArea:false},ticks:{color:"#8a909c",font:{size:10}},
+           title:{display:true,text:lang==="zh"?"感觉 z（报警方向）":"feel z (toward alarm)",color:"#8a909c",font:{size:10}}} } }
   });
 
   // watchlist — tier-2 candidates: collected daily, not counted; click for data
