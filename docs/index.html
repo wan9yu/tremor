@@ -72,7 +72,7 @@
   .watchlist b{color:#9aa1ad;font-weight:600}
   .watchlist .dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:#5b616d;margin-right:5px;vertical-align:middle}
   .watchlist .days{opacity:.7}
-  .wl-item{cursor:pointer;white-space:nowrap;margin-right:14px}
+  .wl-item{cursor:pointer;white-space:nowrap;display:inline-block;margin:0 14px 4px 0}
   .wl-item:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
   .modal-card .mchart{margin:12px 0 4px}
   .modal-card .mnow{font-size:15px;margin:10px 0 2px;color:#c7ccd6}
@@ -474,12 +474,16 @@ function render(){
     b.textContent=T[lang]["range_"+b.dataset.range];
     b.classList.toggle("on", b.dataset.range===range);
   });
-  let viewDates=dates;
-  if(range!=="all" && last){
-    const cut=new Date(utcMidnight(last.date)-(parseInt(range,10)-1)*86400000)
-      .toISOString().slice(0,10);
-    viewDates=dates.filter(d=>d>=cut);
-  }
+  const cutDate=(range!=="all"&&last)
+    ? new Date(utcMidnight(last.date)-(parseInt(range,10)-1)*86400000).toISOString().slice(0,10)
+    : null;
+  let viewDates=cutDate?dates.filter(d=>d>=cutDate):dates;
+  // start the instrument chart where scoring began — the warm-up stretch has
+  // no verdicts to draw and would render as a half-empty axis
+  let firstScored=null;
+  for(const L of TIER1){ const rows=lines[L.id]||[];
+    for(const r of rows){ if(r.z_score!==""){ if(!firstScored||r.date<firstScored) firstScored=r.date; break; } } }
+  if(firstScored) viewDates=viewDates.filter(d=>d>=firstScored);
   // with long histories, drop the everyday dots and keep only tremble markers
   const denseView=viewDates.length>120;
 
@@ -564,15 +568,20 @@ function render(){
   document.getElementById("feel-title").textContent=T[lang].feelTitle;
   document.getElementById("feel-hint").textContent=T[lang].feelHint;
   const sumBy={}; summary.forEach(r=>sumBy[r.date]=r);
-  const counts=viewDates.map(d=>{const r=sumBy[d];
-    return r&&r.trembling_count!==""?(parseInt(r.trembling_count,10)||0):null;});
   const FEEL_IDS=["vix","gdelt_tone","gdelt"];
-  let feelMax=viewDates.map(()=>null);
+  // the feel axis is independent of the instrument axis: seeded feel history
+  // (the VIX archive) predates the instrument's birth and deserves to show —
+  // bars are simply absent for days before the instrument existed
+  let feelDates=[...new Set([...dates,...FEEL_IDS.flatMap(id=>(lines[id]||[]).map(r=>r.date))])].sort();
+  if(cutDate) feelDates=feelDates.filter(d=>d>=cutDate);
+  const counts=feelDates.map(d=>{const r=sumBy[d];
+    return r&&r.trembling_count!==""?(parseInt(r.trembling_count,10)||0):null;});
+  let feelMax=feelDates.map(()=>null);
   const feelSets=FEEL_IDS.map(id=>{
     const L=LINES.find(l=>l.id===id); if(!L) return null;
     const byD={}; (lines[id]||[]).forEach(r=>byD[r.date]=r);
     // z toward the line's alarming direction, so "up" always reads "feels worse"
-    const zA=viewDates.map((d,i)=>{const r=byD[d]; const v=r?parseFloat(r.z_score):NaN;
+    const zA=feelDates.map((d,i)=>{const r=byD[d]; const v=r?parseFloat(r.z_score):NaN;
       if(isNaN(v)) return null;
       const t=L.alarm==="down"?-v:v;
       if(feelMax[i]===null||t>feelMax[i]) feelMax[i]=t;
@@ -580,16 +589,16 @@ function render(){
     return { type:"line", label:L.label[lang], data:zA, yAxisID:"y2",
       borderColor:L.color, backgroundColor:L.color, borderWidth:1.6, tension:.25,
       spanGaps:true, pointRadius:0, pointHoverRadius:4, order:1 };
-  }).filter(Boolean);
+  }).filter(ds=>ds&&ds.data.some(v=>v!==null));  // hide lines still warming up
   // anxiety premium: feeling hot (any feel z>=2) while the instruments read 0
-  const gapCol=viewDates.map((d,i)=>(counts[i]===0&&feelMax[i]!==null&&feelMax[i]>=2)?4:null);
+  const gapCol=feelDates.map((d,i)=>(counts[i]===0&&feelMax[i]!==null&&feelMax[i]>=2)?4:null);
   if(feelChart) feelChart.destroy();
   feelChart=new Chart(document.getElementById("feelchart"),{
-    data:{ labels:viewDates, datasets:[
+    data:{ labels:feelDates, datasets:[
       { type:"bar", label:T[lang].feelBars, data:counts, yAxisID:"y",
         backgroundColor:"rgba(214,69,69,.55)", order:3 },
       { type:"bar", label:"gap", _gap:true, data:gapCol, yAxisID:"y",
-        backgroundColor:"rgba(224,168,61,.13)", barPercentage:1, categoryPercentage:1, order:4 },
+        backgroundColor:"rgba(224,168,61,.28)", barPercentage:1, categoryPercentage:1, order:4 },
       ...feelSets ]},
     options:{ responsive:true, animation:false, interaction:{mode:"index",intersect:false},
       plugins:{ legend:{labels:{color:"#c7ccd6",boxWidth:14,font:{size:11},
@@ -608,7 +617,7 @@ function render(){
   const wl=document.getElementById("watchlist");
   wl.innerHTML=""; wl.hidden=!TIER2.length;
   if(TIER2.length){
-    const b=document.createElement("b"); b.textContent=T[lang].watchTitle+" "; wl.appendChild(b);
+    const b=document.createElement("b"); b.textContent=T[lang].watchTitle; b.style.display="block"; b.style.marginBottom="4px"; wl.appendChild(b);
     for(const L of TIER2){
       const days=(lines[L.id]||[]).filter(r=>r.raw_value!=="").length;
       const item=document.createElement("span"); item.className="wl-item";
