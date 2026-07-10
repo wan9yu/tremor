@@ -29,6 +29,7 @@
   .count .of{color:var(--muted);font-size:20px}
   .count .label{color:var(--muted);font-size:14px}
   .count .darknote{color:#ff6b6b;font-size:13px}
+  .count .calibnote{color:var(--muted);font-size:13px}
   .count .q{margin-left:auto;color:var(--muted);font-size:13px;align-self:center}
   .asof{color:var(--muted);font-size:13px;margin:0 0 16px}
   .sysstatus{border-radius:10px;padding:11px 15px;margin:0 0 18px;font-size:13px;
@@ -284,12 +285,13 @@ const T = {
     benignShift:"benign shift", calibrating:"calibrating",
     annoTitle:"Recent trembles, attributed",
     notCounted:"watchlist — not counted in the resonance",
+    calibNote:(n,m)=>" · "+n+" of "+m+" lines still calibrating",
     range_30:"30d", range_90:"90d", range_365:"1y", range_all:"all",
     alarmingWhen:dir=>"alarming when "+dir, dirUp:"up", dirDown:"down",
     last:(v,u,d)=>" · last: "+v+" "+u+" on "+d, noCollect:"no collection this day",
     source:"Source", alarmTag:dir=>"alarming when "+dir,
     resoTitle:"Resonance — the only number that matters",
-    resoBody:"Each line is normalized on its own, then we simply count how many crossed the trembling threshold today (|z| > 3). The lines are never multiplied into a single doom score. One line moving alone is usually a local event. Several independent instruments — airspace, finance, capital, infrastructure — trembling at once is what “the world is actually more disordered” looks like.",
+    resoBody:"Each line is normalized on its own, then we simply count how many crossed the trembling threshold today (|z| > 3). The lines are never multiplied into a single doom score. One line moving alone is usually a local event. Several independent instruments — airspace, finance, capital, navigation — trembling at once is what “the world is actually more disordered” looks like. Trembling is measured against each line's own recent baseline (~90 observations, capped at 180 days), so the count reads short-horizon shifts, not slow decades-long drift.",
     footer:"tremor doesn't predict the end — nobody can. It only makes <b>now</b> readable: a seismograph, not a prophet, blind to instantaneous shocks and listening for the slow, systemic, trace-leaving kind of disorder. Data is collected daily by a GitHub Actions cron and committed back to the repo (<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>); this dashboard reads the CSVs directly — no backend.",
   },
   zh:{
@@ -315,12 +317,13 @@ const T = {
     benignShift:"良性异动", calibrating:"校准中",
     annoTitle:"近期颤抖及归因",
     notCounted:"观察名单 — 不计入共振",
+    calibNote:(n,m)=>"（"+n+"/"+m+" 根线校准中）",
     range_30:"30天", range_90:"90天", range_365:"1年", range_all:"全部",
     alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下跌",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
     source:"数据来源", alarmTag:dir=>dir+"时为异常",
     resoTitle:"共振——唯一重要的数字",
-    resoBody:"每根线各自归一化，然后我们只数今天有几根越过了颤抖阈值（|z| > 3）。这些线绝不相乘成一个末日总分。单独一根线动，通常只是局部事件。几台互相独立的仪器——空域、金融、资本、基础设施——同时颤抖，才是「世界真的更乱了」的样子。",
+    resoBody:"每根线各自归一化，然后我们只数今天有几根越过了颤抖阈值（|z| > 3）。这些线绝不相乘成一个末日总分。单独一根线动，通常只是局部事件。几台互相独立的仪器——空域、金融、资本、导航——同时颤抖，才是「世界真的更乱了」的样子。颤抖是相对每根线自己最近的基线（约 90 个观测、上限 180 天）测的，所以这个数读的是短期突变，不是数十年的缓慢漂移。",
     footer:"tremor 不预言末日——没人能。它只让<b>此刻</b>变得可读：是地震仪，不是先知；对瞬时灾难无能为力，只倾听那种缓慢的、系统性的、会留下痕迹的失序。数据由 GitHub Actions 每日定时采集并提交回仓库（<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>），仪表盘直接读取 CSV——无需后端。",
   }
 };
@@ -423,12 +426,16 @@ function render(){
   const gapDays=last?Math.floor((nowChinaMidnight()-utcMidnight(last.date))/86400000):null;
   const darkCount=last?(parseInt(last.dark_count||"0",10)||0):0;
 
+  // honesty: "0 — calm" while baselines are still building would overstate
+  // confidence, so the headline carries a calibrating qualifier until then
+  const calibN=TIER1.filter(L=>uniqueObs(lines[L.id]||[])<CALIBRATING_OBS).length;
   if(last){
     const n=parseInt(last.trembling_count||"0",10)||0;
     const el=document.getElementById("count-n"); el.textContent=n; el.style.color=countColor(n);
     const base = n===0?T[lang].calm:(n===1?T[lang].tremblingOne:T[lang].tremblingMany);
     document.getElementById("count-label").innerHTML =
-      base + (darkCount?`<span class="darknote">${T[lang].darkNote(darkCount)}</span>`:"");
+      base + (darkCount?`<span class="darknote">${T[lang].darkNote(darkCount)}</span>`:"")
+           + (calibN?`<span class="calibnote">${T[lang].calibNote(calibN,TIER1.length)}</span>`:"");
     document.getElementById("asof").textContent=T[lang].asof(last.date);
   }
   document.getElementById("count").onclick=()=>openModal(resoModal(lang));

@@ -8,8 +8,12 @@ tremor watches a few **tension indicators**: guarded equilibria that something p
 
 - **Flights airborne** — airspace (community ADS-B)
 - **US high-yield credit spread** — financial system (FRED)
-- **Korea BTC premium** — capital controls (Upbit + Coinbase)
-- **Grid frequency** — infrastructure (Nordic grid: Fingrid / Statnett)
+- **Offshore−onshore yuan spread** — capital controls (CNH−CNY)
+- **GPS interference** — navigation / electronic warfare (GPSJam)
+
+The primary set is chosen and re-chosen by a scored radar process — see `radar.md` for the
+current tiers, the metrics, and every calibration decision. Nine more lines ride a hidden
+watchlist, collected daily while they earn (or lose) a place.
 
 Each line is normalized on its own (robust z-score, de-cycled so routine daily/weekly rhythms don't false-trigger); they are never combined into a single doom score. What matters is **resonance** — how many lines are trembling at once. Several independent instruments screaming together is what "actually more disordered" looks like; one moving alone is just a local event.
 
@@ -26,4 +30,4 @@ pip install -r requirements.txt
 python collect.py && python render.py
 ```
 
-Three lines need no keys (flights, Korea premium, grid frequency). Add a free `FRED_API_KEY` as a repo Secret to light up the credit-spread line too.
+Three of the four primary lines need no keys (flights, yuan spread, GPS interference). Add a free `FRED_API_KEY` as a repo Secret to light up the credit-spread line too.
