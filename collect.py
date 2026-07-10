@@ -4,6 +4,18 @@ Calls every tension-line fetcher, appends today's reading to ``data/<line>.csv``
 with a robust z-score and a trembling flag, then rewrites ``data/summary.csv``
 with the day's trembling count.
 
+Fetcher contract — each module in ``fetchers/`` provides:
+  - ``fetch_daily() -> {"raw_value": float | None, "source_note": str,
+    "obs_date": str (optional)}``. A LAGGED source (one that republishes the
+    same reading until it updates: FRED, PortWatch, GPSJam) MUST set
+    ``obs_date`` to the observation's own date, or duplicate readings will
+    quietly shrink the MAD baseline — the pseudo-replication the obs-dedup
+    rule exists to kill.
+  - module attrs: ``LINE``, ``LABEL``, ``UNIT``, ``ANOMALY_DIRECTION``
+    ("up"/"down" — the alarm direction; only trembles in this direction feed
+    trembling_count), optional ``TIER`` (default 1), optional ``WEEKLY_CYCLE``
+    (True for lines with a weekday rhythm, e.g. flights).
+
 Two tiers (each fetcher sets ``TIER``; absent means 1):
   - TIER 1 — primary instruments: displayed, and counted in the trembling
     resonance and the dark-line count.
@@ -78,28 +90,20 @@ def _upsert(rows, new_row, date):
 
 
 def _history(rows, today):
-    """Prior (values, dates) aligned, excluding today; empty cells become None.
+    """Prior (values, dates, obs_dates) aligned, excluding today.
 
-    Rows that repeat an already-seen observation (same ``obs_date`` — lagged
-    sources republish the same reading until they update) are excluded from the
-    statistical history: duplicates are pseudo-replication that shrinks MAD and
-    inflates the z of genuine moves. Rows without an obs_date (real-time lines)
-    always count.
+    Empty cells become None; observation dedup and every other scoring rule
+    live in ``normalize.judge``, so this stays pure data access.
     """
-    values, dates = [], []
-    seen_obs = set()
+    values, dates, obs_dates = [], [], []
     for r in rows:
         if r.get("date") == today:
             continue
-        obs = r.get("obs_date") or ""
-        if obs:
-            if obs in seen_obs:
-                continue
-            seen_obs.add(obs)
         v = r.get("raw_value")
         values.append(float(v) if v not in (None, "") else None)
         dates.append(r.get("date"))
-    return values, dates, seen_obs
+        obs_dates.append(r.get("obs_date") or "")
+    return values, dates, obs_dates
 
 
 def _fmt(value):
@@ -132,30 +136,13 @@ def collect():
         tier = getattr(mod, "TIER", 1)
         primary = tier == 1
 
-        history, hist_dates, seen_obs = _history(rows, today)
-        stale = bool(obs_date) and obs_date in seen_obs
-        if stale:
-            # The source republished an observation already scored on an earlier
-            # day. Keep the raw value for chart continuity, but score no z and
-            # raise no flag: one observation gets one verdict, not one per day.
-            z = None
-            trembling, direction = 0, ""
-            note += " [stale: observation already recorded]"
-        else:
-            z = normalize.robust_z(
-                history, raw, dates=hist_dates, today_date=today,
-                weekday_cycle=getattr(mod, "WEEKLY_CYCLE", False),
-            )
-            trembling, direction = normalize.classify(z)
-            # Warm-up veto for weekly-cycle lines: while the proper same-weekday
-            # baseline lacks samples, suppress a full-window tremble whose level
-            # has already been seen on this weekday. Auditable via the note.
-            if trembling and getattr(mod, "WEEKLY_CYCLE", False):
-                vetoed, detail = normalize.weekday_range_veto(
-                    history, hist_dates, raw, today)
-                if vetoed:
-                    trembling = 0
-                    note += f" [{detail}]"
+        history, hist_dates, hist_obs = _history(rows, today)
+        z, trembling, direction, verdict_note = normalize.judge(
+            history, hist_dates, hist_obs, raw, obs_date, today,
+            weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False),
+        )
+        if verdict_note:
+            note += f" {verdict_note}"
         # Only tier-1 instruments count toward the live resonance and dark count,
         # and only trembles in the line's declared ALARM direction feed the count
         # — a guard visibly reasserting itself (a benign-direction move) is

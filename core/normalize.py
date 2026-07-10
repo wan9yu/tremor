@@ -38,6 +38,34 @@ def _weekday(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d").weekday()
 
 
+def _age_capped(history, dates, today_date, max_age_days):
+    """Drop (value, date) pairs older than ``max_age_days`` before ``today_date``.
+
+    For slow/deduplicated sources, "the last 90 observations" could otherwise
+    span seasons or regimes. Shared by the z baseline and the weekday veto so
+    both always judge against the same sample set.
+    """
+    if not (dates is not None and today_date and max_age_days):
+        return history, dates
+    try:
+        cutoff = (datetime.strptime(today_date, "%Y-%m-%d")
+                  - timedelta(days=max_age_days)).strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return history, dates
+    pairs = [(v, d) for v, d in zip(history, dates) if not d or d >= cutoff]
+    return [v for v, _ in pairs], [d for _, d in pairs]
+
+
+def _same_weekday(history, dates, today_date):
+    """Values from ``history`` whose date falls on ``today_date``'s weekday."""
+    try:
+        target = _weekday(today_date)
+        return [v for v, d in zip(history, dates)
+                if v is not None and d and _weekday(d) == target]
+    except (ValueError, TypeError):
+        return []
+
+
 def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
              window=WINDOW, min_points=MIN_POINTS, max_age_days=MAX_AGE_DAYS):
     """Robust z-score of ``today`` against the trailing ``window`` of history.
@@ -61,25 +89,9 @@ def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
     """
     if today is None:
         return None
-    # Calendar cap: for slow/deduped sources, "the last 90 observations" could
-    # otherwise span seasons or regimes; drop anything older than max_age_days.
-    if dates is not None and today_date is not None and max_age_days:
-        try:
-            cutoff = (datetime.strptime(today_date, "%Y-%m-%d")
-                      - timedelta(days=max_age_days)).strftime("%Y-%m-%d")
-            pairs = [(v, d) for v, d in zip(history, dates) if not d or d >= cutoff]
-            history = [v for v, _ in pairs]
-            dates = [d for _, d in pairs]
-        except (ValueError, TypeError):
-            pass
+    history, dates = _age_capped(history, dates, today_date, max_age_days)
     if weekday_cycle and dates is not None and today_date is not None:
-        try:
-            target = _weekday(today_date)
-            same = [v for v, d in zip(history, dates)
-                    if v is not None and d and _weekday(d) == target]
-        except (ValueError, TypeError):
-            same = []
-        same = same[-window:]
+        same = _same_weekday(history, dates, today_date)[-window:]
         if len(same) >= min_points:
             return _scale_z(same, today)
     values = [v for v in history if v is not None][-window:]
@@ -116,12 +128,10 @@ def weekday_range_veto(history, dates, today, today_date,
     """
     if today is None or not dates or today_date is None:
         return False, ""
-    try:
-        target = _weekday(today_date)
-        same = [v for v, d in zip(history, dates)
-                if v is not None and d and _weekday(d) == target]
-    except (ValueError, TypeError):
-        return False, ""
+    # Same age cap as robust_z, so the veto judges against the same sample set
+    # the z-score was computed from.
+    history, dates = _age_capped(history, dates, today_date, MAX_AGE_DAYS)
+    same = _same_weekday(history, dates, today_date)
     n = len(same)
     if not (min_samples <= n < max_samples):
         return False, ""
@@ -131,3 +141,38 @@ def weekday_range_veto(history, dates, today, today_date,
         return True, (f"suppressed: within same-weekday range "
                       f"[{lo:g}, {hi:g}] (n={n})")
     return False, ""
+
+
+def judge(history, dates, obs_dates, today, today_obs, today_date,
+          weekly_cycle=False):
+    """The full verdict for today's reading: ``(z, trembling, direction, note)``.
+
+    Owns the whole scoring sequence in one place — observation dedup (lagged
+    sources republish a reading until they update; only the first occurrence
+    counts), the stale check (a republished observation scores no new z and
+    raises no flag), the calendar cap, the weekday baseline, classification,
+    and the weekly-cycle warm-up veto. ``note`` carries any verdict detail
+    (stale marker, veto reason) for the row's source_note.
+
+    ``history``/``dates``/``obs_dates`` are aligned per prior row; ``today_obs``
+    is today's observation date ("" for real-time lines).
+    """
+    values, kept_dates = [], []
+    seen_obs = set()
+    for v, d, o in zip(history, dates, obs_dates):
+        if o:
+            if o in seen_obs:
+                continue
+            seen_obs.add(o)
+        values.append(v)
+        kept_dates.append(d)
+    if today_obs and today_obs in seen_obs:
+        return None, 0, "", "[stale: observation already recorded]"
+    z = robust_z(values, today, dates=kept_dates, today_date=today_date,
+                 weekday_cycle=weekly_cycle)
+    trembling, direction = classify(z)
+    if trembling and weekly_cycle:
+        vetoed, detail = weekday_range_veto(values, kept_dates, today, today_date)
+        if vetoed:
+            return z, 0, direction, f"[{detail}]"
+    return z, trembling, direction, ""

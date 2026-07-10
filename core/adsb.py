@@ -53,9 +53,9 @@ def region_airborne(lat, lon):
         )
         if count >= REGION_FLOOR:
             return count, name
+        if thin:  # a second provider agrees it's thin -> a real reading
+            return thin[0][0], f"{thin[0][1]} (low, corroborated by {name})"
         thin.append((count, name))
-        if len(thin) >= 2:  # two providers agree it's thin -> a real reading
-            return thin[0][0], f"{thin[0][1]} (low, corroborated by {thin[1][1]})"
     if thin:
         return None, f"suspected degraded feed ({thin[0][0]} via {thin[0][1]}, uncorroborated)"
     return None, "no provider responded"
