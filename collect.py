@@ -44,7 +44,7 @@ from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
                       grid_frequency, net_outages, ports, sofr_iorb)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
-# (airspace / financial system / capital controls / infrastructure), so several
+# (airspace / financial system / capital controls / navigation-EW), so several
 # trembling at once means more than any one moving alone. Tier-2 lines ride along
 # to build history until they earn promotion.
 LINES = [flights, credit_spread, cnh_cny, gnss,         # tier 1 (primary, displayed)
