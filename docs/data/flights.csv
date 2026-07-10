@@ -17,4 +17,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date
 2026-07-07,1379,-1.554,0,down,"ADS-B airborne over 4 regions via adsb.fi, adsb.lol, airplanes.live",
 2026-07-08,1586,-0.186,0,down,ADS-B airborne over 4 regions via airplanes.live,
 2026-07-09,1783,0.686,0,up,ADS-B airborne over 4 regions via airplanes.live,
-2026-07-10,1375,-1.144,0,down,"ADS-B regions [W/C Europe=61, US East=583, US West=543, E Asia/Japan=188] via airplanes.live",
+2026-07-10,1282,-1.554,0,down,"ADS-B regions [W/C Europe=74, US East=515, US West=481, E Asia/Japan=212] via airplanes.live",
