@@ -62,10 +62,19 @@
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 16px 10px}
   .panel h2{font-size:14px;margin:0;font-weight:600}
   .panel .hint{color:var(--muted);font-size:12px;margin:2px 0 10px}
-  .watchlist{color:var(--muted);font-size:12px;margin:14px 2px 0;line-height:1.5}
+  .panelhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .rangetoggle{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+  .rangetoggle button{background:transparent;color:var(--muted);border:0;padding:3px 9px;
+    font-size:11px;cursor:pointer;font-family:inherit}
+  .rangetoggle button.on{background:var(--line);color:var(--ink)}
+  .watchlist{color:var(--muted);font-size:12px;margin:14px 2px 0;line-height:1.7}
   .watchlist b{color:#9aa1ad;font-weight:600}
   .watchlist .dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:#5b616d;margin-right:5px;vertical-align:middle}
   .watchlist .days{opacity:.7}
+  .wl-item{cursor:pointer;white-space:nowrap;margin-right:14px}
+  .wl-item:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+  .modal-card .mchart{margin:12px 0 4px}
+  .modal-card .mnow{font-size:15px;margin:10px 0 2px;color:#c7ccd6}
   footer{color:var(--muted);font-size:13px;margin-top:34px;border-top:1px solid var(--line);padding-top:18px}
   footer a{color:#9fb6ff}
   code{background:#1d2129;padding:1px 5px;border-radius:5px;font-size:12px}
@@ -112,7 +121,12 @@
   <div class="strip" id="strip"></div>
 
   <div class="panel">
-    <h2 id="panel-title"></h2>
+    <div class="panelhead">
+      <h2 id="panel-title"></h2>
+      <div class="rangetoggle" id="rangetoggle">
+        <button data-range="30"></button><button data-range="90"></button><button data-range="365"></button><button data-range="all"></button>
+      </div>
+    </div>
     <p class="hint" id="panel-hint"></p>
     <canvas id="chart" height="150"></canvas>
   </div>
@@ -134,6 +148,9 @@
 // ---------- language + cookie (default English) ----------
 function getLang(){ const m=document.cookie.match(/(?:^|;)\s*tremor_lang=(en|zh)/); return m?m[1]:"en"; }
 function setLang(l){ document.cookie="tremor_lang="+l+";path=/;max-age="+(3600*24*365); }
+// chart range (days of history shown); persists like the language choice
+function getRange(){ const m=document.cookie.match(/(?:^|;)\s*tremor_range=(30|90|365|all)/); return m?m[1]:"90"; }
+function setRange(r){ document.cookie="tremor_range="+r+";path=/;max-age="+(3600*24*365); }
 
 // ---------- per-line metadata (bilingual) ----------
 const LINES = [
@@ -266,6 +283,8 @@ const T = {
     nodata:"NO DATA", more:"tap to learn what it measures ›",
     benignShift:"benign shift", calibrating:"calibrating",
     annoTitle:"Recent trembles, attributed",
+    notCounted:"watchlist — not counted in the resonance",
+    range_30:"30d", range_90:"90d", range_365:"1y", range_all:"all",
     alarmingWhen:dir=>"alarming when "+dir, dirUp:"up", dirDown:"down",
     last:(v,u,d)=>" · last: "+v+" "+u+" on "+d, noCollect:"no collection this day",
     source:"Source", alarmTag:dir=>"alarming when "+dir,
@@ -295,6 +314,8 @@ const T = {
     nodata:"无数据", more:"点击了解它测的是什么 ›",
     benignShift:"良性异动", calibrating:"校准中",
     annoTitle:"近期颤抖及归因",
+    notCounted:"观察名单 — 不计入共振",
+    range_30:"30天", range_90:"90天", range_365:"1年", range_all:"全部",
     alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下跌",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
     source:"数据来源", alarmTag:dir=>dir+"时为异常",
@@ -339,8 +360,9 @@ function utcMidnight(d){ const p=d.split("-").map(Number); return Date.UTC(p[0],
 function nowChinaMidnight(){ const t=new Date(Date.now()+8*3600*1000); return Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); }
 
 // ---------- modal ----------
-function openModal(html){ document.getElementById("modal-body").innerHTML=html; document.getElementById("modal").hidden=false; }
-function closeModal(){ document.getElementById("modal").hidden=true; }
+let modalChart=null;
+function openModal(html){ if(modalChart){modalChart.destroy();modalChart=null;} document.getElementById("modal-body").innerHTML=html; document.getElementById("modal").hidden=false; }
+function closeModal(){ if(modalChart){modalChart.destroy();modalChart=null;} document.getElementById("modal").hidden=true; }
 document.getElementById("modal-x").onclick=closeModal;
 document.getElementById("modal-backdrop").onclick=closeModal;
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
@@ -411,18 +433,33 @@ function render(){
   }
   document.getElementById("count").onclick=()=>openModal(resoModal(lang));
 
+  // chart range: slice the shared date axis to the selected window
+  const range=getRange();
+  document.querySelectorAll("#rangetoggle button").forEach(b=>{
+    b.textContent=T[lang]["range_"+b.dataset.range];
+    b.classList.toggle("on", b.dataset.range===range);
+  });
+  let viewDates=dates;
+  if(range!=="all" && last){
+    const cut=new Date(utcMidnight(last.date)-(parseInt(range,10)-1)*86400000)
+      .toISOString().slice(0,10);
+    viewDates=dates.filter(d=>d>=cut);
+  }
+  // with long histories, drop the everyday dots and keep only tremble markers
+  const denseView=viewDates.length>120;
+
   const strip=document.getElementById("strip"); strip.innerHTML="";
   const datasets=[]; const darkNames=[];
   for(const L of TIER1){
     const rows=lines[L.id]||[]; const byDate={}; rows.forEach(r=>byDate[r.date]=r);
     // per-date tremble state: "alarm" reads red, "benign" (guard reasserting) reads calm
-    const tstate=dates.map(d=>{const r=byDate[d];
-      return r&&r.trembling==="1"?(r.direction===L.alarm?"alarm":"benign"):null;});
+    const trembleState=r=>r&&r.trembling==="1"?(r.direction===L.alarm?"alarm":"benign"):null;
+    const tstate=viewDates.map(d=>trembleState(byDate[d]));
     const ptColor=tstate.map(t=>t==="alarm"?"#d64545":t==="benign"?"#3fb27f":L.color);
     // plot the RECORDED z_score — the instrument's actual verdicts — so the ±3
     // band and the marked trembles line up exactly; blank z (warm-up, stale
     // observation) is an honest gap the line spans
-    const z=dates.map(d=>{ const r=byDate[d]; const v=r?parseFloat(r.z_score):NaN; return isNaN(v)?null:v; });
+    const z=viewDates.map(d=>{ const r=byDate[d]; const v=r?parseFloat(r.z_score):NaN; return isNaN(v)?null:v; });
     const todayRow=last?byDate[last.date]:null;
     const hasToday=todayRow&&todayRow.raw_value!=="";
     const lastGood=[...rows].reverse().find(r=>r.raw_value!=="");
@@ -434,7 +471,7 @@ function render(){
     let nowHtml, subHtml;
     if(hasToday){
       let pill="";
-      const t=tstate[dates.length-1];
+      const t=trembleState(todayRow);
       if(t)
         pill = t==="alarm"
           ? `<span class="pill trembling">${lang==="zh"?"颤抖":"trembling"}</span>`
@@ -456,7 +493,7 @@ function render(){
 
     datasets.push({ label:L.label[lang], _lineId:L.id, data:z, borderColor:L.color, backgroundColor:L.color,
       borderWidth:1.8, tension:.25, spanGaps:true,
-      pointRadius:tstate.map(t=>t?4:2), pointHoverRadius:5,
+      pointRadius:tstate.map(t=>t?4:(denseView?0:2)), pointHoverRadius:5,
       pointBackgroundColor:ptColor, pointBorderColor:ptColor });
   }
 
@@ -470,12 +507,12 @@ function render(){
 
   // Dashed ±3 trembling-threshold guides — visual reference only, kept out of
   // the legend and the hover tooltip so only the real lines are listed.
-  const thr=v=>({label:(v>0?"+":"")+v, _threshold:true, data:dates.map(()=>v),
+  const thr=v=>({label:(v>0?"+":"")+v, _threshold:true, data:viewDates.map(()=>v),
     borderColor:"rgba(214,69,69,.45)", borderWidth:1, borderDash:[5,4],
     pointRadius:0, pointHoverRadius:0, fill:false, tension:0});
   if(chart) chart.destroy();
   chart=new Chart(document.getElementById("chart"),{
-    type:"line", data:{ labels:dates, datasets:[...datasets, thr(3), thr(-3)] },
+    type:"line", data:{ labels:viewDates, datasets:[...datasets, thr(3), thr(-3)] },
     options:{ responsive:true, animation:false, interaction:{mode:"index",intersect:false},
       plugins:{ legend:{labels:{color:"#c7ccd6",boxWidth:14,font:{size:11},
                   filter:(item,data)=>!data.datasets[item.datasetIndex]._threshold}},
@@ -488,18 +525,59 @@ function render(){
            ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"}} } }
   });
 
-  // watchlist — tier-2 candidates: collected daily, not scored or charted
+  // watchlist — tier-2 candidates: collected daily, not counted; click for data
   const wl=document.getElementById("watchlist");
+  wl.innerHTML=""; wl.hidden=!TIER2.length;
   if(TIER2.length){
-    wl.hidden=false;
-    wl.innerHTML=`<b>${T[lang].watchTitle}</b> `+TIER2.map(L=>{
+    const b=document.createElement("b"); b.textContent=T[lang].watchTitle+" "; wl.appendChild(b);
+    for(const L of TIER2){
       const days=(lines[L.id]||[]).filter(r=>r.raw_value!=="").length;
-      return `<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)})</span>`;
-    }).join("&nbsp;&nbsp;&nbsp;");
-  } else wl.hidden=true;
+      const item=document.createElement("span"); item.className="wl-item";
+      item.innerHTML=`<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)}) ›</span>`;
+      item.onclick=()=>openTier2Modal(L,lang);
+      wl.appendChild(item);
+    }
+  }
+}
+
+// tier-2 detail: explanation + latest reading + mini history chart + attributions.
+// Deliberately muted — watchlist lines are observed, never counted in the resonance.
+function openTier2Modal(L,lang){
+  const rows=(DATA.lines[L.id]||[]).filter(r=>r.raw_value!=="");
+  const cur=rows[rows.length-1];
+  const dir=L.alarm==="down"?T[lang].dirDown:T[lang].dirUp;
+  const annos=annosFor(L.id).slice(-3).reverse();
+  const annoHtml=annos.length
+    ? `<h4 class="annoh">${T[lang].annoTitle}</h4>`+annos.map(a=>
+        `<p class="anno"><b>${a.date}</b> <span class="tag2">${a.verdict}</span> ${a.note}</p>`).join("")
+    : "";
+  openModal(`<div class="mdomain">${L.domain[lang]}</div>
+    <h3>${L.label[lang]}</h3>
+    <div class="tags"><span class="tag2">${T[lang].notCounted}</span><span class="tag2">${T[lang].alarmTag(dir)}</span><span class="tag2">${T[lang].source}: ${L.source[lang]}</span></div>
+    <p>${L.explain[lang]}</p>
+    ${cur?`<p class="mnow"><b>${fmt(cur.raw_value)}</b> ${L.unit[lang]} <span class="days">(${cur.date}${cur.z_score?` · z=${cur.z_score}`:""})</span></p>`:""}
+    <canvas class="mchart" height="110"></canvas>
+    ${annoHtml}`);
+  // mini chart of raw values, tremble points colored like the main chart
+  const recent=rows.slice(-90);
+  const colors=recent.map(r=>r.trembling==="1"?(r.direction===L.alarm?"#d64545":"#3fb27f"):L.color);
+  if(modalChart) modalChart.destroy();
+  modalChart=new Chart(document.querySelector("#modal-body .mchart"),{
+    type:"line",
+    data:{ labels:recent.map(r=>r.date), datasets:[{ data:recent.map(r=>parseFloat(r.raw_value)),
+      borderColor:L.color, borderWidth:1.5, tension:.25, spanGaps:true,
+      pointRadius:recent.map(r=>r.trembling==="1"?4:(recent.length>60?0:2)),
+      pointBackgroundColor:colors, pointBorderColor:colors }] },
+    options:{ responsive:true, animation:false,
+      plugins:{ legend:{display:false},
+        tooltip:{callbacks:{label:c=>`${fmt(c.parsed.y)} ${L.unit[lang]}`}} },
+      scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:6,font:{size:9}},grid:{color:"#1c1f27"}},
+        y:{ticks:{color:"#8a909c",font:{size:9}},grid:{color:"#1c1f27"}} } }
+  });
 }
 
 document.querySelectorAll("#langtoggle button").forEach(b=>b.onclick=()=>{ setLang(b.dataset.lang); render(); });
+document.querySelectorAll("#rangetoggle button").forEach(b=>b.onclick=()=>{ setRange(b.dataset.range); render(); });
 (async()=>{ await load(); render(); })();
 </script>
 </body>
