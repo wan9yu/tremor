@@ -19,3 +19,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date
 2026-07-09,78,0.578,0,up,ADS-B airborne over 3 China metros via airplanes.live,
 2026-07-10,141,6.070,1,up,"ADS-B China metros [Beijing=63, Shanghai=33, Guangzhou=45] via airplanes.live",
 2026-07-11,61,-1.049,0,down,"ADS-B China metros [Beijing=26, Shanghai=16, Guangzhou=19] via airplanes.live (low, corroborated by adsb.fi), airplanes.live (low, corroborated by adsb.lol)",
+2026-07-12,52,-1.526,0,down,"ADS-B China metros [Beijing=21, Shanghai=7, Guangzhou=24] via airplanes.live (low, corroborated by adsb.fi), airplanes.live (low, corroborated by adsb.lol)",

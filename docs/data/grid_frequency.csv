@@ -19,3 +19,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date
 2026-07-09,99,-0.193,0,down,Fingrid dataset 177 max |dev| over 1434 points (24h),
 2026-07-10,93,-0.519,0,down,Fingrid dataset 177 max |dev| over 1436 points (24h),
 2026-07-11,66,-2.080,0,down,Fingrid dataset 177 max |dev| over 1436 points (24h),
+2026-07-12,166,3.305,1,up,Fingrid dataset 177 max |dev| over 1438 points (24h),
