@@ -20,3 +20,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date
 2026-07-10,0.5313,0.909,0,up,GPSJam 2026-07-09: 18396/3462724 aircraft with bad GPS,2026-07-09
 2026-07-11,0.5313,,0,,GPSJam 2026-07-09: 18396/3462724 aircraft with bad GPS [stale: observation already recorded],2026-07-09
 2026-07-12,0.4746,0.230,0,up,GPSJam 2026-07-10: 16707/3520306 aircraft with bad GPS,2026-07-10
+2026-07-13,0.5171,0.578,0,up,GPSJam 2026-07-11: 17363/3357733 aircraft with bad GPS,2026-07-11
