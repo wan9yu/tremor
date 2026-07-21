@@ -29,3 +29,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date
 2026-07-19,1135,-2.802,0,down,"ADS-B regions [W/C Europe=188, US East=331, US West=457, E Asia/Japan=159] via airplanes.live",
 2026-07-20,1620,-0.115,0,down,"ADS-B regions [W/C Europe=176, US East=761, US West=537, E Asia/Japan=146] via airplanes.live",
 2026-07-21,1739,0.519,0,up,"ADS-B regions [W/C Europe=185, US East=876, US West=518, E Asia/Japan=160] via airplanes.live",
+2026-07-22,1173,-2.695,0,down,"ADS-B regions [W/C Europe=178, US East=293, US West=537, E Asia/Japan=165] via airplanes.live",
