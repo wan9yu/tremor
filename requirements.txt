@@ -1,2 +1,5 @@
-requests>=2.31
-matplotlib>=3.7
+# Pinned exactly, on purpose. This instrument's value is an unbroken daily CSV
+# over years, so a dependency change should require a person, not arrive on a
+# Tuesday. Bump deliberately, and only when the tests still pass.
+requests==2.32.3
+matplotlib==3.9.0
