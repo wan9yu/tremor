@@ -126,6 +126,30 @@ class TestWeekdayVeto(unittest.TestCase):
         self.assertFalse(vetoed)
 
 
+class TestCycleKeying(unittest.TestCase):
+    """De-cycling must key off the OBSERVATION date, not the row date."""
+
+    def test_same_weekday_uses_the_cycle_date(self):
+        # Rows written Mon/Tue/Wed, but each is ABOUT the preceding Sunday.
+        vals = [10.0, 20.0, 30.0]
+        rows = ["2026-06-01", "2026-06-09", "2026-06-16"]
+        obs = ["2026-05-31", "2026-06-07", "2026-06-14"]  # all Sundays
+        self.assertEqual(N._same_weekday(vals, obs, "2026-06-21"), vals)
+        # Keyed on the row dates instead, the same call finds nothing in common.
+        self.assertNotEqual(N._same_weekday(vals, rows, "2026-06-21"), vals)
+
+    def test_cycle_dates_default_to_row_dates(self):
+        """A live snapshot line has no obs_date; behaviour must be unchanged."""
+        vals = [float(i) for i in range(14)]
+        dates = [f"2026-06-{i + 1:02d}" for i in range(14)]
+        with_obs, _, _, _ = N.judge(vals, dates, [""] * 14, 99.0, "", "2026-06-20",
+                                    weekly_cycle=True)
+        plain, _, _, _ = N.judge(vals, dates, [""] * 14, 99.0, "", "2026-06-20",
+                                 weekly_cycle=False)
+        self.assertIsNotNone(with_obs)
+        self.assertAlmostEqual(with_obs, plain)
+
+
 class TestClassify(unittest.TestCase):
     def test_direction_and_threshold(self):
         self.assertEqual(N.classify(None), (0, ""))

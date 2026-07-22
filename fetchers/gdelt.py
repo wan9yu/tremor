@@ -20,6 +20,9 @@ LINE = "gdelt"
 LABEL = "Global conflict-event share (GDELT)"
 UNIT = "%"
 ANOMALY_DIRECTION = "up"
+WEEKLY_CYCLE = True  # news volume has a strong weekday rhythm: weekends carry
+# ~62k events against ~108k on weekdays, and the thinner weekend mix reads as
+# more conflict and grimmer tone. De-cycling keys off obs_date, not the row date.
 TIER = 2
 
 
