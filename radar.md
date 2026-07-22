@@ -42,6 +42,34 @@ baseline), but too stale to be a live tier-1 instrument. Prefer ≤ ~2-day lag f
 evidence. Rubric scores are 0–3; computed metrics show `—` until there is enough
 history (~20 days).
 
+**One rule about new coverage** (added round 7): no new tier-1 line may be justified by a
+single episode. New coverage enters at tier-2 and earns promotion over ≥60 scored readings
+with a documented tremble rate. An instrument tuned to catch the last crisis is how
+instruments stop working on the next one.
+
+### Known limits of the method
+
+Written down because they are structural, not bugs, and a reader deserves them up front.
+
+1. **A rolling z is a CHANGE detector; the founding question is a LEVEL question.** Every
+   line is scored against its own recent history, so a disorder that is already running
+   sits inside its own baseline and reads calm. A war in its third week is invisible by
+   construction; only its onset and its end are visible. This is the single largest gap
+   between what tremor measures and what it asks, and no amount of extra coverage closes
+   it — it would take an external reference for "normal", which the instrument does not
+   yet admit.
+2. **|z| > 3 is not a 1-in-300 event at the window sizes tremor runs on.** Measured null
+   exceedance on iid Gaussian data with the current estimator: **2.7% at n=10, 1.2% at
+   n=20, 0.36% at n=90.** (Under the MAD scale used before round 7 it was 5.3% / 2.1% /
+   0.56%.) Short-window lines are therefore expected to tremble occasionally with nothing
+   happening; that is why attribution is mandatory and why tier-2 exists.
+3. **Tremble COUNTS are day counts, not episode counts.** A line with high autocorrelation
+   records one event as several trembling days. Rate comparisons across lines are
+   correspondingly rough.
+4. **Below ~60 scored readings a per-line tremble rate cannot be adjudicated.** The
+   confidence interval is wider than the difference being argued about. Radar rounds
+   should say so rather than rule on n≈20.
+
 ---
 
 ## Tier 1 — primary  (4 / 4 ✅)
@@ -310,3 +338,73 @@ The mission audit scored the second clause of the founding question ("或只是�
   premium, visible. Earlier same-day fixes: stale tier-1 lists in README/resonance modal
   corrected, comparator disclosed, calibrating qualifier added to the headline.
 - The founding question's two halves are now both on the page.
+
+### Round 7 — 2026-07-22 (the scale estimator; a miss, and a correction)
+
+Triggered by a 15-day miss, reviewed against 31 days of history. The instrument read
+**0 / 4 every day from 07-07 to 07-22** while the US–Iran ceasefire collapsed, the IRGC
+closed the Strait of Hormuz, the Houthis declared a naval blockade of Saudi Arabia and
+Brent reached $91. The miss is logged in `annotations.csv` as a permanent record.
+
+**Diagnosis — mostly coverage, partly calibration, and the premise was wrong.**
+The working premise going in was "the |z|>3 rule over-fires 26x" (7.8% observed against
+0.3% nominal). That is wrong: 0.3% is the tail of a *standard normal*, but a z built from a
+finite window has its own, much fatter null distribution that depends on window size.
+Measured by simulation against the shipped code: **|z|>3 under MAD occurs 5.3% of the time
+at n=10 and 0.56% at n=90 with nothing happening.** True over-firing was ~1.5–3x, not 26x —
+and the threshold could not be raised anyway, because two adjudicated REAL events (the FAA
+nine-airport ground stop of 07-21, and the 07-18 Northeast storms) had already scored
+−2.70 and −2.80 and been missed *at* 3.0.
+
+**Shipped: MAD → Rousseeuw-Croux Qn** in `core/normalize.py`. Same 50% breakdown point and
+the same collapse condition, but unbiased on short windows (MAD measures ~0.91 sigma at
+n=10; Qn ~1.00) with about half the sampling variance. Null exceedance at |z|>3 falls to
+2.7% / 1.2% / 0.36% at n=10 / 20 / 90. Replayed over all 341 scored rows the tremble rate
+goes 7.3% → 6.5%; `em_corp_oas` 9.1% → 0%; the adjudicated `grid_frequency` artifact of
+07-12 is suppressed while 07-17 survives; and **the adjudicated real `flights` event of
+07-22 is recovered, −2.695 → −3.014.** Forward only; every series carries a seam here.
+
+**Shipped: the RMS fallback is gone.** When the robust scale collapsed, scoring fell
+through to a median-centred RMS with breakdown point 0 — on the real `sofr_iorb_spread`
+window of 07-02 it manufactured z = 5.262 from a 3bp integer move. No spread now returns
+None, as the stated rule always said it should. Costs zero z-scores on the existing record.
+
+**Shipped: a test suite** (`tests/test_normalize.py`, run in CI before any row is written)
+and a **CI failure alarm** — a persistently failing run stopped the daily commit, and
+GitHub disables a cron workflow after 60 days without repository activity, so the
+instrument could have switched itself off with nobody told.
+
+**Corrected:** the `gdelt_tone` annotation of 07-21 defended a tremble with a weekday
+control computed on a *different row*. The trembling row scored a Sunday observation whose
+own-weekday z is ≈ −1.05; the genuine weekday signal was the next row, at −4.31 sd, which
+did not tremble. The instrument trembled on the artifact and stayed silent on the real day.
+
+**Reliability, first data-backed reading** (tremble rate over scored rows, MAD basis, and
+see limit 4 above — none of these n are large enough to adjudicate, they are recorded to
+accumulate): `sofr_iorb_spread` 30% (n=10), `grid_frequency` 9.5% (21), `cnh_cny` 9.5% (21),
+`em_corp_oas` 9.1% (11), `vix` 7.3% (178), `capital_premium` 4.8% (21), `cn_flights` 4.8%
+(21), `flights` 4.8% (21), `credit_spread` 0% (11), `gnss_interference` 0% (19).
+No promotions. `grid_frequency` is **blocked from tier-1** pending re-measurement under Qn.
+
+**Investigated and deliberately NOT built** (each rejected on evidence, recorded so it is
+not silently re-litigated):
+- *A Gulf region for `flights`* — probed all three keyless ADS-B aggregators at seven Gulf
+  points: 6–15 airborne over Dubai, 14–28 Doha, 10–21 Hormuz; the deduplicated union of
+  eight 250nm circles covering the whole peninsula is **35 aircraft**, against ~950 in the
+  single W/C Europe circle. Dubai swung 14→15→11→6→13 within fourteen minutes. A sensor
+  with ±50% snapshot noise cannot see the −14% move the Hormuz closure actually produced.
+  Free community ADS-B does not instrument the Gulf. Recorded as a permanent limitation.
+- *Regionalizing `gnss_interference` onto a Hormuz box* — backtested on 95 days of real
+  GPSJam files. A box at 25–38N/44–62E does fire (z ≈ +3.2/+3.8/+3.3 across the episode),
+  but **moving its southern edge by one degree destroys the detection entirely** (24–38N
+  gives 2.0/2.1/1.8), and its 90-day baseline spans a ~10x growth in the sampling frame
+  (139 active cells / 3,570 aircraft in April against 555 / 36,416 in July) — the same
+  sensor-inflation artifact that forced the `net_outages` v2 break. A tier-1 reading that
+  depends on where a human drew a rectangle is worse than an honestly empty slot. Deferred.
+
+**Still open, carried to round 8:** the level-vs-change limit (1 above) — the deepest
+finding of the review and unaddressed; harvesting the full DAILY PortWatch series (the
+fetcher currently discards 6 of every 7 observations it already downloads, which is the
+real reason `chokepoint_breadth` could not score through the Hormuz closure); a per-line
+`status` so "cannot score" stops reading identically to "calm"; the weekly cycle on the
+GDELT feel lines; `grid_frequency`'s daily-maximum statistic; vendoring Chart.js.

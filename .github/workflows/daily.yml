@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write          # commit the day's data back to the repo
+  issues: write            # raise an alarm when a run fails (see the last step)
 
 concurrency:
   group: tremor-daily
@@ -24,6 +25,11 @@ jobs:
           cache: pip
 
       - run: pip install -r requirements.txt
+
+      # The scoring rules are the instrument. If they have drifted, stop before
+      # writing a row rather than committing readings judged by broken rules.
+      - name: Check the scoring rules
+        run: python -m unittest discover tests
 
       - name: Collect today's readings
         env:
@@ -44,3 +50,27 @@ jobs:
           git add data/ charts/ docs/data/
           git commit -m "data: $(date -u +%F)" || echo "no changes to commit"
           git push
+
+      # A silent instrument is the failure mode that ends this project. The daily
+      # commit is also what keeps the schedule alive — GitHub disables a cron
+      # workflow after 60 days without repository activity — so a run that keeps
+      # failing does not merely lose days, it eventually switches tremor off with
+      # nobody told. Raise one open issue and keep appending to it.
+      - name: Raise the alarm on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TITLE="tremor: the daily collection is failing"
+          NUM=$(gh issue list --state open --search "$TITLE in:title" --json number \
+                --jq '.[0].number // empty')
+          BODY="Run failed on $(date -u +%F) — $RUN_URL
+
+          The instrument writes no row for a failed run, and the schedule itself
+          expires after 60 days without a commit. Fix or disable deliberately."
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi

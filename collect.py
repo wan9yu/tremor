@@ -9,7 +9,7 @@ Fetcher contract — each module in ``fetchers/`` provides:
     "obs_date": str (optional)}``. A LAGGED source (one that republishes the
     same reading until it updates: FRED, PortWatch, GPSJam) MUST set
     ``obs_date`` to the observation's own date, or duplicate readings will
-    quietly shrink the MAD baseline — the pseudo-replication the obs-dedup
+    quietly shrink the robust-scale baseline — the pseudo-replication the obs-dedup
     rule exists to kill.
   - module attrs: ``LINE``, ``LABEL``, ``UNIT``, ``ANOMALY_DIRECTION``
     ("up"/"down" — the alarm direction; only trembles in this direction feed
