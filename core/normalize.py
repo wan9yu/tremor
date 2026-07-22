@@ -15,6 +15,21 @@ MAX_AGE_DAYS = 180  # calendar cap: slow sources must not build baselines across
 THRESHOLD = 3.0    # |z| above this counts as "trembling"
 MIN_POINTS = 10    # need at least this much clean history to judge honestly
 
+# A line reporting nothing can be in several very different states, and the
+# instrument used to express all of them the same way: an empty z-score. That is
+# how a strait closing went unnoticed for fifteen days — the only line watching
+# it COULD NOT SCORE, and "cannot score" looked exactly like "calm". The state is
+# now recorded as data on every row, not as prose inside source_note.
+STATUS_SCORING = "scoring"      # enough clean history; a z was computed
+STATUS_WARMING = "warming-up"   # fewer than MIN_POINTS unique observations yet
+STATUS_STALE = "stale"          # the source republished an observation we hold
+STATUS_DARK = "dark"            # no reading at all — the fetch failed
+STATUS_FLAT = "no-spread"       # history has no resolvable dispersion to judge against
+# A line is BLIND when it holds a reading it cannot judge. Dark is not blindness
+# (it is already reported loudly); staleness is not either (the observation was
+# judged when it first arrived).
+BLIND_STATUSES = (STATUS_WARMING, STATUS_FLAT)
+
 _QN_C = 2.2219  # scales the Qn order statistic to a Gaussian standard deviation
 # Rousseeuw-Croux finite-sample corrections; past n=9 the closed form takes over.
 _QN_D = {2: 0.399, 3: 0.994, 4: 0.512, 5: 0.844,
@@ -132,19 +147,35 @@ def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
     cycle is absorbed by the trailing window; true year-over-year
     de-seasonalization waits on a full year of history.)
     """
+    return robust_z_status(history, today, dates, today_date, weekday_cycle,
+                           window, min_points, max_age_days,
+                           cycle_dates, today_cycle_date)[0]
+
+
+def robust_z_status(history, today, dates=None, today_date=None,
+                    weekday_cycle=False, window=WINDOW, min_points=MIN_POINTS,
+                    max_age_days=MAX_AGE_DAYS, cycle_dates=None,
+                    today_cycle_date=None):
+    """``robust_z``, but returns ``(z, status)`` — WHY there is no z, when there isn't.
+
+    Distinguishing "not enough history yet" from "no dispersion to measure
+    against" from "quiet" is the whole point; see the STATUS_* constants.
+    """
     if today is None:
-        return None
+        return None, STATUS_DARK
     history, dates, cycle_dates = _age_capped(
         history, dates, cycle_dates, today_date, max_age_days)
     today_cycle_date = today_cycle_date or today_date
     if weekday_cycle and cycle_dates is not None and today_cycle_date is not None:
         same = _same_weekday(history, cycle_dates, today_cycle_date)[-window:]
         if len(same) >= min_points:
-            return _scale_z(same, today)
+            z = _scale_z(same, today)
+            return (z, STATUS_SCORING) if z is not None else (None, STATUS_FLAT)
     values = [v for v in history if v is not None][-window:]
     if len(values) < min_points:
-        return None
-    return _scale_z(values, today)
+        return None, STATUS_WARMING
+    z = _scale_z(values, today)
+    return (z, STATUS_SCORING) if z is not None else (None, STATUS_FLAT)
 
 
 def classify(z, threshold=THRESHOLD):
@@ -194,7 +225,7 @@ def weekday_range_veto(history, dates, today, today_date,
 
 def judge(history, dates, obs_dates, today, today_obs, today_date,
           weekly_cycle=False):
-    """The full verdict for today's reading: ``(z, trembling, direction, note)``.
+    """Today's verdict: ``(z, trembling, direction, note, status)``.
 
     Owns the whole scoring sequence in one place — observation dedup (lagged
     sources republish a reading until they update; only the first occurrence
@@ -204,7 +235,9 @@ def judge(history, dates, obs_dates, today, today_obs, today_date,
     (stale marker, veto reason) for the row's source_note.
 
     ``history``/``dates``/``obs_dates`` are aligned per prior row; ``today_obs``
-    is today's observation date ("" for real-time lines).
+    is today's observation date ("" for real-time lines). ``status`` says WHY a
+    reading was or was not judged, so that "cannot score" can never again be
+    displayed identically to "calm".
     """
     values, kept_dates, kept_cycle = [], [], []
     seen_obs = set()
@@ -219,16 +252,17 @@ def judge(history, dates, obs_dates, today, today_obs, today_date,
         # keys off the observation date when the source publishes one.
         kept_cycle.append(o or d)
     if today_obs and today_obs in seen_obs:
-        return None, 0, "", "[stale: observation already recorded]"
+        return None, 0, "", "[stale: observation already recorded]", STATUS_STALE
     today_cycle = today_obs or today_date
-    z = robust_z(values, today, dates=kept_dates, today_date=today_date,
-                 weekday_cycle=weekly_cycle,
-                 cycle_dates=kept_cycle, today_cycle_date=today_cycle)
+    z, status = robust_z_status(
+        values, today, dates=kept_dates, today_date=today_date,
+        weekday_cycle=weekly_cycle,
+        cycle_dates=kept_cycle, today_cycle_date=today_cycle)
     trembling, direction = classify(z)
     if trembling and weekly_cycle:
         vetoed, detail = weekday_range_veto(
             values, kept_dates, today, today_date,
             cycle_dates=kept_cycle, today_cycle_date=today_cycle)
         if vetoed:
-            return z, 0, direction, f"[{detail}]"
-    return z, trembling, direction, ""
+            return z, 0, direction, f"[{detail}]", status
+    return z, trembling, direction, "", status

@@ -1,32 +1,32 @@
-date,raw_value,z_score,trembling,direction,source_note,obs_date
-2026-06-22,1336,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-06-23,1300,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-06-24,1602,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-06-25,1792,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-06-26,1831,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-06-27,1703,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-06-28,1363,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-06-29,1667,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-06-30,1769,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-07-01,1717,,0,,ADS-B airborne over 4 regions via airplanes.live,
-2026-07-02,1751,0.466,0,up,ADS-B airborne over 4 regions via airplanes.live,
-2026-07-03,1780,0.584,0,up,ADS-B airborne over 4 regions via airplanes.live,
-2026-07-04,1441,-2.387,0,down,"ADS-B airborne over 4 regions via adsb.fi, airplanes.live",
-2026-07-05,945,-5.745,1,down,ADS-B airborne over 4 regions via airplanes.live,
-2026-07-06,1421,-1.763,0,down,ADS-B airborne over 4 regions via airplanes.live,
-2026-07-07,1379,-1.554,0,down,"ADS-B airborne over 4 regions via adsb.fi, adsb.lol, airplanes.live",
-2026-07-08,1586,-0.186,0,down,ADS-B airborne over 4 regions via airplanes.live,
-2026-07-09,1783,0.686,0,up,ADS-B airborne over 4 regions via airplanes.live,
-2026-07-10,1282,-1.554,0,down,"ADS-B regions [W/C Europe=74, US East=515, US West=481, E Asia/Japan=212] via airplanes.live",
-2026-07-11,1588,-0.052,0,down,"ADS-B regions [W/C Europe=157, US East=633, US West=653, E Asia/Japan=145] via airplanes.live",
-2026-07-12,1366,-0.860,0,down,"ADS-B regions [W/C Europe=178, US East=585, US West=459, E Asia/Japan=144] via airplanes.live",
-2026-07-13,1704,0.408,0,up,"ADS-B regions [W/C Europe=186, US East=815, US West=560, E Asia/Japan=143] via airplanes.live",
-2026-07-14,1715,0.451,0,up,"ADS-B regions [W/C Europe=184, US East=849, US West=526, E Asia/Japan=156] via airplanes.live",
-2026-07-15,1736,0.508,0,up,"ADS-B regions [W/C Europe=175, US East=863, US West=542, E Asia/Japan=156] via airplanes.live",
-2026-07-16,1711,0.351,0,up,"ADS-B regions [W/C Europe=212, US East=791, US West=550, E Asia/Japan=158] via airplanes.live",
-2026-07-17,1646,-0.125,0,down,"ADS-B regions [W/C Europe=168, US East=729, US West=592, E Asia/Japan=157] via airplanes.live",
-2026-07-18,1639,-0.100,0,down,"ADS-B regions [W/C Europe=211, US East=702, US West=570, E Asia/Japan=156] via airplanes.live",
-2026-07-19,1135,-2.802,0,down,"ADS-B regions [W/C Europe=188, US East=331, US West=457, E Asia/Japan=159] via airplanes.live",
-2026-07-20,1620,-0.115,0,down,"ADS-B regions [W/C Europe=176, US East=761, US West=537, E Asia/Japan=146] via airplanes.live",
-2026-07-21,1739,0.519,0,up,"ADS-B regions [W/C Europe=185, US East=876, US West=518, E Asia/Japan=160] via airplanes.live",
-2026-07-22,1173,-2.695,0,down,"ADS-B regions [W/C Europe=178, US East=293, US West=537, E Asia/Japan=165] via airplanes.live",
+date,raw_value,z_score,trembling,direction,source_note,obs_date,status
+2026-06-22,1336,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-06-23,1300,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-06-24,1602,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-06-25,1792,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-06-26,1831,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-06-27,1703,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-06-28,1363,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-06-29,1667,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-06-30,1769,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-07-01,1717,,0,,ADS-B airborne over 4 regions via airplanes.live,,warming-up
+2026-07-02,1751,0.466,0,up,ADS-B airborne over 4 regions via airplanes.live,,scoring
+2026-07-03,1780,0.584,0,up,ADS-B airborne over 4 regions via airplanes.live,,scoring
+2026-07-04,1441,-2.387,0,down,"ADS-B airborne over 4 regions via adsb.fi, airplanes.live",,scoring
+2026-07-05,945,-5.745,1,down,ADS-B airborne over 4 regions via airplanes.live,,scoring
+2026-07-06,1421,-1.763,0,down,ADS-B airborne over 4 regions via airplanes.live,,scoring
+2026-07-07,1379,-1.554,0,down,"ADS-B airborne over 4 regions via adsb.fi, adsb.lol, airplanes.live",,scoring
+2026-07-08,1586,-0.186,0,down,ADS-B airborne over 4 regions via airplanes.live,,scoring
+2026-07-09,1783,0.686,0,up,ADS-B airborne over 4 regions via airplanes.live,,scoring
+2026-07-10,1282,-1.554,0,down,"ADS-B regions [W/C Europe=74, US East=515, US West=481, E Asia/Japan=212] via airplanes.live",,scoring
+2026-07-11,1588,-0.052,0,down,"ADS-B regions [W/C Europe=157, US East=633, US West=653, E Asia/Japan=145] via airplanes.live",,scoring
+2026-07-12,1366,-0.860,0,down,"ADS-B regions [W/C Europe=178, US East=585, US West=459, E Asia/Japan=144] via airplanes.live",,scoring
+2026-07-13,1704,0.408,0,up,"ADS-B regions [W/C Europe=186, US East=815, US West=560, E Asia/Japan=143] via airplanes.live",,scoring
+2026-07-14,1715,0.451,0,up,"ADS-B regions [W/C Europe=184, US East=849, US West=526, E Asia/Japan=156] via airplanes.live",,scoring
+2026-07-15,1736,0.508,0,up,"ADS-B regions [W/C Europe=175, US East=863, US West=542, E Asia/Japan=156] via airplanes.live",,scoring
+2026-07-16,1711,0.351,0,up,"ADS-B regions [W/C Europe=212, US East=791, US West=550, E Asia/Japan=158] via airplanes.live",,scoring
+2026-07-17,1646,-0.125,0,down,"ADS-B regions [W/C Europe=168, US East=729, US West=592, E Asia/Japan=157] via airplanes.live",,scoring
+2026-07-18,1639,-0.100,0,down,"ADS-B regions [W/C Europe=211, US East=702, US West=570, E Asia/Japan=156] via airplanes.live",,scoring
+2026-07-19,1135,-2.802,0,down,"ADS-B regions [W/C Europe=188, US East=331, US West=457, E Asia/Japan=159] via airplanes.live",,scoring
+2026-07-20,1620,-0.115,0,down,"ADS-B regions [W/C Europe=176, US East=761, US West=537, E Asia/Japan=146] via airplanes.live",,scoring
+2026-07-21,1739,0.519,0,up,"ADS-B regions [W/C Europe=185, US East=876, US West=518, E Asia/Japan=160] via airplanes.live",,scoring
+2026-07-22,1173,-2.695,0,down,"ADS-B regions [W/C Europe=178, US East=293, US West=537, E Asia/Japan=165] via airplanes.live",,scoring

@@ -70,7 +70,7 @@ class TestJudge(unittest.TestCase):
     def test_republished_observation_scores_nothing(self):
         vals, dates, _ = self._hist()
         obs = [f"2026-06-{i + 1:02d}" for i in range(len(vals))]
-        z, trembling, direction, note = N.judge(
+        z, trembling, direction, note, status = N.judge(
             vals, dates, obs, 999.0, "2026-06-05", "2026-06-20")
         self.assertIsNone(z)
         self.assertEqual(trembling, 0)
@@ -80,34 +80,68 @@ class TestJudge(unittest.TestCase):
         vals = [10.0, 10.0, 10.0, 20.0]
         dates = ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04"]
         obs = ["2026-05-30", "2026-05-30", "2026-05-30", "2026-06-03"]
-        z, _, _, _ = N.judge(vals, dates, obs, 30.0, "2026-06-04", "2026-06-05")
+        z, _, _, _, _ = N.judge(vals, dates, obs, 30.0, "2026-06-04", "2026-06-05")
         # Two kept observations is under MIN_POINTS, so the honest answer is None.
         self.assertIsNone(z)
 
     def test_thin_history_yields_none(self):
         vals, dates, obs = self._hist(n=N.MIN_POINTS - 1)
-        z, trembling, _, _ = N.judge(vals, dates, obs, 500.0, "", "2026-06-20")
+        z, trembling, _, _, _ = N.judge(vals, dates, obs, 500.0, "", "2026-06-20")
         self.assertIsNone(z)
         self.assertEqual(trembling, 0)
 
     def test_a_real_outlier_still_trembles(self):
         vals, dates, obs = self._hist(n=20)
-        z, trembling, direction, _ = N.judge(vals, dates, obs, 5000.0, "", "2026-07-01")
+        z, trembling, direction, _, _ = N.judge(vals, dates, obs, 5000.0, "", "2026-07-01")
         self.assertIsNotNone(z)
         self.assertEqual(trembling, 1)
         self.assertEqual(direction, "up")
 
     def test_missing_reading_is_never_scored(self):
         vals, dates, obs = self._hist(n=20)
-        z, trembling, _, _ = N.judge(vals, dates, obs, None, "", "2026-07-01")
+        z, trembling, _, _, _ = N.judge(vals, dates, obs, None, "", "2026-07-01")
         self.assertIsNone(z)
         self.assertEqual(trembling, 0)
 
     def test_age_cap_drops_stale_history(self):
         vals = [100.0 + i for i in range(12)]
         dates = [f"2020-01-{i + 1:02d}" for i in range(12)]
-        z, _, _, _ = N.judge(vals, dates, [""] * 12, 200.0, "", "2026-07-01")
+        z, _, _, _, _ = N.judge(vals, dates, [""] * 12, 200.0, "", "2026-07-01")
         self.assertIsNone(z, "history older than MAX_AGE_DAYS must not build a baseline")
+
+
+class TestStatus(unittest.TestCase):
+    """"Cannot score" must never again be indistinguishable from "calm"."""
+
+    def _hist(self, n):
+        vals = [100.0 + i for i in range(n)]
+        return vals, [f"2026-06-{i + 1:02d}" for i in range(n)], [""] * n
+
+    def test_each_state_is_named(self):
+        thin_v, thin_d, thin_o = self._hist(4)
+        cases = [
+            (self._hist(20) + (500.0, "", "2026-07-01"), N.STATUS_SCORING),
+            ((thin_v, thin_d, thin_o, 500.0, "", "2026-07-01"), N.STATUS_WARMING),
+            (self._hist(20)[:2] + ([""] * 20,) + (None, "", "2026-07-01"), N.STATUS_DARK),
+            (([5.0] * 14, [f"2026-06-{i + 1:02d}" for i in range(14)], [""] * 14,
+              9.0, "", "2026-06-20"), N.STATUS_FLAT),
+        ]
+        for args, expected in cases:
+            self.assertEqual(N.judge(*args)[4], expected)
+
+    def test_a_republished_observation_reports_stale(self):
+        vals, dates, _ = self._hist(12)
+        obs = [f"2026-06-{i + 1:02d}" for i in range(12)]
+        self.assertEqual(N.judge(vals, dates, obs, 9.0, "2026-06-05", "2026-06-20")[4],
+                         N.STATUS_STALE)
+
+    def test_blind_means_holding_a_reading_it_cannot_judge(self):
+        """Dark is loud already; stale was judged when it first arrived."""
+        self.assertIn(N.STATUS_WARMING, N.BLIND_STATUSES)
+        self.assertIn(N.STATUS_FLAT, N.BLIND_STATUSES)
+        self.assertNotIn(N.STATUS_DARK, N.BLIND_STATUSES)
+        self.assertNotIn(N.STATUS_STALE, N.BLIND_STATUSES)
+        self.assertNotIn(N.STATUS_SCORING, N.BLIND_STATUSES)
 
 
 class TestWeekdayVeto(unittest.TestCase):
@@ -142,9 +176,9 @@ class TestCycleKeying(unittest.TestCase):
         """A live snapshot line has no obs_date; behaviour must be unchanged."""
         vals = [float(i) for i in range(14)]
         dates = [f"2026-06-{i + 1:02d}" for i in range(14)]
-        with_obs, _, _, _ = N.judge(vals, dates, [""] * 14, 99.0, "", "2026-06-20",
+        with_obs, _, _, _, _ = N.judge(vals, dates, [""] * 14, 99.0, "", "2026-06-20",
                                     weekly_cycle=True)
-        plain, _, _, _ = N.judge(vals, dates, [""] * 14, 99.0, "", "2026-06-20",
+        plain, _, _, _, _ = N.judge(vals, dates, [""] * 14, 99.0, "", "2026-06-20",
                                  weekly_cycle=False)
         self.assertIsNotNone(with_obs)
         self.assertAlmostEqual(with_obs, plain)

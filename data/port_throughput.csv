@@ -1,32 +1,201 @@
-date,raw_value,z_score,trembling,direction,source_note,obs_date
-2026-06-22,4729,,0,,IMF PortWatch global port calls 2026-06-12,2026-06-12
-2026-06-23,4729,,0,,IMF PortWatch global port calls 2026-06-12,2026-06-12
-2026-06-24,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19
-2026-06-25,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19
-2026-06-26,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19
-2026-06-27,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19
-2026-06-28,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19
-2026-06-29,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19
-2026-06-30,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19
-2026-07-01,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19
-2026-07-02,4727,-2.380,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26
-2026-07-03,4727,-1.995,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26
-2026-07-04,4727,-1.785,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26
-2026-07-05,4727,-1.652,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26
-2026-07-06,4727,-1.558,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26
-2026-07-07,4727,-1.489,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26
-2026-07-08,4824,3.459,1,up,IMF PortWatch global port calls 2026-07-03,2026-07-03
-2026-07-09,4824,1.392,0,up,IMF PortWatch global port calls 2026-07-03,2026-07-03
-2026-07-10,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03
-2026-07-11,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03
-2026-07-12,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03
-2026-07-13,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03
-2026-07-14,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03
-2026-07-15,4384,,0,,IMF PortWatch global port calls 2026-07-10,2026-07-10
-2026-07-16,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10
-2026-07-17,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10
-2026-07-18,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10
-2026-07-19,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10
-2026-07-20,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10
-2026-07-21,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10
-2026-07-22,4965,,0,,IMF PortWatch global port calls 2026-07-17,2026-07-17
+date,raw_value,z_score,trembling,direction,source_note,obs_date,status
+2026-01-04,3966,,0,,"IMF PortWatch global port calls 2025-12-25 [archive import: scored retroactively, not a live reading]",2025-12-25,warming-up
+2026-01-05,4627,,0,,"IMF PortWatch global port calls 2025-12-26 [archive import: scored retroactively, not a live reading]",2025-12-26,warming-up
+2026-01-06,4578,,0,,"IMF PortWatch global port calls 2025-12-27 [archive import: scored retroactively, not a live reading]",2025-12-27,warming-up
+2026-01-07,4388,,0,,"IMF PortWatch global port calls 2025-12-28 [archive import: scored retroactively, not a live reading]",2025-12-28,warming-up
+2026-01-08,4958,,0,,"IMF PortWatch global port calls 2025-12-29 [archive import: scored retroactively, not a live reading]",2025-12-29,warming-up
+2026-01-09,4423,,0,,"IMF PortWatch global port calls 2025-12-30 [archive import: scored retroactively, not a live reading]",2025-12-30,warming-up
+2026-01-10,3861,,0,,"IMF PortWatch global port calls 2025-12-31 [archive import: scored retroactively, not a live reading]",2025-12-31,warming-up
+2026-01-11,3550,,0,,"IMF PortWatch global port calls 2026-01-01 [archive import: scored retroactively, not a live reading]",2026-01-01,warming-up
+2026-01-12,4003,,0,,"IMF PortWatch global port calls 2026-01-02 [archive import: scored retroactively, not a live reading]",2026-01-02,warming-up
+2026-01-13,4106,,0,,"IMF PortWatch global port calls 2026-01-03 [archive import: scored retroactively, not a live reading]",2026-01-03,warming-up
+2026-01-14,4049,-0.388,0,down,"IMF PortWatch global port calls 2026-01-04 [archive import: scored retroactively, not a live reading]",2026-01-04,scoring
+2026-01-15,5035,1.972,0,up,"IMF PortWatch global port calls 2026-01-05 [archive import: scored retroactively, not a live reading]",2026-01-05,scoring
+2026-01-16,4870,1.115,0,up,"IMF PortWatch global port calls 2026-01-06 [archive import: scored retroactively, not a live reading]",2026-01-06,scoring
+2026-01-17,4942,0.979,0,up,"IMF PortWatch global port calls 2026-01-07 [archive import: scored retroactively, not a live reading]",2026-01-07,scoring
+2026-01-18,4862,0.824,0,up,"IMF PortWatch global port calls 2026-01-08 [archive import: scored retroactively, not a live reading]",2026-01-08,scoring
+2026-01-19,4730,0.617,0,up,"IMF PortWatch global port calls 2026-01-09 [archive import: scored retroactively, not a live reading]",2026-01-09,scoring
+2026-01-20,3986,-1.009,0,down,"IMF PortWatch global port calls 2026-01-10 [archive import: scored retroactively, not a live reading]",2026-01-10,scoring
+2026-01-21,4118,-0.632,0,down,"IMF PortWatch global port calls 2026-01-11 [archive import: scored retroactively, not a live reading]",2026-01-11,scoring
+2026-01-22,5051,1.369,0,up,"IMF PortWatch global port calls 2026-01-12 [archive import: scored retroactively, not a live reading]",2026-01-12,scoring
+2026-01-23,4830,0.863,0,up,"IMF PortWatch global port calls 2026-01-13 [archive import: scored retroactively, not a live reading]",2026-01-13,scoring
+2026-01-24,5014,1.151,0,up,"IMF PortWatch global port calls 2026-01-14 [archive import: scored retroactively, not a live reading]",2026-01-14,scoring
+2026-01-25,5065,1.152,0,up,"IMF PortWatch global port calls 2026-01-15 [archive import: scored retroactively, not a live reading]",2026-01-15,scoring
+2026-01-26,4775,0.412,0,up,"IMF PortWatch global port calls 2026-01-16 [archive import: scored retroactively, not a live reading]",2026-01-16,scoring
+2026-01-27,4704,0.193,0,up,"IMF PortWatch global port calls 2026-01-17 [archive import: scored retroactively, not a live reading]",2026-01-17,scoring
+2026-01-28,4491,-0.446,0,down,"IMF PortWatch global port calls 2026-01-18 [archive import: scored retroactively, not a live reading]",2026-01-18,scoring
+2026-01-29,5207,1.414,0,up,"IMF PortWatch global port calls 2026-01-19 [archive import: scored retroactively, not a live reading]",2026-01-19,scoring
+2026-01-30,4761,0.216,0,up,"IMF PortWatch global port calls 2026-01-20 [archive import: scored retroactively, not a live reading]",2026-01-20,scoring
+2026-01-31,4681,-0.056,0,down,"IMF PortWatch global port calls 2026-01-21 [archive import: scored retroactively, not a live reading]",2026-01-21,scoring
+2026-02-01,4826,0.336,0,up,"IMF PortWatch global port calls 2026-01-22 [archive import: scored retroactively, not a live reading]",2026-01-22,scoring
+2026-02-02,4867,0.409,0,up,"IMF PortWatch global port calls 2026-01-23 [archive import: scored retroactively, not a live reading]",2026-01-23,scoring
+2026-02-03,4611,-0.286,0,down,"IMF PortWatch global port calls 2026-01-24 [archive import: scored retroactively, not a live reading]",2026-01-24,scoring
+2026-02-04,4302,-1.045,0,down,"IMF PortWatch global port calls 2026-01-25 [archive import: scored retroactively, not a live reading]",2026-01-25,scoring
+2026-02-05,5283,1.565,0,up,"IMF PortWatch global port calls 2026-01-26 [archive import: scored retroactively, not a live reading]",2026-01-26,scoring
+2026-02-06,4917,0.529,0,up,"IMF PortWatch global port calls 2026-01-27 [archive import: scored retroactively, not a live reading]",2026-01-27,scoring
+2026-02-07,4870,0.397,0,up,"IMF PortWatch global port calls 2026-01-28 [archive import: scored retroactively, not a live reading]",2026-01-28,scoring
+2026-02-08,4775,0.115,0,up,"IMF PortWatch global port calls 2026-01-29 [archive import: scored retroactively, not a live reading]",2026-01-29,scoring
+2026-02-09,4821,0.204,0,up,"IMF PortWatch global port calls 2026-01-30 [archive import: scored retroactively, not a live reading]",2026-01-30,scoring
+2026-02-10,4510,-0.711,0,down,"IMF PortWatch global port calls 2026-01-31 [archive import: scored retroactively, not a live reading]",2026-01-31,scoring
+2026-02-11,4470,-0.745,0,down,"IMF PortWatch global port calls 2026-02-01 [archive import: scored retroactively, not a live reading]",2026-02-01,scoring
+2026-02-12,4998,0.744,0,up,"IMF PortWatch global port calls 2026-02-02 [archive import: scored retroactively, not a live reading]",2026-02-02,scoring
+2026-02-13,4862,0.317,0,up,"IMF PortWatch global port calls 2026-02-03 [archive import: scored retroactively, not a live reading]",2026-02-03,scoring
+2026-02-14,4979,0.619,0,up,"IMF PortWatch global port calls 2026-02-04 [archive import: scored retroactively, not a live reading]",2026-02-04,scoring
+2026-02-15,4728,-0.118,0,down,"IMF PortWatch global port calls 2026-02-05 [archive import: scored retroactively, not a live reading]",2026-02-05,scoring
+2026-02-16,4774,0.040,0,up,"IMF PortWatch global port calls 2026-02-06 [archive import: scored retroactively, not a live reading]",2026-02-06,scoring
+2026-02-17,4370,-1.246,0,down,"IMF PortWatch global port calls 2026-02-07 [archive import: scored retroactively, not a live reading]",2026-02-07,scoring
+2026-02-18,4366,-1.206,0,down,"IMF PortWatch global port calls 2026-02-08 [archive import: scored retroactively, not a live reading]",2026-02-08,scoring
+2026-02-19,5460,2.110,0,up,"IMF PortWatch global port calls 2026-02-09 [archive import: scored retroactively, not a live reading]",2026-02-09,scoring
+2026-02-20,5114,0.992,0,up,"IMF PortWatch global port calls 2026-02-10 [archive import: scored retroactively, not a live reading]",2026-02-10,scoring
+2026-02-21,4893,0.344,0,up,"IMF PortWatch global port calls 2026-02-11 [archive import: scored retroactively, not a live reading]",2026-02-11,scoring
+2026-02-22,4832,0.165,0,up,"IMF PortWatch global port calls 2026-02-12 [archive import: scored retroactively, not a live reading]",2026-02-12,scoring
+2026-02-23,4790,0.045,0,up,"IMF PortWatch global port calls 2026-02-13 [archive import: scored retroactively, not a live reading]",2026-02-13,scoring
+2026-02-24,4545,-0.700,0,down,"IMF PortWatch global port calls 2026-02-14 [archive import: scored retroactively, not a live reading]",2026-02-14,scoring
+2026-02-25,4493,-0.834,0,down,"IMF PortWatch global port calls 2026-02-15 [archive import: scored retroactively, not a live reading]",2026-02-15,scoring
+2026-02-26,4748,-0.077,0,down,"IMF PortWatch global port calls 2026-02-16 [archive import: scored retroactively, not a live reading]",2026-02-16,scoring
+2026-02-27,4773,0.017,0,up,"IMF PortWatch global port calls 2026-02-17 [archive import: scored retroactively, not a live reading]",2026-02-17,scoring
+2026-02-28,4870,0.305,0,up,"IMF PortWatch global port calls 2026-02-18 [archive import: scored retroactively, not a live reading]",2026-02-18,scoring
+2026-03-01,4851,0.252,0,up,"IMF PortWatch global port calls 2026-02-19 [archive import: scored retroactively, not a live reading]",2026-02-19,scoring
+2026-03-02,4902,0.422,0,up,"IMF PortWatch global port calls 2026-02-20 [archive import: scored retroactively, not a live reading]",2026-02-20,scoring
+2026-03-03,4618,-0.529,0,down,"IMF PortWatch global port calls 2026-02-21 [archive import: scored retroactively, not a live reading]",2026-02-21,scoring
+2026-03-04,4431,-1.154,0,down,"IMF PortWatch global port calls 2026-02-22 [archive import: scored retroactively, not a live reading]",2026-02-22,scoring
+2026-03-05,5196,1.404,0,up,"IMF PortWatch global port calls 2026-02-23 [archive import: scored retroactively, not a live reading]",2026-02-23,scoring
+2026-03-06,4971,0.639,0,up,"IMF PortWatch global port calls 2026-02-24 [archive import: scored retroactively, not a live reading]",2026-02-24,scoring
+2026-03-07,4891,0.384,0,up,"IMF PortWatch global port calls 2026-02-25 [archive import: scored retroactively, not a live reading]",2026-02-25,scoring
+2026-03-08,4851,0.250,0,up,"IMF PortWatch global port calls 2026-02-26 [archive import: scored retroactively, not a live reading]",2026-02-26,scoring
+2026-03-09,4851,0.259,0,up,"IMF PortWatch global port calls 2026-02-27 [archive import: scored retroactively, not a live reading]",2026-02-27,scoring
+2026-03-10,4799,0.085,0,up,"IMF PortWatch global port calls 2026-02-28 [archive import: scored retroactively, not a live reading]",2026-02-28,scoring
+2026-03-11,4457,-1.174,0,down,"IMF PortWatch global port calls 2026-03-01 [archive import: scored retroactively, not a live reading]",2026-03-01,scoring
+2026-03-12,5050,0.987,0,up,"IMF PortWatch global port calls 2026-03-02 [archive import: scored retroactively, not a live reading]",2026-03-02,scoring
+2026-03-13,4781,-0.005,0,down,"IMF PortWatch global port calls 2026-03-03 [archive import: scored retroactively, not a live reading]",2026-03-03,scoring
+2026-03-14,4704,-0.276,0,down,"IMF PortWatch global port calls 2026-03-04 [archive import: scored retroactively, not a live reading]",2026-03-04,scoring
+2026-03-15,4933,0.557,0,up,"IMF PortWatch global port calls 2026-03-05 [archive import: scored retroactively, not a live reading]",2026-03-05,scoring
+2026-03-16,4776,-0.018,0,down,"IMF PortWatch global port calls 2026-03-06 [archive import: scored retroactively, not a live reading]",2026-03-06,scoring
+2026-03-17,4524,-0.950,0,down,"IMF PortWatch global port calls 2026-03-07 [archive import: scored retroactively, not a live reading]",2026-03-07,scoring
+2026-03-18,4383,-1.466,0,down,"IMF PortWatch global port calls 2026-03-08 [archive import: scored retroactively, not a live reading]",2026-03-08,scoring
+2026-03-19,5265,1.796,0,up,"IMF PortWatch global port calls 2026-03-09 [archive import: scored retroactively, not a live reading]",2026-03-09,scoring
+2026-03-20,4799,0.082,0,up,"IMF PortWatch global port calls 2026-03-10 [archive import: scored retroactively, not a live reading]",2026-03-10,scoring
+2026-03-21,4897,0.431,0,up,"IMF PortWatch global port calls 2026-03-11 [archive import: scored retroactively, not a live reading]",2026-03-11,scoring
+2026-03-22,4978,0.734,0,up,"IMF PortWatch global port calls 2026-03-12 [archive import: scored retroactively, not a live reading]",2026-03-12,scoring
+2026-03-23,4743,-0.158,0,down,"IMF PortWatch global port calls 2026-03-13 [archive import: scored retroactively, not a live reading]",2026-03-13,scoring
+2026-03-24,4356,-1.596,0,down,"IMF PortWatch global port calls 2026-03-14 [archive import: scored retroactively, not a live reading]",2026-03-14,scoring
+2026-03-25,4423,-1.320,0,down,"IMF PortWatch global port calls 2026-03-15 [archive import: scored retroactively, not a live reading]",2026-03-15,scoring
+2026-03-26,5272,1.817,0,up,"IMF PortWatch global port calls 2026-03-16 [archive import: scored retroactively, not a live reading]",2026-03-16,scoring
+2026-03-27,4962,0.655,0,up,"IMF PortWatch global port calls 2026-03-17 [archive import: scored retroactively, not a live reading]",2026-03-17,scoring
+2026-03-28,4938,0.566,0,up,"IMF PortWatch global port calls 2026-03-18 [archive import: scored retroactively, not a live reading]",2026-03-18,scoring
+2026-03-29,4845,0.219,0,up,"IMF PortWatch global port calls 2026-03-19 [archive import: scored retroactively, not a live reading]",2026-03-19,scoring
+2026-03-30,4572,-0.817,0,down,"IMF PortWatch global port calls 2026-03-20 [archive import: scored retroactively, not a live reading]",2026-03-20,scoring
+2026-03-31,4433,-1.304,0,down,"IMF PortWatch global port calls 2026-03-21 [archive import: scored retroactively, not a live reading]",2026-03-21,scoring
+2026-04-01,4545,-0.863,0,down,"IMF PortWatch global port calls 2026-03-22 [archive import: scored retroactively, not a live reading]",2026-03-22,scoring
+2026-04-02,5131,1.293,0,up,"IMF PortWatch global port calls 2026-03-23 [archive import: scored retroactively, not a live reading]",2026-03-23,scoring
+2026-04-03,5080,1.076,0,up,"IMF PortWatch global port calls 2026-03-24 [archive import: scored retroactively, not a live reading]",2026-03-24,scoring
+2026-04-04,4862,0.270,0,up,"IMF PortWatch global port calls 2026-03-25 [archive import: scored retroactively, not a live reading]",2026-03-25,scoring
+2026-04-05,4654,-0.519,0,down,"IMF PortWatch global port calls 2026-03-26 [archive import: scored retroactively, not a live reading]",2026-03-26,scoring
+2026-04-06,4882,0.323,0,up,"IMF PortWatch global port calls 2026-03-27 [archive import: scored retroactively, not a live reading]",2026-03-27,scoring
+2026-04-07,4652,-0.565,0,down,"IMF PortWatch global port calls 2026-03-28 [archive import: scored retroactively, not a live reading]",2026-03-28,scoring
+2026-04-08,4457,-1.315,0,down,"IMF PortWatch global port calls 2026-03-29 [archive import: scored retroactively, not a live reading]",2026-03-29,scoring
+2026-04-09,5191,1.500,0,up,"IMF PortWatch global port calls 2026-03-30 [archive import: scored retroactively, not a live reading]",2026-03-30,scoring
+2026-04-10,4675,-0.462,0,down,"IMF PortWatch global port calls 2026-03-31 [archive import: scored retroactively, not a live reading]",2026-03-31,scoring
+2026-04-11,4755,-0.169,0,down,"IMF PortWatch global port calls 2026-04-01 [archive import: scored retroactively, not a live reading]",2026-04-01,scoring
+2026-04-12,4755,-0.173,0,down,"IMF PortWatch global port calls 2026-04-02 [archive import: scored retroactively, not a live reading]",2026-04-02,scoring
+2026-04-13,4635,-0.663,0,down,"IMF PortWatch global port calls 2026-04-03 [archive import: scored retroactively, not a live reading]",2026-04-03,scoring
+2026-04-14,4332,-1.905,0,down,"IMF PortWatch global port calls 2026-04-04 [archive import: scored retroactively, not a live reading]",2026-04-04,scoring
+2026-04-15,4075,-2.979,0,down,"IMF PortWatch global port calls 2026-04-05 [archive import: scored retroactively, not a live reading]",2026-04-05,scoring
+2026-04-16,4964,0.691,0,up,"IMF PortWatch global port calls 2026-04-06 [archive import: scored retroactively, not a live reading]",2026-04-06,scoring
+2026-04-17,4844,0.200,0,up,"IMF PortWatch global port calls 2026-04-07 [archive import: scored retroactively, not a live reading]",2026-04-07,scoring
+2026-04-18,4849,0.220,0,up,"IMF PortWatch global port calls 2026-04-08 [archive import: scored retroactively, not a live reading]",2026-04-08,scoring
+2026-04-19,4759,-0.144,0,down,"IMF PortWatch global port calls 2026-04-09 [archive import: scored retroactively, not a live reading]",2026-04-09,scoring
+2026-04-20,4682,-0.459,0,down,"IMF PortWatch global port calls 2026-04-10 [archive import: scored retroactively, not a live reading]",2026-04-10,scoring
+2026-04-21,4333,-1.933,0,down,"IMF PortWatch global port calls 2026-04-11 [archive import: scored retroactively, not a live reading]",2026-04-11,scoring
+2026-04-22,4415,-1.604,0,down,"IMF PortWatch global port calls 2026-04-12 [archive import: scored retroactively, not a live reading]",2026-04-12,scoring
+2026-04-23,5079,1.252,0,up,"IMF PortWatch global port calls 2026-04-13 [archive import: scored retroactively, not a live reading]",2026-04-13,scoring
+2026-04-24,4908,0.504,0,up,"IMF PortWatch global port calls 2026-04-14 [archive import: scored retroactively, not a live reading]",2026-04-14,scoring
+2026-04-25,4953,0.702,0,up,"IMF PortWatch global port calls 2026-04-15 [archive import: scored retroactively, not a live reading]",2026-04-15,scoring
+2026-04-26,4928,0.613,0,up,"IMF PortWatch global port calls 2026-04-16 [archive import: scored retroactively, not a live reading]",2026-04-16,scoring
+2026-04-27,4759,-0.150,0,down,"IMF PortWatch global port calls 2026-04-17 [archive import: scored retroactively, not a live reading]",2026-04-17,scoring
+2026-04-28,4373,-1.814,0,down,"IMF PortWatch global port calls 2026-04-18 [archive import: scored retroactively, not a live reading]",2026-04-18,scoring
+2026-04-29,4438,-1.534,0,down,"IMF PortWatch global port calls 2026-04-19 [archive import: scored retroactively, not a live reading]",2026-04-19,scoring
+2026-04-30,5152,1.577,0,up,"IMF PortWatch global port calls 2026-04-20 [archive import: scored retroactively, not a live reading]",2026-04-20,scoring
+2026-05-01,4896,0.429,0,up,"IMF PortWatch global port calls 2026-04-21 [archive import: scored retroactively, not a live reading]",2026-04-21,scoring
+2026-05-02,4861,0.267,0,up,"IMF PortWatch global port calls 2026-04-22 [archive import: scored retroactively, not a live reading]",2026-04-22,scoring
+2026-05-03,4858,0.254,0,up,"IMF PortWatch global port calls 2026-04-23 [archive import: scored retroactively, not a live reading]",2026-04-23,scoring
+2026-05-04,4897,0.422,0,up,"IMF PortWatch global port calls 2026-04-24 [archive import: scored retroactively, not a live reading]",2026-04-24,scoring
+2026-05-05,4528,-1.236,0,down,"IMF PortWatch global port calls 2026-04-25 [archive import: scored retroactively, not a live reading]",2026-04-25,scoring
+2026-05-06,4493,-1.390,0,down,"IMF PortWatch global port calls 2026-04-26 [archive import: scored retroactively, not a live reading]",2026-04-26,scoring
+2026-05-07,5932,5.014,1,up,"IMF PortWatch global port calls 2026-04-27 [archive import: scored retroactively, not a live reading]",2026-04-27,scoring
+2026-05-08,5056,1.116,0,up,"IMF PortWatch global port calls 2026-04-28 [archive import: scored retroactively, not a live reading]",2026-04-28,scoring
+2026-05-09,5058,1.094,0,up,"IMF PortWatch global port calls 2026-04-29 [archive import: scored retroactively, not a live reading]",2026-04-29,scoring
+2026-05-10,5005,0.809,0,up,"IMF PortWatch global port calls 2026-04-30 [archive import: scored retroactively, not a live reading]",2026-04-30,scoring
+2026-05-11,4464,-1.434,0,down,"IMF PortWatch global port calls 2026-05-01 [archive import: scored retroactively, not a live reading]",2026-05-01,scoring
+2026-05-12,4648,-0.683,0,down,"IMF PortWatch global port calls 2026-05-02 [archive import: scored retroactively, not a live reading]",2026-05-02,scoring
+2026-05-13,4175,-2.613,0,down,"IMF PortWatch global port calls 2026-05-03 [archive import: scored retroactively, not a live reading]",2026-05-03,scoring
+2026-05-14,4970,0.686,0,up,"IMF PortWatch global port calls 2026-05-04 [archive import: scored retroactively, not a live reading]",2026-05-04,scoring
+2026-05-15,4797,-0.008,0,down,"IMF PortWatch global port calls 2026-05-05 [archive import: scored retroactively, not a live reading]",2026-05-05,scoring
+2026-05-16,5045,0.982,0,up,"IMF PortWatch global port calls 2026-05-06 [archive import: scored retroactively, not a live reading]",2026-05-06,scoring
+2026-05-17,5044,0.966,0,up,"IMF PortWatch global port calls 2026-05-07 [archive import: scored retroactively, not a live reading]",2026-05-07,scoring
+2026-05-18,4934,0.463,0,up,"IMF PortWatch global port calls 2026-05-08 [archive import: scored retroactively, not a live reading]",2026-05-08,scoring
+2026-05-19,4741,-0.386,0,down,"IMF PortWatch global port calls 2026-05-09 [archive import: scored retroactively, not a live reading]",2026-05-09,scoring
+2026-05-20,4738,-0.404,0,down,"IMF PortWatch global port calls 2026-05-10 [archive import: scored retroactively, not a live reading]",2026-05-10,scoring
+2026-05-21,5340,2.177,0,up,"IMF PortWatch global port calls 2026-05-11 [archive import: scored retroactively, not a live reading]",2026-05-11,scoring
+2026-05-22,4996,0.749,0,up,"IMF PortWatch global port calls 2026-05-12 [archive import: scored retroactively, not a live reading]",2026-05-12,scoring
+2026-05-23,5012,0.801,0,up,"IMF PortWatch global port calls 2026-05-13 [archive import: scored retroactively, not a live reading]",2026-05-13,scoring
+2026-05-24,5196,1.514,0,up,"IMF PortWatch global port calls 2026-05-14 [archive import: scored retroactively, not a live reading]",2026-05-14,scoring
+2026-05-25,4862,0.068,0,up,"IMF PortWatch global port calls 2026-05-15 [archive import: scored retroactively, not a live reading]",2026-05-15,scoring
+2026-05-26,4877,0.120,0,up,"IMF PortWatch global port calls 2026-05-16 [archive import: scored retroactively, not a live reading]",2026-05-16,scoring
+2026-05-27,4791,-0.241,0,down,"IMF PortWatch global port calls 2026-05-17 [archive import: scored retroactively, not a live reading]",2026-05-17,scoring
+2026-05-28,5531,2.778,0,up,"IMF PortWatch global port calls 2026-05-18 [archive import: scored retroactively, not a live reading]",2026-05-18,scoring
+2026-05-29,5123,1.090,0,up,"IMF PortWatch global port calls 2026-05-19 [archive import: scored retroactively, not a live reading]",2026-05-19,scoring
+2026-05-30,5118,1.044,0,up,"IMF PortWatch global port calls 2026-05-20 [archive import: scored retroactively, not a live reading]",2026-05-20,scoring
+2026-05-31,5102,0.957,0,up,"IMF PortWatch global port calls 2026-05-21 [archive import: scored retroactively, not a live reading]",2026-05-21,scoring
+2026-06-01,4949,0.371,0,up,"IMF PortWatch global port calls 2026-05-22 [archive import: scored retroactively, not a live reading]",2026-05-22,scoring
+2026-06-02,4629,-0.867,0,down,"IMF PortWatch global port calls 2026-05-23 [archive import: scored retroactively, not a live reading]",2026-05-23,scoring
+2026-06-03,4503,-1.351,0,down,"IMF PortWatch global port calls 2026-05-24 [archive import: scored retroactively, not a live reading]",2026-05-24,scoring
+2026-06-04,5044,0.742,0,up,"IMF PortWatch global port calls 2026-05-25 [archive import: scored retroactively, not a live reading]",2026-05-25,scoring
+2026-06-05,5153,1.152,0,up,"IMF PortWatch global port calls 2026-05-26 [archive import: scored retroactively, not a live reading]",2026-05-26,scoring
+2026-06-06,4974,0.462,0,up,"IMF PortWatch global port calls 2026-05-27 [archive import: scored retroactively, not a live reading]",2026-05-27,scoring
+2026-06-07,5189,1.245,0,up,"IMF PortWatch global port calls 2026-05-28 [archive import: scored retroactively, not a live reading]",2026-05-28,scoring
+2026-06-08,4994,0.485,0,up,"IMF PortWatch global port calls 2026-05-29 [archive import: scored retroactively, not a live reading]",2026-05-29,scoring
+2026-06-09,4706,-0.561,0,down,"IMF PortWatch global port calls 2026-05-30 [archive import: scored retroactively, not a live reading]",2026-05-30,scoring
+2026-06-10,4654,-0.755,0,down,"IMF PortWatch global port calls 2026-05-31 [archive import: scored retroactively, not a live reading]",2026-05-31,scoring
+2026-06-11,5377,1.867,0,up,"IMF PortWatch global port calls 2026-06-01 [archive import: scored retroactively, not a live reading]",2026-06-01,scoring
+2026-06-12,4604,-0.901,0,down,"IMF PortWatch global port calls 2026-06-02 [archive import: scored retroactively, not a live reading]",2026-06-02,scoring
+2026-06-13,4869,0.026,0,up,"IMF PortWatch global port calls 2026-06-03 [archive import: scored retroactively, not a live reading]",2026-06-03,scoring
+2026-06-14,5079,0.756,0,up,"IMF PortWatch global port calls 2026-06-04 [archive import: scored retroactively, not a live reading]",2026-06-04,scoring
+2026-06-15,4960,0.338,0,up,"IMF PortWatch global port calls 2026-06-05 [archive import: scored retroactively, not a live reading]",2026-06-05,scoring
+2026-06-16,4599,-0.947,0,down,"IMF PortWatch global port calls 2026-06-06 [archive import: scored retroactively, not a live reading]",2026-06-06,scoring
+2026-06-17,4650,-0.766,0,down,"IMF PortWatch global port calls 2026-06-07 [archive import: scored retroactively, not a live reading]",2026-06-07,scoring
+2026-06-18,5210,1.256,0,up,"IMF PortWatch global port calls 2026-06-08 [archive import: scored retroactively, not a live reading]",2026-06-08,scoring
+2026-06-19,5127,0.929,0,up,"IMF PortWatch global port calls 2026-06-09 [archive import: scored retroactively, not a live reading]",2026-06-09,scoring
+2026-06-20,5198,1.164,0,up,"IMF PortWatch global port calls 2026-06-10 [archive import: scored retroactively, not a live reading]",2026-06-10,scoring
+2026-06-21,5192,1.118,0,up,"IMF PortWatch global port calls 2026-06-11 [archive import: scored retroactively, not a live reading]",2026-06-11,scoring
+2026-06-22,4910,0.126,0,up,"IMF PortWatch global port calls 2026-06-12 [archive import: scored retroactively, not a live reading]",2026-06-12,scoring
+2026-06-23,4677,-0.704,0,down,"IMF PortWatch global port calls 2026-06-13 [archive import: scored retroactively, not a live reading]",2026-06-13,scoring
+2026-06-24,4641,-0.835,0,down,"IMF PortWatch global port calls 2026-06-14 [archive import: scored retroactively, not a live reading]",2026-06-14,scoring
+2026-06-25,5399,1.883,0,up,"IMF PortWatch global port calls 2026-06-15 [archive import: scored retroactively, not a live reading]",2026-06-15,scoring
+2026-06-26,5021,0.510,0,up,"IMF PortWatch global port calls 2026-06-16 [archive import: scored retroactively, not a live reading]",2026-06-16,scoring
+2026-06-27,5036,0.562,0,up,"IMF PortWatch global port calls 2026-06-17 [archive import: scored retroactively, not a live reading]",2026-06-17,scoring
+2026-06-28,5094,0.740,0,up,"IMF PortWatch global port calls 2026-06-18 [archive import: scored retroactively, not a live reading]",2026-06-18,scoring
+2026-06-29,4945,0.195,0,up,"IMF PortWatch global port calls 2026-06-19 [archive import: scored retroactively, not a live reading]",2026-06-19,scoring
+2026-06-30,4575,-1.151,0,down,"IMF PortWatch global port calls 2026-06-20 [archive import: scored retroactively, not a live reading]",2026-06-20,scoring
+2026-07-01,4535,-1.294,0,down,"IMF PortWatch global port calls 2026-06-21 [archive import: scored retroactively, not a live reading]",2026-06-21,scoring
+2026-07-02,5345,1.620,0,up,"IMF PortWatch global port calls 2026-06-22 [archive import: scored retroactively, not a live reading]",2026-06-22,scoring
+2026-07-03,5036,0.503,0,up,"IMF PortWatch global port calls 2026-06-23 [archive import: scored retroactively, not a live reading]",2026-06-23,scoring
+2026-07-04,5179,0.967,0,up,"IMF PortWatch global port calls 2026-06-24 [archive import: scored retroactively, not a live reading]",2026-06-24,scoring
+2026-07-05,5078,0.601,0,up,"IMF PortWatch global port calls 2026-06-25 [archive import: scored retroactively, not a live reading]",2026-06-25,scoring
+2026-07-06,4770,-0.479,0,down,"IMF PortWatch global port calls 2026-06-26 [archive import: scored retroactively, not a live reading]",2026-06-26,scoring
+2026-07-07,4593,-1.090,0,down,"IMF PortWatch global port calls 2026-06-27 [archive import: scored retroactively, not a live reading]",2026-06-27,scoring
+2026-07-08,4682,-0.789,0,down,"IMF PortWatch global port calls 2026-06-28 [archive import: scored retroactively, not a live reading]",2026-06-28,scoring
+2026-07-09,5303,1.402,0,up,"IMF PortWatch global port calls 2026-06-29 [archive import: scored retroactively, not a live reading]",2026-06-29,scoring
+2026-07-10,5167,0.890,0,up,"IMF PortWatch global port calls 2026-06-30 [archive import: scored retroactively, not a live reading]",2026-06-30,scoring
+2026-07-11,5046,0.438,0,up,"IMF PortWatch global port calls 2026-07-01 [archive import: scored retroactively, not a live reading]",2026-07-01,scoring
+2026-07-12,4906,-0.087,0,down,"IMF PortWatch global port calls 2026-07-02 [archive import: scored retroactively, not a live reading]",2026-07-02,scoring
+2026-07-13,4870,-0.214,0,down,"IMF PortWatch global port calls 2026-07-03 [archive import: scored retroactively, not a live reading]",2026-07-03,scoring
+2026-07-14,4509,-1.523,0,down,"IMF PortWatch global port calls 2026-07-04 [archive import: scored retroactively, not a live reading]",2026-07-04,scoring
+2026-07-15,4603,-1.193,0,down,"IMF PortWatch global port calls 2026-07-05 [archive import: scored retroactively, not a live reading]",2026-07-05,scoring
+2026-07-16,5333,1.482,0,up,"IMF PortWatch global port calls 2026-07-06 [archive import: scored retroactively, not a live reading]",2026-07-06,scoring
+2026-07-17,5029,0.343,0,up,"IMF PortWatch global port calls 2026-07-07 [archive import: scored retroactively, not a live reading]",2026-07-07,scoring
+2026-07-18,4844,-0.337,0,down,"IMF PortWatch global port calls 2026-07-08 [archive import: scored retroactively, not a live reading]",2026-07-08,scoring
+2026-07-19,4741,-0.705,0,down,"IMF PortWatch global port calls 2026-07-09 [archive import: scored retroactively, not a live reading]",2026-07-09,scoring
+2026-07-20,4403,-1.906,0,down,"IMF PortWatch global port calls 2026-07-10 [archive import: scored retroactively, not a live reading]",2026-07-10,scoring
+2026-07-21,4039,-3.200,1,down,"IMF PortWatch global port calls 2026-07-11 [archive import: scored retroactively, not a live reading]",2026-07-11,scoring
+2026-07-22,4141,-2.816,0,down,"IMF PortWatch global port calls 2026-07-12 [archive import: scored retroactively, not a live reading]",2026-07-12,scoring
