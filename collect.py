@@ -31,14 +31,8 @@ trembling count; the lines are never multiplied into a single doom score.
 import csv
 import os
 import shutil
-from datetime import datetime, timedelta, timezone
+from core import clock, normalize
 
-from core import normalize
-
-# Rows are dated in China time (UTC+8, no DST): the daily run fires at 06:00
-# China, so a row dated D was collected on the morning of D, China time — which
-# matches how the (China-based) project reads the calendar.
-CHINA_TZ = timezone(timedelta(hours=8))
 from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
                       credit_spread, em_oas, flights, gdelt, gdelt_tone, gnss,
                       grid_frequency, net_outages, ports, sofr_iorb, vix)
@@ -58,10 +52,11 @@ DATA = os.path.join(ROOT, "data")
 DOCS_DATA = os.path.join(ROOT, "docs", "data")
 
 LINE_HEADER = ["date", "raw_value", "z_score", "trembling", "direction", "source_note",
-               "obs_date"]
+               "obs_date", "status"]
 # Summary holds only the tier-1 aggregates; each line's own z lives in its CSV, so
 # the schema stays stable as indicators are added, promoted, or demoted.
-SUMMARY_HEADER = ["date", "trembling_count", "dark_count"]
+SUMMARY_HEADER = ["date", "trembling_count", "dark_count", "blind_count",
+                  "scoring_count"]
 
 
 def _read_rows(path):
@@ -117,10 +112,12 @@ def _fmt(value):
 
 
 def collect():
-    today = datetime.now(CHINA_TZ).strftime("%Y-%m-%d")
+    today = clock.china_today()
     summary = {"date": today}
     trembling_count = 0
     dark_count = 0
+    blind_count = 0
+    scoring_count = 0
 
     for mod in LINES:
         path = os.path.join(DATA, mod.LINE + ".csv")
@@ -138,7 +135,7 @@ def collect():
         primary = tier == 1
 
         history, hist_dates, hist_obs = _history(rows, today)
-        z, trembling, direction, verdict_note = normalize.judge(
+        z, trembling, direction, verdict_note, status = normalize.judge(
             history, hist_dates, hist_obs, raw, obs_date, today,
             weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False),
         )
@@ -148,11 +145,18 @@ def collect():
         # and only trembles in the line's declared ALARM direction feed the count
         # — a guard visibly reasserting itself (a benign-direction move) is
         # recorded but is not disorder.
+        # Only tier-1 instruments count. A line that HOLDS a reading it cannot
+        # judge is counted blind, not calm: the denominator of the headline has
+        # to say how many instruments were actually able to answer today.
         if primary:
             if trembling and direction == mod.ANOMALY_DIRECTION:
                 trembling_count += 1
             if raw is None:
                 dark_count += 1
+            elif status in normalize.BLIND_STATUSES:
+                blind_count += 1
+            elif status == normalize.STATUS_SCORING:
+                scoring_count += 1
 
         row = {
             "date": today,
@@ -162,6 +166,7 @@ def collect():
             "direction": direction,
             "source_note": note,
             "obs_date": obs_date,
+            "status": status,
         }
         rows = _upsert(rows, row, today)
         _write_rows(path, LINE_HEADER, rows)
@@ -169,19 +174,23 @@ def collect():
         flag = "  TREMBLING" if trembling else ""
         print(
             f"[{mod.LINE:16} t{tier}] raw={row['raw_value'] or 'NA':>10}  "
-            f"z={row['z_score'] or 'NA':>7}{flag}  ({note})"
+            f"z={row['z_score'] or 'NA':>7} {status:<11}{flag}  ({note})"
         )
 
     summary["trembling_count"] = str(trembling_count)
     summary["dark_count"] = str(dark_count)
+    summary["blind_count"] = str(blind_count)
+    summary["scoring_count"] = str(scoring_count)
     summary_path = os.path.join(DATA, "summary.csv")
     srows = _upsert(_read_rows(summary_path), summary, today)
     for r in srows:  # keep every row schema-complete even across format changes
         for k in SUMMARY_HEADER:
             r.setdefault(k, "")
     _write_rows(summary_path, SUMMARY_HEADER, srows)
-    dark_note = f", {dark_count} dark" if dark_count else ""
-    print(f"\n== {today}: {trembling_count} line(s) trembling{dark_note} ==")
+    extra = "".join([f", {dark_count} dark" if dark_count else "",
+                     f", {blind_count} blind" if blind_count else ""])
+    print(f"\n== {today}: {trembling_count} of {scoring_count} scoring "
+          f"line(s) trembling{extra} ==")
 
     # Mirror the data into docs/ so the GitHub Pages dashboard is self-contained.
     os.makedirs(DOCS_DATA, exist_ok=True)

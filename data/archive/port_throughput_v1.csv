@@ -1,0 +1,32 @@
+date,raw_value,z_score,trembling,direction,source_note,obs_date,status
+2026-06-22,4729,,0,,IMF PortWatch global port calls 2026-06-12,2026-06-12,warming-up
+2026-06-23,4729,,0,,IMF PortWatch global port calls 2026-06-12,2026-06-12,warming-up
+2026-06-24,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19,warming-up
+2026-06-25,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19,warming-up
+2026-06-26,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19,warming-up
+2026-06-27,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19,warming-up
+2026-06-28,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19,warming-up
+2026-06-29,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19,warming-up
+2026-06-30,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19,warming-up
+2026-07-01,4760,,0,,IMF PortWatch global port calls 2026-06-19,2026-06-19,warming-up
+2026-07-02,4727,-2.380,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26,scoring
+2026-07-03,4727,-1.995,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26,scoring
+2026-07-04,4727,-1.785,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26,scoring
+2026-07-05,4727,-1.652,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26,scoring
+2026-07-06,4727,-1.558,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26,scoring
+2026-07-07,4727,-1.489,0,down,IMF PortWatch global port calls 2026-06-26,2026-06-26,scoring
+2026-07-08,4824,3.459,1,up,IMF PortWatch global port calls 2026-07-03,2026-07-03,scoring
+2026-07-09,4824,1.392,0,up,IMF PortWatch global port calls 2026-07-03,2026-07-03,scoring
+2026-07-10,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03,stale
+2026-07-11,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03,stale
+2026-07-12,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03,stale
+2026-07-13,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03,stale
+2026-07-14,4824,,0,,IMF PortWatch global port calls 2026-07-03 [stale: observation already recorded],2026-07-03,stale
+2026-07-15,4384,,0,,IMF PortWatch global port calls 2026-07-10,2026-07-10,warming-up
+2026-07-16,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10,stale
+2026-07-17,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10,stale
+2026-07-18,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10,stale
+2026-07-19,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10,stale
+2026-07-20,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10,stale
+2026-07-21,4384,,0,,IMF PortWatch global port calls 2026-07-10 [stale: observation already recorded],2026-07-10,stale
+2026-07-22,4965,,0,,IMF PortWatch global port calls 2026-07-17,2026-07-17,warming-up

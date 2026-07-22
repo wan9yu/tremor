@@ -11,7 +11,7 @@ alarming move.
 
 Source: IMF PortWatch `Daily_Ports_Data` ArcGIS feature service. Keyless.
 """
-from core import portwatch
+from core import clock, portwatch
 
 LINE = "port_throughput"
 LABEL = "Global port calls (PortWatch)"
@@ -21,11 +21,12 @@ TIER = 2
 
 
 def fetch_daily():
-    total, date, note = portwatch.latest_daily_sum("Daily_Ports_Data", "portcalls")
+    total, date, note = portwatch.daily_sum_at_lag(
+        "Daily_Ports_Data", "portcalls", clock.china_today())
     if total is None:
         return {"raw_value": None, "source_note": note}
     return {
         "raw_value": total,
-        "source_note": f"IMF PortWatch global port calls {date}",
+        "source_note": f"IMF PortWatch global port calls {date}{note}",
         "obs_date": date,
     }

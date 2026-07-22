@@ -1,4 +1,4 @@
-"""IODA — internet outages (infrastructure tension watchlist, tier 2).
+"""IODA — internet outages (communications infrastructure, tier 1).
 
 Guarded equilibrium: ISPs and states defend a country's internet connectivity
 (routing, peering, transit) as critical infrastructure. The leaking hand: when a
@@ -27,7 +27,11 @@ LINE = "net_outages"
 LABEL = "Countries with internet outages (IODA ping)"
 UNIT = "countries"
 ANOMALY_DIRECTION = "up"
-TIER = 2
+TIER = 1  # promoted round 7 into the slot gnss_interference vacated. PROVISIONAL:
+# it is the only candidate that is global, zero-lag, and a domain no other line
+# covers, but v2 has only a handful of scored readings and does NOT meet the
+# 60-reading promotion bar. Reviewed at 60; the status column reports its
+# blindness on the page meanwhile.
 
 _URL = "https://api.ioda.inetintel.cc.gatech.edu/v2/outages/summary"
 _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
@@ -53,12 +57,18 @@ def fetch_daily():
         return {"raw_value": None, "source_note": "IODA returned a non-JSON body"}
     if data is None:
         return {"raw_value": None, "source_note": "IODA returned no data field"}
-    # Count only countries whose outage was seen by the pinned datasource.
-    count = sum(
-        1 for d in data
-        if any(k.startswith(_DATASOURCE) for k in (d.get("scores") or {}))
+    # Count only countries whose outage was seen by the pinned datasource, and
+    # record WHICH ones: a count alone makes a tremble unattributable, and every
+    # tremble in this instrument has to be answerable with "caused by what?".
+    hit = [d for d in data
+           if any(k.startswith(_DATASOURCE) for k in (d.get("scores") or {}))]
+    names = sorted(
+        (d.get("entity") or {}).get("name") or (d.get("entity") or {}).get("code") or "?"
+        for d in hit
     )
+    count = len(hit)
+    who = f" [{', '.join(names)}]" if names else ""
     return {
         "raw_value": float(count),
-        "source_note": f"IODA {count} countries with {_DATASOURCE} outages (24h)",
+        "source_note": f"IODA {count} countries with {_DATASOURCE} outages (24h){who}",
     }

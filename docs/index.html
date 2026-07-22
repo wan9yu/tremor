@@ -87,6 +87,7 @@
   .modal-card ul.cov{margin:0 0 12px;padding-left:18px;font-size:14.5px;line-height:1.62;color:#c7ccd6}
   .modal-card ul.cov li{margin:0 0 5px}
   .wl-item:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+  .wl-blind{color:var(--amber);opacity:.85}
   .modal-card .mchart{margin:12px 0 4px}
   .modal-card .mnow{font-size:15px;margin:10px 0 2px;color:#c7ccd6}
   footer{color:var(--muted);font-size:13px;margin-top:34px;border-top:1px solid var(--line);padding-top:18px}
@@ -261,8 +262,7 @@ const LINES = [
     explain:{
       en:"Trade economics and the littoral states keep ships flowing through each of 28 maritime chokepoints — Suez, Hormuz, Bab-el-Mandeb, the Bosporus, Malacca, Panama, the Taiwan Strait. A drop in total transits leaks a blockade, war, drought, or attack at one of them. Two honest limits: tremor records only the 28-point TOTAL, so a single strait closing moves it by a couple of percent and can be lost in the sum; and because PortWatch republishes weekly, this line rarely holds enough unique observations to score at all. Like the flights line, but for sea trade — and currently the slowest eye tremor has.",
       zh:"贸易经济和沿岸国家让船流持续通过 28 个海上咽喉点——苏伊士、霍尔木兹、曼德海峡、博斯普鲁斯、马六甲、巴拿马、台湾海峡。总航运量骤降，就泄露其中某处的封锁、战争、干旱或袭击。两个必须说明的局限：tremor 只记录 28 点的总量，因此单独一条海峡关闭只让它动几个百分点，可能被总量淹没；而且 PortWatch 每周才更新一次，这根线很少攒够独立观测、常常根本打不出分数。像航班线，但测的是海上贸易——也是 tremor 目前最慢的一只眼。"} },
-  { id:"gnss_interference", color:"#56b6c2", alarm:"up", tier:1,
-    watches:{en:"GPS interference as one worldwide ratio",zh:"GPS 干扰，且只是一个全球比值"},
+  { id:"gnss_interference", color:"#56b6c2", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Navigation (global)",zh:"导航（全球）"},
     label:{en:"GPS interference",zh:"GPS 干扰"},
@@ -294,9 +294,10 @@ const LINES = [
     explain:{
       en:"Ports, shippers, and the economies behind them keep cargo moving — idle berths and unworked cargo burn money. A sustained drop in global port calls leaks a strike, lockdown, blockade, war damage, sanctions, or a demand collapse. This is the PORT side of PortWatch (2065 ports from satellite AIS), distinct from the chokepoint line; watch a single strategically-sensitive port for a sudden silence, or the global total for a broad trade shock.",
       zh:"港口、船东和背后的经济体让货物持续流动——空泊位和压港货物都在烧钱。全球靠港量持续下滑，就泄露罢工、封锁、战争破坏、制裁或需求崩塌。这是 PortWatch 的港口侧（卫星 AIS 覆盖 2065 个港口），与咽喉点线互补；可盯单个战略敏感港口的突然沉默，或看全球总量的大面积贸易冲击。"} },
-  { id:"net_outages", color:"#8fbf6f", alarm:"up", tier:2,
+  { id:"net_outages", color:"#8fbf6f", alarm:"up", tier:1,
+    watches:{en:"country-level internet reachability, worldwide",zh:"全球范围的国家级互联网可达性"},
     unit:{en:"countries",zh:"国"},
-    domain:{en:"Infrastructure (global)",zh:"基础设施（全球）"},
+    domain:{en:"Communications (global)",zh:"通信（全球）"},
     label:{en:"Countries with internet outages",zh:"断网国家数"},
     source:{en:"IODA (Georgia Tech) — ping-slash24 only",zh:"IODA（佐治亚理工）— 仅 ping-slash24 源"},
     explain:{
@@ -329,11 +330,14 @@ const T = {
     annoTitle:"Recent trembles, attributed",
     notCounted:"watchlist — not counted in the resonance",
     calibNote:(n,m)=>" · "+n+" of "+m+" lines still calibrating",
+    blindNote:n=>" · "+n+(n===1?" line cannot score":" lines cannot score")+" (not the same as calm)",
+    statusLabel:{"warming-up":"cannot score yet","no-spread":"no spread to judge against",
+                 "stale":"republished — already recorded","dark":"NO DATA"},
     range_30:"30d", range_90:"90d", range_365:"1y", range_all:"all",
     feelTitle:"Real vs felt — where they diverge",
     feelHint:"Bars: how many primary instruments trembled that day (the measured side). Lines: how disordered the world FEELS — priced fear (VIX) and global news tone/conflict share — shown as z toward each line's alarming direction. Feel lines are contrast only, never counted. Amber columns mark a DIVERGENCE: the felt side ran hot while every primary instrument read calm. A divergence has two possible causes and this chart cannot tell them apart — the feeling outran the world (an anxiety premium), or the strain fell outside what tremor watches (a coverage gap).",
     feelGapNote:"divergence — felt hot, measured calm; cause unknown (anxiety premium or coverage gap)",
-    covLine:"Field of view: EU/US/Japan airspace · US high-yield credit · onshore/offshore yuan · one global GPS ratio.",
+    covLine:"Field of view: EU/US/Japan airspace · US high-yield credit · onshore/offshore yuan · worldwide internet reachability.",
     covTail:" Outside this, real strain can still read 0.",
     covMore:"what tremor cannot see ›",
     covTitle:"Field of view — what tremor can and cannot see",
@@ -371,11 +375,14 @@ const T = {
     annoTitle:"近期颤抖及归因",
     notCounted:"观察名单 — 不计入共振",
     calibNote:(n,m)=>"（"+n+"/"+m+" 根线校准中）",
+    blindNote:n=>" · "+n+" 根线无法计分（这不等于平静）",
+    statusLabel:{"warming-up":"尚无法计分","no-spread":"无离散度可判",
+                 "stale":"重复发布 — 已记录","dark":"无数据"},
     range_30:"30天", range_90:"90天", range_365:"1年", range_all:"全部",
     feelTitle:"真实 vs 感觉 — 两者的背离",
     feelHint:"柱：当天一级仪器的颤抖根数（测量侧）。线：世界「感觉」有多乱——恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自报警方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 一次背离：感觉侧发烫，而所有一级仪器读数平静。背离有两种可能，这张图分不出是哪一种——要么是感觉跑在了世界前面（焦虑溢价），要么是压力落在了 tremor 的视野之外（覆盖盲区）。",
     feelGapNote:"背离 —— 感觉发烫，测量平静；成因未知（焦虑溢价或覆盖盲区）",
-    covLine:"视野范围：欧/美/日空域 · 美国高收益债 · 在岸/离岸人民币 · 单一全球 GPS 比值。",
+    covLine:"视野范围：欧/美/日空域 · 美国高收益债 · 在岸/离岸人民币 · 全球互联网可达性。",
     covTail:"视野之外，真实的压力照样可能读作 0。",
     covMore:"tremor 看不见什么 ›",
     covTitle:"视野范围 —— tremor 看得见与看不见什么",
@@ -498,7 +505,15 @@ function render(){
   const {summary,dates,lines}=DATA;
   const TIER1=LINES.filter(L=>(L.tier||1)===1);
   const TIER2=LINES.filter(L=>(L.tier||1)===2);
-  document.getElementById("count-of").textContent=TIER1.length;
+  // The denominator is how many instruments could ACTUALLY ANSWER today. A line
+  // holding a reading it cannot judge is blind, not calm — conflating the two is
+  // how a strait closing went unreported for fifteen days.
+  const blindLines=TIER1.filter(L=>{
+    const r=(lines[L.id]||[]).slice(-1)[0];
+    return r && r.status && ["warming-up","no-spread"].includes(r.status);
+  });
+  const scoringN=TIER1.length-blindLines.length-darkCount;
+  document.getElementById("count-of").textContent=Math.max(scoringN,0);
   const last=summary[summary.length-1];
   const gapDays=last?Math.floor((nowChinaMidnight()-utcMidnight(last.date))/86400000):null;
   const darkCount=last?(parseInt(last.dark_count||"0",10)||0):0;
@@ -512,6 +527,7 @@ function render(){
     const base = n===0?T[lang].calm:(n===1?T[lang].tremblingOne:T[lang].tremblingMany);
     document.getElementById("count-label").innerHTML =
       base + (darkCount?`<span class="darknote">${T[lang].darkNote(darkCount)}</span>`:"")
+           + (blindLines.length?`<span class="darknote">${T[lang].blindNote(blindLines.length)}</span>`:"")
            + (calibN?`<span class="calibnote">${T[lang].calibNote(calibN,TIER1.length)}</span>`:"");
     document.getElementById("asof").textContent=T[lang].asof(last.date);
   }
@@ -675,8 +691,14 @@ function render(){
     const b=document.createElement("b"); b.textContent=T[lang].watchTitle; b.style.display="block"; b.style.marginBottom="4px"; wl.appendChild(b);
     for(const L of TIER2){
       const days=(lines[L.id]||[]).filter(r=>r.raw_value!=="").length;
+      // Say when a line cannot score. A watchlist entry that is silently unable
+      // to judge its own reading is indistinguishable from one that is calm.
+      const st=((lines[L.id]||[]).slice(-1)[0]||{}).status||"";
+      const stTxt=(T[lang].statusLabel||{})[st];
+      const blind=["warming-up","no-spread"].includes(st);
       const item=document.createElement("span"); item.className="wl-item";
-      item.innerHTML=`<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)}) ›</span>`;
+      item.innerHTML=`<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)})`
+        + (blind&&stTxt?` <span class="wl-blind">${stTxt}</span>`:"")+` ›</span>`;
       item.onclick=()=>openTier2Modal(L,lang);
       wl.appendChild(item);
     }

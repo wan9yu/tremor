@@ -72,7 +72,7 @@ Written down because they are structural, not bugs, and a reader deserves them u
 
 ---
 
-## Tier 1 — primary  (4 / 4 ✅)
+## Tier 1 — primary  (4 / 4 ⚠️ one provisional)
 
 The four displayed, counted instruments — four distinct domains. Decided round 3,
 applied round 4.
@@ -82,7 +82,7 @@ applied round 4.
 | flights | airspace (EU/US/JP) | 3 | 3 | 2 | — | — | — | ✅ |
 | credit_spread | financial (US→global) | 3 | 3 | 3 | — | — | — | ✅ global bellwether |
 | cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ slot 4 (user-decided) |
-| gnss_interference | navigation/EW (global) | 3 | 3 | 3 | — | — | — | ✅ slot for trade swapped R5 — ~1-day lag, fingerprints conflict |
+| net_outages | communications (global) | 2 | 3 | 3 | 13/13 | — | 0.42 | ⚠️ **PROVISIONAL** — promoted R7 into the slot gnss vacated; only ~13 observations, does NOT meet the 60-reading bar (see the round-7 log) |
 
 ## Tier 2 — watchlist  (8 candidates + 3 contrast)
 
@@ -97,7 +97,7 @@ as the "felt vs real" contrast.)
 | chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810/day (Hormuz blockaded) — strong, but PortWatch lags ~8 days: too stale to display live |
 | sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | SOFR−IORB ~−2bps (calm) — keyless FRED |
 | em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | EM corp OAS ~1.38pp — orthogonal to US HY |
-| net_outages | infrastructure (global) | 2 | 2 | 3 | — | — | ~3 countries in outage now (IODA) — breadth of disruption |
+| gnss_interference | navigation/EW (global) | 3 | 3 | 1* | 31/31 | 0% | demoted R7 — *effective* reach is 1, not 3: one worldwide ratio has no regional sensitivity and read 0.47% through a Gulf air war |
 | capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | demoted R4 (redundant with China); kept on watch |
 | grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | demoted R4 (regional); kept on watch — may re-challenge on orthogonality |
 | cn_flights | airspace (China) | 3 | 3 | 1 | — | — | sparse ADS-B coverage; observing if signal survives |
@@ -408,3 +408,74 @@ fetcher currently discards 6 of every 7 observations it already downloads, which
 real reason `chokepoint_breadth` could not score through the Hormuz closure); a per-line
 `status` so "cannot score" stops reading identically to "calm"; the weekly cycle on the
 GDELT feel lines; `grid_frequency`'s daily-maximum statistic; vendoring Chart.js.
+
+### Round 7.1 — 2026-07-22 (tier-1 swap; the status column; PortWatch rebuilt)
+
+**Tier-1 swap: `gnss_interference` → tier 2, `net_outages` → tier 1.**
+The GPS line kept a primary slot while being structurally unable to do its job:
+it sums every h3 cell on earth into one ratio, so a regional jamming campaign is
+diluted by global traffic. Through the July Gulf escalation it read 0.47% and
+z = −0.12 while the airspace over Iran and the Hormuz approaches ran near 16%.
+Its Reach was scored 3 (global) — the honest score for a *global average* is 1,
+because it responds to nowhere in particular. Regionalizing it was investigated
+and deferred this round (see 7.0), so the slot is better spent.
+
+Candidates were ranked on the data, not on preference. The freshness rule (≤ ~2
+days) eliminated `chokepoint_breadth` (10d), `port_throughput` (10d) and
+`sofr_iorb_spread` (2.5d) outright. Of the five survivors, first-difference
+correlation against the three remaining tier-1 lines eliminated `em_corp_oas`
+as **redundant** (r = +0.74 against credit_spread — it is another credit
+spread); `capital_premium` and `cn_flights` duplicate the domains cnh_cny and
+flights already cover, at Reach 1; `grid_frequency` is orthogonal (max |r| =
+0.22) but is Nordic-only and was blocked from tier-1 this round on its
+statistic. `net_outages` is the only candidate that is GLOBAL, zero-lag, and a
+domain no other line watches — and it is the only change available that widens
+an instrument whose other three lines are EU/US/China-specific. A country going
+dark leaks either a deliberate shutdown or an infrastructure collapse; both are
+disorder, and both are invisible to every other line here.
+
+**This promotion is PROVISIONAL and breaks the round-7 bar, deliberately and on
+the record.** The v2 series has ~13 observations, far short of the 60 scored
+readings this same round set as the promotion standard. It is taken because the
+alternative — leaving a slot occupied by a line proven unable to see its own
+domain — is worse, and because the status column now makes the weakness legible
+on the page rather than hidden. **Pre-committed review at 60 scored readings
+(~late September 2026):** if the tremble rate's Wilson lower bound exceeds 2%,
+or the line proves to track IODA's detector coverage rather than the world, it
+goes back to tier-2 and the slot runs empty and disclosed. Also fixed as a
+precondition: the fetcher now records WHICH countries are dark, because a count
+alone makes a tremble unattributable and every tremble here must be answerable.
+
+**The `status` column.** Every row now carries one of `scoring` / `warming-up` /
+`stale` / `dark` / `no-spread`, and `summary.csv` gains `blind_count` and
+`scoring_count`. A line reporting nothing was previously in one of six very
+different states, all rendered as an empty z-score — which is exactly how a
+strait closing went unnoticed for fifteen days: the only line watching it COULD
+NOT SCORE, and that looked identical to calm. The dashboard's denominator is now
+the number of instruments that could actually answer, so "0 of 4" can become
+"0 of 3 · 1 line cannot score (not the same as calm)". Historical rows were
+migrated by DERIVING status from what each row already said — dark from an empty
+value, stale from its own note, scoring from a present z — never by re-scoring.
+
+**PortWatch rebuilt (series v2, both trade lines).** The fetcher asked for the
+newest available day and kept one row, so on six days out of seven it
+re-recorded a reading it already held. PortWatch is a COMPLETE DAILY series
+published weekly in seven-day batches: the fetcher was downloading the whole
+week and discarding six sevenths of it. That, not the publication lag, is why
+these lines held 6 distinct observations in 31 days and could not score at all.
+v2 reads the observation exactly 10 days back — one new observation per
+collection day — and both lines were seeded from the source's own archive
+(`tools/seed_portwatch.py`, the `vix` precedent, replayed strictly in order so
+no row is judged against its own future). Result: 6 distinct observations → 190
+scored, with tremble rates of 2.1% and 1.1%. Every seeded row says in its note
+that it was computed retroactively and was never a live detection.
+
+**What this does NOT fix, stated plainly:** it does not close the Hormuz gap.
+The reading is a 28-strait TOTAL and Hormuz is one or two percent of it — on the
+day the strait closed this line moved UP. The alarm-direction tremble it does
+record (observation 07-10, z = −4.63) comes from elsewhere in the basket. Seeing
+a single strait needs a per-strait breadth COUNT, which is opened as a tier-3
+candidate rather than built this round: it would be a second series break on a
+line already broken today. Also noted: PortWatch REVISES history — the service
+now serves 2,133 transits for observation 07-12 where the v1 record captured
+2,137.

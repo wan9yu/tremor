@@ -9,7 +9,7 @@ tremor watches a few **tension indicators**: guarded equilibria that something p
 - **Flights airborne** — airspace (community ADS-B)
 - **US high-yield credit spread** — financial system (FRED)
 - **Offshore−onshore yuan spread** — capital controls (CNH−CNY)
-- **GPS interference** — navigation / electronic warfare (GPSJam)
+- **Internet outages** — how many countries are dark at once (IODA)
 
 The primary set is chosen and re-chosen by a scored radar process — see `radar.md` for the
 current tiers, the metrics, and every calibration decision. Eleven more lines ride a hidden
@@ -17,7 +17,7 @@ watchlist, collected daily while they earn (or lose) a place.
 
 Each line is normalized on its own (robust z-score against its own recent history; lines with a known weekly rhythm are de-cycled by weekday so a routine weekend dip doesn't false-trigger); they are never combined into a single doom score. What matters is **resonance** — how many lines are trembling at once. Several independent instruments screaming together is what "actually more disordered" looks like; one moving alone is just a local event.
 
-The dashboard states its own **field of view**: the four primary lines watch EU/US/Japan airspace, US high-yield credit, the onshore/offshore yuan, and one global GPS ratio. Strain outside that can be entirely real and still read 0 — and because each line is scored against its own recent history, a disorder that has already been running for weeks sits inside its own baseline and reads calm too. Both limits are written down in `radar.md`.
+The dashboard states its own **field of view**: the four primary lines watch EU/US/Japan airspace, US high-yield credit, the onshore/offshore yuan, and worldwide internet reachability. Strain outside that can be entirely real and still read 0 — and because each line is scored against its own recent history, a disorder that has already been running for weeks sits inside its own baseline and reads calm too. Both limits are written down in `radar.md`.
 
 Missing data is never faked or hidden: a source going dark is recorded as a gap, and a prolonged collection blackout is shown as its own "system disruption" — because the instrument itself falling silent is a kind of tremor.
 

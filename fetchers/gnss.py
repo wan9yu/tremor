@@ -1,4 +1,4 @@
-"""GPSJam — GPS/GNSS interference (navigation / electronic warfare, tier 1).
+"""GPSJam — GPS/GNSS interference (navigation / electronic warfare, tier 2).
 
 Guarded equilibrium: aviation, ICAO, and military PNT authorities guard usable,
 jam-free GPS as a defended public good — whole air-traffic and timing systems
@@ -31,7 +31,7 @@ LINE = "gnss_interference"
 LABEL = "GPS interference (% aircraft)"
 UNIT = "%"
 ANOMALY_DIRECTION = "up"
-TIER = 1  # primary (the 4th instrument): global, ~1-day lag, fingerprints conflict
+TIER = 2  # demoted round 7: one worldwide ratio cannot see a regional campaign
 
 _URL = "https://gpsjam.org/data/{date}-h3_4.csv"
 _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
