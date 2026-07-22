@@ -4,7 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>tremor — is the world actually more disordered?</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Chart.js is vendored, not loaded from a CDN: jsdelivr is blocked in China, so
+     the operator could not reliably see their own dashboard. The CDN stays as a
+     fallback only if the local copy is ever missing. -->
+<script src="vendor/chart.umd.min.js"></script>
+<script>
+  if (typeof Chart === "undefined") {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>');
+  }
+</script>
 <style>
   :root{
     --bg:#0e0f12; --panel:#16181d; --line:#23262e; --ink:#e7e9ee; --muted:#8a909c;
