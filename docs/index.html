@@ -73,6 +73,11 @@
   .watchlist .dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:#5b616d;margin-right:5px;vertical-align:middle}
   .watchlist .days{opacity:.7}
   .wl-item{cursor:pointer;white-space:nowrap;display:inline-block;margin:0 14px 4px 0}
+  .coverage{color:var(--muted);font-size:12px;margin:-6px 2px 18px;line-height:1.6}
+  .coverage .cmore{color:#9aa1ad;cursor:pointer;margin-left:4px}
+  .coverage .cmore:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+  .modal-card ul.cov{margin:0 0 12px;padding-left:18px;font-size:14.5px;line-height:1.62;color:#c7ccd6}
+  .modal-card ul.cov li{margin:0 0 5px}
   .wl-item:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
   .modal-card .mchart{margin:12px 0 4px}
   .modal-card .mnow{font-size:15px;margin:10px 0 2px;color:#c7ccd6}
@@ -121,6 +126,8 @@
 
   <div class="strip" id="strip"></div>
 
+  <p class="coverage" id="coverage" hidden></p>
+
   <div class="panel">
     <div class="panelhead">
       <h2 id="panel-title"></h2>
@@ -160,8 +167,11 @@ function getRange(){ const m=document.cookie.match(/(?:^|;)\s*tremor_range=(30|9
 function setRange(r){ document.cookie="tremor_range="+r+";path=/;max-age="+(3600*24*365); }
 
 // ---------- per-line metadata (bilingual) ----------
+// `watches` states each tier-1 line's actual field of view. If a region is added
+// or removed here, the covBlind string below must be updated in the same edit.
 const LINES = [
   { id:"flights", color:"#5aa9e6", alarm:"down",
+    watches:{en:"W/C Europe · US East · US West · Japan/E Asia",zh:"西/中欧 · 美东 · 美西 · 日本/东亚"},
     unit:{en:"aircraft",zh:"架"},
     domain:{en:"Airspace",zh:"空域"},
     label:{en:"Aircraft airborne",zh:"在飞航班量"},
@@ -170,6 +180,7 @@ const LINES = [
       en:"Airlines fight to keep planes on schedule — delays and cancellations cost them money — so the number of aircraft in the air is normally held up by a powerful profit motive. When it drops sharply, a bigger force has overpowered that motive: closed airspace, severe weather, a pandemic, a security lockdown. Military airspace closures are never announced; they leave a shadow only in how many planes are actually flying. That makes flights a side channel for the otherwise invisible. Counted across several busy regions from public ADS-B data.",
       zh:"航空公司拼命让航班准点——延误和取消都在烧钱——所以「在飞的飞机数量」平时被强大的盈利动机顶在高位。一旦骤降，说明有更大的力量压垮了这股动机：空域关闭、极端天气、瘟疫、安全管制。军方封锁空域从不公告，只在「实际有多少飞机在飞」上留下影子。于是航班成了不可见之事的侧信道。数据来自多个繁忙空域的公开 ADS-B。"} },
   { id:"credit_spread", color:"#e0a83d", alarm:"up",
+    watches:{en:"the US high-yield bond market",zh:"美国高收益债市场"},
     unit:{en:"pp",zh:"个百分点"},
     domain:{en:"Financial system",zh:"金融系统"},
     label:{en:"US HY credit spread (OAS)",zh:"美国高收益债信用利差 (OAS)"},
@@ -191,9 +202,10 @@ const LINES = [
     label:{en:"Grid freq. max |dev|",zh:"电网频率最大偏离"},
     source:{en:"Fingrid, Statnett fallback (Nordic grid)",zh:"Fingrid，Statnett 备份（北欧电网）"},
     explain:{
-      en:"Grid operators defend 50 Hz second by second — one of the most fiercely guarded balances humans maintain. Any deviation means supply and demand were overwhelmed: a blackout precursor, a fuel shortage, a system under shock. We track the largest deviation from 50 Hz over the day. Source is Fingrid (Finland), with a keyless Statnett (Norway) fallback — both read the same Nordic synchronous grid.",
-      zh:"电网运营商以秒为单位死守 50 赫兹——这是人类守得最凶的平衡之一。任何偏离都意味着供需被压垮：停电前兆、燃料短缺、系统受冲击。我们记录当天对 50 赫兹的最大偏离。数据来自芬兰 Fingrid，并以挪威 Statnett（无需密钥）作为备份——两者读的是同一张北欧同步电网。"} },
+      en:"Grid operators defend 50 Hz second by second — one of the most fiercely guarded balances humans maintain. The Nordic frequency routinely wanders inside a ±100 mHz normal band — Fingrid's own bar for a LARGE deviation is 300 mHz, of which there were eleven in all of 2024 — and only a large one means supply and demand were overwhelmed: a blackout precursor, a fuel shortage, a system under shock. We track the largest deviation from 50 Hz over the day. Source is Fingrid (Finland), with a keyless Statnett (Norway) fallback — both read the same Nordic synchronous grid.",
+      zh:"电网运营商以秒为单位死守 50 赫兹——这是人类守得最凶的平衡之一。北欧频率在 ±100 mHz 的正常带内本就常态游走——Fingrid 自己把「大偏差」定在 300 mHz，2024 全年只有 11 次——只有大幅偏离才意味着供需被压垮：停电前兆、燃料短缺、系统受冲击。我们记录当天对 50 赫兹的最大偏离。数据来自芬兰 Fingrid，并以挪威 Statnett（无需密钥）作为备份——两者读的是同一张北欧同步电网。"} },
   { id:"cnh_cny", color:"#e0617d", alarm:"up", tier:1,
+    watches:{en:"the onshore/offshore yuan spread",zh:"在岸/离岸人民币价差"},
     unit:{en:"pips",zh:"点"},
     domain:{en:"Capital controls (China)",zh:"资本管制（中国）"},
     label:{en:"Offshore−onshore yuan spread",zh:"离岸−在岸人民币价差"},
@@ -207,16 +219,16 @@ const LINES = [
     label:{en:"China aircraft airborne",zh:"中国在飞航班量"},
     source:{en:"Community ADS-B — Beijing, Shanghai, Guangzhou",zh:"社区 ADS-B — 北京、上海、广州"},
     explain:{
-      en:"The same airspace logic as the main flights line, scoped to China's three busiest metros. On the watchlist, not yet a live instrument: free community ADS-B coverage over China is sparse and feeder-dependent (~30–60 aircraft per metro vs ~800 over Europe), so the count partly tracks receiver availability, not real traffic. Collected daily to build history; promoted if it proves to carry signal.",
-      zh:"和主航班线一样的空域逻辑，范围缩到中国三个最繁忙的都会区。它在观察名单上，还不是正式仪器：免费社区 ADS-B 在中国覆盖稀疏、依赖志愿接收器（每个都会区约 30–60 架，而欧洲约 800 架），所以这个数部分反映的是接收器多少、而非真实流量。每天照常采集以累积历史；一旦证明有信号，就升为一级。"} },
+      en:"The same airspace logic as the main flights line, scoped to China's three busiest metros. On the watchlist, not yet a live instrument: free community ADS-B coverage over China is sparse and feeder-dependent (~0–25 aircraft per metro at the sampling hour, against ~180 over W/C Europe), so the count partly tracks receiver availability, not real traffic. Collected daily to build history; promoted if it proves to carry signal.",
+      zh:"和主航班线一样的空域逻辑，范围缩到中国三个最繁忙的都会区。它在观察名单上，还不是正式仪器：免费社区 ADS-B 在中国覆盖稀疏、依赖志愿接收器（采样时刻每个都会区约 0–25 架，而西/中欧约 180 架），所以这个数部分反映的是接收器多少、而非真实流量。每天照常采集以累积历史；一旦证明有信号，就升为一级。"} },
   { id:"gdelt", color:"#6f7686", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Conflict events (global)",zh:"冲突事件（全球）"},
     label:{en:"Global conflict-event share",zh:"全球冲突事件占比"},
     source:{en:"GDELT 2.0 — full previous day, ~96 files",zh:"GDELT 2.0 — 前一整天约 96 个文件聚合"},
     explain:{
-      en:"The share of the world's news-coded events that are MATERIAL CONFLICT — assault, fight, mass violence (GDELT's QuadClass 4). Deliberately NOT a tension indicator and never counted: event tallies have no guard and inflate as media coverage densifies. It rides the watchlist as the 'felt vs real' contrast — how much conflict the world is reporting, set against the objective lines; the gap between them is the anxiety premium of the age. Aggregated over the entire previous day's ~96 raw event files (~100k events), so the daily value is no longer single-file noise.",
-      zh:"全球被编码的新闻事件里，属于「物质性冲突」（袭击、交火、大规模暴力，GDELT 的 QuadClass 4）的占比。它刻意不是张力指标、永不计数：事件计数没有守护力，且随媒体覆盖逐年通胀。它待在观察名单上，是「真实 vs 感觉」对照——世界在报道多少冲突，与客观线对比，二者的缺口就是这个时代的焦虑溢价。聚合前一整天约 96 个原始事件文件（约 10 万事件），日值不再是单文件噪声。"} },
+      en:"The share of the world's news-coded events that are MATERIAL CONFLICT — assault, fight, mass violence (GDELT's QuadClass 4). Deliberately NOT a tension indicator and never counted: event tallies have no guard and inflate as media coverage densifies. It rides the watchlist as the 'felt vs real' contrast — how much conflict the world is reporting, set against the measured lines. When the two diverge, the gap is the point — this instrument shows it without deciding in advance whether it is excess feeling or missing coverage. Aggregated over the entire previous day's ~96 raw event files (~100k events), so the daily value is no longer single-file noise.",
+      zh:"全球被编码的新闻事件里，属于「物质性冲突」（袭击、交火、大规模暴力，GDELT 的 QuadClass 4）的占比。它刻意不是张力指标、永不计数：事件计数没有守护力，且随媒体覆盖逐年通胀。它待在观察名单上，是「真实 vs 感觉」对照——世界在报道多少冲突，与客观线对比，二者背离时，那个缺口正是重点——这台仪器把它显示出来，但不预先判定那是感觉过头，还是覆盖不足。聚合前一整天约 96 个原始事件文件（约 10 万事件），日值不再是单文件噪声。"} },
   { id:"gdelt_tone", color:"#9b8ec4", alarm:"down", tier:2,
     unit:{en:"tone",zh:"tone"},
     domain:{en:"Feel (news tone)",zh:"感觉（新闻情绪）"},
@@ -239,16 +251,17 @@ const LINES = [
     label:{en:"Chokepoint vessel transits",zh:"海上咽喉点航运量"},
     source:{en:"IMF PortWatch — 28 chokepoints",zh:"IMF PortWatch — 28 个咽喉点"},
     explain:{
-      en:"Trade economics and the littoral states keep ships flowing through each of 28 maritime chokepoints — Suez, Hormuz, Bab-el-Mandeb, the Bosporus, Malacca, Panama, the Taiwan Strait. A drop in total transits leaks a blockade, war, drought, or attack at one of them. The live data already shows the thesis working — Hormuz fell to a couple of transits a day under blockade, the Red Sea cut Suez far below normal. Like the flights line, but for sea trade.",
-      zh:"贸易经济和沿岸国家让船流持续通过 28 个海上咽喉点——苏伊士、霍尔木兹、曼德海峡、博斯普鲁斯、马六甲、巴拿马、台湾海峡。总航运量骤降，就泄露其中某处的封锁、战争、干旱或袭击。实时数据已经验证了这套逻辑——霍尔木兹在封锁下塌到每天几艘，红海危机把苏伊士压到远低于常态。像航班线，但测的是海上贸易。"} },
+      en:"Trade economics and the littoral states keep ships flowing through each of 28 maritime chokepoints — Suez, Hormuz, Bab-el-Mandeb, the Bosporus, Malacca, Panama, the Taiwan Strait. A drop in total transits leaks a blockade, war, drought, or attack at one of them. Two honest limits: tremor records only the 28-point TOTAL, so a single strait closing moves it by a couple of percent and can be lost in the sum; and because PortWatch republishes weekly, this line rarely holds enough unique observations to score at all. Like the flights line, but for sea trade — and currently the slowest eye tremor has.",
+      zh:"贸易经济和沿岸国家让船流持续通过 28 个海上咽喉点——苏伊士、霍尔木兹、曼德海峡、博斯普鲁斯、马六甲、巴拿马、台湾海峡。总航运量骤降，就泄露其中某处的封锁、战争、干旱或袭击。两个必须说明的局限：tremor 只记录 28 点的总量，因此单独一条海峡关闭只让它动几个百分点，可能被总量淹没；而且 PortWatch 每周才更新一次，这根线很少攒够独立观测、常常根本打不出分数。像航班线，但测的是海上贸易——也是 tremor 目前最慢的一只眼。"} },
   { id:"gnss_interference", color:"#56b6c2", alarm:"up", tier:1,
+    watches:{en:"GPS interference as one worldwide ratio",zh:"GPS 干扰，且只是一个全球比值"},
     unit:{en:"%",zh:"%"},
     domain:{en:"Navigation (global)",zh:"导航（全球）"},
     label:{en:"GPS interference",zh:"GPS 干扰"},
     source:{en:"GPSJam (ADS-B Exchange)",zh:"GPSJam（基于 ADS-B Exchange）"},
     explain:{
-      en:"Aviation and military authorities guard usable, jam-free GPS as a public good the whole air-traffic and timing system leans on. A rise in the share of aircraft reporting bad GPS leaks deliberate jamming or spoofing — electronic warfare, war fronts, border conflict (the Black Sea, Baltic and Eastern Mediterranean have run hot for a while). A globally-aggregated side-channel that directly fingerprints state-level conflict.",
-      zh:"民航和军方把「可用、不被干扰的 GPS」当作整个空管与授时系统都依赖的公共品来守护。报告 GPS 异常的飞机占比上升，就泄露蓄意干扰或欺骗——电子战、战争前线、边境冲突（黑海、波罗的海、东地中海已热了一阵）。一个全球聚合的侧信道，直接指认国家级冲突。"} },
+      en:"Aviation and military authorities guard usable, jam-free GPS as a public good the whole air-traffic and timing system leans on. A rise in the share of aircraft reporting bad GPS leaks deliberate jamming or spoofing — electronic warfare, war fronts, border conflict (the Black Sea, Baltic and Eastern Mediterranean have run hot for a while). One honest limit, and it is a large one: this is ONE WORLDWIDE RATIO, so interference confined to a single region is diluted by global traffic and can read perfectly flat. In July 2026 the airspace over Iran and the Hormuz approaches was heavily jammed while this line sat at 0.47% and did not move. Read it as a global floor, not as a conflict detector.",
+      zh:"民航和军方把「可用、不被干扰的 GPS」当作整个空管与授时系统都依赖的公共品来守护。报告 GPS 异常的飞机占比上升，就泄露蓄意干扰或欺骗——电子战、战争前线、边境冲突（黑海、波罗的海、东地中海已热了一阵）。必须说明一个很大的局限：这是一个全球比值，所以局限在单一地区的干扰会被全球流量稀释、可能读作完全平坦。2026 年 7 月伊朗与霍尔木兹进近空域被大量干扰时，这根线停在 0.47% 纹丝不动。请把它读作全球底噪，而不是冲突探测器。"} },
   { id:"sofr_iorb_spread", color:"#c9a227", alarm:"up", tier:2,
     unit:{en:"bps",zh:"基点"},
     domain:{en:"Financial plumbing (US→global)",zh:"金融管道（美国→全球）"},
@@ -286,7 +299,7 @@ const LINES = [
 const T = {
   en:{
     tag:"An honest, long-running instrument for one question: is the world actually getting more disordered — or does it only feel that way?",
-    calm:"lines trembling today — calm",
+    calm:"lines trembling today — calm inside the field of view",
     tremblingOne:"line trembling today", tremblingMany:"lines trembling today",
     darkNote:n=>" · "+n+" line"+(n>1?"s":"")+" dark",
     countQ:"what is this? ›",
@@ -309,19 +322,26 @@ const T = {
     notCounted:"watchlist — not counted in the resonance",
     calibNote:(n,m)=>" · "+n+" of "+m+" lines still calibrating",
     range_30:"30d", range_90:"90d", range_365:"1y", range_all:"all",
-    feelTitle:"Real vs felt — the anxiety premium",
-    feelHint:"Bars: how many primary instruments trembled that day (the real side). Lines: how disordered the world FEELS — priced fear (VIX) and global news tone/conflict share — shown as z toward each line's alarming direction. Feel lines are contrast only, never counted. Amber columns mark days when feeling ran hot while every instrument stayed calm — the anxiety premium.",
+    feelTitle:"Real vs felt — where they diverge",
+    feelHint:"Bars: how many primary instruments trembled that day (the measured side). Lines: how disordered the world FEELS — priced fear (VIX) and global news tone/conflict share — shown as z toward each line's alarming direction. Feel lines are contrast only, never counted. Amber columns mark a DIVERGENCE: the felt side ran hot while every primary instrument read calm. A divergence has two possible causes and this chart cannot tell them apart — the feeling outran the world (an anxiety premium), or the strain fell outside what tremor watches (a coverage gap).",
+    feelGapNote:"divergence — felt hot, measured calm; cause unknown (anxiety premium or coverage gap)",
+    covLine:"Field of view: EU/US/Japan airspace · US high-yield credit · onshore/offshore yuan · one global GPS ratio.",
+    covTail:" Outside this, real strain can still read 0.",
+    covMore:"what tremor cannot see ›",
+    covTitle:"Field of view — what tremor can and cannot see",
+    covLead:"\"0 of 4\" holds only inside the four instruments' own field of view:",
+    covBlind:"tremor has no instrument in the Middle East, South Asia, Africa or Latin America, and none that watches a single strait, border or war front. A war there can be entirely real while every line here reads calm. That is a limit of the instrument, not a reading about the world. The watchlist below is where new coverage is built, before it is ever counted.",
     feelBars:"trembling count (real)",
     alarmingWhen:dir=>"alarming when "+dir, dirUp:"up", dirDown:"down",
     last:(v,u,d)=>" · last: "+v+" "+u+" on "+d, noCollect:"no collection this day",
     source:"Source", alarmTag:dir=>"alarming when "+dir,
     resoTitle:"Resonance — the only number that matters",
-    resoBody:"Each line is normalized on its own, then we simply count how many crossed the trembling threshold today (|z| > 3). The lines are never multiplied into a single doom score. One line moving alone is usually a local event. Several independent instruments — airspace, finance, capital, navigation — trembling at once is what “the world is actually more disordered” looks like. Trembling is measured against each line's own recent baseline (~90 observations, capped at 180 days), so the count reads short-horizon shifts, not slow decades-long drift.",
+    resoBody:"Each line is normalized on its own, then we count how many crossed the trembling threshold today (|z| > 3) IN THAT LINE'S OWN ALARMING DIRECTION. A line crossing the other way — a guard visibly reasserting itself, a closed strait reopening — is recorded as a benign shift and is not counted as disorder. A republished reading scores nothing: only the first occurrence of an observation ever enters a baseline. The lines are never multiplied into a single doom score. One line moving alone is usually a local event. Several independent instruments — airspace, finance, capital, navigation — trembling at once is what “the world is actually more disordered” looks like. Trembling is measured against each line's own recent baseline (~90 observations, capped at 180 days), so the count reads short-horizon shifts, not slow decades-long drift — a disorder that has already been running for weeks sits inside its own baseline and reads calm. The count is also bounded by where the instruments look: see the field of view under the strip.",
     footer:"tremor doesn't predict the end — nobody can. It only makes <b>now</b> readable: a seismograph, not a prophet, blind to instantaneous shocks and listening for the slow, systemic, trace-leaving kind of disorder. Data is collected daily by a GitHub Actions cron and committed back to the repo (<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>); this dashboard reads the CSVs directly — no backend.",
   },
   zh:{
     tag:"一台诚实的、长期运行的仪器，只回答一个问题：这个世界是不是真的更乱了——还是只是感觉更乱了？",
-    calm:"根线今天在颤抖 — 平静",
+    calm:"根线今天在颤抖 — 视野之内平静",
     tremblingOne:"根线今天在颤抖", tremblingMany:"根线今天在颤抖",
     darkNote:n=>" · "+n+" 根线无数据",
     countQ:"这是什么？›",
@@ -344,14 +364,21 @@ const T = {
     notCounted:"观察名单 — 不计入共振",
     calibNote:(n,m)=>"（"+n+"/"+m+" 根线校准中）",
     range_30:"30天", range_90:"90天", range_365:"1年", range_all:"全部",
-    feelTitle:"真实 vs 感觉 — 焦虑溢价",
-    feelHint:"柱：当天一级仪器的颤抖根数（真实侧）。线：世界「感觉」有多乱——恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自报警方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 感觉发烫而仪器全部平静的日子——这就是焦虑溢价。",
+    feelTitle:"真实 vs 感觉 — 两者的背离",
+    feelHint:"柱：当天一级仪器的颤抖根数（测量侧）。线：世界「感觉」有多乱——恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自报警方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 一次背离：感觉侧发烫，而所有一级仪器读数平静。背离有两种可能，这张图分不出是哪一种——要么是感觉跑在了世界前面（焦虑溢价），要么是压力落在了 tremor 的视野之外（覆盖盲区）。",
+    feelGapNote:"背离 —— 感觉发烫，测量平静；成因未知（焦虑溢价或覆盖盲区）",
+    covLine:"视野范围：欧/美/日空域 · 美国高收益债 · 在岸/离岸人民币 · 单一全球 GPS 比值。",
+    covTail:"视野之外，真实的压力照样可能读作 0。",
+    covMore:"tremor 看不见什么 ›",
+    covTitle:"视野范围 —— tremor 看得见与看不见什么",
+    covLead:"「4 根线中有 0 根颤抖」这句话，只在这四台仪器自己的视野之内成立：",
+    covBlind:"tremor 在中东、南亚、非洲、拉美没有任何仪器，也没有任何一台盯着某一条海峡、某一段边境或某一条战线。那里的战争可以完全真实，而这里每根线仍然读作平静。这是仪器的局限，不是关于世界的读数。下方的观察名单，就是新覆盖在被计数之前生长的地方。",
     feelBars:"颤抖根数（真实）",
     alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下跌",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
     source:"数据来源", alarmTag:dir=>dir+"时为异常",
     resoTitle:"共振——唯一重要的数字",
-    resoBody:"每根线各自归一化，然后我们只数今天有几根越过了颤抖阈值（|z| > 3）。这些线绝不相乘成一个末日总分。单独一根线动，通常只是局部事件。几台互相独立的仪器——空域、金融、资本、导航——同时颤抖，才是「世界真的更乱了」的样子。颤抖是相对每根线自己最近的基线（约 90 个观测、上限 180 天）测的，所以这个数读的是短期突变，不是数十年的缓慢漂移。",
+    resoBody:"每根线各自归一化，然后我们数今天有几根在自己的报警方向上越过了颤抖阈值（|z| > 3）。反方向越过——守护力重新压住场面，比如封锁的海峡重开——记为良性异动，不算失序。重复发布的读数不计分：每个观测只有第一次出现才进入基线。这些线绝不相乘成一个末日总分。单独一根线动，通常只是局部事件。几台互相独立的仪器——空域、金融、资本、导航——同时颤抖，才是「世界真的更乱了」的样子。颤抖是相对每根线自己最近的基线（约 90 个观测、上限 180 天）测的，所以这个数读的是短期突变，不是数十年的缓慢漂移——一场已经持续数周的失序，会落在自己的基线之内、读作平静。这个数还受限于仪器看向哪里：见仪器条下方的视野范围。",
     footer:"tremor 不预言末日——没人能。它只让<b>此刻</b>变得可读：是地震仪，不是先知；对瞬时灾难无能为力，只倾听那种缓慢的、系统性的、会留下痕迹的失序。数据由 GitHub Actions 每日定时采集并提交回仓库（<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>），仪表盘直接读取 CSV——无需后端。",
   }
 };
@@ -411,12 +438,26 @@ function lineModal(L,lang){
     <p>${L.explain[lang]}</p>${annoHtml}`;
 }
 function resoModal(lang){ return `<h3>${T[lang].resoTitle}</h3><p>${T[lang].resoBody}</p>`; }
+// Built FROM each tier-1 line's own `watches` field, so the disclosure cannot go
+// stale independently of the instruments it describes.
+function covModal(lang){
+  const t1=LINES.filter(L=>(L.tier||1)===1);
+  const items=t1.map(L=>`<li><b>${L.domain[lang]}</b> — ${L.watches[lang]}</li>`).join("");
+  return `<h3>${T[lang].covTitle}</h3><p>${T[lang].covLead}</p>
+    <ul class="cov">${items}</ul><p>${T[lang].covBlind}</p>`;
+}
 
 // ---------- data + render ----------
 let DATA=null, chart=null, feelChart=null;
 // display-side hedge: MIN_POINTS=10 is the scoring floor, but a robust scale
 // stays jumpy on short windows until roughly this many unique observations exist
 const CALIBRATING_OBS=30;
+// A day "diverges" when the felt side runs hot while every primary instrument
+// reads calm. This is a DESCRIPTION, not a diagnosis: the cause may be excess
+// feeling or missing coverage, and the instrument cannot distinguish them.
+const FEEL_IDS=["vix","gdelt_tone","gdelt"];
+const FEEL_HOT=2;
+const isDivergent=(count,feelMax)=>count===0&&feelMax!==null&&feelMax>=FEEL_HOT;
 async function load(){
   const [summary, annotations, ...lineArr]=await Promise.all([
     getCSV("data/summary.csv"), getCSV("data/annotations.csv"),
@@ -536,6 +577,13 @@ function render(){
       pointBackgroundColor:ptColor, pointBorderColor:ptColor });
   }
 
+  // Field of view. "0 of 4" is a statement about four instruments, not about the
+  // world; say where they point so a reader can judge the silence for themselves.
+  const cov=document.getElementById("coverage"); cov.hidden=false;
+  cov.innerHTML=`${T[lang].covLine}${T[lang].covTail}`+
+    `<span class="cmore" id="covmore">${T[lang].covMore}</span>`;
+  document.getElementById("covmore").onclick=()=>openModal(covModal(lang));
+
   // system status banner
   const st=document.getElementById("sysstatus"); st.hidden=false;
   if(!last){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].nodata}</span>`; }
@@ -568,7 +616,6 @@ function render(){
   document.getElementById("feel-title").textContent=T[lang].feelTitle;
   document.getElementById("feel-hint").textContent=T[lang].feelHint;
   const sumBy={}; summary.forEach(r=>sumBy[r.date]=r);
-  const FEEL_IDS=["vix","gdelt_tone","gdelt"];
   // the feel axis is independent of the instrument axis: seeded feel history
   // (the VIX archive) predates the instrument's birth and deserves to show —
   // bars are simply absent for days before the instrument existed
@@ -591,7 +638,7 @@ function render(){
       spanGaps:true, pointRadius:0, pointHoverRadius:4, order:1 };
   }).filter(ds=>ds&&ds.data.some(v=>v!==null));  // hide lines still warming up
   // anxiety premium: feeling hot (any feel z>=2) while the instruments read 0
-  const gapCol=feelDates.map((d,i)=>(counts[i]===0&&feelMax[i]!==null&&feelMax[i]>=2)?4:null);
+  const gapCol=feelDates.map((d,i)=>isDivergent(counts[i],feelMax[i])?4:null);
   if(feelChart) feelChart.destroy();
   feelChart=new Chart(document.getElementById("feelchart"),{
     data:{ labels:feelDates, datasets:[

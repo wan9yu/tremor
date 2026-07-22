@@ -1,4 +1,4 @@
-"""GPSJam — GPS/GNSS interference (navigation / electronic-warfare watchlist, tier 2).
+"""GPSJam — GPS/GNSS interference (navigation / electronic warfare, tier 1).
 
 Guarded equilibrium: aviation, ICAO, and military PNT authorities guard usable,
 jam-free GPS as a defended public good — whole air-traffic and timing systems
@@ -10,6 +10,15 @@ and Eastern Mediterranean have run hot for a while).
 Reading: share of tracked aircraft reporting bad GPS worldwide, in percent. A
 rise is the alarming move. Jamming campaigns persist for days–weeks, so the
 day's aggregate is honest at daily cadence.
+
+KNOWN LIMIT — this is one WORLDWIDE ratio and has no regional sensitivity. A
+jamming campaign confined to one theatre is diluted by global traffic: through
+the July 2026 Gulf escalation the bad-GPS share inside the Iran/Hormuz airspace
+ran near 16% while this line read 0.47% and never moved. Regionalizing it was
+investigated in radar round 7 and deferred — every candidate box that detected
+the episode lost the detection when its edge moved one degree, and the 90-day
+baseline spanned a tenfold growth in the sampling frame. Treat the reading as a
+global floor, not as a conflict detector.
 
 Source: GPSJam daily CSV (built on ADS-B Exchange). Keyless; the per-day file is
 dated, so we take the most recent available day.

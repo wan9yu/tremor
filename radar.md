@@ -84,12 +84,12 @@ applied round 4.
 | cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ slot 4 (user-decided) |
 | gnss_interference | navigation/EW (global) | 3 | 3 | 3 | — | — | — | ✅ slot for trade swapped R5 — ~1-day lag, fingerprints conflict |
 
-## Tier 2 — watchlist  (8 candidates + 1 contrast)
+## Tier 2 — watchlist  (8 candidates + 3 contrast)
 
 Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
-are tier-1 challengers banking evidence. (gdelt sits outside the 8 candidate slots — it
-fails the guard gate and can never promote; it rides along only as the "felt vs real"
-contrast.)
+are tier-1 challengers banking evidence. (the three feel lines — gdelt, gdelt_tone, vix — sit outside the
+8 candidate slots: they fail the guard gate and can never promote; they ride along only
+as the "felt vs real" contrast.)
 
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | note |
 |---|---|:--:|:--:|:--:|:--:|:--:|---|
