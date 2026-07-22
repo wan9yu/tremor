@@ -21,6 +21,13 @@ prior Sunday, so the newest available reading ages from about 3 days just after
 a release to about 9 days just before the next one. Ten buys a day of margin. If
 the target is still unpublished, the newest available day is used and the
 shortfall is stated in the note rather than hidden.
+
+THE PRICE, recorded here so it is visible from the code and not only from
+radar.md: a fixed lag makes these lines permanently ~10 days stale, which puts
+them permanently outside the freshness rule for a displayed tier-1 instrument
+(≤ ~2 days). This trades liveness for the ability to score at all, and it is the
+right trade only because these are watchlist lines. Reading the newest available
+day instead would be fresher and would still be unable to judge itself.
 """
 import datetime
 import json

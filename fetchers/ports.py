@@ -19,14 +19,20 @@ UNIT = "port calls"
 ANOMALY_DIRECTION = "down"
 TIER = 2
 
+# Named here so the archive seeder in tools/ addresses exactly the same service,
+# field and note prefix the daily fetch does.
+SERVICE = "Daily_Ports_Data"
+FIELD = "portcalls"
+NOTE = "IMF PortWatch global port calls"
+
 
 def fetch_daily():
     total, date, note = portwatch.daily_sum_at_lag(
-        "Daily_Ports_Data", "portcalls", clock.china_today())
+        SERVICE, FIELD, clock.china_today())
     if total is None:
         return {"raw_value": None, "source_note": note}
     return {
         "raw_value": total,
-        "source_note": f"IMF PortWatch global port calls {date}{note}",
+        "source_note": f"{NOTE} {date}{note}",
         "obs_date": date,
     }

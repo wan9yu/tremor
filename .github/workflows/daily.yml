@@ -31,6 +31,11 @@ jobs:
       - name: Check the scoring rules
         run: python -m unittest discover tests
 
+      # The dashboard is one inline script with no build step. Render it against
+      # the committed CSVs so a runtime error cannot reach the page unnoticed.
+      - name: Check the dashboard renders
+        run: node tests/render_smoke.js
+
       - name: Collect today's readings
         env:
           # FRED_API_KEY (credit spread) and FINGRID_API_KEY (grid frequency, with
