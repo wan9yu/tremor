@@ -30,3 +30,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-20,97,-0.084,0,down,Yahoo USDCNH 6.7774 − USDCNY 6.7677 (pips),,scoring
 2026-07-21,111,0.365,0,up,Yahoo USDCNH 6.7685 − USDCNY 6.7574 (pips),,scoring
 2026-07-22,109,0.249,0,up,Yahoo USDCNH 6.7678 − USDCNY 6.7569 (pips),,scoring
+2026-07-23,8,-2.793,0,down,Yahoo USDCNH 6.7728 − USDCNY 6.7720 (pips),,scoring
