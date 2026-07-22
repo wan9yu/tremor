@@ -414,8 +414,8 @@ function resoModal(lang){ return `<h3>${T[lang].resoTitle}</h3><p>${T[lang].reso
 
 // ---------- data + render ----------
 let DATA=null, chart=null, feelChart=null;
-// display-side hedge: MIN_POINTS=10 is the scoring floor, but MAD baselines
-// stay structurally jumpy until roughly this many unique observations exist
+// display-side hedge: MIN_POINTS=10 is the scoring floor, but a robust scale
+// stays jumpy on short windows until roughly this many unique observations exist
 const CALIBRATING_OBS=30;
 async function load(){
   const [summary, annotations, ...lineArr]=await Promise.all([
