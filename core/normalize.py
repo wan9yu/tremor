@@ -69,36 +69,50 @@ def _weekday(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d").weekday()
 
 
-def _age_capped(history, dates, today_date, max_age_days):
-    """Drop (value, date) pairs older than ``max_age_days`` before ``today_date``.
+def _age_capped(history, dates, cycle_dates, today_date, max_age_days):
+    """Drop entries older than ``max_age_days`` before ``today_date``.
 
     For slow/deduplicated sources, "the last 90 observations" could otherwise
-    span seasons or regimes. Shared by the z baseline and the weekday veto so
-    both always judge against the same sample set.
+    span seasons or regimes. The cap is judged on the ROW date (when the reading
+    entered the record); ``cycle_dates`` rides along untouched so the weekday
+    baseline and the veto always see the same sample set as the z-score.
     """
+    if cycle_dates is None:
+        cycle_dates = dates
     if not (dates is not None and today_date and max_age_days):
-        return history, dates
+        return history, dates, cycle_dates
     try:
         cutoff = (datetime.strptime(today_date, "%Y-%m-%d")
                   - timedelta(days=max_age_days)).strftime("%Y-%m-%d")
     except (ValueError, TypeError):
-        return history, dates
-    pairs = [(v, d) for v, d in zip(history, dates) if not d or d >= cutoff]
-    return [v for v, _ in pairs], [d for _, d in pairs]
+        return history, dates, cycle_dates
+    triples = [(v, d, c) for v, d, c in zip(history, dates, cycle_dates)
+               if not d or d >= cutoff]
+    return ([v for v, _, _ in triples], [d for _, d, _ in triples],
+            [c for _, _, c in triples])
 
 
-def _same_weekday(history, dates, today_date):
-    """Values from ``history`` whose date falls on ``today_date``'s weekday."""
+def _same_weekday(history, cycle_dates, today_cycle_date):
+    """Values whose CYCLE date falls on ``today_cycle_date``'s weekday.
+
+    The cycle date is the date the weekly rhythm belongs to — the OBSERVATION
+    date, not the date the row was written. They differ for any lagged source:
+    GDELT publishes the previous full UTC day, and the lag is not even constant,
+    so bucketing by row date would de-cycle against the wrong weekday and smear
+    the very rhythm the de-cycling exists to remove. For a live snapshot line
+    the two are the same date and this is a distinction without a difference.
+    """
     try:
-        target = _weekday(today_date)
-        return [v for v, d in zip(history, dates)
+        target = _weekday(today_cycle_date)
+        return [v for v, d in zip(history, cycle_dates)
                 if v is not None and d and _weekday(d) == target]
     except (ValueError, TypeError):
         return []
 
 
 def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
-             window=WINDOW, min_points=MIN_POINTS, max_age_days=MAX_AGE_DAYS):
+             window=WINDOW, min_points=MIN_POINTS, max_age_days=MAX_AGE_DAYS,
+             cycle_dates=None, today_cycle_date=None):
     """Robust z-score of ``today`` against the trailing ``window`` of history.
 
     ``history`` is the list of prior raw values (oldest..newest) and may contain
@@ -120,9 +134,11 @@ def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
     """
     if today is None:
         return None
-    history, dates = _age_capped(history, dates, today_date, max_age_days)
-    if weekday_cycle and dates is not None and today_date is not None:
-        same = _same_weekday(history, dates, today_date)[-window:]
+    history, dates, cycle_dates = _age_capped(
+        history, dates, cycle_dates, today_date, max_age_days)
+    today_cycle_date = today_cycle_date or today_date
+    if weekday_cycle and cycle_dates is not None and today_cycle_date is not None:
+        same = _same_weekday(history, cycle_dates, today_cycle_date)[-window:]
         if len(same) >= min_points:
             return _scale_z(same, today)
     values = [v for v in history if v is not None][-window:]
@@ -141,7 +157,8 @@ def classify(z, threshold=THRESHOLD):
 
 
 def weekday_range_veto(history, dates, today, today_date,
-                       min_samples=3, max_samples=MIN_POINTS, margin=0.05):
+                       min_samples=3, max_samples=MIN_POINTS, margin=0.05,
+                       cycle_dates=None, today_cycle_date=None):
     """Warm-up veto for weekly-cycle lines, nonparametric by design.
 
     Until a line has ``max_samples`` same-weekday readings (when the proper
@@ -161,8 +178,9 @@ def weekday_range_veto(history, dates, today, today_date,
         return False, ""
     # Same age cap as robust_z, so the veto judges against the same sample set
     # the z-score was computed from.
-    history, dates = _age_capped(history, dates, today_date, MAX_AGE_DAYS)
-    same = _same_weekday(history, dates, today_date)
+    history, dates, cycle_dates = _age_capped(
+        history, dates, cycle_dates, today_date, MAX_AGE_DAYS)
+    same = _same_weekday(history, cycle_dates, today_cycle_date or today_date)
     n = len(same)
     if not (min_samples <= n < max_samples):
         return False, ""
@@ -188,7 +206,7 @@ def judge(history, dates, obs_dates, today, today_obs, today_date,
     ``history``/``dates``/``obs_dates`` are aligned per prior row; ``today_obs``
     is today's observation date ("" for real-time lines).
     """
-    values, kept_dates = [], []
+    values, kept_dates, kept_cycle = [], [], []
     seen_obs = set()
     for v, d, o in zip(history, dates, obs_dates):
         if o:
@@ -197,13 +215,20 @@ def judge(history, dates, obs_dates, today, today_obs, today_date,
             seen_obs.add(o)
         values.append(v)
         kept_dates.append(d)
+        # A weekly rhythm belongs to the day the reading is ABOUT, so de-cycling
+        # keys off the observation date when the source publishes one.
+        kept_cycle.append(o or d)
     if today_obs and today_obs in seen_obs:
         return None, 0, "", "[stale: observation already recorded]"
+    today_cycle = today_obs or today_date
     z = robust_z(values, today, dates=kept_dates, today_date=today_date,
-                 weekday_cycle=weekly_cycle)
+                 weekday_cycle=weekly_cycle,
+                 cycle_dates=kept_cycle, today_cycle_date=today_cycle)
     trembling, direction = classify(z)
     if trembling and weekly_cycle:
-        vetoed, detail = weekday_range_veto(values, kept_dates, today, today_date)
+        vetoed, detail = weekday_range_veto(
+            values, kept_dates, today, today_date,
+            cycle_dates=kept_cycle, today_cycle_date=today_cycle)
         if vetoed:
             return z, 0, direction, f"[{detail}]"
     return z, trembling, direction, ""
