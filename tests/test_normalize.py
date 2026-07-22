@@ -117,17 +117,22 @@ class TestStatus(unittest.TestCase):
         vals = [100.0 + i for i in range(n)]
         return vals, [f"2026-06-{i + 1:02d}" for i in range(n)], [""] * n
 
-    def test_each_state_is_named(self):
-        thin_v, thin_d, thin_o = self._hist(4)
-        cases = [
-            (self._hist(20) + (500.0, "", "2026-07-01"), N.STATUS_SCORING),
-            ((thin_v, thin_d, thin_o, 500.0, "", "2026-07-01"), N.STATUS_WARMING),
-            (self._hist(20)[:2] + ([""] * 20,) + (None, "", "2026-07-01"), N.STATUS_DARK),
-            (([5.0] * 14, [f"2026-06-{i + 1:02d}" for i in range(14)], [""] * 14,
-              9.0, "", "2026-06-20"), N.STATUS_FLAT),
-        ]
-        for args, expected in cases:
-            self.assertEqual(N.judge(*args)[4], expected)
+    def _status(self, values, today, dates=None, obs=None, today_obs=""):
+        dates = dates or [f"2026-06-{i + 1:02d}" for i in range(len(values))]
+        return N.judge(values, dates, obs or [""] * len(values),
+                       today, today_obs, "2026-07-01")[4]
+
+    def test_enough_clean_history_is_scoring(self):
+        self.assertEqual(self._status(self._hist(20)[0], 500.0), N.STATUS_SCORING)
+
+    def test_too_little_history_is_warming_up(self):
+        self.assertEqual(self._status(self._hist(4)[0], 500.0), N.STATUS_WARMING)
+
+    def test_a_missing_reading_is_dark(self):
+        self.assertEqual(self._status(self._hist(20)[0], None), N.STATUS_DARK)
+
+    def test_a_window_with_no_dispersion_is_no_spread(self):
+        self.assertEqual(self._status([5.0] * 14, 9.0), N.STATUS_FLAT)
 
     def test_a_republished_observation_reports_stale(self):
         vals, dates, _ = self._hist(12)

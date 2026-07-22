@@ -24,14 +24,20 @@ UNIT = "vessels"
 ANOMALY_DIRECTION = "down"
 TIER = 2  # watchlist: PortWatch is ~10 days behind — too stale to display live
 
+# Named here so the archive seeder in tools/ addresses exactly the same service,
+# field and note prefix the daily fetch does.
+SERVICE = "Daily_Chokepoints_Data"
+FIELD = "n_total"
+NOTE = "IMF PortWatch 28 chokepoints, total transits"
+
 
 def fetch_daily():
     total, date, note = portwatch.daily_sum_at_lag(
-        "Daily_Chokepoints_Data", "n_total", clock.china_today())
+        SERVICE, FIELD, clock.china_today())
     if total is None:
         return {"raw_value": None, "source_note": note}
     return {
         "raw_value": total,
-        "source_note": f"IMF PortWatch 28 chokepoints, total transits {date}{note}",
+        "source_note": f"{NOTE} {date}{note}",
         "obs_date": date,
     }

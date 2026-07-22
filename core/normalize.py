@@ -85,26 +85,26 @@ def _weekday(date_str):
 
 
 def _age_capped(history, dates, cycle_dates, today_date, max_age_days):
-    """Drop entries older than ``max_age_days`` before ``today_date``.
+    """``(history, cycle_dates)`` with entries older than ``max_age_days`` dropped.
 
     For slow/deduplicated sources, "the last 90 observations" could otherwise
-    span seasons or regimes. The cap is judged on the ROW date (when the reading
-    entered the record); ``cycle_dates`` rides along untouched so the weekday
-    baseline and the veto always see the same sample set as the z-score.
+    span seasons or regimes. The cap is judged on the ROW date — when the
+    reading entered the record — while ``cycle_dates`` (the observation dates
+    the weekly rhythm belongs to) rides along, so the z baseline and the weekday
+    veto always judge against the same sample set.
     """
     if cycle_dates is None:
         cycle_dates = dates
     if not (dates is not None and today_date and max_age_days):
-        return history, dates, cycle_dates
+        return history, cycle_dates
     try:
         cutoff = (datetime.strptime(today_date, "%Y-%m-%d")
                   - timedelta(days=max_age_days)).strftime("%Y-%m-%d")
     except (ValueError, TypeError):
-        return history, dates, cycle_dates
-    triples = [(v, d, c) for v, d, c in zip(history, dates, cycle_dates)
-               if not d or d >= cutoff]
-    return ([v for v, _, _ in triples], [d for _, d, _ in triples],
-            [c for _, _, c in triples])
+        return history, cycle_dates
+    kept = [(v, c) for v, d, c in zip(history, dates, cycle_dates)
+            if not d or d >= cutoff]
+    return [v for v, _ in kept], [c for _, c in kept]
 
 
 def _same_weekday(history, cycle_dates, today_cycle_date):
@@ -128,15 +128,16 @@ def _same_weekday(history, cycle_dates, today_cycle_date):
 def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
              window=WINDOW, min_points=MIN_POINTS, max_age_days=MAX_AGE_DAYS,
              cycle_dates=None, today_cycle_date=None):
-    """Robust z-score of ``today`` against the trailing ``window`` of history.
+    """``(z, status)`` for ``today`` against the trailing ``window`` of history.
 
     ``history`` is the list of prior raw values (oldest..newest) and may contain
     None for gaps; gaps are dropped, so the window is the last ``window``
     *available* readings (which can span more than ``window`` calendar days when
-    a source has been down). Returns a float, or None when there is not enough
-    clean history — or no spread at all — to judge honestly. Returning None
-    there is deliberate: tremor would rather say "I can't tell yet" than fake a
-    number.
+    a source has been down). ``z`` is None when there is not enough clean
+    history — or no spread at all — to judge honestly, and ``status`` says WHICH
+    of those it was. Returning None is deliberate: tremor would rather say "I
+    can't tell yet" than fake a number, and naming the kind of "can't" is what
+    stops an unscoreable line from reading exactly like a calm one.
 
     De-cycling: sampling at a fixed time of day already removes the diurnal
     cycle. For a line with a strong WEEKLY rhythm (e.g. flights, which dip every
@@ -147,23 +148,9 @@ def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
     cycle is absorbed by the trailing window; true year-over-year
     de-seasonalization waits on a full year of history.)
     """
-    return robust_z_status(history, today, dates, today_date, weekday_cycle,
-                           window, min_points, max_age_days,
-                           cycle_dates, today_cycle_date)[0]
-
-
-def robust_z_status(history, today, dates=None, today_date=None,
-                    weekday_cycle=False, window=WINDOW, min_points=MIN_POINTS,
-                    max_age_days=MAX_AGE_DAYS, cycle_dates=None,
-                    today_cycle_date=None):
-    """``robust_z``, but returns ``(z, status)`` — WHY there is no z, when there isn't.
-
-    Distinguishing "not enough history yet" from "no dispersion to measure
-    against" from "quiet" is the whole point; see the STATUS_* constants.
-    """
     if today is None:
         return None, STATUS_DARK
-    history, dates, cycle_dates = _age_capped(
+    history, cycle_dates = _age_capped(
         history, dates, cycle_dates, today_date, max_age_days)
     today_cycle_date = today_cycle_date or today_date
     if weekday_cycle and cycle_dates is not None and today_cycle_date is not None:
@@ -209,7 +196,7 @@ def weekday_range_veto(history, dates, today, today_date,
         return False, ""
     # Same age cap as robust_z, so the veto judges against the same sample set
     # the z-score was computed from.
-    history, dates, cycle_dates = _age_capped(
+    history, cycle_dates = _age_capped(
         history, dates, cycle_dates, today_date, MAX_AGE_DAYS)
     same = _same_weekday(history, cycle_dates, today_cycle_date or today_date)
     n = len(same)
@@ -254,7 +241,7 @@ def judge(history, dates, obs_dates, today, today_obs, today_date,
     if today_obs and today_obs in seen_obs:
         return None, 0, "", "[stale: observation already recorded]", STATUS_STALE
     today_cycle = today_obs or today_date
-    z, status = robust_z_status(
+    z, status = robust_z(
         values, today, dates=kept_dates, today_date=today_date,
         weekday_cycle=weekly_cycle,
         cycle_dates=kept_cycle, today_cycle_date=today_cycle)

@@ -38,13 +38,13 @@ from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
                       grid_frequency, net_outages, ports, sofr_iorb, vix)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
-# (airspace / financial system / capital controls / navigation-EW), so several
+# (airspace / financial system / capital controls / communications), so several
 # trembling at once means more than any one moving alone. Tier-2 lines ride along
-# to build history until they earn promotion.
-LINES = [flights, credit_spread, cnh_cny, gnss,         # tier 1 (primary, displayed)
-         capital_premium, grid_frequency, chokepoint,   # tier 2 (lagged/demoted)
-         cn_flights, sofr_iorb, em_oas, ports,          # tier 2 (candidates)
-         net_outages,
+# to build history until they earn promotion. The grouping below is a reading
+# aid; ``TIER`` on each module is what actually decides.
+LINES = [flights, credit_spread, cnh_cny, net_outages,  # tier 1 (primary, displayed)
+         gnss, capital_premium, grid_frequency,         # tier 2 (demoted)
+         chokepoint, cn_flights, sofr_iorb, em_oas, ports,   # tier 2 (candidates)
          gdelt, gdelt_tone, vix]                        # tier 2 (feel contrast, never promotable)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -55,8 +55,7 @@ LINE_HEADER = ["date", "raw_value", "z_score", "trembling", "direction", "source
                "obs_date", "status"]
 # Summary holds only the tier-1 aggregates; each line's own z lives in its CSV, so
 # the schema stays stable as indicators are added, promoted, or demoted.
-SUMMARY_HEADER = ["date", "trembling_count", "dark_count", "blind_count",
-                  "scoring_count"]
+SUMMARY_HEADER = ["date", "trembling_count", "dark_count", "blind_count"]
 
 
 def _read_rows(path):
@@ -111,13 +110,45 @@ def _fmt(value):
     return str(value)
 
 
+def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False):
+    """Judge one reading against ``prior_rows`` and return the CSV row for it.
+
+    The ONLY place a line row is built. The daily collector and the archive
+    seeders in ``tools/`` both go through here, so a schema change, a change of
+    z precision, or a new verdict field cannot leave seeded rows in an older
+    shape than live ones — most of some lines' history is written by a seeder,
+    and that path is not exercised by the daily run.
+    """
+    history, hist_dates, hist_obs = _history(prior_rows, date)
+    z, trembling, direction, verdict_note, status = normalize.judge(
+        history, hist_dates, hist_obs, raw, obs_date, date,
+        weekly_cycle=weekly_cycle,
+    )
+    if verdict_note:
+        note += f" {verdict_note}"
+    return {
+        "date": date,
+        "raw_value": _fmt(raw),
+        "z_score": "" if z is None else f"{z:.3f}",
+        "trembling": str(trembling),
+        "direction": direction,
+        "source_note": note,
+        "obs_date": obs_date or "",
+        "status": status,
+    }
+
+
+def write_line(line, rows):
+    """Write a line's full row list to ``data/<line>.csv``."""
+    _write_rows(os.path.join(DATA, line + ".csv"), LINE_HEADER, rows)
+
+
 def collect():
     today = clock.china_today()
     summary = {"date": today}
     trembling_count = 0
     dark_count = 0
     blind_count = 0
-    scoring_count = 0
 
     for mod in LINES:
         path = os.path.join(DATA, mod.LINE + ".csv")
@@ -134,63 +165,45 @@ def collect():
         tier = getattr(mod, "TIER", 1)
         primary = tier == 1
 
-        history, hist_dates, hist_obs = _history(rows, today)
-        z, trembling, direction, verdict_note, status = normalize.judge(
-            history, hist_dates, hist_obs, raw, obs_date, today,
-            weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False),
-        )
-        if verdict_note:
-            note += f" {verdict_note}"
-        # Only tier-1 instruments count toward the live resonance and dark count,
-        # and only trembles in the line's declared ALARM direction feed the count
-        # — a guard visibly reasserting itself (a benign-direction move) is
-        # recorded but is not disorder.
-        # Only tier-1 instruments count. A line that HOLDS a reading it cannot
-        # judge is counted blind, not calm: the denominator of the headline has
-        # to say how many instruments were actually able to answer today.
+        row = score_row(today, raw, note, obs_date, rows,
+                        weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False))
+        status = row["status"]
+        trembling = int(row["trembling"])
+        # Only tier-1 instruments count, and only trembles in the line's declared
+        # ALARM direction — a guard visibly reasserting itself is recorded but is
+        # not disorder. A line HOLDING a reading it cannot judge is blind, not
+        # calm: the headline's denominator has to say how many instruments were
+        # actually able to answer. A stale row is neither, because the
+        # observation was judged when it first arrived and that verdict stands.
         if primary:
-            if trembling and direction == mod.ANOMALY_DIRECTION:
+            if trembling and row["direction"] == mod.ANOMALY_DIRECTION:
                 trembling_count += 1
-            if raw is None:
+            if status == normalize.STATUS_DARK:
                 dark_count += 1
             elif status in normalize.BLIND_STATUSES:
                 blind_count += 1
-            elif status == normalize.STATUS_SCORING:
-                scoring_count += 1
 
-        row = {
-            "date": today,
-            "raw_value": _fmt(raw),
-            "z_score": "" if z is None else f"{z:.3f}",
-            "trembling": str(trembling),
-            "direction": direction,
-            "source_note": note,
-            "obs_date": obs_date,
-            "status": status,
-        }
-        rows = _upsert(rows, row, today)
-        _write_rows(path, LINE_HEADER, rows)
+        _write_rows(path, LINE_HEADER, _upsert(rows, row, today))
 
         flag = "  TREMBLING" if trembling else ""
         print(
             f"[{mod.LINE:16} t{tier}] raw={row['raw_value'] or 'NA':>10}  "
-            f"z={row['z_score'] or 'NA':>7} {status:<11}{flag}  ({note})"
+            f"z={row['z_score'] or 'NA':>7} {status:<11}{flag}  "
+            f"({row['source_note']})"
         )
 
     summary["trembling_count"] = str(trembling_count)
     summary["dark_count"] = str(dark_count)
     summary["blind_count"] = str(blind_count)
-    summary["scoring_count"] = str(scoring_count)
     summary_path = os.path.join(DATA, "summary.csv")
     srows = _upsert(_read_rows(summary_path), summary, today)
     for r in srows:  # keep every row schema-complete even across format changes
         for k in SUMMARY_HEADER:
             r.setdefault(k, "")
     _write_rows(summary_path, SUMMARY_HEADER, srows)
-    extra = "".join([f", {dark_count} dark" if dark_count else "",
-                     f", {blind_count} blind" if blind_count else ""])
-    print(f"\n== {today}: {trembling_count} of {scoring_count} scoring "
-          f"line(s) trembling{extra} ==")
+    extra = ((f", {dark_count} dark" if dark_count else "")
+             + (f", {blind_count} blind" if blind_count else ""))
+    print(f"\n== {today}: {trembling_count} line(s) trembling{extra} ==")
 
     # Mirror the data into docs/ so the GitHub Pages dashboard is self-contained.
     os.makedirs(DOCS_DATA, exist_ok=True)

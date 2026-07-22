@@ -176,8 +176,10 @@ function getRange(){ const m=document.cookie.match(/(?:^|;)\s*tremor_range=(30|9
 function setRange(r){ document.cookie="tremor_range="+r+";path=/;max-age="+(3600*24*365); }
 
 // ---------- per-line metadata (bilingual) ----------
-// `watches` states each tier-1 line's actual field of view. If a region is added
-// or removed here, the covBlind string below must be updated in the same edit.
+// `watches` states each tier-1 line's actual field of view. The coverage line
+// and its modal are both DERIVED from it, so they cannot go stale on a tier
+// swap. Only `covBlind` — the prose about what tremor cannot see — is written
+// by hand and must be revisited when coverage genuinely changes.
 const LINES = [
   { id:"flights", color:"#5aa9e6", alarm:"down",
     watches:{en:"W/C Europe · US East · US West · Japan/E Asia",zh:"西/中欧 · 美东 · 美西 · 日本/东亚"},
@@ -337,7 +339,7 @@ const T = {
     feelTitle:"Real vs felt — where they diverge",
     feelHint:"Bars: how many primary instruments trembled that day (the measured side). Lines: how disordered the world FEELS — priced fear (VIX) and global news tone/conflict share — shown as z toward each line's alarming direction. Feel lines are contrast only, never counted. Amber columns mark a DIVERGENCE: the felt side ran hot while every primary instrument read calm. A divergence has two possible causes and this chart cannot tell them apart — the feeling outran the world (an anxiety premium), or the strain fell outside what tremor watches (a coverage gap).",
     feelGapNote:"divergence — felt hot, measured calm; cause unknown (anxiety premium or coverage gap)",
-    covLine:"Field of view: EU/US/Japan airspace · US high-yield credit · onshore/offshore yuan · worldwide internet reachability.",
+    covLead2:"Field of view: ",
     covTail:" Outside this, real strain can still read 0.",
     covMore:"what tremor cannot see ›",
     covTitle:"Field of view — what tremor can and cannot see",
@@ -382,7 +384,7 @@ const T = {
     feelTitle:"真实 vs 感觉 — 两者的背离",
     feelHint:"柱：当天一级仪器的颤抖根数（测量侧）。线：世界「感觉」有多乱——恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自报警方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 一次背离：感觉侧发烫，而所有一级仪器读数平静。背离有两种可能，这张图分不出是哪一种——要么是感觉跑在了世界前面（焦虑溢价），要么是压力落在了 tremor 的视野之外（覆盖盲区）。",
     feelGapNote:"背离 —— 感觉发烫，测量平静；成因未知（焦虑溢价或覆盖盲区）",
-    covLine:"视野范围：欧/美/日空域 · 美国高收益债 · 在岸/离岸人民币 · 全球互联网可达性。",
+    covLead2:"视野范围：",
     covTail:"视野之外，真实的压力照样可能读作 0。",
     covMore:"tremor 看不见什么 ›",
     covTitle:"视野范围 —— tremor 看得见与看不见什么",
@@ -471,6 +473,10 @@ const CALIBRATING_OBS=30;
 // reads calm. This is a DESCRIPTION, not a diagnosis: the cause may be excess
 // feeling or missing coverage, and the instrument cannot distinguish them.
 const FEEL_IDS=["vix","gdelt_tone","gdelt"];
+// Mirrors normalize.BLIND_STATUSES: a line HOLDING a reading it cannot judge.
+const BLIND=["warming-up","no-spread"];
+const lastRow=(lines,id)=>(lines[id]||[]).slice(-1)[0]||{};
+const isBlind=r=>BLIND.includes(r.status);
 const FEEL_HOT=2;
 const isDivergent=(count,feelMax)=>count===0&&feelMax!==null&&feelMax>=FEEL_HOT;
 async function load(){
@@ -505,18 +511,16 @@ function render(){
   const {summary,dates,lines}=DATA;
   const TIER1=LINES.filter(L=>(L.tier||1)===1);
   const TIER2=LINES.filter(L=>(L.tier||1)===2);
-  // The denominator is how many instruments could ACTUALLY ANSWER today. A line
-  // holding a reading it cannot judge is blind, not calm — conflating the two is
-  // how a strait closing went unreported for fifteen days.
-  const blindLines=TIER1.filter(L=>{
-    const r=(lines[L.id]||[]).slice(-1)[0];
-    return r && r.status && ["warming-up","no-spread"].includes(r.status);
-  });
-  const scoringN=TIER1.length-blindLines.length-darkCount;
-  document.getElementById("count-of").textContent=Math.max(scoringN,0);
   const last=summary[summary.length-1];
   const gapDays=last?Math.floor((nowChinaMidnight()-utcMidnight(last.date))/86400000):null;
   const darkCount=last?(parseInt(last.dark_count||"0",10)||0):0;
+  // The denominator is how many instruments could ACTUALLY ANSWER today. A line
+  // holding a reading it cannot judge is blind, not calm — conflating the two is
+  // how a strait closing went unreported for fifteen days. The collector owns
+  // this count; rows written before the column existed leave it blank.
+  const blindCount=last?(parseInt(last.blind_count||"0",10)||0):0;
+  document.getElementById("count-of").textContent=
+    Math.max(TIER1.length-blindCount-darkCount,0);
 
   // honesty: "0 — calm" while baselines are still building would overstate
   // confidence, so the headline carries a calibrating qualifier until then
@@ -527,7 +531,7 @@ function render(){
     const base = n===0?T[lang].calm:(n===1?T[lang].tremblingOne:T[lang].tremblingMany);
     document.getElementById("count-label").innerHTML =
       base + (darkCount?`<span class="darknote">${T[lang].darkNote(darkCount)}</span>`:"")
-           + (blindLines.length?`<span class="darknote">${T[lang].blindNote(blindLines.length)}</span>`:"")
+           + (blindCount?`<span class="darknote">${T[lang].blindNote(blindCount)}</span>`:"")
            + (calibN?`<span class="calibnote">${T[lang].calibNote(calibN,TIER1.length)}</span>`:"");
     document.getElementById("asof").textContent=T[lang].asof(last.date);
   }
@@ -604,8 +608,10 @@ function render(){
   // Field of view. "0 of 4" is a statement about four instruments, not about the
   // world; say where they point so a reader can judge the silence for themselves.
   const cov=document.getElementById("coverage"); cov.hidden=false;
-  cov.innerHTML=`${T[lang].covLine}${T[lang].covTail}`+
-    `<span class="cmore" id="covmore">${T[lang].covMore}</span>`;
+  // Derived from the same `watches` metadata the modal uses, so a tier swap can
+  // never leave this sentence describing instruments that are no longer here.
+  cov.innerHTML=`${T[lang].covLead2}${TIER1.map(L=>L.watches[lang]).join(" · ")}.`
+    + `${T[lang].covTail}<span class="cmore" id="covmore">${T[lang].covMore}</span>`;
   document.getElementById("covmore").onclick=()=>openModal(covModal(lang));
 
   // system status banner
@@ -693,9 +699,9 @@ function render(){
       const days=(lines[L.id]||[]).filter(r=>r.raw_value!=="").length;
       // Say when a line cannot score. A watchlist entry that is silently unable
       // to judge its own reading is indistinguishable from one that is calm.
-      const st=((lines[L.id]||[]).slice(-1)[0]||{}).status||"";
-      const stTxt=(T[lang].statusLabel||{})[st];
-      const blind=["warming-up","no-spread"].includes(st);
+      const r=lastRow(lines,L.id);
+      const stTxt=(T[lang].statusLabel||{})[r.status];
+      const blind=isBlind(r);
       const item=document.createElement("span"); item.className="wl-item";
       item.innerHTML=`<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)})`
         + (blind&&stTxt?` <span class="wl-blind">${stTxt}</span>`:"")+` ›</span>`;
