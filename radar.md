@@ -1,14 +1,34 @@
 # tremor radar — indicator registry
 
-tremor doesn't keep a fixed indicator set; it runs a **radar**. Indicators move
-through a **4-8-16 funnel** as they earn measurable evidence, so the live
-instrument is always the best few we have — chosen by data, never by gut feel.
+tremor doesn't keep a fixed indicator set; it runs a **radar**. Indicators are
+chosen by data, never by gut feel, and the live instrument is always the best few
+we have.
+
+**Two tiers only** (round 8 — collapsed from the old 4-8-16 funnel):
 
 | tier | role | target |
 |---|---|---|
 | **1 — primary** | displayed on the dashboard, counted in the trembling resonance | 4 |
-| **2 — watchlist** | scraped daily, building history; not shown or counted | 8 |
-| **3 — candidate** | researched ideas with a verified-free data source; not yet built | 16 |
+| **2 — collected** | scraped every day, building history; not shown or counted; no cap | all that qualify |
+
+Why two, not three. The old third tier was "researched ideas, not yet collected" —
+a tier that produces NO DATA. But the project's rule is that decisions are
+data-backed, so an idea you never collect can only ever be judged from n=0 or gut
+feel, which is the thing the rule forbids. So there is no idea-tier: if a candidate
+has a real guard and a **verified, working, keyless daily fetcher**, it is BUILT and
+collected immediately, and it banks evidence toward tier-1. Collection is nearly
+free in a git-scraping architecture; the history you don't collect is the expensive
+thing.
+
+The bar to ENTER tier-2 is real, because every collected line is a survivability
+liability (one more source that can rot, one more fetch that can flake the daily
+run): (1) it passes the guard + cadence gates, or is an explicit never-counted
+CONTEXT line; (2) it has a fetcher that has been PROBED returning real numbers, not
+just a plausible-looking source; (3) its failure mode is named. Ideas that don't yet
+meet (2) are a plain **Backlog** list below — a to-do, not a tier.
+
+The only funnel that remains is tier-1 promotion: a tier-2 line earns a primary slot
+over ≥60 scored readings, gated on orthogonality and the freshness rule.
 
 ## How an indicator is scored
 
@@ -38,9 +58,9 @@ line that is daily but lags a week (e.g. IMF PortWatch, ~8 days) only shows a di
 after it began — fine for tier-2 (history accumulates, the lag washes out in the rolling
 baseline), but too stale to be a live tier-1 instrument. Prefer ≤ ~2-day lag for tier-1.
 
-4-8-16 is a steady-state target, not a forced cut: a line is never demoted without
-evidence. Rubric scores are 0–3; computed metrics show `—` until there is enough
-history (~20 days).
+A line is never demoted without evidence. Rubric scores are 0–3; computed metrics
+show `—` until there is enough history (~20 days). Tier-1 holds a target of 4;
+tier-2 is uncapped (round 8).
 
 **One rule about new coverage** (added round 7): no new tier-1 line may be justified by a
 single episode. New coverage enters at tier-2 and earns promotion over ≥60 scored readings
@@ -84,10 +104,11 @@ applied round 4.
 | cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ slot 4 (user-decided) |
 | net_outages | communications (global) | 2 | 3 | 3 | 13/13 | — | 0.42 | ⚠️ **PROVISIONAL** — promoted R7 into the slot gnss vacated; only ~13 observations, does NOT meet the 60-reading bar (see the round-7 log) |
 
-## Tier 2 — watchlist  (7 candidates + 4 context · 1 slot open)
+## Tier 2 — collected  (10 candidates + 4 context · no cap)
 
 Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
-are tier-1 challengers banking evidence. Below them sit the **context lines** — they fail
+are tier-1 challengers banking evidence. There is no slot cap (round 8): any candidate
+with a real guard and a probed, working fetcher is collected. Below them sit the **context lines** — they fail
 the guard gate and can never promote or be counted; they ride along only to aid
 interpretation. Three are "felt vs real" reads (gdelt, gdelt_tone, vix); the fourth,
 `polar_temp`, is a planetary-baseline (LEVEL) read, added round 8 under the
@@ -107,26 +128,28 @@ add, no premature reject. `polar_temp` is its first use.
 | gnss_interference | navigation/EW (global) | 3 | 3 | 1* | 31/31 | 0% | demoted R7 — *effective* reach is 1, not 3: one worldwide ratio has no regional sensitivity and read 0.47% through a Gulf air war |
 | capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | demoted R4 (redundant with China); kept on watch |
 | grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | demoted R4 (regional); kept on watch — may re-challenge on orthogonality |
+| euro_hy_spread | financial (EU) | 3 | 2 | 2 | — | — | built R8 — ICE BofA Euro HY OAS ~2.5pp, keyless FRED; orthogonal to US HY (different central bank) |
+| fx_parallel_premium | capital controls (AR) | 2 | 3 | 2 | — | — | built R8 — Argentina blue-vs-official FX premium, keyless dolarapi; a hard-controlled regime, distinct from cnh_cny/kimchi |
+| hkma_aggr_balance | capital (HK) | 3 | 3 | 2 | — | — | built R8 — HK currency-board aggregate balance, keyless HKMA API; falls as the peg is defended under outflow |
 | — gdelt | feel: conflict share (global) | 1 | 0 | 3 | — | — | contrast line (guard gate) — v2 full-day aggregation, not a candidate slot |
 | — gdelt_tone | feel: news tone (global) | 1 | 0 | 3 | — | — | contrast line — full-day average tone, same pass as gdelt |
 | — vix | feel: priced fear (global) | 1 | 0 | 3 | — | — | contrast line — keyless FRED VIXCLS, seeded 180d from archive |
 | — polar_temp | context: planetary level (Arctic 80N) | 1 | 0 | 2 | — | — | context line, provisional-watch — DMI +80N daily anomaly vs the 1958-2002 normal (keyless, ~1d lag). A LEVEL read, not a tension indicator; the long baseline is vendored in core/arctic_clim.py |
 
-## Tier 3 — candidate ideas  (7 / 16)
+## Backlog — ideas not yet built
 
-All clear both gates (real guard; daily-persistent or daily-aggregatable). Sorted by strength.
-Data sources marked ✅ were live-verified keyless+daily. (Tier 2 is now full at 8/8, so these
-wait for a tier-2 slot to open — i.e. a watchlist line graduating to tier-1 or washing out.)
+Real guard, plausible free source, but NOT yet a collected line: each needs a
+fetcher that has been probed returning real numbers before it can enter tier-2.
+A to-do list, not a tier. (The round-8 restructure BUILT the three that were ready —
+euro_hy_spread, fx_parallel_premium, hkma_aggr_balance — they are now tier-2 lines
+above.)
 
-| candidate | domain | hypothesis (guard → leak) | L | G | R | data source (free, daily) |
-|---|---|---|:--:|:--:|:--:|---|
-| euro_fragmentation | financial (EU) | the ECB defends cohesion → a widening periphery-core 10y spread leaks euro-breakup stress | 3 | 3 | 2 | ✅ ECB SDMX API |
-| hkd_aggr_balance | capital (HK) | HKMA's currency board defends the peg → a collapse in the aggregate balance leaks capital flight | 3 | 3 | 2 | ✅ HKMA Open API |
-| entsog_gas_flow | energy (EU) | pipelines + economies keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | 3 | 3 | 2 | ✅ ENTSOG API |
-| bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | 2 | 2 | 3 | ✅ RIPEstat (RIPE NCC) |
-| fx_parallel_premium | capital (multi) | central banks defend the official rate → a black-market / crypto premium leaks capital flight (AR, VE, NG, …) | 2 | 3 | 2 | ✅ CriptoYa / dolarapi (keyless) |
-| euro_hy_spread | financial (EU) | ECB + banks press EU spreads down → a spike leaks European credit fear | 3 | 2 | 2 | ✅ FRED keyless `BAMLHE00EHYIOAS` |
-| cp_funding_spread | financial | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | 2 | 2 | 2 | ✅ FRED keyless `CPFF` |
+| candidate | domain | hypothesis (guard → leak) | what it still needs |
+|---|---|---|---|
+| euro_fragmentation | financial (EU) | ECB defends cohesion → a widening periphery-core 10y spread leaks euro-breakup stress | a DAILY periphery-core spread source — the probed ECB SDMX IRS series is MONTHLY, which can't be a daily line; find the daily government-yield series |
+| entsog_gas_flow | energy (EU) | pipelines keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | point-selection design: the ENTSOG operationaldata API returns per-point per-operator flows; picking a non-diluting, non-frame-churning aggregate (which EU import points?) is real work, and aggregation dilution is a known failure mode |
+| bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | the right global formulation — RIPEstat routing-status for one AS is not a global instability measure; a withdrawal/update-rate is exposed to sensor-inflation and low-count-integer failure modes and must be designed against them |
+| cp_funding_spread | financial (US) | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | the correct CP-minus-funds construction: a single FRED `CPFF` series is not verified to be a spread; build it as (AA financial CP rate − OIS/funds), and confirm what each series actually is |
 
 ### Rejected
 | candidate | reason |
@@ -570,3 +593,24 @@ now to build history; how it is PRESENTED to aid interpretation is deferred unti
 run of history and a designed readout (it is deliberately NOT on the dashboard yet). This
 is the provisional-watch disposition working as intended: verified source, undecided role,
 zero commitment to the counted instrument.
+
+**Structure change — collapsed 4-8-16 into two tiers.** Tier 1 (counted) and tier 2
+(collected, uncapped). The old "candidate ideas, not built" tier is gone: it produced no
+data, so a candidate parked there could only ever be judged from n=0 — which contradicts
+the project's own data-backed rule. Now, anything with a real guard and a PROBED working
+fetcher is built and collected immediately; the only remaining funnel is tier-1 promotion
+(≥60 readings). Unbuilt ideas move to a plain Backlog list. The bar to enter tier-2 stays
+real because each collected line is a survivability liability — a verified fetcher and a
+named failure mode, not just a plausible source.
+
+**Built three ex-tier-3 lines** (their sources were re-probed live and returned real
+numbers): `euro_hy_spread` (ICE BofA Euro HY OAS, keyless FRED — European credit fear,
+orthogonal to US HY), `fx_parallel_premium` (Argentina blue-vs-official premium, keyless
+dolarapi — a hard capital-control regime, distinct from cnh_cny and the Korea kimchi
+premium), `hkma_aggr_balance` (HK currency-board aggregate balance, keyless HKMA API —
+falls as the peg is defended under outflow). Four ex-tier-3 ideas stay on the Backlog
+because they are not yet buildable as probed: `euro_fragmentation` (the probed ECB series
+was monthly, not daily), `entsog_gas_flow` (needs point-selection design to avoid
+aggregation dilution), `bgp_instability` (RIPEstat single-AS routing is not a global
+instability measure), `cp_funding_spread` (a single FRED CPFF series is not a verified
+CP-minus-funds spread).
