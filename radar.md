@@ -84,12 +84,19 @@ applied round 4.
 | cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ slot 4 (user-decided) |
 | net_outages | communications (global) | 2 | 3 | 3 | 13/13 | — | 0.42 | ⚠️ **PROVISIONAL** — promoted R7 into the slot gnss vacated; only ~13 observations, does NOT meet the 60-reading bar (see the round-7 log) |
 
-## Tier 2 — watchlist  (7 candidates + 3 contrast · 1 slot open)
+## Tier 2 — watchlist  (7 candidates + 4 context · 1 slot open)
 
 Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
-are tier-1 challengers banking evidence. (the three feel lines — gdelt, gdelt_tone, vix — sit outside the
-8 candidate slots: they fail the guard gate and can never promote; they ride along only
-as the "felt vs real" contrast.)
+are tier-1 challengers banking evidence. Below them sit the **context lines** — they fail
+the guard gate and can never promote or be counted; they ride along only to aid
+interpretation. Three are "felt vs real" reads (gdelt, gdelt_tone, vix); the fourth,
+`polar_temp`, is a planetary-baseline (LEVEL) read, added round 8 under the
+**provisional-watch** disposition (see below). None occupy a candidate slot.
+
+**Provisional-watch** (disposition added round 8): a source that is verified free+daily
+but whose ROLE is undecided is collected now — never counted — so its history accumulates
+while the decision is deferred. It is the honest home for "we're not sure yet": no gut-feel
+add, no premature reject. `polar_temp` is its first use.
 
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | note |
 |---|---|:--:|:--:|:--:|:--:|:--:|---|
@@ -103,6 +110,7 @@ as the "felt vs real" contrast.)
 | — gdelt | feel: conflict share (global) | 1 | 0 | 3 | — | — | contrast line (guard gate) — v2 full-day aggregation, not a candidate slot |
 | — gdelt_tone | feel: news tone (global) | 1 | 0 | 3 | — | — | contrast line — full-day average tone, same pass as gdelt |
 | — vix | feel: priced fear (global) | 1 | 0 | 3 | — | — | contrast line — keyless FRED VIXCLS, seeded 180d from archive |
+| — polar_temp | context: planetary level (Arctic 80N) | 1 | 0 | 2 | — | — | context line, provisional-watch — DMI +80N daily anomaly vs the 1958-2002 normal (keyless, ~1d lag). A LEVEL read, not a tension indicator; the long baseline is vendored in core/arctic_clim.py |
 
 ## Tier 3 — candidate ideas  (7 / 16)
 
@@ -545,3 +553,20 @@ on exactly this axis (a heatwave-driven nuclear depression, a multi-week drought
 a year-long net-importer flip all go blind mid-crisis). Widening coverage does not
 address it; only a level reference would, and that remains a deliberate open
 question rather than a build.
+
+**Added (provisional-watch): `polar_temp` — Arctic 80N temperature anomaly.** Not a
+tension indicator: nobody guards the temperature of the Arctic, so it fails the guard
+gate exactly as the river-gauge and reservoir candidates did, and it can never be
+counted or promoted. It is admitted as a never-counted CONTEXT line — the first brick of
+the long-horizon LEVEL layer that is this project's largest gap. Source verified live:
+DMI (Danish Meteorological Institute) daily mean temperature north of 80N, keyless, ~1-day
+lag, back to 1958. The reading is the anomaly vs the fixed 1958-2002 climate normal (that
+normal is extracted once and vendored in `core/arctic_clim.py`, so the long baseline lives
+in the repo and each daily row is self-contained — no decades of seed rows needed). The
+huge seasonal cycle is removed by the anomaly; note the high-Arctic summer normal sits near
+freezing (ice-melt pinned), so summer anomalies run small while the real warming shows in
+winter — today's read is -1.04C, slightly below the historical summer normal. Collected
+now to build history; how it is PRESENTED to aid interpretation is deferred until it has a
+run of history and a designed readout (it is deliberately NOT on the dashboard yet). This
+is the provisional-watch disposition working as intended: verified source, undecided role,
+zero commitment to the counted instrument.

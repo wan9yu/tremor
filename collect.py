@@ -35,7 +35,8 @@ from core import clock, normalize
 
 from fetchers import (capital_premium, chokepoint, cnh_cny,
                       credit_spread, em_oas, flights, gdelt, gdelt_tone, gnss,
-                      grid_frequency, net_outages, ports, sofr_iorb, vix)
+                      grid_frequency, net_outages, polar_temp, ports, sofr_iorb,
+                      vix)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
 # (airspace / financial system / capital controls / communications), so several
@@ -45,7 +46,7 @@ from fetchers import (capital_premium, chokepoint, cnh_cny,
 LINES = [flights, credit_spread, cnh_cny, net_outages,  # tier 1 (primary, displayed)
          gnss, capital_premium, grid_frequency,         # tier 2 (demoted)
          chokepoint, sofr_iorb, em_oas, ports,   # tier 2 (candidates)
-         gdelt, gdelt_tone, vix]                        # tier 2 (feel contrast, never promotable)
+         gdelt, gdelt_tone, vix, polar_temp]             # tier 2 (context/contrast, never promotable)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")
