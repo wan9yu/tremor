@@ -28,3 +28,17 @@ def latest_value(series_id):
             except ValueError:
                 continue
     return None, None
+
+
+def reading(series_id, label="OAS"):
+    """A keyless FRED series as the fetcher contract dict.
+
+    The shared shape for the one-line watchlist lines (em_corp_oas,
+    euro_hy_spread, …) so the "unavailable" note and the value-to-dict wrapping
+    live in one place. ``label`` names the quantity in the note (e.g. "OAS").
+    """
+    date, value = latest_value(series_id)
+    if value is None:
+        return {"raw_value": None, "source_note": f"FRED {series_id} unavailable"}
+    return {"raw_value": value, "source_note": f"FRED {series_id} {label} {date}",
+            "obs_date": date}
