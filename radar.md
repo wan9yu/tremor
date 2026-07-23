@@ -4,21 +4,16 @@ tremor doesn't keep a fixed indicator set; it runs a **radar**. Indicators are
 chosen by data, never by gut feel, and the live instrument is always the best few
 we have.
 
-**Two tiers only** (round 8 — collapsed from the old 4-8-16 funnel):
+**Two tiers:**
 
 | tier | role | target |
 |---|---|---|
 | **1 — primary** | displayed on the dashboard, counted in the trembling resonance | 4 |
 | **2 — collected** | scraped every day, building history; not shown or counted; no cap | all that qualify |
 
-Why two, not three. The old third tier was "researched ideas, not yet collected" —
-a tier that produces NO DATA. But the project's rule is that decisions are
-data-backed, so an idea you never collect can only ever be judged from n=0 or gut
-feel, which is the thing the rule forbids. So there is no idea-tier: if a candidate
-has a real guard and a **verified, working, keyless daily fetcher**, it is BUILT and
-collected immediately, and it banks evidence toward tier-1. Collection is nearly
-free in a git-scraping architecture; the history you don't collect is the expensive
-thing.
+Anything with a real guard and a **verified, working, keyless daily fetcher** is built
+and collected immediately, banking evidence toward tier-1. Collection is nearly free in
+a git-scraping architecture; the history you don't collect is the expensive thing.
 
 The bar to ENTER tier-2 is real, because every collected line is a survivability
 liability (one more source that can rot, one more fetch that can flake the daily
@@ -27,8 +22,8 @@ CONTEXT line; (2) it has a fetcher that has been PROBED returning real numbers, 
 just a plausible-looking source; (3) its failure mode is named. Ideas that don't yet
 meet (2) are a plain **Backlog** list below — a to-do, not a tier.
 
-The only funnel that remains is tier-1 promotion: a tier-2 line earns a primary slot
-over ≥60 scored readings, gated on orthogonality and the freshness rule.
+The only funnel is tier-1 promotion: a tier-2 line earns a primary slot over ≥60
+scored readings, gated on orthogonality and the freshness rule.
 
 ## How an indicator is scored
 
