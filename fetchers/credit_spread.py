@@ -36,13 +36,12 @@ _URL = "https://api.stlouisfed.org/fred/series/observations"
 
 def _keyless(reason):
     """Public fredgraph.csv path — no key. Used when the keyed API cannot answer."""
-    obs_date, value = fred.latest_value(_SERIES)
-    if value is None:
+    result = fred.reading(_SERIES)
+    if result["raw_value"] is None:
         return {"raw_value": None,
                 "source_note": f"{reason}; keyless fallback also failed"}
-    return {"raw_value": value,
-            "source_note": f"FRED {_SERIES} OAS {obs_date} [keyless fallback: {reason}]",
-            "obs_date": obs_date}
+    result["source_note"] += f" [keyless fallback: {reason}]"
+    return result
 
 
 def fetch_daily():

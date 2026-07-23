@@ -41,13 +41,11 @@ def fetch_daily():
     if not records:
         return {"raw_value": None, "source_note": "HKMA returned no records"}
     rec = records[0]
-    bal = rec.get("closing_balance")
-    if bal is None:
-        return {"raw_value": None, "source_note": "HKMA record had no closing_balance"}
     try:
-        bal = float(bal)
+        bal = float(rec.get("closing_balance"))  # float(None) raises TypeError
     except (ValueError, TypeError):
-        return {"raw_value": None, "source_note": "HKMA closing_balance unparseable"}
+        return {"raw_value": None,
+                "source_note": "HKMA closing_balance missing or unparseable"}
     return {
         "raw_value": bal,
         "source_note": f"HKMA aggregate balance {bal:.0f} HK$m ({rec.get('end_of_date')})",

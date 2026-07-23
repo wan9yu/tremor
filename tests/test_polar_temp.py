@@ -3,12 +3,12 @@ anomaly math. The fetch itself is network and is not exercised here; the parsing
 and the fixed baseline are."""
 import os
 import sys
-import types
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import arctic_clim
+from support import stub_requests
 
 
 class TestClimatology(unittest.TestCase):
@@ -35,17 +35,12 @@ class TestClimatology(unittest.TestCase):
 class TestAnomalyParsing(unittest.TestCase):
     def _fetch_with(self, body):
         import fetchers.polar_temp as M
-        real = M.requests
 
         class R:
             status_code = 200
             text = body
-        M.requests = types.SimpleNamespace(get=lambda *a, **k: R(),
-                                           RequestException=Exception)
-        try:
+        with stub_requests(M, get=lambda *a, **k: R()):
             return M.fetch_daily()
-        finally:
-            M.requests = real
 
     def test_reads_last_row_and_computes_anomaly(self):
         # day 203 normal is ~274.36K; a reading of 275.36K is +1.00C.

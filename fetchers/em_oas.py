@@ -22,8 +22,4 @@ _SERIES = "BAMLEMCBPIOAS"
 
 
 def fetch_daily():
-    date, value = fred.latest_value(_SERIES)
-    if value is None:
-        return {"raw_value": None, "source_note": f"FRED {_SERIES} unavailable"}
-    return {"raw_value": value, "source_note": f"FRED {_SERIES} OAS {date}",
-            "obs_date": date}
+    return fred.reading(_SERIES)
