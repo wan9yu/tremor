@@ -32,4 +32,4 @@ pip install -r requirements.txt
 python collect.py && python render.py
 ```
 
-Three of the four primary lines need no keys (flights, yuan spread, GPS interference). Add a free `FRED_API_KEY` as a repo Secret to light up the credit-spread line too.
+All four primary lines run keyless (flights, yuan spread, internet outages, and the credit spread via a public FRED fallback). Adding a free `FRED_API_KEY` as a repo Secret just gives the credit line its primary, keyed source.
