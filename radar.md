@@ -84,7 +84,7 @@ applied round 4.
 | cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ slot 4 (user-decided) |
 | net_outages | communications (global) | 2 | 3 | 3 | 13/13 | — | 0.42 | ⚠️ **PROVISIONAL** — promoted R7 into the slot gnss vacated; only ~13 observations, does NOT meet the 60-reading bar (see the round-7 log) |
 
-## Tier 2 — watchlist  (8 candidates + 3 contrast)
+## Tier 2 — watchlist  (7 candidates + 3 contrast · 1 slot open)
 
 Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
 are tier-1 challengers banking evidence. (the three feel lines — gdelt, gdelt_tone, vix — sit outside the
@@ -100,7 +100,6 @@ as the "felt vs real" contrast.)
 | gnss_interference | navigation/EW (global) | 3 | 3 | 1* | 31/31 | 0% | demoted R7 — *effective* reach is 1, not 3: one worldwide ratio has no regional sensitivity and read 0.47% through a Gulf air war |
 | capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | demoted R4 (redundant with China); kept on watch |
 | grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | demoted R4 (regional); kept on watch — may re-challenge on orthogonality |
-| cn_flights | airspace (China) | 3 | 3 | 1 | — | — | sparse ADS-B coverage; observing if signal survives |
 | — gdelt | feel: conflict share (global) | 1 | 0 | 3 | — | — | contrast line (guard gate) — v2 full-day aggregation, not a candidate slot |
 | — gdelt_tone | feel: news tone (global) | 1 | 0 | 3 | — | — | contrast line — full-day average tone, same pass as gdelt |
 | — vix | feel: priced fear (global) | 1 | 0 | 3 | — | — | contrast line — keyless FRED VIXCLS, seeded 180d from archive |
@@ -479,3 +478,70 @@ candidate rather than built this round: it would be a second series break on a
 line already broken today. Also noted: PortWatch REVISES history — the service
 now serves 2,133 transits for observation 07-12 where the v1 record captured
 2,137.
+
+### Round 8 — 2026-07-23 (tier-2 red/blue divergence; cn_flights retired)
+
+A diverge-then-adversarial round: six blue-team domain sweeps proposed candidates
+(each required to probe a real free source), then every candidate ran through a
+red-team attack and a neutral judge. Outcome: **16 rejected, 1 adjustment, zero
+added.** A harsh screen is the honest one — the failure to fund is the finding.
+
+**Acted on — RETIRE `cn_flights`** (structurally confounded, not underperforming;
+do not re-litigate as "needs more readings"). Its alarm direction is *down*, and
+its dominant confound — a community ADS-B feeder dropping offline — pushes the
+count *down too*, so the sensor is collinear with its own failure and can never
+separate "China grounded its metros" from "a Beijing receiver rebooted." Verified
+live on the 32-row history: 2026-07-20 read Beijing=0 (physically impossible for a
+metro), total 33, z=−2.41 in the alarm direction — a feeder outage wearing the
+costume of an airspace collapse; Beijing then sat at 0/3/1/2 aircraft for four
+straight days. The only tremble ever recorded (07-10, z=+6.07) was benign-direction
+(coverage coming *on*). More data cannot cure a collinearity, and a normalization
+cannot either (the dropout is per-metro and no keyless same-frame denominator is
+exposed). A broken sensor pointed in the alarm direction is worse than an empty
+slot — it manufactures the exact false "China air-traffic collapse" the instrument
+exists to suppress. CSV archived to `data/archive/cn_flights_retired.csv`; the 8th
+watchlist slot is now **open and disclosed** (the screen found nothing worth
+filling it with).
+
+**Why nothing was added — the pattern.** Almost every "new domain" candidate was
+plumbing-clean (keyless, daily, fresh, real numbers) and died on the GUARD GATE:
+they were free-floating physical or market-clearing reads dressed as guarded
+equilibria. River gauges (`rhine_kaub`, a Mississippi stage), a Brazilian
+reservoir level (`br_hydro_reserve`), French power net-exchange and nuclear
+availability (`fr_net_exchange`, `fr_nuclear`), GB interconnector flows — in each,
+nothing self-interested defends the level and pushes it back when it drifts;
+scarcity or market coupling moving the number is arbitrage/weather succeeding, not
+a guard being overpowered. That is the VIX/GDELT signature, and it fails the gate
+categorically — no accumulation of readings converts a weather gauge into a
+tension indicator. Two candidates passed the guard gate and still died on the
+project's own statistics: `sofr99_dispersion` (SOFR99−SOFR is quantized to integer
+basis points, so Qn=0 and the row is STATUS_FLAT on ~23% of windows — it literally
+cannot score in the calm regime, failure mode #5 in terminal form) and
+`taiwan_strait_transits` (an AIS gap-then-backfill artifact fires a false −7 to −11
+"blockade" z on calm days, and it re-taps the weekly PortWatch pipeline).
+
+**Adjustments screened and REJECTED (kept as-is, with the reason on record):**
+- `grid_frequency` daily-max → minutes-outside-band: the duration statistic reads
+  structurally zero on 41% of days at the honest ±100 mHz limit (failure mode #5),
+  destroys the keyless Statnett fallback (a 60s snapshot can't compute a daily
+  duration), and forces a baseline reset. The mild right-skew of the max (2 up-
+  trembles in 32 rows) is the lesser evil. A skew-aware one-sided z on the existing
+  max is the better idea, but it is a different, unbuilt change.
+- `gnss_interference` regional-breadth: the ratio (hot/eligible) form does NOT
+  divide out coverage growth — ADS-B feeders densify preferentially in already-hot
+  theatres, so the breadth statistic drifts +43% over 24 months from the sampling
+  frame alone (failure mode #1, the exact reason it was demoted in r7). Stays a
+  global line.
+- `chokepoint_per_strait_breadth`: the proposed volume gate (median ≥ 40) deletes
+  Bab el-Mandeb, Panama, and Hormuz — the very straits the line exists to watch —
+  from the panel. Rejected; `chokepoint_breadth` stays the 28-strait total.
+- `capital_premium` keep-as-orthogonal: a label-only rebuttal that answered only
+  one of the two demotion grounds; no change.
+
+**Biggest gap still unaddressed** (unchanged from r7): the LEVEL-vs-CHANGE limit.
+A rolling z is a change detector, so a sustained crisis reads calm once it sits
+inside its own baseline — and notably, most of the rejected candidates fail *worse*
+on exactly this axis (a heatwave-driven nuclear depression, a multi-week drought,
+a year-long net-importer flip all go blind mid-crisis). Widening coverage does not
+address it; only a level reference would, and that remains a deliberate open
+question rather than a build.

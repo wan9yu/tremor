@@ -224,14 +224,6 @@ const LINES = [
     explain:{
       en:"China's central bank manages the onshore yuan (CNY) inside a tight daily band, spending FX reserves to defend it; the offshore yuan (CNH) trades freely with no such guard. When CNH stays weaker than CNY, the market is pricing a depreciation the managed onshore rate won't yet admit — capital-flight pressure, tightening controls, a managed devaluation building. Measured as the CNH − CNY spread in pips (1 pip = 0.0001 yuan/USD) from Yahoo Finance.",
       zh:"中国央行把在岸人民币（CNY）管在很窄的每日波动区间内，烧外汇储备死守；离岸人民币（CNH）自由交易，没有这层守护。当 CNH 持续弱于 CNY，市场就在给在岸还不肯承认的贬值定价——资本外逃压力、管制收紧、一场有管理的贬值在酝酿。用 Yahoo Finance 的 CNH−CNY 价差（pips，1 pip = 0.0001 元/美元）衡量。"} },
-  { id:"cn_flights", color:"#6f7686", alarm:"down", tier:2,
-    unit:{en:"aircraft",zh:"架"},
-    domain:{en:"Airspace (China)",zh:"空域（中国）"},
-    label:{en:"China aircraft airborne",zh:"中国在飞航班量"},
-    source:{en:"Community ADS-B — Beijing, Shanghai, Guangzhou",zh:"社区 ADS-B — 北京、上海、广州"},
-    explain:{
-      en:"The same airspace logic as the main flights line, scoped to China's three busiest metros. On the watchlist, not yet a live instrument: free community ADS-B coverage over China is sparse and feeder-dependent (~0–25 aircraft per metro at the sampling hour, against ~180 over W/C Europe), so the count partly tracks receiver availability, not real traffic. Collected daily to build history; promoted if it proves to carry signal.",
-      zh:"和主航班线一样的空域逻辑，范围缩到中国三个最繁忙的都会区。它在观察名单上，还不是正式仪器：免费社区 ADS-B 在中国覆盖稀疏、依赖志愿接收器（采样时刻每个都会区约 0–25 架，而西/中欧约 180 架），所以这个数部分反映的是接收器多少、而非真实流量。每天照常采集以累积历史；一旦证明有信号，就升为一级。"} },
   { id:"gdelt", color:"#6f7686", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Conflict events (global)",zh:"冲突事件（全球）"},

@@ -33,7 +33,7 @@ import os
 import shutil
 from core import clock, normalize
 
-from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
+from fetchers import (capital_premium, chokepoint, cnh_cny,
                       credit_spread, em_oas, flights, gdelt, gdelt_tone, gnss,
                       grid_frequency, net_outages, ports, sofr_iorb, vix)
 
@@ -44,7 +44,7 @@ from fetchers import (capital_premium, chokepoint, cn_flights, cnh_cny,
 # aid; ``TIER`` on each module is what actually decides.
 LINES = [flights, credit_spread, cnh_cny, net_outages,  # tier 1 (primary, displayed)
          gnss, capital_premium, grid_frequency,         # tier 2 (demoted)
-         chokepoint, cn_flights, sofr_iorb, em_oas, ports,   # tier 2 (candidates)
+         chokepoint, sofr_iorb, em_oas, ports,   # tier 2 (candidates)
          gdelt, gdelt_tone, vix]                        # tier 2 (feel contrast, never promotable)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
