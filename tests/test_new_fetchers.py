@@ -41,5 +41,43 @@ class TestHkmaAggrBalance(unittest.TestCase):
         self.assertEqual(M.ANOMALY_DIRECTION, "down")
 
 
+class TestCnhCnyLegTimestamps(unittest.TestCase):
+    """A spread is only meaningful if both legs are quoted at the same moment."""
+
+    def _fetch(self, cnh_t, cny_t, cnh=6.7705, cny=6.7714):
+        import fetchers.cnh_cny as M
+        quotes = {"USDCNH=X": (cnh, cnh_t), "USDCNY=X": (cny, cny_t)}
+
+        class R:
+            def __init__(self, u): self._u = u; self.status_code = 200
+            def json(self):
+                sym = self._u.rsplit("/", 1)[-1]
+                price, when = quotes[sym]
+                return {"chart": {"result": [{"meta": {
+                    "regularMarketPrice": price, "regularMarketTime": when}}]}}
+        with stub_requests(M, get=lambda u, **k: R(u)):
+            return M.fetch_daily()
+
+    def test_legs_hours_apart_are_written_empty(self):
+        # The real 2026-07-25 case: offshore still on Friday's close, onshore on
+        # a Saturday print 6.5h later. Subtracting them is not a spread.
+        out = self._fetch(1774386000 - 6 * 3600 - 1800, 1774386000)
+        self.assertIsNone(out["raw_value"])
+        self.assertIn("not comparable", out["source_note"])
+
+    def test_simultaneous_legs_score_and_carry_the_older_obs_date(self):
+        base = 1774386000  # both legs within minutes of each other
+        out = self._fetch(base, base - 600)
+        self.assertAlmostEqual(out["raw_value"], -9.0, places=1)
+        import datetime
+        expected = datetime.datetime.fromtimestamp(
+            base - 600, datetime.timezone.utc).strftime("%Y-%m-%d")
+        self.assertEqual(out["obs_date"], expected)
+
+    def test_a_missing_quote_time_is_written_empty(self):
+        out = self._fetch(None, 1774386000)
+        self.assertIsNone(out["raw_value"])
+
+
 if __name__ == "__main__":
     unittest.main()
