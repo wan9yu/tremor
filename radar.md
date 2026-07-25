@@ -73,6 +73,15 @@ Written down because they are structural, not bugs, and a reader deserves them u
    between what tremor measures and what it asks, and no amount of extra coverage closes
    it — it would take an external reference for "normal", which the instrument does not
    yet admit.
+   **Measured, not argued** (2026-07-25): replaying 200 days of per-strait transits for the
+   Strait of Hormuz through the unmodified scoring rules produces 13 alarm-direction
+   trembles, *all* on 2026-03-02..03-14 — and none in June or July. On 2026-07-12, the day
+   the strait was reported closed, a dedicated Hormuz line reads **z = −0.47**. The monthly
+   medians say why: 72 (Jan), 81.5 (Feb), then 4, 8, 6, 11, 15 (Mar–Jul). By July the
+   trailing window's "normal" *was* the blockade. The instrument caught the onset loudly and
+   then went blind for five months. Note what this rules out: the July miss was **not**
+   primarily a coverage failure — a sensor pointed straight at Hormuz would have missed it
+   too.
 2. **|z| > 3 is not a 1-in-300 event at the window sizes tremor runs on.** Measured null
    exceedance on iid Gaussian data with the current estimator: **2.7% at n=10, 1.2% at
    n=20, 0.36% at n=90.** (Under the MAD scale used before round 7 it was 5.3% / 2.1% /
