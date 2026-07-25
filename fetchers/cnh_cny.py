@@ -11,7 +11,21 @@ POSITIVE spread (offshore yuan weaker) is the alarming direction.
 
 Source: Yahoo Finance daily quotes for USDCNH=X (offshore) and USDCNY=X (onshore).
 Free and keyless. Both legs must be present, or the day is written empty.
+
+A SPREAD IS ONLY MEANINGFUL IF BOTH LEGS ARE QUOTED AT THE SAME MOMENT. The two
+legs are two separate requests, and Yahoo's ``regularMarketTime`` for them can
+diverge — measured at 6.5 hours apart on 2026-07-25, when the offshore leg still
+carried Friday's 20:59 UTC close while the onshore leg had a 03:30 UTC Saturday
+print. Subtracting prices captured hours apart injects whatever the yuan did in
+between, and this spread is only ~100 pips wide, so the error is the size of the
+signal. Two guards follow from that: the day is written EMPTY when the legs are
+further apart than ``_MAX_LEG_GAP_S``, and ``obs_date`` is taken from the older
+leg's own timestamp rather than the collection date — so a weekend run that
+re-reads Friday's closes is correctly recorded as a republished observation and
+the standard dedup rule gives it no new z and no flag.
 """
+import datetime
+
 import requests
 
 LINE = "cnh_cny"
@@ -22,10 +36,14 @@ TIER = 1  # primary indicator
 
 _CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}"
 _HEADERS = {"User-Agent": "Mozilla/5.0 (tremor; +https://github.com/wan9yu/tremor)"}
+# Both symbols quote nearly around the clock on weekdays, so a simultaneous read
+# should differ by minutes. Three hours is generous enough not to blank a normal
+# weekday and tight enough to catch the multi-hour desync that motivated it.
+_MAX_LEG_GAP_S = 3 * 3600
 
 
-def _yahoo_price(symbol):
-    """Latest price for a Yahoo Finance symbol, or None."""
+def _yahoo_quote(symbol):
+    """``(price, quote_time_epoch)`` for a Yahoo symbol, or ``(None, None)``."""
     try:
         r = requests.get(
             _CHART.format(sym=symbol),
@@ -34,21 +52,27 @@ def _yahoo_price(symbol):
             params={"interval": "1d", "range": "5d"},
         )
     except requests.RequestException:
-        return None
+        return None, None
     if r.status_code != 200:
-        return None
+        return None, None
     try:
         meta = r.json()["chart"]["result"][0]["meta"]
         price = meta.get("regularMarketPrice")
-        return float(price) if price is not None else None
+        when = meta.get("regularMarketTime")
+        return (float(price) if price is not None else None,
+                int(when) if when is not None else None)
     except (ValueError, KeyError, IndexError, TypeError):
-        return None
+        return None, None
+
+
+def _utc(epoch):
+    return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
 
 
 def fetch_daily():
-    """Return {"raw_value": float | None, "source_note": str}."""
-    cnh = _yahoo_price("USDCNH=X")
-    cny = _yahoo_price("USDCNY=X")
+    """Return {"raw_value": float | None, "source_note": str, "obs_date": str}."""
+    cnh, cnh_t = _yahoo_quote("USDCNH=X")
+    cny, cny_t = _yahoo_quote("USDCNY=X")
     missing = []
     if cnh is None or cnh <= 0:
         missing.append("USDCNH")
@@ -59,8 +83,31 @@ def fetch_daily():
             "raw_value": None,
             "source_note": "yuan spread unavailable, missing: " + ", ".join(missing),
         }
+    if cnh_t is None or cny_t is None:
+        return {
+            "raw_value": None,
+            "source_note": ("yuan spread not comparable: Yahoo gave no quote time, "
+                            "so the two legs cannot be shown to be simultaneous"),
+        }
+
+    gap = abs(cnh_t - cny_t)
+    stamps = (f"CNH {_utc(cnh_t):%Y-%m-%d %H:%MZ}, CNY {_utc(cny_t):%Y-%m-%d %H:%MZ}")
+    if gap > _MAX_LEG_GAP_S:
+        return {
+            "raw_value": None,
+            "source_note": (f"yuan spread not comparable: legs quoted {gap / 3600:.1f}h "
+                            f"apart ({stamps}) — a spread this narrow cannot survive "
+                            f"subtracting prices captured hours apart"),
+        }
+
     pips = (cnh - cny) * 10000.0
+    # The observation belongs to the OLDER leg: that is the moment both prices are
+    # known to describe. A weekend re-read of Friday's closes therefore repeats
+    # Friday's obs_date and dedups instead of scoring twice.
+    obs = _utc(min(cnh_t, cny_t)).strftime("%Y-%m-%d")
     return {
         "raw_value": round(pips, 1),
-        "source_note": f"Yahoo USDCNH {cnh:.4f} − USDCNY {cny:.4f} (pips)",
+        "source_note": (f"Yahoo USDCNH {cnh:.4f} − USDCNY {cny:.4f} (pips) "
+                        f"[{stamps}, {gap / 60:.0f}min apart]"),
+        "obs_date": obs,
     }
