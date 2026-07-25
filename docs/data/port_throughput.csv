@@ -202,3 +202,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-23,5008,0.266,0,up,IMF PortWatch global port calls 2026-07-13,2026-07-13,scoring
 2026-07-24,4941,0.005,0,up,IMF PortWatch global port calls 2026-07-14,2026-07-14,scoring
 2026-07-25,5084,0.505,0,up,IMF PortWatch global port calls 2026-07-15,2026-07-15,scoring
+2026-07-26,4970,0.093,0,up,IMF PortWatch global port calls 2026-07-16,2026-07-16,scoring
