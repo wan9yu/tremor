@@ -33,3 +33,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-23,8,-2.793,0,down,Yahoo USDCNH 6.7728 − USDCNY 6.7720 (pips),,scoring
 2026-07-24,102,0.042,0,up,Yahoo USDCNH 6.7769 − USDCNY 6.7667 (pips),,scoring
 2026-07-25,-9,-3.255,1,down,Yahoo USDCNH 6.7705 − USDCNY 6.7714 (pips),,scoring
+2026-07-26,,,0,,"yuan spread not comparable: legs quoted 24.5h apart (CNH 2026-07-24 20:59Z, CNY 2026-07-25 21:32Z) — a spread this narrow cannot survive subtracting prices captured hours apart",,dark
