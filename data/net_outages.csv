@@ -16,3 +16,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-24,2,-0.572,0,down,"IODA 2 countries with ping-slash24 outages (24h) [Cote D Ivoire, Georgia]",,scoring
 2026-07-25,2,-0.492,0,down,"IODA 2 countries with ping-slash24 outages (24h) [Belarus, Georgia]",,scoring
 2026-07-26,3,0.000,0,flat,"IODA 3 countries with ping-slash24 outages (24h) [Bahrain, Georgia, Oman]",,scoring
+2026-07-27,0,-1.461,0,down,IODA 0 countries with ping-slash24 outages (24h),,scoring
