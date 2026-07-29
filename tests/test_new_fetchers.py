@@ -1,6 +1,7 @@
 """Parse locks for the round-8 fetchers (network fetch not exercised here)."""
 import os
 import sys
+import types
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -77,6 +78,48 @@ class TestCnhCnyLegTimestamps(unittest.TestCase):
     def test_a_missing_quote_time_is_written_empty(self):
         out = self._fetch(None, 1774386000)
         self.assertIsNone(out["raw_value"])
+
+
+class TestAdsbProviderCorroboration(unittest.TestCase):
+    """A coverage failure can only lose aircraft, so the max is the fullest view."""
+
+    def _region(self, counts):
+        from core import adsb
+        real = adsb.requests
+        by_host = dict(zip(["airplanes.live", "opendata.adsb.fi", "api.adsb.lol"], counts))
+
+        class R:
+            def __init__(self, u):
+                self.status_code = 200
+                host = next(h for h in by_host if h in u)
+                self._n = by_host[host]
+            def json(self):
+                n = self._n
+                return {"ac": ([{"alt_baro": 30000}] * n) + [{"alt_baro": "ground"}]}
+        adsb.requests = types.SimpleNamespace(get=lambda u, **k: R(u),
+                                              RequestException=Exception)
+        try:
+            return adsb.region_airborne(39.0, -77.0)
+        finally:
+            adsb.requests = real
+
+    def test_one_provider_with_a_coverage_gap_cannot_set_the_reading(self):
+        # The defect this fixes: 300 from a degraded provider used to be accepted
+        # outright, because it sits far above the absolute floor of 30.
+        count, note = self._region([300, 800, 790])
+        self.assertEqual(count, 800)
+        self.assertIn("disagreed", note)
+
+    def test_agreeing_providers_report_the_agreed_level(self):
+        count, note = self._region([297, 288, 291])
+        self.assertEqual(count, 297)
+        self.assertNotIn("disagreed", note)
+
+    def test_a_real_collapse_is_reported_not_suppressed(self):
+        # All providers see an empty sky: that is a measurement, not a fault.
+        count, note = self._region([4, 5, 3])
+        self.assertEqual(count, 5)
+        self.assertIn("under floor", note)
 
 
 if __name__ == "__main__":
