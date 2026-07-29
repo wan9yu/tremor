@@ -47,7 +47,8 @@ def replay_line(mod):
     path = os.path.join(collect.DATA, mod.LINE + ".csv")
     if not os.path.exists(path):
         return []
-    rows = list(csv.DictReader(open(path, newline="")))
+    with open(path, newline="") as f:
+        rows = list(csv.DictReader(f))
     out = []
     for i, published in enumerate(rows):
         raw = published.get("raw_value")
@@ -105,9 +106,9 @@ def main(argv):
         print(f"{line:22} {n:>6} {bad:>8} {recent:>18}{flag}")
     print(f"{'TOTAL':22} {total:>6} {diverged:>8} {recent_diverged:>18}")
 
-    published = {r["date"]: int(r["trembling_count"] or 0)
-                 for r in csv.DictReader(open(os.path.join(collect.DATA, "summary.csv"),
-                                              newline=""))}
+    with open(os.path.join(collect.DATA, "summary.csv"), newline="") as f:
+        published = {r["date"]: int(r["trembling_count"] or 0)
+                     for r in csv.DictReader(f)}
     disagree = [d for d in sorted(published)
                 if published[d] != len(counts_now.get(d, []))]
     print(f"\nheadline: published reported a tremble on "
