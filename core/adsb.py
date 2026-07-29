@@ -1,25 +1,27 @@
 """Shared community-ADS-B helper for the airspace lines.
 
 Counts airborne aircraft over a set of regions using keyless aggregators
-(airplanes.live / adsb.fi / adsb.lol), tried in order per region so a count
-normally comes from one provider and stays comparable. The region set is fixed
-and ALL regions are required: a partial sum would look like a flight drop, so a
-missing region yields an empty reading instead.
+(airplanes.live / adsb.fi / adsb.lol). EVERY provider is asked for EVERY region
+and the maximum is taken — see ``region_airborne`` for why that is the right
+rule and what it costs. The region set is fixed and ALL regions are required: a
+partial sum would look like a flight drop, so a missing region yields an empty
+reading instead.
 
-Both flights lines (global and the China watchlist) share this so the provider
-list, headers, parsing, and the require-all-regions rule live in exactly one
-place.
+The provider list, headers, parsing, and the require-all-regions rule live here
+in one place for whichever airspace lines use them.
 """
 import requests
 
 RADIUS_NM = 250
-# Sanity floor: a busy region snapshot below this is either a degraded feed
-# (HTTP 200 with a thin aircraft list) or a genuine collapse. One provider
-# reporting under-floor is treated as suspect and the next provider is tried;
-# TWO independent providers agreeing under-floor is accepted as a real reading
-# — corroboration converts "degraded sensor" into "measured collapse", so the
-# instrument cannot blind itself at exactly the moment it matters.
+# A busy region reading below this is remarkable enough to say so in the note.
+# It is a DISCLOSURE, not a veto: every provider is consulted anyway, so if they
+# all agree the sky is that empty, the sky is that empty — the instrument must
+# not refuse to report a collapse at exactly the moment it matters.
 REGION_FLOOR = 30
+# Report the provider spread in the note once it exceeds this fraction — a
+# widening gap between aggregators is how a degrading feeder network announces
+# itself, and it should be visible in the record rather than silently absorbed.
+PROVIDER_SPREAD_NOTE = 0.10
 PROVIDERS = [
     ("airplanes.live", "https://api.airplanes.live/v2/point/{lat}/{lon}/{r}"),
     ("adsb.fi", "https://opendata.adsb.fi/api/v2/lat/{lat}/lon/{lon}/dist/{r}"),
@@ -31,34 +33,71 @@ HEADERS = {
 }
 
 
+def _provider_count(template, lat, lon):
+    """Airborne aircraft one provider reports for a region, or None if it can't say."""
+    try:
+        r = requests.get(template.format(lat=lat, lon=lon, r=RADIUS_NM),
+                         headers=HEADERS, timeout=15)
+    except requests.RequestException:
+        return None
+    if r.status_code != 200:
+        return None
+    try:
+        payload = r.json()
+    except ValueError:
+        return None
+    aircraft = payload.get("ac") or payload.get("aircraft") or []
+    # alt_baro == "ground" marks a parked/taxiing aircraft; count the rest.
+    return sum(1 for a in aircraft
+               if isinstance(a, dict) and a.get("alt_baro") != "ground")
+
+
 def region_airborne(lat, lon):
-    """Airborne aircraft in one region as (count, provider), or (None, reason)."""
-    thin = []  # under-floor readings seen so far: (count, provider)
+    """Airborne aircraft in one region as (count, note), or (None, reason).
+
+    EVERY provider is asked, every day, and the MAXIMUM is taken. The asymmetry
+    that makes this the right rule: a coverage failure can only LOSE aircraft —
+    a dead receiver or a thinned feeder network means fewer planes seen, and
+    nothing makes an aggregator invent one. So when providers disagree, the
+    highest count is the most complete view of the sky, and a single provider
+    having a bad day can no longer set the reading.
+
+    This replaces asking one provider and only consulting a second when the
+    count fell under an absolute floor of 30. That floor never engaged at the
+    magnitude that matters: a region normally carrying 700-1000 aircraft could
+    lose two thirds of its coverage and still be accepted from the first
+    provider without a second opinion. Corroboration now happens on every
+    region every day rather than only in the extreme.
+
+    Measured cost of the change: taking the max instead of the first responder
+    raises the four-region total by about 0.5%, against a robust scale of ~11%
+    of the median — inside the line's own daily noise. The spread between
+    providers is recorded in the note whenever it is wide, so a degrading
+    provider becomes visible in the record instead of silently setting the level.
+    """
+    seen = []
     for name, template in PROVIDERS:
-        url = template.format(lat=lat, lon=lon, r=RADIUS_NM)
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=15)
-        except requests.RequestException:
-            continue
-        if r.status_code != 200:
-            continue
-        try:
-            payload = r.json()
-        except ValueError:
-            continue
-        aircraft = payload.get("ac") or payload.get("aircraft") or []
-        # alt_baro == "ground" marks a parked/taxiing aircraft; count the rest.
-        count = sum(
-            1 for a in aircraft if isinstance(a, dict) and a.get("alt_baro") != "ground"
-        )
-        if count >= REGION_FLOOR:
-            return count, name
-        if thin:  # a second provider agrees it's thin -> a real reading
-            return thin[0][0], f"{thin[0][1]} (low, corroborated by {name})"
-        thin.append((count, name))
-    if thin:
-        return None, f"suspected degraded feed ({thin[0][0]} via {thin[0][1]}, uncorroborated)"
-    return None, "no provider responded"
+        count = _provider_count(template, lat, lon)
+        if count is not None:
+            seen.append((count, name))
+    if not seen:
+        return None, "no provider responded"
+
+    best, best_name = max(seen)
+    if len(seen) == 1:
+        note = f"{best_name} (sole responder)"
+    else:
+        low = min(c for c, _ in seen)
+        spread = (best - low) / best if best else 0.0
+        note = best_name if spread <= PROVIDER_SPREAD_NOTE else (
+            f"{best_name} (providers disagreed {low}-{best}, "
+            f"{spread * 100:.0f}% apart — max taken)")
+    # An absolute floor is still worth keeping as a last sanity check, but it is
+    # now a DISCLOSURE and not a veto: if every provider sees almost nothing, the
+    # sky really is that empty and the instrument must not refuse to say so.
+    if best < REGION_FLOOR:
+        note += f" [under floor {REGION_FLOOR}: all {len(seen)} providers agree]"
+    return best, note
 
 
 def airborne_over(regions, area_word):
