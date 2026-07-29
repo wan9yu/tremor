@@ -6,3 +6,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-27,1.645,,0,,dolarapi blue 1545 / oficial 1520 = +1.6% premium,2026-07-26,warming-up
 2026-07-28,2.632,,0,,dolarapi blue 1560 / oficial 1520 = +2.6% premium,2026-07-27,warming-up
 2026-07-29,3.289,,0,,dolarapi blue 1570 / oficial 1520 = +3.3% premium,2026-07-28,warming-up
+2026-07-30,3.63,,0,,dolarapi blue 1570 / oficial 1515 = +3.6% premium [sampled 23:01:59Z],2026-07-29,warming-up
