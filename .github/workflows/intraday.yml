@@ -1,0 +1,58 @@
+name: tremor intraday side-sampling
+
+# Measures how wide a day is for the instantaneous lines. It scores nothing,
+# counts nothing, and writes only to data/intraday.csv — a file the collector
+# and the scorer never read. Its whole purpose is to answer, with data rather
+# than argument, whether a once-a-day snapshot can carry a daily statistic:
+# cnh_cny's committed revisions differ by 3.6x its own robust scale depending on
+# when the run fired, which is more than its alarm requires.
+#
+# Deliberately a SEPARATE workflow from daily.yml. A failure here must never be
+# able to cost a daily row — that is the whole reason it does not live in the
+# main job.
+
+on:
+  schedule:
+    # Every six hours, deliberately offset from the 22:00 daily run so the two
+    # never contend for the same push.
+    - cron: "0 2,8,14,20 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tremor-intraday      # its own group; must not queue behind the daily job
+  cancel-in-progress: false
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Sample the snapshot lines
+        run: python tools/sample_intraday.py
+
+      # The daily job may have pushed since checkout, so rebase and retry rather
+      # than failing. Losing a side-sample is harmless; a failed run here is
+      # noise, and noise in an alarm channel is how alarms get ignored.
+      - name: Commit the samples
+        run: |
+          git config user.name "tremor-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/intraday.csv
+          git commit -m "intraday: $(date -u +%FT%HZ)" || exit 0
+          for attempt in 1 2 3; do
+            git pull --rebase --quiet origin main && git push && exit 0
+            echo "push attempt $attempt failed, retrying"
+            sleep 5
+          done
+          echo "could not push after 3 attempts; the sample is lost and that is acceptable"

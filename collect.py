@@ -31,6 +31,8 @@ trembling count; the lines are never multiplied into a single doom score.
 import csv
 import os
 import shutil
+from datetime import datetime, timezone
+
 from core import clock, normalize
 
 from fetchers import (capital_premium, chokepoint, cnh_cny, control_daylength,
@@ -60,6 +62,10 @@ LINE_HEADER = ["date", "raw_value", "z_score", "trembling", "direction", "source
 # Summary holds only the tier-1 aggregates; each line's own z lives in its CSV, so
 # the schema stays stable as indicators are added, promoted, or demoted.
 SUMMARY_HEADER = ["date", "trembling_count", "dark_count", "blind_count"]
+# Written under data/ but never served to the dashboard: diagnostic side-channels
+# that measure the instrument rather than the world. Nothing in collect.py or
+# core/normalize.py may read these either — see tests/test_side_channel.py.
+NOT_MIRRORED = {"intraday.csv"}
 
 
 def _read_rows(path):
@@ -158,13 +164,22 @@ def collect():
         path = os.path.join(DATA, mod.LINE + ".csv")
         rows = _read_rows(path)
 
+        # Stamp WHEN the fetch happened. For a snapshot line the reading is
+        # whatever the world looked like at one instant, and this project has
+        # measured that instant to matter: reconstructing cnh_cny's committed
+        # revisions showed the same calendar date written at values 131 pips
+        # apart by runs at different times — 3.6x the line's robust scale, more
+        # than the 3.0 its own alarm requires. Without the stamp that is
+        # invisible after the fact. It goes in source_note, which is prose and
+        # is not part of the replayed verdict, so it adds no drift.
+        sampled = datetime.now(timezone.utc).strftime("%H:%M:%SZ")
         try:
             result = mod.fetch_daily()
         except Exception as e:  # one bad source must never abort the whole run
             result = {"raw_value": None,
                       "source_note": f"fetcher crashed: {type(e).__name__}"}
         raw = result["raw_value"]
-        note = result["source_note"]
+        note = f"{result['source_note']} [sampled {sampled}]"
         obs_date = result.get("obs_date") or ""
         tier = getattr(mod, "TIER", 1)
         primary = tier == 1
@@ -210,9 +225,12 @@ def collect():
     print(f"\n== {today}: {trembling_count} line(s) trembling{extra} ==")
 
     # Mirror the data into docs/ so the GitHub Pages dashboard is self-contained.
+    # Diagnostic side-channels stay out: they are measurements ABOUT the
+    # instrument, the page never reads them, and intraday.csv grows a dozen rows
+    # a day.
     os.makedirs(DOCS_DATA, exist_ok=True)
     for name in os.listdir(DATA):
-        if name.endswith(".csv"):
+        if name.endswith(".csv") and name not in NOT_MIRRORED:
             shutil.copy2(os.path.join(DATA, name), os.path.join(DOCS_DATA, name))
 
 
