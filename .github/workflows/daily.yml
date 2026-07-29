@@ -31,11 +31,6 @@ jobs:
       - name: Check the scoring rules
         run: python -m unittest discover tests
 
-      # The dashboard is one inline script with no build step. Render it against
-      # the committed CSVs so a runtime error cannot reach the page unnoticed.
-      - name: Check the dashboard renders
-        run: node tests/render_smoke.js
-
       - name: Collect today's readings
         env:
           # FRED_API_KEY (credit spread) and FINGRID_API_KEY (grid frequency, with
@@ -44,16 +39,6 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           FINGRID_API_KEY: ${{ secrets.FINGRID_API_KEY }}
         run: python collect.py
-
-      # The row just written must replay under the same rules that wrote it.
-      # Divergence on OLD rows is expected — that is the forward-only rule showing
-      # its seams — but a row written today that cannot be reproduced means the
-      # collector and the scorer have drifted apart, and that is worth a failed
-      # build: better to lose one day's row than to commit an unreproducible one.
-      # A deliberate scoring change bumps STABLE_SINCE in tools/replay.py, which
-      # forces the change to be declared rather than slipped in.
-      - name: Check the record still replays
-        run: python tools/replay.py --check
 
       - name: Render charts
         run: python render.py
@@ -65,6 +50,27 @@ jobs:
           git add data/ charts/ docs/data/
           git commit -m "data: $(date -u +%F)" || echo "no changes to commit"
           git push
+
+      # VERIFY AFTER COMMITTING, NEVER BEFORE. Several lines are live snapshots
+      # with no archive to re-fetch from, so a gate that fails before the commit
+      # destroys that day permanently — and a silently missing row is the one
+      # thing this project forbids everywhere else: an absence with no stated
+      # reason. So the day is recorded first and audited second. A failure here
+      # raises the alarm issue below; the row stays, and a wrong verdict is
+      # corrected under the normal archive-and-restart rule.
+      #
+      # What this checks: a row written today that cannot be reproduced by the
+      # current scorer means the collector and the scorer have drifted apart.
+      # Divergence on OLD rows is expected and ignored — that is the forward-only
+      # rule showing its seams. A deliberate scoring change bumps STABLE_SINCE in
+      # tools/replay.py, which forces the change to be declared, not slipped in.
+      - name: Audit that today's row replays
+        run: python tools/replay.py --check
+
+      # Presentation, so it audits AFTER the commit for the same reason: a broken
+      # dashboard is worth an alarm, never worth a lost day of data.
+      - name: Audit that the dashboard renders
+        run: node tests/render_smoke.js
 
       # A silent instrument is the failure mode that ends this project. The daily
       # commit is also what keeps the schedule alive — GitHub disables a cron
