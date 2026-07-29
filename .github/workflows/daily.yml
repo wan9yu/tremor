@@ -45,6 +45,16 @@ jobs:
           FINGRID_API_KEY: ${{ secrets.FINGRID_API_KEY }}
         run: python collect.py
 
+      # The row just written must replay under the same rules that wrote it.
+      # Divergence on OLD rows is expected — that is the forward-only rule showing
+      # its seams — but a row written today that cannot be reproduced means the
+      # collector and the scorer have drifted apart, and that is worth a failed
+      # build: better to lose one day's row than to commit an unreproducible one.
+      # A deliberate scoring change bumps STABLE_SINCE in tools/replay.py, which
+      # forces the change to be declared rather than slipped in.
+      - name: Check the record still replays
+        run: python tools/replay.py --check
+
       - name: Render charts
         run: python render.py
 
