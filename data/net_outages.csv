@@ -20,3 +20,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-28,0,-1.635,0,down,IODA 0 countries with ping-slash24 outages (24h),,scoring
 2026-07-29,2,-0.483,0,down,"IODA 2 countries with ping-slash24 outages (24h) [Libyan Arab Jamahiriya, Zimbabwe]",,scoring
 2026-07-30,5,1.339,0,up,"IODA 5 countries with ping-slash24 outages (24h) [Burkina Faso, Ghana, Kenya, Syrian Arab Republic, Togo] [sampled 23:01:52Z]",,scoring
+2026-07-31,0,-1.440,0,down,IODA 0 countries with ping-slash24 outages (24h) [sampled 23:12:15Z],,scoring
