@@ -201,3 +201,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-29,18.67,0.408,0,up,FRED VIXCLS close 2026-07-27,2026-07-27,scoring
 2026-07-30,18.21,0.168,0,up,FRED VIXCLS close 2026-07-28 [sampled 23:02:02Z],2026-07-28,scoring
 2026-07-31,20.66,1.557,0,up,FRED VIXCLS close 2026-07-29 [sampled 23:12:37Z],2026-07-29,scoring
+2026-08-01,17.09,-0.461,0,down,FRED VIXCLS close 2026-07-30 [sampled 23:06:52Z],2026-07-30,scoring
