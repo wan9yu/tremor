@@ -8,3 +8,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-29,2.58,,0,,FRED BAMLHE00EHYIOAS OAS 2026-07-27,2026-07-27,warming-up
 2026-07-30,2.61,,0,,FRED BAMLHE00EHYIOAS OAS 2026-07-28 [sampled 23:01:58Z],2026-07-28,warming-up
 2026-07-31,2.64,,0,,FRED BAMLHE00EHYIOAS OAS 2026-07-29 [sampled 23:12:22Z],2026-07-29,warming-up
+2026-08-01,2.65,,0,,FRED BAMLHE00EHYIOAS OAS 2026-07-30 [sampled 23:06:49Z],2026-07-30,warming-up
