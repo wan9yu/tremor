@@ -45,16 +45,45 @@ class TestControlLine(unittest.TestCase):
         with open(self.PATH, newline="") as f:
             return [r for r in csv.DictReader(f) if r["raw_value"]]
 
-    def test_every_row_matches_the_astronomy_for_its_own_date(self):
-        """The canary. A mismatch means the pipeline mishandled a date."""
+    def test_every_row_matches_the_astronomy_for_the_day_it_claims(self):
+        """The canary, at a tolerance that can actually catch a one-day slip.
+
+        A one-day offset moves day length by about three minutes here, so the
+        15-minute tolerance this test originally used could not detect the very
+        bug it exists for. Rows carrying obs_date are checked to within a minute.
+        Rows written before obs_date was recorded fall back to the row date at
+        the old loose tolerance, and are honestly weaker.
+        """
         for r in self._rows():
-            day = datetime.date.fromisoformat(r["date"])
+            if r.get("obs_date"):
+                day, tol, which = datetime.date.fromisoformat(r["obs_date"]), 0.017, "obs_date"
+            else:
+                day, tol, which = datetime.date.fromisoformat(r["date"]), 0.25, "row date (no obs_date)"
             expected = astronomical_day_length_h(control.LAT, day)
             actual = float(r["raw_value"]) / 3600.0
             self.assertLess(
-                abs(actual - expected), 0.25,  # 15 minutes; a wrong date costs far more
-                f"{r['date']}: recorded {actual:.4f}h but its own date implies "
+                abs(actual - expected), tol,
+                f"{r['date']}: recorded {actual:.4f}h but its {which} {day} implies "
                 f"{expected:.4f}h — the pipeline mishandled a date")
+
+    def test_the_row_describes_a_day_close_to_when_it_was_collected(self):
+        """obs_date must track the collection date; a drift means a stuck fetch."""
+        for r in self._rows():
+            if not r.get("obs_date"):
+                continue
+            gap = (datetime.date.fromisoformat(r["date"])
+                   - datetime.date.fromisoformat(r["obs_date"])).days
+            self.assertIn(gap, (0, 1),
+                          f"{r['date']}: describes {r['obs_date']}, {gap} days adrift")
+
+    def test_a_one_day_slip_would_now_be_caught(self):
+        """The canary must be able to fail. Prove it on a date away from solstice."""
+        day = datetime.date(2026, 8, 1)
+        drift = abs(astronomical_day_length_h(control.LAT, day)
+                    - astronomical_day_length_h(control.LAT,
+                                                day - datetime.timedelta(days=1)))
+        self.assertGreater(drift, 0.017,
+                           "a one-day slip is smaller than the tolerance; the canary is blind")
 
     def test_consecutive_rows_move_by_a_physically_possible_amount(self):
         """Catches a row overwritten by a run from a different day."""

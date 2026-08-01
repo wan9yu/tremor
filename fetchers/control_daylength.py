@@ -15,13 +15,23 @@ healthy is a small piece of evidence that the pipeline is healthy.
 It earns its slot twice.
 
 **As a pipeline canary.** Day length is an exact function of (date, latitude), so
-a value inconsistent with the date on its own row means the pipeline mishandled a
-date — a same-day overwrite from a different run, a timezone boundary, a dedup
-misfire, a row written under the wrong label. That class of bug is not
-hypothetical here: this project has already been bitten by a +1 date-label
-offset and by manual re-runs overwriting a day. `tests/test_control.py` asserts
-every committed row against the astronomy for its own date, so the canary is
-checked offline on every CI run, independent of any z-score.
+a value inconsistent with the day the row claims to describe means the pipeline
+mishandled a date — a same-day overwrite from a different run, a timezone
+boundary, a dedup misfire, a row written under the wrong label. That class of bug
+is not hypothetical here: this project has been bitten by a +1 date-label offset
+and by manual re-runs overwriting a day.
+
+The canary earned its keep on day four. Rows are dated by COLLECTION in China
+time, so the 23:0x UTC run lands on the next China day, and a row dated D carries
+the UTC day D−1 — the project's existing convention, previously invisible because
+no other line could be checked against ground truth. The fetcher now asks for an
+explicit UTC date and records it as ``obs_date``, so the row states which day it
+describes instead of leaving it to be inferred. That matters because a one-day
+offset moves day length by only about three minutes; `tests/test_control.py`
+checks every row against the astronomy for its own ``obs_date`` to within one
+minute, which a one-day slip cannot survive. Near the solstices, where
+consecutive days differ by seconds, no value check can detect an offset — which
+is precisely why the date is recorded rather than inferred.
 
 **As a standing measurement of the estimator.** Replaying 400 days of pure day
 length through the unmodified scoring rules produces **30 trembles (7.5%), every
@@ -37,6 +47,8 @@ Reading: day length in seconds at 51.4779N, 0.0E (Greenwich — arbitrary, fixed
 and documented so it is never quietly moved). Source: sunrise-sunset.org, free
 and keyless. ANOMALY_DIRECTION is nominal; nothing here is ever counted.
 """
+import datetime
+
 import requests
 
 LINE = "control_daylength"
@@ -56,8 +68,16 @@ _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
 
 def fetch_daily():
     """Return {"raw_value": float | None, "source_note": str}."""
+    # Ask for an EXPLICIT UTC date rather than letting the server decide what
+    # "today" is, and record it as obs_date. Rows here are dated by collection
+    # (China time, so a 23:0x UTC run lands on the next China day) while the
+    # value describes a UTC day — without obs_date the row cannot say which, and
+    # the offset is only ~3 minutes of day length, far too small to infer back
+    # from the value. Making it explicit is what lets the canary be tight.
+    day = datetime.datetime.now(datetime.timezone.utc).date()
     try:
-        r = requests.get(_URL, params={"lat": LAT, "lng": LON, "formatted": 0},
+        r = requests.get(_URL, params={"lat": LAT, "lng": LON, "date": day.isoformat(),
+                                       "formatted": 0},
                          headers=_HEADERS, timeout=20)
     except requests.RequestException as e:
         return {"raw_value": None,
@@ -80,8 +100,9 @@ def fetch_daily():
     sunset = (results.get("sunset") or "")[11:19]
     return {
         "raw_value": seconds,
-        "source_note": (f"day length {seconds / 3600:.4f}h at {LAT}N,{LON}E "
+        "source_note": (f"day length {seconds / 3600:.4f}h at {LAT}N,{LON}E on {day} "
                         f"(sunrise {sunrise}Z, sunset {sunset}Z) — CONTROL LINE, "
                         f"no guard, never counted; a tremble here outside "
                         f"Feb-Mar is the instrument, not the world"),
+        "obs_date": day.isoformat(),
     }
