@@ -772,8 +772,8 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-10,1.44,-0.528,0,down,FRED BAMLEMCBPIOAS OAS 2026-07-08,2026-07-08,scoring
 2026-07-13,1.45,-0.352,0,down,FRED BAMLEMCBPIOAS OAS 2026-07-09 [stale: observation already recorded],2026-07-09,scoring
 2026-07-14,1.44,-0.469,0,down,FRED BAMLEMCBPIOAS OAS 2026-07-10,2026-07-10,scoring
-2026-07-15,1.41,-0.821,0,down,FRED BAMLEMCBPIOAS OAS 2026-07-13,2026-07-13,scoring
 2026-07-14,1.45,-0.352,0,down,"FRED BAMLEMCBPIOAS OAS 2026-07-14 [archive import: scored retroactively, not a live reading]",2026-07-14,scoring
+2026-07-15,1.41,-0.821,0,down,FRED BAMLEMCBPIOAS OAS 2026-07-13,2026-07-13,scoring
 2026-07-17,1.48,0.000,0,flat,FRED BAMLEMCBPIOAS OAS 2026-07-15,2026-07-15,scoring
 2026-07-20,1.47,-0.156,0,down,FRED BAMLEMCBPIOAS OAS 2026-07-16 [stale: observation already recorded],2026-07-16,scoring
 2026-07-21,1.48,0.078,0,up,FRED BAMLEMCBPIOAS OAS 2026-07-17,2026-07-17,scoring
@@ -786,3 +786,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-30,1.49,0.469,0,up,FRED BAMLEMCBPIOAS OAS 2026-07-28 [sampled 23:01:58Z],2026-07-28,scoring
 2026-07-31,1.48,0.235,0,up,FRED BAMLEMCBPIOAS OAS 2026-07-29 [sampled 23:12:21Z],2026-07-29,scoring
 2026-08-01,1.5,0.704,0,up,FRED BAMLEMCBPIOAS OAS 2026-07-30 [sampled 23:06:48Z],2026-07-30,scoring
+2026-08-02,1.5,,0,,FRED BAMLEMCBPIOAS OAS 2026-07-30 [sampled 22:58:38Z] [stale: observation already recorded],2026-07-30,stale
