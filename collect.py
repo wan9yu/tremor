@@ -11,6 +11,10 @@ Fetcher contract — each module in ``fetchers/`` provides:
     ``obs_date`` to the observation's own date, or duplicate readings will
     quietly shrink the robust-scale baseline — the pseudo-replication the obs-dedup
     rule exists to kill.
+    A fetcher MAY also return ``components``: ``{name: value}``, the breakdown
+    the reading was aggregated from (per-strait, per-region, per-provider).
+    These are written to ``data/components/<line>.csv`` and are DIAGNOSTIC ONLY —
+    nothing scores them, nothing displays them. See ``write_components``.
   - module attrs: ``LINE``, ``LABEL``, ``UNIT``, ``ANOMALY_DIRECTION``
     ("up"/"down" — the alarm direction; only trembles in this direction feed
     trembling_count), optional ``TIER`` (default 1), optional ``WEEKLY_CYCLE``
@@ -66,6 +70,9 @@ SUMMARY_HEADER = ["date", "trembling_count", "dark_count", "blind_count"]
 # that measure the instrument rather than the world. Nothing in collect.py or
 # core/normalize.py may read these either — see tests/test_side_channel.py.
 NOT_MIRRORED = {"intraday.csv"}
+
+COMPONENTS = os.path.join(DATA, "components")
+COMPONENT_HEADER = ["date", "component", "value"]
 
 
 def _read_rows(path):
@@ -153,6 +160,33 @@ def write_line(line, rows):
     _write_rows(os.path.join(DATA, line + ".csv"), LINE_HEADER, rows)
 
 
+def write_components(line, date, components):
+    """Append today's breakdown to ``data/components/<line>.csv``.
+
+    THE SCALAR IS NOT WHAT WE FETCHED. Every day this instrument downloads 28
+    straits, twelve provider counts, tens of thousands of grid cells — and writes
+    down one number each. The aggregation happens at CAPTURE, so it cannot be
+    undone later: a strait collapsing 65% moved the recorded chokepoint number by
+    under 2%, and there is no going back to ask which strait, because the answer
+    was never written down. PortWatch will not serve 2019 forever.
+
+    So the breakdown is stored beside the reading. It is DIAGNOSTIC ONLY, under
+    the same rule as the intraday sampler: no scoring code may read it, it is not
+    mirrored to the dashboard, and it changes no verdict. Its job is to make the
+    analyses this project has already wanted — a per-strait breadth count, a
+    regional rebalancing of the airspace line, a level layer — possible later
+    without a time machine.
+    """
+    if not components:
+        return
+    path = os.path.join(COMPONENTS, line + ".csv")
+    rows = [r for r in _read_rows(path) if r.get("date") != date]
+    rows += [{"date": date, "component": name, "value": _fmt(float(value))}
+             for name, value in sorted(components.items())]
+    rows.sort(key=lambda r: (r["date"], r["component"]))
+    _write_rows(path, COMPONENT_HEADER, rows)
+
+
 def collect():
     today = clock.china_today()
     summary = {"date": today}
@@ -203,6 +237,7 @@ def collect():
                 blind_count += 1
 
         _write_rows(path, LINE_HEADER, _upsert(rows, row, today))
+        write_components(mod.LINE, today, result.get("components"))
 
         flag = "  TREMBLING" if trembling else ""
         print(
