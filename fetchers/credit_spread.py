@@ -11,9 +11,24 @@ alarming direction.
 Source: FRED API, with a KEYLESS fallback. The keyed JSON API is primary; if the
 key is absent or the call fails, the public fredgraph.csv endpoint serves the
 same series without any key. That fallback covers the failure this line is most
-exposed to — a rotated or expired key silently blinding a tier-1 instrument. It
-is a LIVENESS fallback only: fredgraph ignores a start-date parameter and serves
-a short rolling window, so it cannot be used to rebuild history.
+exposed to — a rotated or expired key silently blinding a tier-1 instrument.
+
+CORRECTION (2026-08-02): this docstring used to end "it is a LIVENESS fallback
+only: fredgraph ignores a start-date parameter and serves a short rolling window,
+so it cannot be used to rebuild history." That was wrong, and being wrong here
+cost the line a seed for six weeks. fredgraph.csv returns 787 observations back
+to 2023-08-01 for this series with no parameters at all — three years, which is
+six times the 180-day MAX_AGE_DAYS cap the baseline actually uses. A start-date
+parameter is indeed ignored (the ICE BofA series appear to carry a three-year
+licensing floor on the keyless download, while SOFR and IORB from the same
+endpoint return their full history), but "no deeper than three years" and
+"cannot rebuild history" are very different claims and only the first is true.
+
+OPERATIONAL WARNING for anyone writing a seeder: fredgraph.csv sits behind bot
+management. Ten requests in twenty seconds black-holed a probing IP for over an
+hour, and the block spread to the rest of the FRED estate. Fetch each series ONCE,
+space the calls by tens of seconds, never retry-storm, and never run a seed from
+CI — locking out the runner would stop daily collection.
 
 The classic TED spread (TEDRATE) was discontinued with LIBOR's retirement; this
 is the modern replacement. FRED serves only a rolling ~3-year window, which is
