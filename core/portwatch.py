@@ -111,3 +111,34 @@ def daily_sum_at_lag(service, field, today, lag_days=LAG_DAYS):
                     if behind else "")
             return total, day.isoformat(), note
     return None, None, f"PortWatch has nothing at or before {target}"
+
+
+def components_at(service, field, name_field, obs_date):
+    """``{name: value}`` for every feature on ``obs_date``, or ``{}``.
+
+    The sum this module normally returns throws away the thing that actually
+    matters. PortWatch answers with all 28 chokepoints every day and the line
+    stores one scalar, so a strait collapsing 65% moves the recorded number by
+    under 2% and is unrecoverable afterwards — that is not a scoring problem,
+    it is a CAPTURE problem, and no later analysis can undo it. This returns the
+    breakdown so it can be written down beside the sum. Nothing scores it.
+    """
+    params = {
+        "where": f"date = DATE '{obs_date}'",
+        "outFields": f"{name_field},{field}",
+        "resultRecordCount": 200,
+        "f": "json",
+    }
+    try:
+        r = requests.get(_BASE.format(svc=service), params=params,
+                         headers=_HEADERS, timeout=30)
+        features = r.json().get("features") or [] if r.status_code == 200 else []
+    except (requests.RequestException, ValueError):
+        return {}
+    out = {}
+    for feature in features:
+        attrs = feature.get("attributes", {})
+        name, value = attrs.get(name_field), attrs.get(field)
+        if name is not None and value is not None:
+            out[str(name)] = float(value)
+    return out

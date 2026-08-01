@@ -40,4 +40,8 @@ def fetch_daily():
         "raw_value": total,
         "source_note": f"{NOTE} {date}{note}",
         "obs_date": date,
+        # The 28 straits arrive in the same response the sum is built from.
+        # Storing only the sum is why a 65% collapse at Hormuz moved this line
+        # by under 2% and left nothing to go back to.
+        "components": portwatch.components_at(SERVICE, FIELD, "portname", date),
     }

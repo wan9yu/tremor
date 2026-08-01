@@ -52,8 +52,13 @@ def _provider_count(template, lat, lon):
                if isinstance(a, dict) and a.get("alt_baro") != "ground")
 
 
-def region_airborne(lat, lon):
+def region_airborne(lat, lon, per_provider=None):
     """Airborne aircraft in one region as (count, note), or (None, reason).
+
+    ``per_provider``, if given a dict, is filled with every provider's own
+    count. All three are already fetched to take the maximum; discarding the
+    other two throws away the only evidence that would show a provider
+    degrading, and it cannot be recovered afterwards.
 
     EVERY provider is asked, every day, and the MAXIMUM is taken. The asymmetry
     that makes this the right rule: a coverage failure can only LOSE aircraft —
@@ -80,6 +85,8 @@ def region_airborne(lat, lon):
         count = _provider_count(template, lat, lon)
         if count is not None:
             seen.append((count, name))
+            if per_provider is not None:
+                per_provider[name] = count
     if not seen:
         return None, "no provider responded"
 
@@ -113,8 +120,14 @@ def airborne_over(regions, area_word):
     parts = []
     providers = []
     missing = []
+    components = {}
     for name, lat, lon in regions:
-        airborne, provider = region_airborne(lat, lon)
+        per_provider = {}
+        airborne, provider = region_airborne(lat, lon, per_provider=per_provider)
+        if airborne is not None:
+            components[name] = float(airborne)
+        for pname, pcount in per_provider.items():
+            components[f"{name}/{pname}"] = float(pcount)
         if airborne is None:
             missing.append(f"{name} ({provider})")
         else:
@@ -122,6 +135,9 @@ def airborne_over(regions, area_word):
             parts.append(f"{name}={airborne}")
             providers.append(provider)
     if missing:
+        # Components are recorded even on a failed reading: a dark day is exactly
+        # when knowing WHICH region went missing is worth most, and it is the one
+        # day the scalar cannot tell you.
         return {
             "raw_value": None,
             "source_note": (
@@ -129,9 +145,11 @@ def airborne_over(regions, area_word):
                 + "; ".join(missing)
                 + " (count needs every region to stay comparable)"
             ),
+            "components": components,
         }
     used = ", ".join(sorted(set(providers)))
     return {
         "raw_value": float(total),
         "source_note": f"ADS-B {area_word} [{', '.join(parts)}] via {used}",
+        "components": components,
     }
