@@ -23,3 +23,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-07-31,0,-1.440,0,down,IODA 0 countries with ping-slash24 outages (24h) [sampled 23:12:15Z],,scoring
 2026-08-01,2,-0.264,0,down,"IODA 2 countries with ping-slash24 outages (24h) [Tunisia, Us Virgin Islands] [sampled 23:06:43Z]",,scoring
 2026-08-02,1,-0.477,0,down,IODA 1 countries with ping-slash24 outages (24h) [Burundi] [sampled 22:58:32Z],,scoring
+2026-08-03,1,-0.521,0,down,IODA 1 countries with ping-slash24 outages (24h) [Syrian Arab Republic] [sampled 22:59:37Z],,scoring
