@@ -11,11 +11,14 @@ than an average, which washes the spikes out.)
 
 Source: Fingrid Open Data (Finland), dataset 177 (real-time frequency), over a
 24-hour window — a richer signal than a momentary snapshot. Needs a free key in
-env FINGRID_API_KEY (sent as the x-api-key header). If the key is missing or
-Fingrid fails, this falls back to Statnett (Norway) — the SAME Nordic 50 Hz
-synchronous grid — whose real-time endpoint is keyless, so the line keeps
-running. Both measure one physical equilibrium; Fingrid is preferred only for
-its wider window.
+env FINGRID_API_KEY (sent as the x-api-key header).
+
+The Statnett (Norway) fallback watches the SAME Nordic 50 Hz grid but through a
+~60-second keyless snapshot, and the max over 60 seconds is NOT the max over 24
+hours: it systematically reads far below the line's Fingrid-built baseline
+(median 113 mHz), so scoring it would understate grid stress on exactly the
+days the primary source is down. On a Fingrid failure the fallback value goes
+into the note for the human record and the row is honestly DARK.
 """
 import os
 from datetime import datetime, timedelta, timezone
@@ -101,7 +104,8 @@ def _statnett():
 def fetch_daily():
     """Return {"raw_value": float | None, "source_note": str}.
 
-    Prefer Fingrid (24h window); fall back to keyless Statnett on any failure.
+    Only Fingrid's 24h window is scored. A Statnett snapshot on a Fingrid
+    failure is disclosure for the human record, never a comparable reading.
     """
     value, note = _fingrid()
     if value is not None:
@@ -110,8 +114,11 @@ def fetch_daily():
     fallback_value, fallback_note = _statnett()
     if fallback_value is not None:
         return {
-            "raw_value": fallback_value,
-            "source_note": f"{fallback_note} [Fingrid unavailable: {note}]",
+            "raw_value": None,
+            "source_note": (f"dark: Fingrid unavailable ({note}); Statnett "
+                            f"snapshot {fallback_value} mHz for the record only "
+                            f"({fallback_note}) — a ~60s max is not comparable "
+                            f"to this line's 24h max, so it is not scored"),
         }
     return {
         "raw_value": None,

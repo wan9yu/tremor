@@ -69,6 +69,21 @@ def _utc(epoch):
     return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
 
 
+def _weekend_gap(older_t, newer_t):
+    """True when the leg desync is just the FX weekend, not a malfunction.
+
+    Every China-Sunday since the desync guard shipped has gone dark with the
+    same signature: CNH frozen at its Friday close while Yahoo restamps the
+    idle CNY leg through Saturday. Both fetches succeed; there is simply no
+    moment on a weekend at which the two legs can be simultaneous. That is a
+    market fact, not a failure, and the note must not describe it as one.
+    """
+    older, newer = _utc(older_t), _utc(newer_t)
+    older_is_friday_close = (older.weekday() == 4 and older.hour >= 20) \
+        or older.weekday() >= 5
+    return older_is_friday_close and newer.weekday() >= 5
+
+
 def fetch_daily():
     """Return {"raw_value": float | None, "source_note": str, "obs_date": str}."""
     cnh, cnh_t = _yahoo_quote("USDCNH=X")
@@ -93,6 +108,13 @@ def fetch_daily():
     gap = abs(cnh_t - cny_t)
     stamps = (f"CNH {_utc(cnh_t):%Y-%m-%d %H:%MZ}, CNY {_utc(cny_t):%Y-%m-%d %H:%MZ}")
     if gap > _MAX_LEG_GAP_S:
+        if _weekend_gap(min(cnh_t, cny_t), max(cnh_t, cny_t)):
+            return {
+                "raw_value": None,
+                "source_note": (f"no new observation: FX weekend, both legs frozen "
+                                f"({stamps}) — no simultaneous quote exists until "
+                                f"Monday trade; dark by market closure, not failure"),
+            }
         return {
             "raw_value": None,
             "source_note": (f"yuan spread not comparable: legs quoted {gap / 3600:.1f}h "

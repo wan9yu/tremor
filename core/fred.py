@@ -33,24 +33,54 @@ def _spaced_get(params):
     return requests.get(_URL, params=params, headers=_HEADERS, timeout=15)
 
 
-def latest_value(series_id):
-    """Latest non-empty (date, value) for a FRED series, or (None, None)."""
+def series(series_id):
+    """[(date, value)] for a FRED series, oldest-first, or None.
+
+    Rows are "observation_date,VALUE"; "." marks a missing observation.
+    """
     try:
         r = _spaced_get({"id": series_id})
     except requests.RequestException:
-        return None, None
+        return None
     if r.status_code != 200:
-        return None, None
-    rows = r.text.strip().splitlines()
-    # rows are "observation_date,VALUE"; "." marks a missing observation.
-    for row in reversed(rows[1:]):
+        return None
+    out = []
+    for row in r.text.strip().splitlines()[1:]:
         parts = row.split(",")
         if len(parts) >= 2 and parts[1] not in ("", ".", "NaN"):
             try:
-                return parts[0], float(parts[1])
+                out.append((parts[0], float(parts[1])))
             except ValueError:
                 continue
-    return None, None
+    return out or None
+
+
+def latest_value(series_id):
+    """Latest non-empty (date, value) for a FRED series, or (None, None)."""
+    rows = series(series_id)
+    if not rows:
+        return None, None
+    return rows[-1]
+
+
+def latest_common(series_a, series_b):
+    """``(date, value_a, value_b)`` on the newest date BOTH series report.
+
+    For a spread of two series this is the only honest pairing: the two need
+    not publish on the same schedule (SOFR posts T+1, IORB same-day), so
+    "latest of each" can subtract values from different days — across an FOMC
+    move that manufactures a spread jump the size of the policy step itself.
+    Returns ``(None, None, None)`` if either series is unavailable or they
+    share no date.
+    """
+    rows_a, rows_b = series(series_a), series(series_b)
+    if not rows_a or not rows_b:
+        return None, None, None
+    by_date_b = dict(rows_b)
+    for date, value_a in reversed(rows_a):
+        if date in by_date_b:
+            return date, value_a, by_date_b[date]
+    return None, None, None
 
 
 def reading(series_id, label="OAS"):

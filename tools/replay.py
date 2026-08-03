@@ -35,10 +35,13 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import collect
+from core import normalize
 
 # Rows written on or after this date should replay exactly: it is the date of the
 # most recent change to scoring semantics (Qn + the no-RMS-fallback rule).
-# Bump it when normalize.py's verdicts change, and say so in annotations.csv.
+# Bump it when normalize.py's verdicts change — and also when a line changes
+# TIER, because the summary audit below reconstructs the headline counts with
+# each line's CURRENT tier. Say so in annotations.csv either way.
 STABLE_SINCE = "2026-07-23"
 
 
@@ -79,6 +82,7 @@ def main(argv):
     total = diverged = recent_diverged = 0
     per_line = []
     counts_now = {}
+    tier1_status = {}  # date -> [replayed status of each tier-1 row that day]
 
     for mod in collect.LINES:
         rows = replay_line(mod)
@@ -91,8 +95,10 @@ def main(argv):
         recent_diverged += len(recent)
         per_line.append((mod.LINE, len(rows), len(bad), len(recent)))
         for date, _, replayed in rows:
-            if replayed["trembling"] == "1" and replayed["direction"] == mod.ANOMALY_DIRECTION \
-                    and getattr(mod, "TIER", 1) == 1:
+            if getattr(mod, "TIER", 1) != 1:
+                continue
+            tier1_status.setdefault(date, []).append(replayed["status"])
+            if replayed["trembling"] == "1" and replayed["direction"] == mod.ANOMALY_DIRECTION:
                 counts_now.setdefault(date, []).append(mod.LINE)
         if verbose:
             for date, p, r in bad:
@@ -120,12 +126,38 @@ def main(argv):
             print(f"            {d}: published {published[d]}, "
                   f"now {len(counts_now.get(d, []))} {counts_now.get(d, [])}")
 
+    # The summary is a derived record too, and until now nothing ever re-derived
+    # it: per-row verdicts replayed while the headline counts — the one number
+    # the dashboard leads with — were taken on faith. Reconstruct all three
+    # counts from the replayed tier-1 rows and hold the summary to them, on the
+    # same since-STABLE_SINCE terms as the rows themselves.
+    summary_bad = []
+    with open(os.path.join(collect.DATA, "summary.csv"), newline="") as f:
+        for row in csv.DictReader(f):
+            date = row["date"]
+            if date < STABLE_SINCE:
+                continue
+            statuses = tier1_status.get(date, [])
+            derived = {
+                "trembling_count": len(counts_now.get(date, [])),
+                "dark_count": sum(s == normalize.STATUS_DARK for s in statuses),
+                "blind_count": sum(s in normalize.BLIND_STATUSES for s in statuses),
+            }
+            stored = {k: int(row.get(k) or 0) for k in derived}
+            if stored != derived:
+                summary_bad.append((date, stored, derived))
+    if summary_bad:
+        print(f"\nsummary does not re-derive on {len(summary_bad)} day(s) since {STABLE_SINCE}:")
+        for date, stored, derived in summary_bad:
+            print(f"  {date}: published {stored} but replay gives {derived}")
+
     print(f"\nDivergence before {STABLE_SINCE} is EXPECTED — it is the forward-only rule "
           f"showing its seams,\nnot an error. Divergence AFTER it means the collector and "
           f"the scorer have drifted apart.")
 
-    if check and recent_diverged:
-        print(f"\nFAIL: {recent_diverged} rows written since {STABLE_SINCE} do not replay.")
+    if check and (recent_diverged or summary_bad):
+        print(f"\nFAIL: {recent_diverged} rows and {len(summary_bad)} summary days "
+              f"since {STABLE_SINCE} do not replay.")
         return 1
     return 0
 
