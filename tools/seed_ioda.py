@@ -280,24 +280,39 @@ def main(argv):
 
     unserved = {r["obs_date"]: r["unserved"]
                 for r in collect._read_rows(_CACHE) if r.get("unserved")}
-    history, absent = [], []
+    history, absent, swept = [], [], []
     for d in wanted:
         hits, entities = cache[d]
         if not entities:          # served nothing, or refused: not an observation
             absent.append(d)
             continue
+        # The seed must produce exactly what the live fetcher would, including
+        # its refusals — otherwise the seeded stretch of the record obeys
+        # different integrity rules from the collected stretch.
+        if net_outages.monitor_swept(hits, entities):
+            swept.append(d)
+            history.append((d, None))
+            continue
         history.append((d, float(hits)))
+    print(f"  {len(swept)} day(s) refused as monitor sweeps: {swept}")
     print(f"fetched: {len(history)} observations, {len(absent)} days without one "
           f"({len(unserved)} the service refused outright, "
           f"{len(absent) - len(unserved)} answered but empty)")
     if unserved:
         print(f"  refused: {sorted(unserved)[:6]}{'...' if len(unserved) > 6 else ''}")
-    spikes = sorted(((v, d) for d, v in history), reverse=True)[:5]
+    spikes = sorted(((v, d) for d, v in history if v is not None), reverse=True)[:5]
     print(f"  largest readings: {[(d, int(v)) for v, d in spikes]}")
     if dry:
         return 0
 
     def import_note(obs, value):
+        hits, entities = cache[obs]
+        if value is None:
+            return (f"no reading: IODA reported {hits} of {entities} watched "
+                    f"entities in outage (24h to {obs} {_WINDOW_HOUR}:00Z) — a "
+                    f"sweep of essentially everything it can see, which is the "
+                    f"monitor losing its own vantage points, not the world going "
+                    f"dark" + seedlib.IMPORT_MARK)
         who = names_by_day.get(obs, "")
         who = f" [{who.replace('; ', ', ')}]" if who else ""
         return (f"IODA {int(value)} countries with {net_outages._DATASOURCE} "
