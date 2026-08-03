@@ -95,17 +95,26 @@ def _append_cache(day, hits, entities, names):
                     "countries": names})
 
 
+# A sweep this long WILL meet a transient network error — the first unattended
+# run died on a single SSLError after two tries ten seconds apart, four hours
+# from the finish. Blips resolve in seconds; a service that is genuinely down
+# stays down. Backing off across a few minutes tells those two apart, and
+# ``_BACKOFF_S`` is what an unattended overnight run is worth.
+_BACKOFF_S = (5, 15, 30, 60, 120)
+
+
 def day_summary(day):
     """``(ping_slash24_count, total_entities, names)`` for one 24h window.
 
-    ``(None, None, "")`` when the request fails outright; a served-but-empty day
-    comes back as ``(0, 0, "")`` and the caller decides what that means.
+    Raises ``TransportError`` when the service will not answer after backing
+    off across several minutes — a served-but-empty day is a legitimate
+    ``(0, 0, "")`` and the caller decides what that means.
     """
     end = datetime.datetime.combine(day, datetime.time(_WINDOW_HOUR, 0),
                                     datetime.timezone.utc)
     stamp = int(end.timestamp())
     last = None
-    for attempt in (1, 2):
+    for attempt in range(len(_BACKOFF_S) + 1):
         try:
             r = requests.get(net_outages._URL,
                              params={"from": stamp - 86400, "until": stamp,
@@ -115,18 +124,30 @@ def day_summary(day):
             last = type(e).__name__
         else:
             if r.status_code == 200:
-                data = r.json().get("data") or []
-                hit = [d for d in data
-                       if any(k.startswith(net_outages._DATASOURCE)
-                              for k in (d.get("scores") or {}))]
-                names = sorted((d.get("entity") or {}).get("name")
-                               or (d.get("entity") or {}).get("code") or "?"
-                               for d in hit)
-                return len(hit), len(data), "; ".join(names)
-            last = f"HTTP {r.status_code}"
-        if attempt == 1:
-            time.sleep(10)
-    raise RuntimeError(f"{day}: {last}")
+                try:
+                    data = r.json().get("data") or []
+                except ValueError:
+                    last = "non-JSON body"
+                else:
+                    hit = [d for d in data
+                           if any(k.startswith(net_outages._DATASOURCE)
+                                  for k in (d.get("scores") or {}))]
+                    names = sorted((d.get("entity") or {}).get("name")
+                                   or (d.get("entity") or {}).get("code") or "?"
+                                   for d in hit)
+                    return len(hit), len(data), "; ".join(names)
+            else:
+                last = f"HTTP {r.status_code}"
+        if attempt < len(_BACKOFF_S):
+            wait = _BACKOFF_S[attempt]
+            print(f"  {day}: {last} — retrying in {wait}s "
+                  f"({attempt + 1}/{len(_BACKOFF_S)})")
+            time.sleep(wait)
+    raise TransportError(f"{day}: {last}")
+
+
+class TransportError(RuntimeError):
+    """The service would not answer this day, after backing off."""
 
 
 def _limit(argv):
@@ -178,6 +199,13 @@ def main(argv):
         stopped = True
         print(f"\n  interrupted after {fetched} day(s); the cache holds every one of "
               f"them and a rerun resumes from there")
+    except TransportError as e:
+        # Stop the sitting, keep everything fetched, and say so plainly. An
+        # unattended sweep must not lose four hours of work to one bad minute,
+        # and it must not paper over a service that is really down either.
+        stopped = True
+        print(f"\n  the service stopped answering ({e}) after {fetched} day(s) "
+              f"this sitting; everything fetched is cached and a rerun resumes")
 
     # A partial sweep must not write a line CSV with a hole where the rest of
     # history goes: the merge would treat the unfetched days as observations
