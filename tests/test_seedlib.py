@@ -1,0 +1,119 @@
+"""The seed merge must never edit the published record. Locked after it did.
+
+The first FRED seed deleted 26 published rows (dark days, stale republishes,
+and a date collision). These tests pin the corrected rule in tools/seedlib.py,
+plus the small pure functions added in the same repair round.
+"""
+import os
+import sys
+import unittest
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+
+import seedlib
+
+
+def _live(date, raw, obs, note="live"):
+    return {"date": date, "raw_value": raw, "obs_date": obs, "source_note": note}
+
+
+def _note(obs, value):
+    return f"import {obs}"
+
+
+class TestMerge(unittest.TestCase):
+    def test_every_published_row_survives(self):
+        live = [
+            _live("2026-07-10", "2.9", "2026-07-09"),
+            _live("2026-07-11", "", ""),                    # dark day
+            _live("2026-07-12", "2.9", "2026-07-09"),       # stale republish
+        ]
+        history = [("2026-07-01", 2.5), ("2026-07-09", 2.9)]
+        plan, dropped = seedlib.merge(history, live, _note)
+        dates = [p[0] for p in plan]
+        self.assertIn("2026-07-10", dates)
+        self.assertIn("2026-07-11", dates)  # the dark day is published record
+        self.assertIn("2026-07-12", dates)  # so is the republish
+        self.assertIn("2026-07-01", dates)  # the archive fills the deep past
+        self.assertEqual(dropped, [])
+        # The observation a live row already carries is not imported again.
+        self.assertEqual(dates.count("2026-07-09"), 0)
+
+    def test_collision_with_a_republish_yields_to_the_observation(self):
+        live = [
+            _live("2026-07-10", "2.9", "2026-07-09"),
+            _live("2026-07-11", "2.9", "2026-07-09"),  # republish ON an obs date
+        ]
+        history = [("2026-07-09", 2.9), ("2026-07-11", 3.1)]
+        plan, dropped = seedlib.merge(history, live, _note)
+        by_date = {p[0]: p for p in plan}
+        # The archive observation for 07-11 wins the date the republish held.
+        self.assertEqual(by_date["2026-07-11"][1], 3.1)
+        self.assertTrue(dropped)
+
+    def test_collision_with_a_first_occurrence_drops_the_import(self):
+        live = [_live("2026-07-11", "2.9", "2026-07-10")]
+        history = [("2026-07-11", 3.1)]
+        plan, dropped = seedlib.merge(history, live, _note)
+        by_date = {p[0]: p for p in plan}
+        self.assertEqual(by_date["2026-07-11"][1], 2.9)  # published row wins
+        self.assertTrue(dropped)                          # and the drop is loud
+
+    def test_dates_are_unique_and_ordered(self):
+        live = [_live("2026-07-10", "2.9", "2026-07-09")]
+        history = [("2026-07-0%d" % d, float(d)) for d in range(1, 9)]
+        plan, _ = seedlib.merge(history, live, _note)
+        dates = [p[0] for p in plan]
+        self.assertEqual(dates, sorted(dates))
+        self.assertEqual(len(dates), len(set(dates)))
+
+    def test_old_verdict_notes_are_stripped(self):
+        self.assertEqual(
+            seedlib.strip_verdict_notes(
+                "FRED X 2.9 [stale: observation already recorded]"),
+            "FRED X 2.9")
+        self.assertEqual(
+            seedlib.strip_verdict_notes(
+                "n=1 [suppressed: within same-weekday range [1, 2] (n=3)]"),
+            "n=1")
+
+
+class TestLegDiscipline(unittest.TestCase):
+    def test_fred_latest_common_pairs_only_shared_dates(self):
+        from core import fred
+        calls = {"SOFR": [("2026-07-29", 3.65), ("2026-07-30", 3.40)],
+                 "IORB": [("2026-07-29", 3.65)]}
+        orig = fred.series
+        fred.series = lambda sid: calls[sid]
+        try:
+            date, a, b = fred.latest_common("SOFR", "IORB")
+        finally:
+            fred.series = orig
+        # 07-30 has no IORB leg; the honest pair is 07-29, spread zero — not
+        # the post-step SOFR against the pre-step IORB.
+        self.assertEqual((date, a, b), ("2026-07-29", 3.65, 3.65))
+
+    def test_weekend_stamp_maps_to_friday(self):
+        from fetchers import fx_parallel_premium as fx
+        self.assertEqual(fx._observation_date("2026-08-01"), "2026-07-31")  # Sat
+        self.assertEqual(fx._observation_date("2026-08-02"), "2026-07-31")  # Sun
+        self.assertEqual(fx._observation_date("2026-07-31"), "2026-07-31")  # Fri
+
+    def test_weekend_leg_gap_is_recognized(self):
+        import datetime
+        from fetchers import cnh_cny
+
+        def epoch(s):
+            return int(datetime.datetime.fromisoformat(s + "+00:00").timestamp())
+        # CNH frozen Friday 20:59Z, CNY restamped Saturday 21:32Z: closure.
+        self.assertTrue(cnh_cny._weekend_gap(
+            epoch("2026-07-31T20:59:00"), epoch("2026-08-01T21:32:00")))
+        # A mid-week 6h desync is a malfunction, not a weekend.
+        self.assertFalse(cnh_cny._weekend_gap(
+            epoch("2026-07-29T10:00:00"), epoch("2026-07-29T16:00:00")))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -61,8 +61,10 @@ def fetch_daily():
 
     last = None
     for line in text.strip().splitlines():
-        parts = line.split()
-        # rows are: YYYYMMDD  day_of_year  temp_kelvin
+        # rows are: YYYYMMDD  day_of_year  temp_kelvin — whitespace-separated
+        # most years, but DMI has shipped comma-separated years (2023), so
+        # commas are normalized to spaces before splitting.
+        parts = line.replace(",", " ").split()
         if len(parts) >= 3 and parts[0].isdigit() and len(parts[0]) == 8:
             last = parts
     if last is None:
