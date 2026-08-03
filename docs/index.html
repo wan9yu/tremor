@@ -254,8 +254,8 @@ const LINES = [
     label:{en:"Chokepoint vessel transits",zh:"海上咽喉点航运量"},
     source:{en:"IMF PortWatch — 28 chokepoints",zh:"IMF PortWatch — 28 个咽喉点"},
     explain:{
-      en:"Trade economics and the littoral states keep ships flowing through each of 28 maritime chokepoints — Suez, Hormuz, Bab-el-Mandeb, the Bosporus, Malacca, Panama, the Taiwan Strait. A drop in total transits leaks a blockade, war, drought, or attack at one of them. Two honest limits: tremor records only the 28-point TOTAL, so a single strait closing moves it by a couple of percent and can be lost in the sum; and because PortWatch republishes weekly, this line rarely holds enough unique observations to score at all. Like the flights line, but for sea trade — and currently the slowest eye tremor has.",
-      zh:"贸易经济和沿岸国家让船流持续通过 28 个海上咽喉点——苏伊士、霍尔木兹、曼德海峡、博斯普鲁斯、马六甲、巴拿马、台湾海峡。总航运量骤降，就泄露其中某处的封锁、战争、干旱或袭击。两个必须说明的局限：tremor 只记录 28 点的总量，因此单独一条海峡关闭只让它动几个百分点，可能被总量淹没；而且 PortWatch 每周才更新一次，这根线很少攒够独立观测、常常根本打不出分数。像航班线，但测的是海上贸易——也是 tremor 目前最慢的一只眼。"} },
+      en:"Trade economics and the littoral states keep ships flowing through each of 28 maritime chokepoints — Suez, Hormuz, Bab-el-Mandeb, the Bosporus, Malacca, Panama, the Taiwan Strait. A drop in total transits leaks a blockade, war, drought, or attack at one of them. Two honest limits: the scored line is the 28-point TOTAL, so a single strait closing moves it only a couple of percent and can be lost in the sum — the per-strait breakdown is captured alongside precisely because the sum once hid a 95% collapse at Hormuz; and PortWatch publishes in weekly batches, so the line reads at a fixed ~10-day lag — permanently honest, permanently late. Like the flights line, but for sea trade — and the slowest eye tremor has.",
+      zh:"贸易经济和沿岸国家让船流持续通过 28 个海上咽喉点——苏伊士、霍尔木兹、曼德海峡、博斯普鲁斯、马六甲、巴拿马、台湾海峡。总航运量骤降，就泄露其中某处的封锁、战争、干旱或袭击。两个必须说明的局限：计分的是 28 点总量，单独一条海峡关闭只让它动几个百分点、可能被总量淹没——正因为这个总量曾把霍尔木兹 95% 的坍塌藏进 2% 的波动里，现在每天的分海峡明细也被同步存档；而 PortWatch 按周批量发布，这根线固定滞后约 10 天——永远诚实，也永远迟到。像航班线，但测的是海上贸易——也是 tremor 最慢的一只眼。"} },
   { id:"gnss_interference", color:"#56b6c2", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Navigation (global)",zh:"导航（全球）"},
@@ -297,6 +297,46 @@ const LINES = [
     explain:{
       en:"ISPs and states defend a country's internet connectivity as critical infrastructure. When a country goes dark, a larger force overwhelmed that — a censorship shutdown, a war, a major cable cut, a grid failure. Counting how many countries are in outage at once turns local incidents into a global breadth-of-disruption signal. Outages persist hours–days, so daily sampling is honest.",
       zh:"运营商和政府把一国的互联网连通性当作关键基础设施来守护。当一个国家陷入黑暗，就是有更大的力量压垮了它——审查式断网、战争、大型海缆断裂、电网崩溃。数有多少国家同时断网，就把局部事件变成了全球的「失序广度」信号。断网持续数小时到数天，所以日频采样是诚实的。"} },
+  { id:"euro_hy_spread", color:"#a3be8c", alarm:"up", tier:2,
+    unit:{en:"pp",zh:"个百分点"},
+    domain:{en:"European financial",zh:"欧洲金融"},
+    label:{en:"Euro HY credit spread (OAS)",zh:"欧元高收益债信用利差 (OAS)"},
+    source:{en:"FRED — ICE BofA Euro HY OAS",zh:"FRED — ICE BofA 欧元高收益债 OAS"},
+    explain:{
+      en:"The euro area's banks, the ECB, and the yield-hungry keep European high-yield spreads compressed, exactly as their US counterparts do — but the borrowers, the currency, and the guard are all different. When this spread blows out while the US line sleeps, the stress is European: an energy shock, a sovereign scare, a bank wobble. When both fire together with the EM line, that three-way resonance has marked every real credit episode in the seeded record — 2023-10, 2024-08, 2025-04, 2026-03.",
+      zh:"欧元区的银行、欧央行和追逐收益的资金把欧洲高收益利差压得很低，机制和美国同行一样——但借款人、货币和守护力都不同。当它独自飙升而美国线沉睡，压力就在欧洲：能源冲击、主权惊吓、银行动摇。当它与美国线、新兴市场线同时开火，这种三线共振在播种的历史里标出了每一次真实的信用事件——2023-10、2024-08、2025-04、2026-03。"} },
+  { id:"fx_parallel_premium", color:"#d08770", alarm:"up", tier:2,
+    unit:{en:"%",zh:"%"},
+    domain:{en:"Capital controls (Argentina)",zh:"资本管制（阿根廷）"},
+    label:{en:"Argentina blue-vs-official premium",zh:"阿根廷平行汇率溢价"},
+    source:{en:"dolarapi — blue vs oficial",zh:"dolarapi — 黑市对官方汇率"},
+    explain:{
+      en:"Argentina's central bank defends an official peso rate with reserves and capital controls; the street ('blue') rate is what people actually pay for dollars. The premium between them is the price of getting money OUT — the same mechanism as the Korea premium, but for a chronically hard-controlled currency where it runs in the tens of percent. A blowout leaks accelerating flight or a devaluation the official rate has not admitted yet.",
+      zh:"阿根廷央行用储备和资本管制守一个官方比索汇率；街头「蓝价」才是人们实际换美元付的价。两者之间的溢价，就是「把钱弄出去」的价格——机制和韩国溢价相同，但这是一个长期硬管制的货币，溢价动辄几十个百分点。溢价崩出去，泄露的是加速外逃、或官方汇率还不肯承认的贬值。"} },
+  { id:"hkma_aggr_balance", color:"#5e81ac", alarm:"down", tier:2,
+    unit:{en:"HK$m",zh:"百万港元"},
+    domain:{en:"Currency peg (Hong Kong)",zh:"联系汇率（香港）"},
+    label:{en:"HKMA aggregate balance",zh:"香港金管局总结余"},
+    source:{en:"HKMA API — interbank aggregate balance",zh:"香港金管局 API — 银行体系总结余"},
+    explain:{
+      en:"The HKMA defends the HKD peg by buying and selling dollars at the band's edges, and every defense drains or fills one visible number: the interbank aggregate balance. A draining balance IS the peg being defended — capital leaving the Hong Kong dollar at scale. The guard is explicit, the leak is a single official daily figure, and the 2022-23 defense drained it from HK$300bn+ to under HK$50bn in plain sight.",
+      zh:"香港金管局在联系汇率区间的边缘买卖美元来守 7.75–7.85 的挂钩，而每一次防守都会抽干或注满一个公开数字：银行体系总结余。总结余被抽干，就是联系汇率正在被防守——资本在成规模地离开港元。守护力是明写的，泄露口是每天一个官方数字，2022–23 年那轮防守把它从 3000 多亿抽到不足 500 亿，全程可见。"} },
+  { id:"polar_temp", color:"#88c0d0", alarm:"up", tier:2,
+    unit:{en:"°C",zh:"°C"},
+    domain:{en:"Planetary context",zh:"行星背景"},
+    label:{en:"Arctic 80N temp anomaly",zh:"北极 80N 温度距平"},
+    source:{en:"DMI +80N vs 1958-2002 normal, seeded to 2019",zh:"DMI +80N 对 1958-2002 常值，播种至 2019"},
+    explain:{
+      en:"Not a tension indicator — nobody defends the Arctic's temperature at a set point, so this can never be counted. It is the slowest context line: today's mean temperature north of 80N against the fixed 1958-2002 normal, a direct LEVEL reading of how far the planet's coldest baseline has drifted. Seeded with seven years of the same DMI product; in that record the anomaly trembles warm 384 times and cold 4 — that asymmetry is the warming itself, visible without a model.",
+      zh:"不是张力指标——没有谁把北极温度守在某个设定值上，所以它永不计数。它是最慢的背景线：80N 以北今日均温对固定的 1958-2002 气候常值，直接读出行星最冷基线漂了多远。用同一 DMI 产品播种了七年历史；这段记录里距平向暖颤动 384 次、向冷只有 4 次——这个不对称本身就是变暖，不需要模型也看得见。"} },
+  { id:"control_daylength", color:"#4c566a", alarm:"up", tier:2,
+    unit:{en:"s",zh:"秒"},
+    domain:{en:"Control (no world in it)",zh:"对照（不含世界）"},
+    label:{en:"Day length at Greenwich",zh:"格林尼治昼长"},
+    source:{en:"sunrise-sunset.org — 51.4779N, 0.0E",zh:"sunrise-sunset.org — 51.4779N, 0.0E"},
+    explain:{
+      en:"The control line: the length of the day at Greenwich, a quantity set by orbital mechanics that no event on Earth can move. It exists to test the instrument, not the world — if this line ever trembles outside its predictable seasonal inflections, the pipeline is wrong, full stop. A canary with no world in it: any signal here is measurement error by definition.",
+      zh:"对照线：格林尼治的昼长，由轨道力学决定，地球上任何事件都动不了它。它测的不是世界，而是仪器本身——如果这根线在可预测的季节拐点之外颤动，那一定是管线错了，没有第二种解释。一只体内不含世界的金丝雀：这里出现任何信号，按定义都是测量误差。"} },
 ];
 
 const T = {
