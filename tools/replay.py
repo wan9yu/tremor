@@ -38,11 +38,20 @@ import collect
 from core import normalize
 
 # Rows written on or after this date should replay exactly: it is the date of the
-# most recent change to scoring semantics (Qn + the no-RMS-fallback rule).
-# Bump it when normalize.py's verdicts change — and also when a line changes
-# TIER, because the summary audit below reconstructs the headline counts with
-# each line's CURRENT tier. Say so in annotations.csv either way.
-STABLE_SINCE = "2026-07-23"
+# most recent change to scoring semantics. Bump it when normalize.py's verdicts
+# change — and also when a line changes TIER or gains a WEEKLY_CYCLE/QUANTUM
+# attribute, because both alter what the scorer produces and the summary audit
+# reconstructs the headline counts with each line's CURRENT tier. Say so in
+# annotations.csv either way.
+#
+# 2026-08-04 — the calibration round: a per-window-size tremble threshold
+# (normalize._C_N), a scale floor for counted lines (QUANTUM), weekday
+# de-cycling replacing same-weekday baselining above DECYCLE_MIN, plus
+# port_throughput gaining the weekly flag and gdelt_tone losing it. Dated to the
+# first collection the new rules govern; everything before it is the older
+# instrument's voice and diverges by design.
+# (2026-07-23 was the previous mark: Qn + the no-RMS-fallback rule.)
+STABLE_SINCE = "2026-08-04"
 
 
 def replay_line(mod, since=None):
@@ -67,6 +76,7 @@ def replay_line(mod, since=None):
             published.get("obs_date") or "",
             rows[:i],
             weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False),
+            quantum=getattr(mod, "QUANTUM", None),
         )
         out.append((published["date"], published, replayed))
     return out

@@ -17,9 +17,13 @@ LINE = "gdelt_tone"
 LABEL = "Global news tone (GDELT)"
 UNIT = "tone"
 ANOMALY_DIRECTION = "down"
-WEEKLY_CYCLE = True  # news volume has a strong weekday rhythm: weekends carry
-# ~62k events against ~108k on weekdays, and the thinner weekend mix reads as
-# more conflict and grimmer tone. De-cycling keys off obs_date, not the row date.
+# NOT flagged as a weekly-cycle line. The volume rhythm is real — weekends carry
+# ~62k events against ~108k on weekdays — but the TONE it produces does not
+# measurably follow it: the weekday-median span is 1.61x this line's own pooled
+# scale at a permutation p of 0.58 (n=24), which is no evidence of a rhythm at
+# all. The sister line gdelt (conflict SHARE) does carry the flag, on a measured
+# effect. Flagging a rhythm that is not there costs real sensitivity, so it is
+# claimed only where it was measured.
 TIER = 2
 
 

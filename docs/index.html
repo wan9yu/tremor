@@ -38,6 +38,7 @@
   .count .label{color:var(--muted);font-size:14px}
   .count .darknote{color:#ff6b6b;font-size:13px}
   .count .calibnote{color:var(--muted);font-size:13px}
+  .count .pairnote{color:#e0a83d;font-size:13px}
   .count .q{margin-left:auto;color:var(--muted);font-size:13px;align-self:center}
   .asof{color:var(--muted);font-size:13px;margin:0 0 16px}
   .sysstatus{border-radius:10px;padding:11px 15px;margin:0 0 18px;font-size:13px;
@@ -364,6 +365,7 @@ const T = {
     annoTitle:"Recent trembles, attributed",
     notCounted:"watchlist — not counted in the resonance",
     calibNote:(n,m)=>" · "+n+" of "+m+" lines still calibrating",
+    whichNote:(names)=>" · "+names.join(" + "),
     blindNote:n=>" · "+n+(n===1?" line cannot score":" lines cannot score")+" (not the same as calm)",
     statusLabel:{"warming-up":"cannot score yet","no-spread":"no spread to judge against",
                  "stale":"republished — already recorded","dark":"NO DATA"},
@@ -409,6 +411,7 @@ const T = {
     annoTitle:"近期颤抖及归因",
     notCounted:"观察名单 — 不计入共振",
     calibNote:(n,m)=>"（"+n+"/"+m+" 根线校准中）",
+    whichNote:(names)=>" · "+names.join(" ＋ "),
     blindNote:n=>" · "+n+" 根线无法计分（这不等于平静）",
     statusLabel:{"warming-up":"尚无法计分","no-spread":"无离散度可判",
                  "stale":"重复发布 — 已记录","dark":"无数据"},
@@ -561,8 +564,18 @@ function render(){
     const n=parseInt(last.trembling_count||"0",10)||0;
     const el=document.getElementById("count-n"); el.textContent=n; el.style.color=countColor(n);
     const base = n===0?T[lang].calm:(n===1?T[lang].tremblingOne:T[lang].tremblingMany);
+    // WHICH lines, not just how many. A count of two is not one fact: measured
+    // per-line alarm rates differ by more than an order of magnitude, so a
+    // credit + airspace pair is near-certainly two independent events while a
+    // pair sharing a domain may be one event counted twice. Naming them lets a
+    // reader judge that instead of trusting the integer.
+    const firing=TIER1.filter(L=>{
+      const rows=lines[L.id]||[]; const r=rows[rows.length-1];
+      return r&&r.date===last.date&&r.trembling==="1"&&r.direction===L.alarm;
+    }).map(L=>L.label[lang]);
     document.getElementById("count-label").innerHTML =
-      base + (darkCount?`<span class="darknote">${T[lang].darkNote(darkCount)}</span>`:"")
+      base + (firing.length>1?`<span class="pairnote">${T[lang].whichNote(firing)}</span>`:"")
+           + (darkCount?`<span class="darknote">${T[lang].darkNote(darkCount)}</span>`:"")
            + (blindCount?`<span class="darknote">${T[lang].blindNote(blindCount)}</span>`:"")
            + (calibN?`<span class="calibnote">${T[lang].calibNote(calibN,TIER1.length)}</span>`:"");
     document.getElementById("asof").textContent=T[lang].asof(last.date);

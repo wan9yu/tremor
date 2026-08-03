@@ -1,4 +1,4 @@
-"""The level layer's rule, locked: pin on open, clear only against the pin.
+"""The level and drift rules, locked: pin on open, clear only against the pin.
 
 Pure logic on synthetic series — no committed data is asserted here, so this
 file may gate collection.
@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
 
+import drift_layer
 import level_layer
 
 
@@ -68,8 +69,43 @@ class TestLevelRule(unittest.TestCase):
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         for rel in ("collect.py", os.path.join("core", "normalize.py")):
             with open(os.path.join(root, rel)) as f:
-                self.assertNotIn("levels", f.read(),
-                                 f"{rel} must not know the level layer exists")
+                source = f.read()
+            for name in ("levels", "drifts"):
+                self.assertNotIn(name, source,
+                                 f"{rel} must not know the {name} layer exists")
+
+
+class TestDriftRule(unittest.TestCase):
+    """Two-sided, pinned, and slow enough that only a real step opens a state."""
+
+    def _flat(self, n, value=1.0):
+        return _series([value] * n)
+
+    def test_a_sustained_step_up_opens_and_pins(self):
+        events = drift_layer.walk(_series([1.0] * 400 + [1.8] * 80))
+        opens = [e for e in events if e[1] == "open"]
+        self.assertEqual(len(opens), 1)
+        self.assertEqual(opens[0][2], "high")
+        self.assertEqual(opens[0][4], 1.0)          # reference pinned at the old level
+        holds = [e for e in events if e[1] == "hold"]
+        self.assertTrue(all(e[4] == 1.0 for e in holds), "the pin drifted")
+
+    def test_a_sustained_step_down_opens_low(self):
+        events = drift_layer.walk(_series([1.0] * 400 + [0.5] * 80))
+        opens = [e for e in events if e[1] == "open"]
+        self.assertEqual([e[2] for e in opens], ["low"])
+
+    def test_a_three_week_excursion_does_not_open(self):
+        events = drift_layer.walk(_series([1.0] * 400 + [1.8] * 21 + [1.0] * 60))
+        self.assertEqual([e for e in events if e[1] == "open"], [])
+
+    def test_a_return_clears_the_state(self):
+        events = drift_layer.walk(_series([1.0] * 400 + [1.8] * 90 + [1.0] * 40))
+        self.assertEqual([e[1] for e in events if e[1] != "hold"], ["open", "clear"])
+
+    def test_a_series_crossing_zero_is_refused(self):
+        """A ratio to a median is meaningless there; say nothing rather than lie."""
+        self.assertEqual(drift_layer.walk(_series([-1.0, 0.0, 1.0] * 200)), [])
 
 
 if __name__ == "__main__":

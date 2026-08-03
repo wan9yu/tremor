@@ -196,6 +196,98 @@ class TestClassify(unittest.TestCase):
         self.assertEqual(N.classify(2.9), (0, "up"))
         self.assertEqual(N.classify(-3.1), (1, "down"))
 
+    def test_the_bar_is_higher_on_a_young_window(self):
+        """A ten-reading window must clear more than a ninety-reading one."""
+        self.assertEqual(N.threshold_for(N.WINDOW), N.THRESHOLD)
+        self.assertGreater(N.threshold_for(10), N.threshold_for(30))
+        self.assertGreater(N.threshold_for(30), N.threshold_for(60))
+        self.assertEqual(N.classify(3.5, n=N.WINDOW), (1, "up"))
+        self.assertEqual(N.classify(3.5, n=10), (0, "up"))
+
+    def test_the_table_never_rises_with_evidence(self):
+        thresholds = [N.threshold_for(n) for n in range(N.MIN_POINTS, N.WINDOW + 1)]
+        self.assertEqual(thresholds, sorted(thresholds, reverse=True))
+
+    def test_a_window_past_the_cap_uses_the_base_threshold(self):
+        self.assertEqual(N.threshold_for(N.WINDOW + 50), N.THRESHOLD)
+
+
+class TestQuantumFloor(unittest.TestCase):
+    """A counted line must not go silent because a calm run tied its scale."""
+
+    FLAT = [1.0] * 20
+
+    def test_a_tied_window_cannot_judge_without_a_quantum(self):
+        self.assertIsNone(N._scale_z(self.FLAT, 160.0))
+
+    def test_the_floor_lets_the_spike_be_judged(self):
+        z = N._scale_z(self.FLAT, 160.0, quantum=1)
+        self.assertIsNotNone(z)
+        self.assertGreater(z, 100)
+
+    def test_the_floor_never_widens_a_resolvable_scale(self):
+        spread = [float(v) for v in range(20)]
+        self.assertAlmostEqual(N._scale_z(spread, 40.0),
+                               N._scale_z(spread, 40.0, quantum=1))
+
+    def test_a_quantized_line_goes_scoring_not_flat(self):
+        dates = [f"2026-06-{i + 1:02d}" for i in range(20)]
+        _, _, _, _, without = N.judge(self.FLAT, dates, [""] * 20, 9.0, "", "2026-06-25")
+        _, _, _, _, with_q = N.judge(self.FLAT, dates, [""] * 20, 9.0, "", "2026-06-25",
+                                     quantum=1)
+        self.assertEqual(without, N.STATUS_FLAT)
+        self.assertEqual(with_q, N.STATUS_SCORING)
+
+
+class TestDecycling(unittest.TestCase):
+    """The weekly rhythm is removed from the window, not carved out of it."""
+
+    def _weekly_series(self, weeks=12, dip=-40.0):
+        """A flat line except every Sunday, which dips."""
+        import datetime
+        start = datetime.date(2026, 1, 5)  # a Monday
+        values, dates = [], []
+        for i in range(weeks * 7):
+            day = start + datetime.timedelta(days=i)
+            values.append(100.0 + (dip if day.weekday() == 6 else 0.0)
+                          + (i % 5) * 0.5)   # a little ordinary noise
+            dates.append(day.isoformat())
+        return values, dates
+
+    def test_a_routine_sunday_dip_is_not_a_tremble(self):
+        values, dates = self._weekly_series()
+        obs = [""] * len(values)
+        z, trembling, _, _, status = N.judge(values, dates, obs, 60.0, "", "2026-03-29",
+                                             weekly_cycle=True)
+        self.assertEqual(status, N.STATUS_SCORING)
+        self.assertEqual(trembling, 0, f"a normal Sunday trembled at z={z}")
+
+    def test_a_real_collapse_on_a_sunday_still_fires(self):
+        values, dates = self._weekly_series()
+        obs = [""] * len(values)
+        _, trembling, direction, _, _ = N.judge(values, dates, obs, 5.0, "", "2026-03-29",
+                                                weekly_cycle=True)
+        self.assertEqual((trembling, direction), (1, "down"))
+
+    def test_the_rhythm_is_not_removed_before_the_gate(self):
+        """Below DECYCLE_MIN the window is judged pooled, with the veto."""
+        values, dates = self._weekly_series(weeks=6)
+        self.assertLess(len(values), N.DECYCLE_MIN)
+        residuals, _ = N._decycled(values, dates, 60.0, "2026-02-15")
+        self.assertIsNotNone(residuals)          # the machinery works...
+        _, trembling, _, note, _ = N.judge(values, dates, [""] * len(values), 60.0, "",
+                                           "2026-02-15", weekly_cycle=True)
+        self.assertEqual(trembling, 0)           # ...but the veto is what guards here
+        self.assertIn("suppressed", note)
+
+    def test_offsets_are_measured_from_the_window(self):
+        values, dates = self._weekly_series()
+        residuals, today = N._decycled(values, dates, 60.0, "2026-03-29")
+        # Sundays sit 40 below; after de-cycling the window has no weekday step.
+        import statistics
+        self.assertLess(statistics.pstdev(residuals), 5.0)
+        self.assertAlmostEqual(today, 100.0, delta=3.0)
+
 
 if __name__ == "__main__":
     unittest.main()
