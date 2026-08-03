@@ -51,5 +51,33 @@ class TestSideChannelIsInert(unittest.TestCase):
         self.assertEqual(names, {"flights", "cnh_cny", "capital_premium"})
 
 
+class TestGateNeverReadsTheCommittedRecord(unittest.TestCase):
+    def test_no_gate_test_touches_the_data_directory(self):
+        """test_*.py files gate collection, so none may assert committed data.
+
+        A committed-data assertion in the pre-collect gate blocks every later
+        run the day an upstream source surprises it — the configuration this
+        project forbids. Record assertions belong in audit_*.py, which runs
+        after the commit. (Reading docs/data is allowed: those checks catch
+        code-caused mirror leaks, which the gate is exactly for.) This rule
+        exists because it was broken twice: the component panel test and the
+        control-line canary both sat in the gate reading data/.
+        """
+        # Built by concatenation so this file's own source stays clean under
+        # its own rule — the scan includes this file too.
+        needle = '"da' + 'ta"'
+        docs_form = '"docs", ' + needle
+        tests_dir = os.path.dirname(os.path.abspath(__file__))
+        for name in sorted(os.listdir(tests_dir)):
+            if not (name.startswith("test_") and name.endswith(".py")):
+                continue
+            with open(os.path.join(tests_dir, name)) as f:
+                src = f.read().replace(docs_form, "")
+            self.assertNotIn(
+                needle, src,
+                f"{name} references the committed data directory — move that "
+                f"assertion to an audit_*.py file, which runs after the commit")
+
+
 if __name__ == "__main__":
     unittest.main()

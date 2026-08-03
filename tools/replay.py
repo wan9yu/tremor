@@ -45,15 +45,20 @@ from core import normalize
 STABLE_SINCE = "2026-07-23"
 
 
-def replay_line(mod):
-    """[(date, published_row, replayed_row)] for one line, oldest first."""
+def replay_line(mod, since=None):
+    """[(date, published_row, replayed_row)] for one line, oldest first.
+
+    ``since`` replays only rows dated on or after it — each still judged
+    against every prior row. That is all ``--check`` needs, and it keeps the
+    daily audit a tail check instead of an O(n^2) full-record pass now that
+    seeded lines run to thousands of rows.
+    """
     path = os.path.join(collect.DATA, mod.LINE + ".csv")
-    if not os.path.exists(path):
-        return []
-    with open(path, newline="") as f:
-        rows = list(csv.DictReader(f))
+    rows = collect._read_rows(path)
     out = []
     for i, published in enumerate(rows):
+        if since and published["date"] < since:
+            continue
         raw = published.get("raw_value")
         replayed = collect.score_row(
             published["date"],
@@ -85,7 +90,10 @@ def main(argv):
     tier1_status = {}  # date -> [replayed status of each tier-1 row that day]
 
     for mod in collect.LINES:
-        rows = replay_line(mod)
+        # --check needs only the rows its failure condition inspects; the full
+        # replay (and the all-time headline comparison below) is the
+        # informational report of the no-flag run.
+        rows = replay_line(mod, since=STABLE_SINCE if check else None)
         if not rows:
             continue
         bad = [(d, p, r) for d, p, r in rows if _differs(p, r)]
@@ -112,19 +120,24 @@ def main(argv):
         print(f"{line:22} {n:>6} {bad:>8} {recent:>18}{flag}")
     print(f"{'TOTAL':22} {total:>6} {diverged:>8} {recent_diverged:>18}")
 
-    with open(os.path.join(collect.DATA, "summary.csv"), newline="") as f:
+    summary_rows = collect._read_rows(os.path.join(collect.DATA, "summary.csv"))
+
+    # The all-time headline comparison only means something when all time was
+    # replayed; in --check mode the replay starts at STABLE_SINCE and the strict
+    # audit below covers those days three-counts-deep.
+    if not check:
         published = {r["date"]: int(r["trembling_count"] or 0)
-                     for r in csv.DictReader(f)}
-    disagree = [d for d in sorted(published)
-                if published[d] != len(counts_now.get(d, []))]
-    print(f"\nheadline: published reported a tremble on "
-          f"{sorted(d for d in published if published[d] > 0)}")
-    print(f"          today's rules give {sorted(counts_now)}")
-    if disagree:
-        print(f"          they disagree on {len(disagree)} of {len(published)} days: {disagree}")
-        for d in disagree:
-            print(f"            {d}: published {published[d]}, "
-                  f"now {len(counts_now.get(d, []))} {counts_now.get(d, [])}")
+                     for r in summary_rows}
+        disagree = [d for d in sorted(published)
+                    if published[d] != len(counts_now.get(d, []))]
+        print(f"\nheadline: published reported a tremble on "
+              f"{sorted(d for d in published if published[d] > 0)}")
+        print(f"          today's rules give {sorted(counts_now)}")
+        if disagree:
+            print(f"          they disagree on {len(disagree)} of {len(published)} days: {disagree}")
+            for d in disagree:
+                print(f"            {d}: published {published[d]}, "
+                      f"now {len(counts_now.get(d, []))} {counts_now.get(d, [])}")
 
     # The summary is a derived record too, and until now nothing ever re-derived
     # it: per-row verdicts replayed while the headline counts — the one number
@@ -132,20 +145,19 @@ def main(argv):
     # counts from the replayed tier-1 rows and hold the summary to them, on the
     # same since-STABLE_SINCE terms as the rows themselves.
     summary_bad = []
-    with open(os.path.join(collect.DATA, "summary.csv"), newline="") as f:
-        for row in csv.DictReader(f):
-            date = row["date"]
-            if date < STABLE_SINCE:
-                continue
-            statuses = tier1_status.get(date, [])
-            derived = {
-                "trembling_count": len(counts_now.get(date, [])),
-                "dark_count": sum(s == normalize.STATUS_DARK for s in statuses),
-                "blind_count": sum(s in normalize.BLIND_STATUSES for s in statuses),
-            }
-            stored = {k: int(row.get(k) or 0) for k in derived}
-            if stored != derived:
-                summary_bad.append((date, stored, derived))
+    for row in summary_rows:
+        date = row["date"]
+        if date < STABLE_SINCE:
+            continue
+        statuses = tier1_status.get(date, [])
+        derived = {
+            "trembling_count": len(counts_now.get(date, [])),
+            "dark_count": sum(s == normalize.STATUS_DARK for s in statuses),
+            "blind_count": sum(s in normalize.BLIND_STATUSES for s in statuses),
+        }
+        stored = {k: int(row.get(k) or 0) for k in derived}
+        if stored != derived:
+            summary_bad.append((date, stored, derived))
     if summary_bad:
         print(f"\nsummary does not re-derive on {len(summary_bad)} day(s) since {STABLE_SINCE}:")
         for date, stored, derived in summary_bad:

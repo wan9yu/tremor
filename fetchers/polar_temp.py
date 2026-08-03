@@ -37,6 +37,32 @@ _URL = "https://download.dmi.dk/pub/plus80N_temperatureindex/meanT{year}_running
 _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
 
 
+def parse_rows(text):
+    """[(obs_date, day_of_year, temp_kelvin)] from one DMI per-year file.
+
+    Rows are ``YYYYMMDD day-of-year kelvin`` — whitespace-separated most
+    years, but DMI has shipped comma-separated years (2023), so commas are
+    normalized to spaces before splitting. The seeder parses whole archive
+    years through this same function, which is what makes its "identical to
+    the live fetcher" claim true by construction rather than by copy-paste.
+    """
+    out = []
+    for line in text.strip().splitlines():
+        parts = line.replace(",", " ").split()
+        if len(parts) >= 3 and parts[0].isdigit() and len(parts[0]) == 8:
+            try:
+                obs = datetime.strptime(parts[0], "%Y%m%d").strftime("%Y-%m-%d")
+                out.append((obs, int(parts[1]), float(parts[2])))
+            except ValueError:
+                continue
+    return out
+
+
+def anomaly_c(doy, temp_k):
+    """The recorded value: kelvin reading minus the 1958-2002 normal, in °C."""
+    return round(temp_k - arctic_clim.normal_k(doy), 3)
+
+
 def fetch_daily():
     """Return {"raw_value": float | None, "source_note": str, "obs_date": str}.
 
@@ -59,27 +85,14 @@ def fetch_daily():
     if text is None:
         return {"raw_value": None, "source_note": "DMI +80N file unavailable"}
 
-    last = None
-    for line in text.strip().splitlines():
-        # rows are: YYYYMMDD  day_of_year  temp_kelvin — whitespace-separated
-        # most years, but DMI has shipped comma-separated years (2023), so
-        # commas are normalized to spaces before splitting.
-        parts = line.replace(",", " ").split()
-        if len(parts) >= 3 and parts[0].isdigit() and len(parts[0]) == 8:
-            last = parts
-    if last is None:
+    rows = parse_rows(text)
+    if not rows:
         return {"raw_value": None, "source_note": "DMI +80N file had no data rows"}
 
-    try:
-        obs_date = datetime.strptime(last[0], "%Y%m%d").strftime("%Y-%m-%d")
-        doy = int(last[1])
-        temp_k = float(last[2])
-    except (ValueError, IndexError):
-        return {"raw_value": None, "source_note": "DMI +80N row unparseable"}
-
-    anomaly = temp_k - arctic_clim.normal_k(doy)
+    obs_date, doy, temp_k = rows[-1]
+    anomaly = anomaly_c(doy, temp_k)
     return {
-        "raw_value": round(anomaly, 3),
+        "raw_value": anomaly,
         "source_note": (f"DMI +80N {obs_date}: {temp_k - 273.15:.2f}°C, "
                         f"{anomaly:+.2f}°C vs 1958-2002 normal (context line, never counted)"),
         "obs_date": obs_date,

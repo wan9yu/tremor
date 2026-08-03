@@ -1,10 +1,9 @@
 """One-off: seed gnss_interference from GPSJam's published daily files.
 
 GPSJam publishes one static CSV per day back to 2022-07-27 — the same files
-the daily fetcher reads, aggregated by exactly the same arithmetic (sum the
-good and bad aircraft counts over every h3 cell, take the bad share), so the
-seeded values are bit-identical to what the live fetcher would have recorded
-on those days.
+the daily fetcher reads, aggregated through the FETCHER'S OWN
+``counts_from_csv``, so the seeded values are identical to what the live
+fetcher would have recorded by construction, not by copy-paste.
 
 The sampling frame is not constant — tracked-aircraft counts grew severalfold
 over the period — but the RATIO is what the line scores, and re-deriving the
@@ -14,10 +13,11 @@ it. That measurement is what makes this seed honest; a count would not have
 survived it.
 
 POLITENESS: ~1,470 requests of ~190KB against a personal static site, paced
-1.5s apart (~40 minutes). Parsed ratios are cached incrementally, so a rerun
-resumes instead of refetching. A 404 is recorded as a day the source does not
-serve; any other failure retries once and then ABORTS the run — a seed must
-not quietly write a series with a transport-shaped hole in it.
+1.5s apart (~40 minutes). Parsed counts are cached incrementally (the cache
+doubles as provenance: the bad/total the ratio destroys), so a rerun resumes
+instead of refetching. A 404 is recorded as a day the source does not serve;
+any other failure retries once and then ABORTS the run — a seed must not
+quietly write a series with a transport-shaped hole in it.
 
     python tools/seed_gnss.py            # fetch (resumable), merge, write
     python tools/seed_gnss.py --dry-run  # fetch/cache only, write nothing
@@ -38,8 +38,7 @@ from fetchers import gnss
 
 FIRST_DAY = datetime.date(2022, 7, 27)
 _PAUSE_S = 1.5
-_CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                      "data", "archive", "gnss_seed_fetch.csv")
+_CACHE = os.path.join(collect.DATA, "archive", "gnss_seed_fetch.csv")
 
 
 def _load_cache():
@@ -64,51 +63,33 @@ def day_counts(day):
     Raises RuntimeError after a retry on any transport-level failure.
     """
     url = gnss._URL.format(date=day)
+    last_error = None
     for attempt in (1, 2):
         try:
             r = requests.get(url, headers=gnss._HEADERS, timeout=30)
         except requests.RequestException as e:
-            if attempt == 2:
-                raise RuntimeError(f"{day}: {type(e).__name__}")
+            last_error = f"{day}: {type(e).__name__}"
+        else:
+            if r.status_code == 404:
+                return None, None
+            if r.status_code == 200:
+                return gnss.counts_from_csv(r.text)
+            last_error = f"{day}: HTTP {r.status_code}"
+        if attempt == 1:
             time.sleep(10)
-            continue
-        if r.status_code == 404:
-            return None, None
-        if r.status_code != 200:
-            if attempt == 2:
-                raise RuntimeError(f"{day}: HTTP {r.status_code}")
-            time.sleep(10)
-            continue
-        good = bad = 0
-        for row in r.text.strip().splitlines()[1:]:
-            cols = row.split(",")
-            if len(cols) >= 3:
-                try:
-                    good += int(cols[1])
-                    bad += int(cols[2])
-                except ValueError:
-                    continue
-        return bad, good + bad
-    return None, None
+    raise RuntimeError(last_error)
 
 
 def main(argv):
     dry = "--dry-run" in argv
     cache = _load_cache()
-    last_live_obs = None
-    path = os.path.join(collect.DATA, gnss.LINE + ".csv")
-    live = []
-    if os.path.exists(path):
-        with open(path, newline="") as f:
-            live = list(csv.DictReader(f))
-        obs_seen = [r["obs_date"] for r in live if r.get("obs_date")]
-        last_live_obs = max(obs_seen) if obs_seen else None
+    live = seedlib.read_line(gnss.LINE)
 
-    # Fetch up to the day before the live record began observing; the live rows
-    # carry everything after that.
-    end = datetime.date.fromisoformat(min(r["obs_date"] for r in live
-                                          if r.get("obs_date"))) if last_live_obs \
-        else datetime.date.today()
+    # Fetch up to the day before the live record began observing; the live
+    # rows carry everything after that.
+    obs_seen = [r["obs_date"] for r in live if r.get("obs_date")]
+    end = (datetime.date.fromisoformat(min(obs_seen)) if obs_seen
+           else datetime.date.today())
     wanted = []
     day = FIRST_DAY
     while day < end:
@@ -129,35 +110,26 @@ def main(argv):
             print(f"  {d} ({i}/{len(todo)})")
         time.sleep(_PAUSE_S)
 
-    history, absent = [], []
+    history, absent, counts = [], [], {}
     for d in wanted:
         r = cache[d]
         if r["total"] in ("", "0"):
             absent.append(d)
             continue
         bad, total = int(r["bad"]), int(r["total"])
+        counts[d] = (bad, total)
         history.append((d, round(bad / total * 100.0, 4)))
     print(f"fetched: {len(history)} observations, {len(absent)} days not served"
           + (f" ({absent[:5]}{'...' if len(absent) > 5 else ''})" if absent else ""))
     if dry:
         return 0
 
-    counts = {d: (int(cache[d]["bad"]), int(cache[d]["total"])) for d, _ in history}
-
     def import_note(obs, value):
         bad, total = counts[obs]
         return (f"GPSJam {obs}: {bad}/{total} aircraft with bad GPS"
                 + seedlib.IMPORT_MARK)
 
-    plan, dropped = seedlib.merge(history, live, import_note)
-    for d in dropped:
-        print(f"  note: {d}")
-    seedlib.archive_current(gnss.LINE, "preseed")
-    out = seedlib.score_series(plan)
-    collect.write_line(gnss.LINE, out)
-    print(f"-> {len(out)} rows, {sum(1 for r in out if r['z_score'])} scored, "
-          f"{sum(int(r['trembling']) for r in out)} trembles, "
-          f"last status={out[-1]['status']}")
+    seedlib.run_seed(gnss, history, import_note)
     return 0
 
 

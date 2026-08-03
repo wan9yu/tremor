@@ -15,21 +15,29 @@ collecting.
 The filename deliberately does not match test_*.py, so the pre-collect gate
 (``python -m unittest discover tests``) skips this file; CI runs it explicitly
 with ``python -m unittest discover tests -p "audit_*.py"``.
+
+Replay of the committed record is NOT here: ``tools/replay.py --check`` is that
+audit's single owner (the workflow step before this one), and it checks a
+superset of what a duplicate test could — per-row drift AND the summary
+re-derivation. One owner, one O(n^2) replay per day.
 """
 import csv
+import datetime
 import os
 import sys
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-sys.path.insert(0, os.path.join(ROOT, "tools"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import replay
+import test_control  # the astronomy lives with the control line's logic tests
+from fetchers import control_daylength as control
 
 # Dates on which the source itself served an incomplete panel, with the missing
 # straits named. An entry here is a human acknowledgement: the shortfall was
-# investigated and found to be the source's, not a lost page of ours. A NEW
+# investigated and found to be the source's, not a lost page of ours (and each
+# entry must have a matching annotations.csv row saying what was found). A NEW
 # short date fails the audit until someone looks and either fixes the capture
 # or acknowledges it here.
 #
@@ -40,18 +48,6 @@ import replay
 ACKNOWLEDGED_SHORT = {
     "2026-07-24": {"Strait of Hormuz"},
 }
-
-
-class TestReplayOfTheLiveRecord(unittest.TestCase):
-    def test_the_live_record_replays_since_the_declared_stable_date(self):
-        """No drift between the collector and the scorer on any committed row."""
-        import collect
-        drifted = []
-        for mod in collect.LINES:
-            for date, published, replayed in replay.replay_line(mod):
-                if date >= replay.STABLE_SINCE and replay._differs(published, replayed):
-                    drifted.append((mod.LINE, date))
-        self.assertEqual(drifted, [], f"rows since {replay.STABLE_SINCE} do not replay")
 
 
 class TestChokepointComponents(unittest.TestCase):
@@ -101,6 +97,65 @@ class TestChokepointComponents(unittest.TestCase):
                 f"{date}: panel is missing {sorted(missing)} — either the "
                 f"source dropped a strait or a page was lost; investigate, "
                 f"then fix the capture or acknowledge it in this file")
+
+
+class TestControlLineRecord(unittest.TestCase):
+    """The control line's committed rows, verified against astronomy.
+
+    Moved here from test_control.py: a canary tripping is exactly when
+    collection must keep running and the alarm must fire, so these cannot sit
+    in the pre-collect gate. The astronomy itself (and the canary's
+    sensitivity proofs) stay with the logic tests.
+    """
+
+    def _rows(self):
+        import collect
+        rows = [r for r in collect._read_rows(
+                    os.path.join(ROOT, "data", "control_daylength.csv"))
+                if r["raw_value"]]
+        if not rows:
+            self.skipTest("control line has no data yet")
+        return rows
+
+    def test_every_row_matches_the_astronomy_for_the_day_it_claims(self):
+        """The canary, at a tolerance that can actually catch a one-day slip.
+
+        Rows carrying obs_date are checked to within a minute; rows written
+        before obs_date was recorded fall back to the row date at a loose
+        tolerance, and are honestly weaker.
+        """
+        for r in self._rows():
+            if r.get("obs_date"):
+                day, tol, which = datetime.date.fromisoformat(r["obs_date"]), 0.017, "obs_date"
+            else:
+                day, tol, which = datetime.date.fromisoformat(r["date"]), 0.25, "row date (no obs_date)"
+            expected = test_control.astronomical_day_length_h(control.LAT, day)
+            actual = float(r["raw_value"]) / 3600.0
+            self.assertLess(
+                abs(actual - expected), tol,
+                f"{r['date']}: recorded {actual:.4f}h but its {which} {day} implies "
+                f"{expected:.4f}h — the pipeline mishandled a date")
+
+    def test_the_row_describes_a_day_close_to_when_it_was_collected(self):
+        """obs_date must track the collection date; a drift means a stuck fetch."""
+        for r in self._rows():
+            if not r.get("obs_date"):
+                continue
+            gap = (datetime.date.fromisoformat(r["date"])
+                   - datetime.date.fromisoformat(r["obs_date"])).days
+            self.assertIn(gap, (0, 1),
+                          f"{r['date']}: describes {r['obs_date']}, {gap} days adrift")
+
+    def test_consecutive_rows_move_by_a_physically_possible_amount(self):
+        """Catches a row overwritten by a run from a different day."""
+        rows = self._rows()
+        for prev, cur in zip(rows, rows[1:]):
+            days = (datetime.date.fromisoformat(cur["date"])
+                    - datetime.date.fromisoformat(prev["date"])).days
+            jump = abs(float(cur["raw_value"]) - float(prev["raw_value"])) / 3600.0
+            # This latitude gains/loses at most ~4.5 min a day, even at equinox.
+            self.assertLess(jump, 0.1 * max(days, 1) + 0.05,
+                            f"{prev['date']} -> {cur['date']}: {jump:.3f}h in {days} day(s)")
 
 
 if __name__ == "__main__":
