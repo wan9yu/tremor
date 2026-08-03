@@ -25,6 +25,11 @@ LABEL = "SOFR − IORB spread (bps)"
 UNIT = "bps"
 ANOMALY_DIRECTION = "up"
 TIER = 2
+QUANTUM = 1  # basis points: both legs are published to 0.01%, so 1bp is the
+# resolution of the difference. This line is the sharpest case for the floor —
+# SOFR is currently pegged exactly at IORB and its last prints are 0bp, so the
+# scale is on course to collapse within weeks; after that a 25bp repo squeeze,
+# the entire event this line exists to catch, would score nothing at all.
 
 
 def fetch_daily():

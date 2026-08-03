@@ -32,6 +32,15 @@ TIER = 1  # promoted round 7 into the slot gnss_interference vacated. PROVISIONA
 # covers, but v2 has only a handful of scored readings and does NOT meet the
 # 60-reading promotion bar. Reviewed at 60; the status column reports its
 # blindness on the page meanwhile.
+QUANTUM = 1  # countries: a count, and the resolution of the reading is one of them.
+# Without this floor the line goes SILENT exactly when it matters. Its readings
+# are small integers (the record holds 0..6, median 3), and the robust scale
+# collapses to zero once about a quarter of the window's pairs tie — measured,
+# twelve consecutive days of "1 country" is enough. The day after such a run, a
+# 160-country mass outage scores z=None: no verdict, no flag, on a tier-1 line.
+# Flooring the scale at one country says the honest thing — a window of
+# identical counts has spread finer than the instrument can see, not zero
+# spread. It has never bound on the real record (smallest Qn used: 1.610).
 
 _URL = "https://api.ioda.inetintel.cc.gatech.edu/v2/outages/summary"
 _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}

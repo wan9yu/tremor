@@ -18,6 +18,14 @@ LABEL = "Global port calls (PortWatch)"
 UNIT = "port calls"
 ANOMALY_DIRECTION = "down"
 TIER = 2
+# Cargo breathes with the week: measured over 211 observations, Sundays run 8.0%
+# below the line's level and Mondays 7.2% above — a span of 2.50x its own pooled
+# scale at a permutation p of 0.0001, the strongest weekly rhythm in the repo.
+# Left unremoved it biased every verdict by which weekday the observation fell
+# on (mean z from +1.52 on Mondays to -1.18 on Sundays) and it was MASKING real
+# alarm-direction days: the July 2026 dip reads as one tremble pooled and three
+# consecutive ones once the rhythm is removed.
+WEEKLY_CYCLE = True
 
 # Named here so the archive seeder in tools/ addresses exactly the same service,
 # field and note prefix the daily fetch does.

@@ -62,11 +62,13 @@ jobs:
       # level layer is DERIVED (recomputed in full from the component record)
       # and the charts are presentation — a bug in either is worth an alarm,
       # never worth a lost day.
-      - name: Derive levels, render charts, commit both
+      - name: Derive levels and drifts, render charts, commit
         run: |
           python tools/level_layer.py
+          python tools/drift_layer.py
           python render.py
-          tools/ci_push.sh "derived: $(TZ=Asia/Shanghai date +%F)" charts/ data/levels.csv
+          tools/ci_push.sh "derived: $(TZ=Asia/Shanghai date +%F)" \
+            charts/ data/levels.csv data/drifts.csv
 
       # VERIFY AFTER COMMITTING, NEVER BEFORE. Several lines are live snapshots
       # with no archive to re-fetch from, so a gate that fails before the commit

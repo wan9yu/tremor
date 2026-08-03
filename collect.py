@@ -18,7 +18,10 @@ Fetcher contract — each module in ``fetchers/`` provides:
   - module attrs: ``LINE``, ``LABEL``, ``UNIT``, ``ANOMALY_DIRECTION``
     ("up"/"down" — the alarm direction; only trembles in this direction feed
     trembling_count), optional ``TIER`` (default 1), optional ``WEEKLY_CYCLE``
-    (True for lines with a weekday rhythm, e.g. flights).
+    (True for lines with a weekday rhythm, e.g. flights), optional ``QUANTUM``
+    (the measurement resolution of a COUNTED reading — one country, one basis
+    point — which floors the robust scale so a calm stretch of identical
+    integers cannot leave the line unable to judge the spike that follows).
 
 Two tiers (each fetcher sets ``TIER``; absent means 1):
   - TIER 1 — primary instruments: displayed, and counted in the trembling
@@ -132,7 +135,8 @@ def _fmt(value):
     return str(value)
 
 
-def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False):
+def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False,
+              quantum=None):
     """Judge one reading against ``prior_rows`` and return the CSV row for it.
 
     The ONLY place a line row is built. The daily collector and the archive
@@ -151,7 +155,7 @@ def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False):
     history, hist_dates, hist_obs = _history(prior_rows, date)
     z, trembling, direction, verdict_note, status = normalize.judge(
         history, hist_dates, hist_obs, raw, obs_date, date,
-        weekly_cycle=weekly_cycle,
+        weekly_cycle=weekly_cycle, quantum=quantum,
     )
     if verdict_note:
         note += f" {verdict_note}"
@@ -238,7 +242,8 @@ def collect():
         primary = tier == 1
 
         row = score_row(today, raw, note, obs_date, rows,
-                        weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False))
+                        weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False),
+                        quantum=getattr(mod, "QUANTUM", None))
         status = row["status"]
         trembling = int(row["trembling"])
         # Only tier-1 instruments count, and only trembles in the line's declared

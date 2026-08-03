@@ -94,11 +94,17 @@ Written down because they are structural, not bugs, and a reader deserves them u
    becoming the baseline. It currently holds one state open: Hormuz since 2026-04-06, at
    ~14% of its pinned 72/day. Diagnostic, unscored, uncounted — but the level question now
    has a written answer instead of a shrug.
-2. **|z| > 3 is not a 1-in-300 event at the window sizes tremor runs on.** Measured null
-   exceedance on iid Gaussian data with the current estimator: **2.7% at n=10, 1.2% at
-   n=20, 0.36% at n=90.** (Under the MAD scale used before round 7 it was 5.3% / 2.1% /
-   0.56%.) Short-window lines are therefore expected to tremble occasionally with nothing
-   happening; that is why attribution is mandatory and why tier-2 exists.
+2. **The tremble bar is not one number — it depends on how much evidence built the
+   verdict.** A robust z measures today against an ESTIMATED median in units of an
+   ESTIMATED scale, and estimates from ten readings wobble in a way estimates from ninety
+   do not: the flat |z|>3 rule fired on a calm day 2.62% of the time at n=10 and 0.391% at
+   n=90, a 6.7x spread, with both regimes live on this record at once. Since round 10 the
+   bar is a calibrated table (`normalize._C_N`, from `tools/calibrate_threshold.py`):
+   **c(10)=4.686, c(20)=3.557, c(30)=3.291, c(60)=3.062, c(90)=3.000**, set so every line
+   at every age has the same **0.3916%** odds of a false tremble on a calm day — the odds a
+   full window always had, so nothing about a mature line changes. Short-window lines are
+   no longer expected to tremble more often than old ones; attribution stays mandatory
+   anyway.
    **Measured on REAL data** (2026-08-02, from the 787-row FRED seeds): |z|>3 fires on
    **5.5–8.5% of days** for real credit series — fat tails, autocorrelation and trend that
    no iid simulation carries. The firing days are not scattered: they cluster inside four
@@ -106,9 +112,16 @@ Written down because they are structural, not bugs, and a reader deserves them u
    agree on the dates, which is event detection with fat-tailed inputs, not a broken rule.
    Any claim of the form "this line trembles X% of the time" must be read against 6–8%,
    not 0.3%.
-3. **Tremble COUNTS are day counts, not episode counts.** A line with high autocorrelation
-   records one event as several trembling days. Rate comparisons across lines are
-   correspondingly rough.
+3. **Tremble COUNTS are day counts, not episode counts, and on the slow lines the gap is
+   about eightfold.** Measured raw lag-1 autocorrelation: 0.986 (credit_spread), 0.993
+   (em_corp_oas), 0.992 (euro_hy_spread), 0.964 (polar_temp), 0.892 (vix, gnss) — at which
+   a 90-observation baseline carries roughly **one and a half independent readings**. One
+   event prints as a run: credit_spread's 66 alarm days are **8 episodes** in 3.01 years,
+   em_corp_oas' 48 are 7, polar_temp's 384 are 34. `tools/episodes.py` reports both, and a
+   per-day rate must not be quoted for these lines without the episode count beside it.
+   The young tier-1 roster is close enough to exchangeable (lag-1 0.07-0.33) that the iid
+   null is still honest for the headline — which stops being true the day a second
+   credit-like line is promoted.
 4. **Below ~60 scored readings a per-line tremble rate cannot be adjudicated.** The
    confidence interval is wider than the difference being argued about. Radar rounds
    should say so rather than rule on n≈20.
@@ -736,3 +749,97 @@ wrong) is the next radar round's question, and it must be answered against the
 ≥60-reading bar, not in a bookkeeping entry. `net_outages`' Qn-collapse exposure (47%
 of the tied pairs needed for a zero scale, on a line whose real spike would then score
 z=None) belongs to the same review.
+
+> **RETRACTED IN ROUND 10.** The ceiling claim above is false, and it repeated the
+> tiny-sample error this round had just caught elsewhere: +211 pips and 8.3 countries
+> were computed against 41 and 25 observations. Measured properly, the headline reaches
+> 2 about **1.9 days a year** at the lines' own replayed alarm rates, and the record
+> shows no 2 because ≥2 tier-1 lines were simultaneously SCORING on only 33 of 800
+> replayed days. The Qn-collapse exposure was real and is now fixed (`QUANTUM`). See
+> round 10.
+
+
+### Round 10 — 2026-08-04 (the calibration round: the bar, the floor, the rhythm, the drift)
+
+A statistical audit of the scoring machinery against the seeded records — the first time
+these questions could be MEASURED rather than argued. Four scoring changes ship together
+under one **STABLE_SINCE = 2026-08-04**; two reporting changes and one new derived layer
+ship alongside without touching a verdict. Full replay: **631 trembles become 619**, the
+headline changes on no day, both adjudicated artifacts in the record are suppressed, and
+every real credit episode survives.
+
+**The bar now depends on the evidence.** See Known limit 2 — `_C_N`, calibrated so a calm
+day has the same 0.3916% odds of a false tremble at any window size. The one thing it must
+not be sold as fixing is the excess tremble rate on the slow lines: that is ~two-thirds
+serial dependence (an AR(1) null at credit's own lag-1 of 0.987 already gives ~4.7%), and
+c(n) removes exactly 1 of credit_spread's 66 trembles.
+
+**A counted line gets a scale floor.** Qn collapses to zero once about a quarter of a
+window's pairs tie — on a small-integer line the certain outcome of any calm stretch.
+Verified against the real file: twelve consecutive days of "1 country" is enough, after
+which a **160-country mass outage on tier-1 `net_outages` scores z=None**. `QUANTUM=1`
+(one country, one basis point) floors the scale for `net_outages` and `sofr_iorb_spread`.
+It has never bound on the record (smallest Qn used: 1.610), so it flips no published
+verdict — it only prevents the future silence.
+
+**The weekly rhythm is removed from the window, not carved out of it.** Same-weekday
+baselining left ~26 readings permanently, the instrument's highest false-alarm regime,
+locked in on a headline line. Above `DECYCLE_MIN = 70` observations each weekday's own
+level is measured from the window and subtracted, and the day is judged against the whole
+de-cycled window: measured false-alarm rate over flights' coming year 2.30-2.67% → 1.10-
+1.20%, with 5-9 points more power on a real four-sigma collapse and the same weekend-dip
+suppression the mechanism exists for. The gate is 70 because de-cycling a thin window eats
+the spread it should preserve (18% false-alarm rate at three readings per weekday).
+
+**Two weekly flags corrected.** `port_throughput` gains one — Sundays 8.0% light, Mondays
+7.2% heavy, span 2.50x its own scale at permutation p=0.0001 over 211 observations, and
+the rhythm was MASKING alarm-direction days inside the July 2026 Hormuz window (it reads
+one tremble pooled, four de-cycled). `gdelt_tone` loses one: the volume rhythm is real but
+the TONE does not follow it (span 1.61x, p=0.58), and claiming a rhythm that is not there
+costs sensitivity.
+
+**Episodes, not days** (`tools/episodes.py`) — Known limit 3. No rule changes; the
+vocabulary does.
+
+**The drift layer** (`tools/drift_layer.py` → `data/drifts.csv`): a two-sided clone of the
+level layer for the third shape — a whole line's level moving and staying moved. A line is
+DRIFTED when its two-week median has run ≥1.5x above (or ≤2/3 below) its own year-ago
+median for 28 straight days, reference pinned at the open, clearing within 20% of the pin.
+Over 3,882 judged line-days the entire record opens **exactly one state**: gnss 2023-07-09
+to 2023-11-19, the real jamming escalation, at +38 days. Zero false states. Robust CUSUM
+was tested and disqualified (21-216 alarms per line). Declared blind: undefined on a
+series crossing zero, and blind to a ratchet slow enough for the trailing reference to
+absorb.
+
+**Yearly medians**, the one view that sees the drifts a ratio rule provably cannot (the
+Arctic anomaly is an interval scale; gnss's post-2023 creep is absorbed by any trailing
+reference):
+
+| line | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| credit_spread | — | — | — | — | 3.905 | 3.17 | 2.94 | 2.8 |
+| em_corp_oas | — | — | — | — | 2.595 | 1.9 | 1.64 | 1.49 |
+| euro_hy_spread | — | — | — | — | 4.41 | 3.45 | 2.96 | 2.65 |
+| vix | — | — | — | — | — | — | 16.92 | 17.965 |
+| gnss_interference | — | — | — | 0.2289 | 0.2937 | 0.3892 | 0.36875 | 0.4185 |
+| polar_temp | 2.233 | 3.205 | 2.213 | 2.478 | 2.3265 | 2.5115 | 3.276 | 2.6655 |
+| chokepoint_breadth | — | — | — | — | — | — | — | 1897 |
+| port_throughput | — | — | — | — | — | — | — | 4862 |
+
+Read the gnss row: 0.229 → 0.294 → 0.389 → 0.369 → 0.419. The credit rows show the mirror
+image — a four-year compression from 3.905 to 2.8 with no episode to point at. Neither
+motion is visible to any single day's z.
+
+**The resonance ceiling claim of round 9 is retracted** — see the note inline above. The
+headline reaches 2 about 1.9 days a year at the lines' own measured rates; the record has
+none because ≥2 tier-1 lines were simultaneously scoring on only 33 of 800 replayed days.
+What survives is that the PAIR matters more than the count: `cnh_cny` and `net_outages`
+sit at their calm nulls, so a double involving either is near-certainly signal (all-null
+P(count≥2) = 0.0076%/day, once in 36 years), while `flights` is the headline's dominant
+noise source. The dashboard now names which lines are firing whenever the count exceeds 1.
+
+**Still open after this round:** the tier-1 composition question itself (a promotion review
+at the ≥60-reading bar, now that `net_outages` can no longer go silent and has a seed
+landing); a `flights` feed-dropout dark-guard, which the audit measured as the fix for its
+remaining artifact alarm; and whether `MAX_AGE_DAYS = 180` still binds correctly now that
+de-cycling shortens the effective baseline span.
