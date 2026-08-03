@@ -161,7 +161,7 @@ def write_line(line, rows):
 
 
 def write_components(line, date, components):
-    """Append today's breakdown to ``data/components/<line>.csv``.
+    """Append one day's breakdown to ``data/components/<line>.csv`` under ``date``.
 
     THE SCALAR IS NOT WHAT WE FETCHED. Every day this instrument downloads 28
     straits, twelve provider counts, tens of thousands of grid cells — and writes
@@ -212,6 +212,13 @@ def collect():
         except Exception as e:  # one bad source must never abort the whole run
             result = {"raw_value": None,
                       "source_note": f"fetcher crashed: {type(e).__name__}"}
+        # The same rule covers a fetcher that RETURNS garbage instead of raising:
+        # reading a malformed shape outside this guard would abort the run and
+        # cost every line its day, not just the broken one.
+        if not isinstance(result, dict) or "raw_value" not in result \
+                or "source_note" not in result:
+            result = {"raw_value": None,
+                      "source_note": "fetcher returned a malformed result"}
         raw = result["raw_value"]
         note = f"{result['source_note']} [sampled {sampled}]"
         obs_date = result.get("obs_date") or ""
@@ -237,7 +244,12 @@ def collect():
                 blind_count += 1
 
         _write_rows(path, LINE_HEADER, _upsert(rows, row, today))
-        write_components(mod.LINE, today, result.get("components"))
+        # Components are keyed by the OBSERVATION date when the line declares
+        # one: for a lagged source the breakdown describes the day the transits
+        # happened, not the day we asked. Keying by collection date left the
+        # chokepoint file with two date axes ten days apart at the backfill/live
+        # seam. Snapshot lines have no obs_date and keep the collection date.
+        write_components(mod.LINE, obs_date or today, result.get("components"))
 
         flag = "  TREMBLING" if trembling else ""
         print(

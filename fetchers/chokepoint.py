@@ -36,12 +36,20 @@ def fetch_daily():
         SERVICE, FIELD, clock.china_today())
     if total is None:
         return {"raw_value": None, "source_note": note}
+    # The 28 straits arrive in the same response the sum is built from.
+    # Storing only the sum is why a 65% collapse at Hormuz moved this line
+    # by under 2% and left nothing to go back to.
+    components = portwatch.components_at(SERVICE, FIELD, "portname", date)
+    # The sum is only comparable across days if it is a sum of the same
+    # straits. The source CAN come up short — obs 2026-07-24 arrived with no
+    # Hormuz row at all, day ~146 of the closure — and a short panel must be
+    # said out loud: the recorded total is then a 27-strait number sitting in
+    # a 28-strait series. Which strait is missing is in the components file.
+    if components and len(components) != 28:
+        note += f" [panel short: {len(components)} of 28 straits in the response]"
     return {
         "raw_value": total,
         "source_note": f"{NOTE} {date}{note}",
         "obs_date": date,
-        # The 28 straits arrive in the same response the sum is built from.
-        # Storing only the sum is why a 65% collapse at Hormuz moved this line
-        # by under 2% and left nothing to go back to.
-        "components": portwatch.components_at(SERVICE, FIELD, "portname", date),
+        "components": components,
     }
