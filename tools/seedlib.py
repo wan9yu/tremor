@@ -76,16 +76,21 @@ def merge(history, live_rows, import_note):
     for obs, value in history:
         if obs in covered:
             continue  # a live row is that observation's record
+        # A seeded day may be DARK: the source answered, and the fetcher's own
+        # integrity rules refuse to read a world number out of that answer. The
+        # seed must be able to say so, or it would either fabricate a value the
+        # live fetcher would never write, or drop a day it can explain.
+        raw = None if value is None else float(value)
         holder = live_by_date.get(obs)
         if holder is None:
-            plan[obs] = (float(value), import_note(obs, value), obs)
+            plan[obs] = (raw, import_note(obs, value), obs)
         elif obs in republish_dates:
             # The stale republish's observation lives elsewhere in the file;
             # the archive observation does not. The observation wins the date.
             dropped.append(f"live republish row {obs} yields its date to the "
                            f"archive observation (its own observation is "
                            f"recorded on an earlier row)")
-            plan[obs] = (float(value), import_note(obs, value), obs)
+            plan[obs] = (raw, import_note(obs, value), obs)
         else:
             dropped.append(f"archive observation {obs} not imported: the date "
                            f"is held by a published "

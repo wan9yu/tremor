@@ -847,7 +847,19 @@ The capability to tell them apart next time already exists (the intraday sampler
 2026-07-29, per-provider components from 2026-08-02); it merely postdates the event. A
 rule that darkened such days would make the instrument assert a cause it cannot know.
 
-**Still open after this round:** the tier-1 composition question itself (a promotion review
-at the ≥60-reading bar, now that `net_outages` can no longer go silent and has a seed
-landing); and whether `MAX_AGE_DAYS = 180` still binds correctly now that de-cycling
-shortens the effective baseline span.
+**`net_outages` is seeded** (2022-01-26 onward, 1,646 rows, 1,590 scoring, 4.52 years) and
+the seed changed what we know about it in two directions. It is far MORE reachable than
+recorded — the 2026-07-29 note said its alarm needed 8.3 countries against a record max of
+6, but that max was 25 observations deep; the real distribution reaches 45 and the line
+fires 55 times in four years, 3.5% of scored days across 35 episodes at lag-1 0.363. And
+it is dirtier than recorded: the two known IODA self-outage days are actually **twelve**,
+each a day the monitor reported essentially every entity it watches as dark (220 of 222 on
+2025-03-25, Antarctica and Andorra included, recovered the next day). Those are now refused
+at the fetcher on a measured conjunction — count ≥100 AND ≥80% of everything watched,
+which selects exactly those 12 of 1,621 with the nearest non-selected day at 45 countries
+and 45%. The line's promotion review can now actually be held.
+
+**Still open after this round:** the tier-1 composition question itself — a promotion
+review at the ≥60-reading bar, which `net_outages` now clears by a factor of twenty-six;
+and whether `MAX_AGE_DAYS = 180` still binds correctly now that de-cycling shortens the
+effective baseline span.
