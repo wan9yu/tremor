@@ -8,14 +8,18 @@ past windows, so the history exists; this fetches it one day at a time.
 
 TWO THINGS THIS SEEDER MUST NOT GET WRONG.
 
-1. AN EMPTY ANSWER IS NOT A CALM WORLD. IODA's summary endpoint returns nothing
-   at all before 2022-01-26 — zero entities across every datasource, not zero
-   outages — and seeding those days as "0 countries dark" would fabricate the
-   calmest stretch in the record out of a service that did not yet exist. A day
-   counts as an OBSERVATION only if the response carries at least one entity
-   from some datasource; then the ping-slash24 count, zero or not, is real.
-   Days before the floor are not fetched at all, and any later empty day is
-   recorded as served-nothing rather than as a reading.
+1. AN EMPTY ANSWER IS NOT A CALM WORLD, AND NEITHER IS A BROKEN ONE. IODA's
+   summary endpoint returns nothing at all before 2022-01-26 — zero entities
+   across every datasource, not zero outages — and seeding those days as
+   "0 countries dark" would fabricate the calmest stretch in the record out of
+   a service that did not yet exist. Separately, some individual dates make the
+   service answer HTTP 500 no matter how patiently they are retried
+   (2023-09-19 is the first found): its backend cannot compute that window.
+   Three different states, kept three different things: a day is an OBSERVATION
+   only if the response carries at least one entity from some datasource; a day
+   the service answers but empties is served-nothing; a day it refuses outright
+   is UNSERVED, recorded with its reason and skipped. None of the three becomes
+   a zero.
 
 2. IODA HAS TWICE GONE DOWN AND REPORTED ITSELF AS THE WORLD GOING DOWN. The
    known artifact days show 160 and 191 countries against a median of 3 — a
@@ -83,16 +87,20 @@ def _int(cell):
     return int(cell) if cell not in ("", None) else None
 
 
-def _append_cache(day, hits, entities, names):
+_CACHE_HEADER = ["obs_date", "hits", "entities", "countries", "unserved"]
+
+
+def _append_cache(day, hits, entities, names, unserved=""):
     exists = os.path.exists(_CACHE)
     with open(_CACHE, "a", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["obs_date", "hits", "entities", "countries"])
+        w = csv.DictWriter(f, fieldnames=_CACHE_HEADER)
         if not exists:
             w.writeheader()
         w.writerow({"obs_date": day,
                     "hits": "" if hits is None else hits,
                     "entities": "" if entities is None else entities,
-                    "countries": names})
+                    "countries": names,
+                    "unserved": unserved})
 
 
 # A sweep this long WILL meet a transient network error — the first unattended
@@ -101,6 +109,10 @@ def _append_cache(day, hits, entities, names):
 # stays down. Backing off across a few minutes tells those two apart, and
 # ``_BACKOFF_S`` is what an unattended overnight run is worth.
 _BACKOFF_S = (5, 15, 30, 60, 120)
+# ...and this many refused days in a row means the service (or this network) is
+# down, not that those particular dates are broken. One is a hole in the source
+# worth recording; a run of them is a reason to stop and come back.
+_MAX_CONSECUTIVE_UNSERVED = 3
 
 
 def day_summary(day):
@@ -184,10 +196,25 @@ def main(argv):
           f"{len(cache)} cached, {len(todo)} to fetch "
           f"(~{len(todo) * _SECONDS_PER_DAY / 3600:.1f} h)")
 
-    fetched, stopped = 0, False
+    fetched, stopped, consecutive_unserved = 0, False, 0
     try:
         for i, d in enumerate([] if dry else todo):
-            hits, entities, names = day_summary(datetime.date.fromisoformat(d))
+            try:
+                hits, entities, names = day_summary(datetime.date.fromisoformat(d))
+            except TransportError as e:
+                # A single date the backend cannot compute is a hole in the
+                # SOURCE, not a reason to stop: record why and move on. A run
+                # of them is a different animal — that is the service or this
+                # network being down, and continuing would quietly mark months
+                # unserved on no evidence at all.
+                consecutive_unserved += 1
+                if consecutive_unserved > _MAX_CONSECUTIVE_UNSERVED:
+                    raise
+                print(f"  {d}: unserved ({e}) — recorded and skipped")
+                _append_cache(d, None, None, "", unserved=str(e).split(": ", 1)[-1])
+                cache[d] = (None, None)
+                continue
+            consecutive_unserved = 0
             _append_cache(d, hits, entities, names)
             cache[d] = (hits, entities)
             names_by_day[d] = names
@@ -201,11 +228,13 @@ def main(argv):
               f"them and a rerun resumes from there")
     except TransportError as e:
         # Stop the sitting, keep everything fetched, and say so plainly. An
-        # unattended sweep must not lose four hours of work to one bad minute,
-        # and it must not paper over a service that is really down either.
+        # unattended sweep must not lose hours of work to one bad minute, and it
+        # must not paper over a service that is really down either.
         stopped = True
-        print(f"\n  the service stopped answering ({e}) after {fetched} day(s) "
-              f"this sitting; everything fetched is cached and a rerun resumes")
+        print(f"\n  {_MAX_CONSECUTIVE_UNSERVED + 1} days in a row went unanswered "
+              f"(last: {e}) — that is the service or this network, not the dates. "
+              f"Stopped after {fetched} day(s) this sitting; everything fetched is "
+              f"cached and a rerun resumes")
 
     # A partial sweep must not write a line CSV with a hole where the rest of
     # history goes: the merge would treat the unfetched days as observations
@@ -219,15 +248,20 @@ def main(argv):
                   "seed lands when the sweep is complete")
         return 0
 
+    unserved = {r["obs_date"]: r["unserved"]
+                for r in collect._read_rows(_CACHE) if r.get("unserved")}
     history, absent = [], []
     for d in wanted:
         hits, entities = cache[d]
-        if not entities:          # served nothing at all: not an observation
+        if not entities:          # served nothing, or refused: not an observation
             absent.append(d)
             continue
         history.append((d, float(hits)))
-    print(f"fetched: {len(history)} observations, {len(absent)} days served nothing"
-          + (f" ({absent[:5]}{'...' if len(absent) > 5 else ''})" if absent else ""))
+    print(f"fetched: {len(history)} observations, {len(absent)} days without one "
+          f"({len(unserved)} the service refused outright, "
+          f"{len(absent) - len(unserved)} answered but empty)")
+    if unserved:
+        print(f"  refused: {sorted(unserved)[:6]}{'...' if len(unserved) > 6 else ''}")
     spikes = sorted(((v, d) for d, v in history), reverse=True)[:5]
     print(f"  largest readings: {[(d, int(v)) for v, d in spikes]}")
     if dry:
