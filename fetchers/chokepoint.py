@@ -28,6 +28,7 @@ TIER = 2  # watchlist: PortWatch is ~10 days behind — too stale to display liv
 # field and note prefix the daily fetch does.
 SERVICE = "Daily_Chokepoints_Data"
 FIELD = "n_total"
+PANEL = 28  # the strait panel this line's identity is built on
 NOTE = "IMF PortWatch 28 chokepoints, total transits"
 
 
@@ -41,12 +42,12 @@ def fetch_daily():
     # by under 2% and left nothing to go back to.
     components = portwatch.components_at(SERVICE, FIELD, "portname", date)
     # The sum is only comparable across days if it is a sum of the same
-    # straits. The source CAN come up short — obs 2026-07-24 arrived with no
-    # Hormuz row at all, day ~146 of the closure — and a short panel must be
-    # said out loud: the recorded total is then a 27-strait number sitting in
-    # a 28-strait series. Which strait is missing is in the components file.
-    if components and len(components) != 28:
-        note += f" [panel short: {len(components)} of 28 straits in the response]"
+    # straits. The source CAN change size — obs 2026-07-24 arrived with no
+    # Hormuz row at all, day ~146 of the closure — and either direction must
+    # be said out loud: the recorded total is then a differently-based number
+    # sitting in a 28-strait series. Which straits is in the components file.
+    if components and len(components) != PANEL:
+        note += f" [panel: {len(components)} straits in the response, series expects {PANEL}]"
     return {
         "raw_value": total,
         "source_note": f"{NOTE} {date}{note}",

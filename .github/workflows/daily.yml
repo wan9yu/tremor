@@ -47,51 +47,26 @@ jobs:
       # The day is committed the moment it is collected. Nothing presentational
       # may stand between collection and the push that makes the day durable:
       # several lines are live snapshots with no archive, so any step that can
-      # fail here costs a day that cannot be re-fetched. The push retries with a
-      # rebase because the intraday sampler shares this branch and scheduler
-      # delays have been observed to exceed the cron offset between the two.
-      # The commit is dated in China time to match the rows it carries.
+      # fail here costs a day that cannot be re-fetched. tools/ci_push.sh is
+      # the one home for the rebase-and-retry policy: the intraday sampler
+      # shares this branch and scheduler delays have been observed to exceed
+      # the cron offset between the two. The commit is dated in China time to
+      # match the rows it carries.
       - name: Commit the day
         run: |
           git config user.name "tremor-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/ docs/data/
-          if git diff --cached --quiet; then
-            echo "no changes to commit"
-            exit 0
-          fi
-          git commit -m "data: $(TZ=Asia/Shanghai date +%F)"
-          for attempt in 1 2 3; do
-            git push && exit 0
-            echo "push attempt $attempt rejected, rebasing and retrying"
-            git pull --rebase --quiet origin main
-            sleep 5
-          done
-          echo "could not push the day after 3 attempts"
-          exit 1
+          tools/ci_push.sh "data: $(TZ=Asia/Shanghai date +%F)" data/ docs/data/
 
       # Everything second-order comes after the data is safely pushed: the
       # level layer is DERIVED (recomputed in full from the component record)
       # and the charts are presentation — a bug in either is worth an alarm,
-      # never worth a lost day. The commit retries for the same reason as above.
+      # never worth a lost day.
       - name: Derive levels, render charts, commit both
         run: |
           python tools/level_layer.py
           python render.py
-          git add charts/ data/levels.csv
-          if git diff --cached --quiet; then
-            echo "no chart changes"
-            exit 0
-          fi
-          git commit -m "derived: $(TZ=Asia/Shanghai date +%F)"
-          for attempt in 1 2 3; do
-            git push && exit 0
-            echo "push attempt $attempt rejected, rebasing and retrying"
-            git pull --rebase --quiet origin main
-            sleep 5
-          done
-          echo "could not push the charts after 3 attempts"
-          exit 1
+          tools/ci_push.sh "derived: $(TZ=Asia/Shanghai date +%F)" charts/ data/levels.csv
 
       # VERIFY AFTER COMMITTING, NEVER BEFORE. Several lines are live snapshots
       # with no archive to re-fetch from, so a gate that fails before the commit

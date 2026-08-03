@@ -37,6 +37,25 @@ _URL = "https://gpsjam.org/data/{date}-h3_4.csv"
 _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
 
 
+def counts_from_csv(text):
+    """``(bad, total)`` aircraft summed over every h3 cell of one day's file.
+
+    Rows are ``hex,count_good_aircraft,count_bad_aircraft``. The seeder
+    aggregates whole archive days through this same function, which is what
+    makes its "identical to the live fetcher" claim true by construction.
+    """
+    good = bad = 0
+    for row in text.strip().splitlines()[1:]:
+        cols = row.split(",")
+        if len(cols) >= 3:
+            try:
+                good += int(cols[1])
+                bad += int(cols[2])
+            except ValueError:
+                continue
+    return bad, good + bad
+
+
 def fetch_daily():
     last_status = None
     for back in range(0, 4):  # today may not be published yet; walk back a few days
@@ -49,16 +68,7 @@ def fetch_daily():
         if r.status_code != 200 or len(r.text) < 100:
             last_status = f"HTTP {r.status_code}"
             continue
-        good = bad = 0
-        for row in r.text.strip().splitlines()[1:]:  # hex,count_good_aircraft,count_bad_aircraft
-            cols = row.split(",")
-            if len(cols) >= 3:
-                try:
-                    good += int(cols[1])
-                    bad += int(cols[2])
-                except ValueError:
-                    continue
-        total = good + bad
+        bad, total = counts_from_csv(r.text)
         if total == 0:
             last_status = "empty"
             continue

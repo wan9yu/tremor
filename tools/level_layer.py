@@ -32,10 +32,11 @@ has one. It is not mirrored to the dashboard.
     python tools/level_layer.py            # recompute data/levels.csv
     python tools/level_layer.py --report   # print the states currently open
 """
-import csv
 import os
 import statistics
 import sys
+from bisect import bisect_left
+from datetime import date as _date
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -54,32 +55,30 @@ OUT = os.path.join(collect.DATA, "levels.csv")
 HEADER = ["date", "component", "event", "trail_median", "reference", "ratio"]
 
 
-def _to_ordinal(date):
-    from datetime import date as d
-    return d.fromisoformat(date).toordinal()
-
-
 def walk(series):
     """Level events for one component: [(date, event, trail, ref, ratio)].
 
     ``series`` is [(date, value)] oldest-first. Events are ``open``/``hold``/
     ``clear``; ``hold`` is emitted daily while a state stays open, so the file
     answers "what is broken TODAY" with a row, not with an absence.
+
+    Dates are unique and sorted, so every calendar window is a contiguous
+    slice found by bisect over the ordinals — this runs daily in CI and must
+    not grow quadratically with the record.
     """
+    ords = [_date.fromisoformat(d).toordinal() for d, _ in series]
+    values = [v for _, v in series]
     out = []
     breach_run = 0
     pinned = None
     for i, (date, _) in enumerate(series):
-        ord_today = _to_ordinal(date)
-        trail = [v for d, v in series[max(0, i - 40):i + 1]
-                 if ord_today - _to_ordinal(d) < TRAIL_DAYS]
-        if not trail:
-            continue
+        ord_today = ords[i]
+        trail = values[bisect_left(ords, ord_today - TRAIL_DAYS + 1):i + 1]
         trail_median = statistics.median(trail)
 
         if pinned is None:
-            ref_vals = [v for d, v in series[:i]
-                        if REF_WINDOW[1] <= ord_today - _to_ordinal(d) <= REF_WINDOW[0]]
+            ref_vals = values[bisect_left(ords, ord_today - REF_WINDOW[0]):
+                              bisect_left(ords, ord_today - REF_WINDOW[1] + 1)]
             if len(ref_vals) < REF_MIN_OBS:
                 breach_run = 0
                 continue
@@ -109,15 +108,12 @@ def walk(series):
 
 def compute():
     """All level events across every component, sorted by (date, component)."""
-    if not os.path.exists(SOURCE):
-        return []
     by_component = {}
-    with open(SOURCE, newline="") as f:
-        for r in csv.DictReader(f):
-            by_component.setdefault(r["component"], []).append(
-                (r["date"], float(r["value"])))
+    for r in collect._read_rows(SOURCE):
+        by_component.setdefault(r["component"], []).append(
+            (r["date"], float(r["value"])))
     rows = []
-    for component, series in sorted(by_component.items()):
+    for component, series in by_component.items():
         series.sort()
         for date, event, trail, ref, ratio in walk(series):
             rows.append({"date": date, "component": component, "event": event,
@@ -130,20 +126,21 @@ def compute():
 def main(argv):
     rows = compute()
     if "--report" in argv:
-        open_now = {}
+        open_now, opened = {}, {}
         for r in rows:
-            if r["event"] in ("open", "hold"):
+            if r["event"] == "open":
+                opened[r["component"]] = r["date"]
                 open_now[r["component"]] = r
-            elif r["event"] == "clear":
+            elif r["event"] == "hold":
+                open_now[r["component"]] = r
+            else:
                 open_now.pop(r["component"], None)
         if not open_now:
             print("no state is open")
         for component, r in sorted(open_now.items()):
-            opened = min(x["date"] for x in rows
-                         if x["component"] == component and x["event"] == "open")
-            print(f"OPEN {component}: since {opened}, trailing {r['trail_median']} "
-                  f"vs pinned {r['reference']} ({float(r['ratio']) * 100:.0f}%), "
-                  f"as of {r['date']}")
+            print(f"OPEN {component}: since {opened[component]}, "
+                  f"trailing {r['trail_median']} vs pinned {r['reference']} "
+                  f"({float(r['ratio']) * 100:.0f}%), as of {r['date']}")
         return 0
     collect._write_rows(OUT, HEADER, rows)
     events = sum(1 for r in rows if r["event"] != "hold")

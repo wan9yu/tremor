@@ -104,6 +104,39 @@ def score_series(plan, weekly_cycle=False):
     return out
 
 
+def read_line(line):
+    """Published rows of ``data/<line>.csv``; [] when the line has none yet."""
+    return collect._read_rows(os.path.join(collect.DATA, line + ".csv"))
+
+
+def run_seed(mod, history, import_note, dry=False):
+    """The whole seeder tail: merge, disclose, archive, re-score, write, report.
+
+    Takes the fetcher MODULE, not a line name, so the re-score reads
+    ``WEEKLY_CYCLE`` exactly as the live collector does — a parameter a
+    hand-rolled seeder has to remember, at a seam that has already bitten
+    once. Each seeder is left with only what genuinely differs: acquiring the
+    history and wording the import note. Returns the written rows, or None on
+    a dry run.
+    """
+    live = read_line(mod.LINE)
+    plan, dropped = merge(history, live, import_note)
+    print(f"  {mod.LINE}: {len(history)} archived observations "
+          f"{history[0][0]}..{history[-1][0]}; {len(live)} live rows "
+          f"-> {len(plan)} merged rows")
+    for d in dropped:
+        print(f"    note: {d}")
+    if dry:
+        return None
+    archive_current(mod.LINE, "preseed")
+    out = score_series(plan, weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False))
+    collect.write_line(mod.LINE, out)
+    print(f"    -> {len(out)} rows, {sum(1 for r in out if r['z_score'])} scored, "
+          f"{sum(int(r['trembling']) for r in out)} trembles, "
+          f"last status={out[-1]['status']}")
+    return out
+
+
 def archive_current(line, suffix):
     """Copy ``data/<line>.csv`` to ``data/archive/<line>_<suffix>.csv``."""
     src = os.path.join(collect.DATA, line + ".csv")

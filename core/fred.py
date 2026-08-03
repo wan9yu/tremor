@@ -23,23 +23,25 @@ _MIN_GAP_S = 5.0
 _last_request = 0.0
 
 
-def _spaced_get(params):
+def _spaced_get(params, timeout=15):
     """GET fredgraph.csv, at most one request per ``_MIN_GAP_S`` per process."""
     global _last_request
     wait = _MIN_GAP_S - (time.monotonic() - _last_request)
     if wait > 0:
         time.sleep(wait)
     _last_request = time.monotonic()
-    return requests.get(_URL, params=params, headers=_HEADERS, timeout=15)
+    return requests.get(_URL, params=params, headers=_HEADERS, timeout=timeout)
 
 
-def series(series_id):
+def series(series_id, timeout=15):
     """[(date, value)] for a FRED series, oldest-first, or None.
 
     Rows are "observation_date,VALUE"; "." marks a missing observation.
+    The seeder passes a longer timeout; EVERY caller goes through the pacing
+    above — this module is the only sanctioned path to fredgraph.
     """
     try:
-        r = _spaced_get({"id": series_id})
+        r = _spaced_get({"id": series_id}, timeout=timeout)
     except requests.RequestException:
         return None
     if r.status_code != 200:
