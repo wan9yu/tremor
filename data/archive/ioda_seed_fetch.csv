@@ -1,0 +1,67 @@
+obs_date,hits,entities,countries
+2022-01-26,0,5,
+2022-01-27,0,13,
+2022-01-28,0,13,
+2022-01-29,0,14,
+2022-01-30,0,13,
+2022-01-31,0,78,
+2022-02-01,0,23,
+2022-02-02,0,20,
+2022-02-03,0,36,
+2022-02-04,0,52,
+2022-02-05,0,45,
+2022-02-06,0,62,
+2022-02-07,0,51,
+2022-02-08,0,52,
+2022-02-09,0,48,
+2022-02-10,0,53,
+2022-02-11,1,45,Federated States Of Micronesia
+2022-02-12,2,79,Federated States Of Micronesia; Gambia
+2022-02-13,0,81,
+2022-02-14,1,88,Mayotte
+2022-02-15,0,83,
+2022-02-16,2,86,Djibouti; Trinidad And Tobago
+2022-02-17,2,84,Gambia; Trinidad And Tobago
+2022-02-18,1,112,Guinea
+2022-02-19,1,107,Bonaire/Sint Eustatius/Saba
+2022-02-20,3,110,Bonaire/Sint Eustatius/Saba; Djibouti; Lesotho
+2022-02-21,2,111,Bonaire/Sint Eustatius/Saba; Swaziland
+2022-02-22,2,110,Guyana; Indonesia
+2022-02-23,4,113,Central African Republic; Guinea; Indonesia; South Sudan
+2022-02-24,1,85,Bolivia
+2022-02-25,2,85,Faroe Islands; Namibia
+2022-02-26,3,79,Haiti; Maldives; Papua New Guinea
+2022-02-27,1,79,Madagascar
+2022-02-28,3,112,Haiti; Saint Kitts And Nevis; Syrian Arab Republic
+2022-03-01,2,112,Palau; Saint Kitts And Nevis
+2022-03-02,45,100,Afghanistan; Andorra; Aruba; Bahamas; Bahrain; Barbados; Belize; Bermuda; Brunei Darussalam; Burkina Faso; Cameroon; Cayman Islands; Congo; Cuba; Curacao; Democratic Republic Of The Congo; Dominica; French Guiana; French Polynesia; Gabon; Gibraltar; Guadeloupe; Guam; Jamaica; Jersey; Kyrgyzstan; Libyan Arab Jamahiriya; Liechtenstein; Madagascar; Martinique; Monaco; Mongolia; Mozambique; Namibia; Nepal; New Caledonia; Nicaragua; Niger; Senegal; Seychelles; Sudan; Syrian Arab Republic; Tanzania; Us Virgin Islands; Zimbabwe
+2022-03-03,1,112,Taiwan Province Of China
+2022-03-04,4,101,Iran (Islamic Republic Of); Nepal; South Sudan; Tajikistan
+2022-03-05,1,72,Lesotho
+2022-03-06,0,78,
+2022-03-07,1,82,Aland Islands
+2022-03-08,2,76,Aland Islands; Niger
+2022-03-09,3,83,Aland Islands; Tajikistan; Vanuatu
+2022-03-10,1,80,Aland Islands
+2022-03-11,29,95,Aland Islands; Albania; Bosnia And Herzegovina; Brunei Darussalam; Democratic Republic Of The Congo; Gambia; Ghana; Kenya; Lesotho; Liberia; Luxembourg; Malawi; Malaysia; Montenegro; Oman; Portugal; Reunion; Rwanda; Sierra Leone; Slovenia; Sri Lanka; Swaziland; Tanzania; Uganda; Ukraine; Uzbekistan; Yemen; Zambia; Zimbabwe
+2022-03-12,1,67,Aland Islands
+2022-03-13,3,78,Aland Islands; Guyana; Malawi
+2022-03-14,2,72,Aland Islands; Montenegro
+2022-03-15,4,72,Aland Islands; Aruba; Montenegro; Sint Maarten
+2022-03-16,5,78,Aland Islands; Bonaire/Sint Eustatius/Saba; Lesotho; Montenegro; Yemen
+2022-03-17,6,76,Aland Islands; Lesotho; Montenegro; Seychelles; Syrian Arab Republic; Tajikistan
+2022-03-18,3,103,Aland Islands; Montenegro; Niger
+2022-03-19,4,67,Aland Islands; Benin; Gabon; Montenegro
+2022-03-20,3,66,Benin; Montenegro; Yemen
+2022-03-21,4,69,Bonaire/Sint Eustatius/Saba; Malawi; Montenegro; Papua New Guinea
+2022-03-22,5,76,Congo; Italy; Lesotho; Malawi; Montenegro
+2022-03-23,3,74,Cote D Ivoire; Montenegro; Sudan
+2022-03-24,2,66,Cote D Ivoire; Montenegro
+2022-03-25,4,65,Congo; Cote D Ivoire; Gabon; Montenegro
+2022-03-26,4,63,Congo; Cote D Ivoire; Kazakhstan; Montenegro
+2022-03-27,3,60,Cote D Ivoire; Maldives; Montenegro
+2022-03-28,6,65,Aland Islands; Cote D Ivoire; Estonia; Montenegro; Sweden; Yemen
+2022-03-29,2,65,Cote D Ivoire; Lebanon
+2022-03-30,4,73,Cote D Ivoire; Egypt; Palestinian Territories; Syrian Arab Republic
+2022-03-31,2,67,Cote D Ivoire; Papua New Guinea
+2022-04-01,3,64,Cote D Ivoire; Palestinian Territories; Syrian Arab Republic
