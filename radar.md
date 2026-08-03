@@ -151,7 +151,7 @@ add, no premature reject. `polar_temp` is its first use.
 | chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810/day (Hormuz blockaded) — strong, but PortWatch lags ~8 days: too stale to display live |
 | sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | SOFR−IORB ~−2bps (calm) — keyless FRED |
 | em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | EM corp OAS ~1.38pp — orthogonal to US HY |
-| gnss_interference | navigation/EW (global) | 3 | 3 | 1* | 31/31 | 0% | demoted R7 — *effective* reach is 1, not 3: one worldwide ratio has no regional sensitivity and read 0.47% through a Gulf air war |
+| gnss_interference | navigation/EW (global) | 3 | 3 | 1* | 31/31 | 3.4% | demoted R7 — *effective* reach is 1, not 3: one worldwide ratio has no regional sensitivity. Seeded R9 to 2022-07 (1,466 rows): it fires 49 alarm-direction trembles in 1,452 scored days, and the Gulf window peaks at z=2.87 — under-powered, not motionless (see the R9 corrections). Its global floor rose 1.64x in four years with no single day ever unusual |
 | capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | demoted R4 (redundant with China); kept on watch |
 | grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | demoted R4 (regional); kept on watch — may re-challenge on orthogonality |
 | euro_hy_spread | financial (EU) | 3 | 2 | 2 | — | — | built R8 — ICE BofA Euro HY OAS ~2.5pp, keyless FRED; orthogonal to US HY (different central bank) |
@@ -671,9 +671,29 @@ against seeded baselines before it is cited again.
 **Seeded.** `polar_temp` to 2019-01-01 (2,740 rows; DMI's directory serves 2019+ only —
 an earlier probe's "2017" claim did not survive contact with the source; DMI's 2023 file
 is comma-separated where every other year is whitespace-separated, and the parser now
-reads both). `gnss_interference` to 2022-07-27 (~1,470 GPSJam daily files; the raw
-bad/total counts are archived alongside, so the ratio no longer destroys its own
+reads both). `gnss_interference` to 2022-07-27 (1,466 rows from 1,423 GPSJam daily files;
+the raw bad/total counts are archived alongside, so the ratio no longer destroys its own
 numerator at capture).
+
+**What the gnss seed overturned, and what it did not.** Two of round 7's findings do not
+survive four years of the line's own data. (1) The "tenfold growth in the sampling frame"
+is 9 broken partial files out of 1,423 — by yearly median the frame grew 1.23x, not 10x —
+so that half of the reason regionalization was deferred is void. (2) "It read 0.47% through
+a Gulf air war and never moved" was a statement about a 39-observation baseline: re-scored
+against the seeded record the July 2026 window peaks at **z = +2.87**, an approach to the
+alarm, and across 1,452 scored days the line fires 49 alarm-direction trembles (3.4%)
+clustered in real episodes. The line was under-powered, not motionless. What SURVIVES is
+the demotion itself: 2.87 is still not 3, a worldwide ratio still cannot be trusted to
+catch a regional campaign, and the other half of the deferral reason — candidate boxes
+losing the detection when their edge moves one degree — is untouched. Regionalization
+returns to the table with one of its two objections removed; it is not thereby approved.
+
+**A level shift in a context line, found the same way.** gnss's monthly medians step from
+0.19-0.25% (2022 through mid-2023) to ~0.44% after 2023-08 and never return: first-year
+median 0.236%, last-year 0.388%, **1.64x**, with no single day ever unusual against its own
+trailing 90. That is Known limit 1 in its purest form, in a second domain — and together
+with polar_temp's 384-warm-to-4-cold asymmetry it is the argument that the level layer is
+not a chokepoint-specific convenience but a missing organ.
 
 **The level layer** (`tools/level_layer.py`, derived, unscored, uncounted, unmirrored):
 pinned-reference state detection over the per-strait component record — open at 14
