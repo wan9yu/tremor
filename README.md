@@ -12,12 +12,14 @@ tremor watches a few **tension indicators**: guarded equilibria that something p
 - **Internet outages** — how many countries are dark at once (IODA)
 
 The primary set is chosen and re-chosen by a scored radar process — see `radar.md` for the
-current tiers, the metrics, and every calibration decision. Eleven more lines ride a hidden
-watchlist, collected daily while they earn (or lose) a place.
+current tiers, the metrics, and every calibration decision. Fifteen more lines ride the
+watchlist — shown on the dashboard, collected daily while they earn (or lose) a place —
+including contrast lines (VIX, news tone) that measure how disordered the world FEELS,
+a planetary context line, and one control line with no world in it at all.
 
 Each line is normalized on its own (robust z-score against its own recent history; lines with a known weekly rhythm are de-cycled by weekday so a routine weekend dip doesn't false-trigger); they are never combined into a single doom score. What matters is **resonance** — how many lines are trembling at once. Several independent instruments screaming together is what "actually more disordered" looks like; one moving alone is just a local event.
 
-The dashboard states its own **field of view**: the four primary lines watch EU/US/Japan airspace, US high-yield credit, the onshore/offshore yuan, and worldwide internet reachability. Strain outside that can be entirely real and still read 0 — and because each line is scored against its own recent history, a disorder that has already been running for weeks sits inside its own baseline and reads calm too. Both limits are written down in `radar.md`.
+The dashboard states its own **field of view**: the four primary lines watch EU/US/Japan airspace, US high-yield credit, the onshore/offshore yuan, and worldwide internet reachability. Strain outside that can be entirely real and still read 0 — and because each line is scored against its own recent history, a disorder that has already been running for weeks sits inside its own baseline and reads calm too. Both limits are written down in `radar.md`. The second one is why a separate **level layer** (`tools/level_layer.py`) walks the per-strait record for states that are stuck broken: it is what currently says, while every scored line reads calm, that the Strait of Hormuz has been running at ~14% of its normal traffic since April.
 
 Missing data is never faked or hidden: a source going dark is recorded as a gap, and a prolonged collection blackout is shown as its own "system disruption" — because the instrument itself falling silent is a kind of tremor.
 

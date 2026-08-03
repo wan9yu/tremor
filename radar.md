@@ -41,12 +41,18 @@ data exists):
 - **Orthogonality** — how uncorrelated it is from the live tier-1 set; the gate that
   keeps the primary four independent. *(computed, tier-1 gate)*
 
-**Two absolute gates** (fail either → not a counted indicator):
+**Three absolute gates** (fail any → not a counted indicator):
 - **Guard gate** — no real guard → never tier-1 (watchlist / "felt vs real" contrast only).
 - **Cadence gate** — collection samples once a day, so the disorder must persist at daily
   resolution, OR be aggregated intraday→daily (as `grid_frequency` takes the day's MAX
   deviation). Intraday-transient phenomena that recover within a day — stablecoin
   flash-depegs, a momentary FX wick — are aliased away by a daily snapshot and rejected.
+- **Reachability gate** (standing since 2026-07-30; registered here R9) — the line's own
+  alarm must be REACHABLE: if |z|>3 requires a move beyond anything in the line's whole
+  record, the alarm cannot fire on any day resembling the observed world and the line is
+  a decoration, not an instrument. Measured as the threshold distance in Qn units against
+  the record's observed range. NOTE: reachability numbers are baseline-relative — a seed
+  that deepens the baseline voids the previous arithmetic (this bit the FRED lines, R9).
 
 **Freshness rule for tier-1:** a displayed instrument must be FRESH (low publication lag). A
 line that is daily but lags a week (e.g. IMF PortWatch, ~8 days) only shows a disruption long
@@ -82,11 +88,24 @@ Written down because they are structural, not bugs, and a reader deserves them u
    then went blind for five months. Note what this rules out: the July miss was **not**
    primarily a coverage failure — a sensor pointed straight at Hormuz would have missed it
    too.
+   **Partially answered** (2026-08-03, R9): the LEVEL LAYER (`tools/level_layer.py`) walks
+   the per-strait component record with a pinned pre-event reference — the reference is
+   frozen the day a state opens, so a broken state can no longer argue itself normal by
+   becoming the baseline. It currently holds one state open: Hormuz since 2026-04-06, at
+   ~14% of its pinned 72/day. Diagnostic, unscored, uncounted — but the level question now
+   has a written answer instead of a shrug.
 2. **|z| > 3 is not a 1-in-300 event at the window sizes tremor runs on.** Measured null
    exceedance on iid Gaussian data with the current estimator: **2.7% at n=10, 1.2% at
    n=20, 0.36% at n=90.** (Under the MAD scale used before round 7 it was 5.3% / 2.1% /
    0.56%.) Short-window lines are therefore expected to tremble occasionally with nothing
    happening; that is why attribution is mandatory and why tier-2 exists.
+   **Measured on REAL data** (2026-08-02, from the 787-row FRED seeds): |z|>3 fires on
+   **5.5–8.5% of days** for real credit series — fat tails, autocorrelation and trend that
+   no iid simulation carries. The firing days are not scattered: they cluster inside four
+   real credit episodes (2023-10, 2024-08, 2025-04, 2026-03) and all three credit lines
+   agree on the dates, which is event detection with fat-tailed inputs, not a broken rule.
+   Any claim of the form "this line trembles X% of the time" must be read against 6–8%,
+   not 0.3%.
 3. **Tremble COUNTS are day counts, not episode counts.** A line with high autocorrelation
    records one event as several trembling days. Rate comparisons across lines are
    correspondingly rough.
@@ -108,7 +127,7 @@ applied round 4.
 | cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ slot 4 (user-decided) |
 | net_outages | communications (global) | 2 | 3 | 3 | 13/13 | — | 0.42 | ⚠️ **PROVISIONAL** — promoted R7 into the slot gnss vacated; only ~13 observations, does NOT meet the 60-reading bar (see the round-7 log) |
 
-## Tier 2 — collected  (10 candidates + 4 context · no cap)
+## Tier 2 — collected  (10 candidates + 4 context + 1 control · no cap)
 
 Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
 are tier-1 challengers banking evidence. There is no slot cap (round 8): any candidate
@@ -117,6 +136,9 @@ the guard gate and can never promote or be counted; they ride along only to aid
 interpretation. Three are "felt vs real" reads (gdelt, gdelt_tone, vix); the fourth,
 `polar_temp`, is a planetary-baseline (LEVEL) read, added round 8 under the
 **provisional-watch** disposition (see below). None occupy a candidate slot.
+Below even those sits `control_daylength`, the CONTROL line: it contains no world at
+all — it exists to catch the pipeline lying, and any signal in it is measurement error
+by definition.
 
 **Provisional-watch** (disposition added round 8): a source that is verified free+daily
 but whose ROLE is undecided is collected now — never counted — so its history accumulates
@@ -138,7 +160,8 @@ add, no premature reject. `polar_temp` is its first use.
 | — gdelt | feel: conflict share (global) | 1 | 0 | 3 | — | — | contrast line (guard gate) — v2 full-day aggregation, not a candidate slot |
 | — gdelt_tone | feel: news tone (global) | 1 | 0 | 3 | — | — | contrast line — full-day average tone, same pass as gdelt |
 | — vix | feel: priced fear (global) | 1 | 0 | 3 | — | — | contrast line — keyless FRED VIXCLS, seeded 180d from archive |
-| — polar_temp | context: planetary level (Arctic 80N) | 1 | 0 | 2 | — | — | context line, provisional-watch — DMI +80N daily anomaly vs the 1958-2002 normal (keyless, ~1d lag). A LEVEL read, not a tension indicator; the long baseline is vendored in core/arctic_clim.py |
+| — polar_temp | context: planetary level (Arctic 80N) | 1 | 0 | 2 | — | — | context line, provisional-watch — DMI +80N daily anomaly vs the 1958-2002 normal (keyless, ~1d lag). A LEVEL read, not a tension indicator; the long baseline is vendored in core/arctic_clim.py. Seeded R9 to 2019 (2,740 rows): 384 warm trembles vs 4 cold — the asymmetry is the warming |
+| — control_daylength | CONTROL: pipeline canary (no world) | 0 | 0 | — | — | — | control line, added 2026-07-30, registered R9 — day length at 51.4779N, 0.0E (sunrise-sunset.org). Set by orbital mechanics; nothing on Earth moves it, so any tremble here is measurement error by definition. obs_date is RECORDED, not inferred, so a one-day pipeline slip trips the ~1-minute canary tolerance even near the solstices |
 
 ## Backlog — ideas not yet built
 
@@ -618,3 +641,78 @@ was monthly, not daily), `entsog_gas_flow` (needs point-selection design to avoi
 aggregation dilution), `bgp_instability` (RIPEstat single-AS routing is not a global
 instability measure), `cp_funding_spread` (a single FRED CPFF series is not a verified
 CP-minus-funds spread).
+
+### Round 9 — 2026-08-03 (bookkeeping: the registry catches up with the instrument)
+
+Not a scoring round: **no tier moves, no threshold changes.** Everything below had
+already happened in code and data over 2026-07-29..08-03; this entry makes the registry
+stop lying about it. The one genuine scoring question that surfaced is queued at the end,
+with the evidence bar it must clear.
+
+**Registered.** The reachability gate (standing since 2026-07-30, now a third absolute
+gate above); the `control_daylength` control line (added 2026-07-30, now in the tier-2
+table); the empirical false-alarm rate on real credit data (5.5–8.5%/day, clustered
+inside four real episodes — appended to Known limit 2).
+
+**The FRED seeds, what they found, and what they cost.** `credit_spread`,
+`em_corp_oas`, `euro_hy_spread` seeded to 787 observations each (back to 2023-08-01).
+Found: ~20 three-line resonance days the live record was too young to contain (peak
+2025-04-07: z=12.2 / 11.3 / 8.9), and credit_spread's "approach to threshold" of
+2026-07-29 (z=+2.376) was a short-baseline artifact — the same observation reads
+**z=+0.704** against the full record. Cost: the first seeder's merge silently deleted 26
+published rows across the three lines, including a counted tier-1 dark day. Repaired
+2026-08-03 from the preseed archives via the corrected merge (`tools/seedlib.py`, which
+every future seeder now goes through); annotations 08-02/08-03 carry the correction.
+**Consequence for this table: every reachability figure computed on 2026-07-29/30 for
+the FRED lines is void** — em_corp_oas's alarm now sits INSIDE its observed range (the
+2025-04 episode reached z=11), not beyond its record. Reachability must be recomputed
+against seeded baselines before it is cited again.
+
+**Seeded.** `polar_temp` to 2019-01-01 (2,740 rows; DMI's directory serves 2019+ only —
+an earlier probe's "2017" claim did not survive contact with the source; DMI's 2023 file
+is comma-separated where every other year is whitespace-separated, and the parser now
+reads both). `gnss_interference` to 2022-07-27 (~1,470 GPSJam daily files; the raw
+bad/total counts are archived alongside, so the ratio no longer destroys its own
+numerator at capture).
+
+**The level layer** (`tools/level_layer.py`, derived, unscored, uncounted, unmirrored):
+pinned-reference state detection over the per-strait component record — open at 14
+consecutive days of a 14-day trailing median ≤0.5× a pre-event reference (median of
+t-365..t-60, ≥30 obs, ≥5/day), reference pinned at open, clear at 0.8× pinned. Replayed
+over the full record it opens exactly two states: **Hormuz 2026-04-06, still open at
+~14% of its pinned 72/day**, and Kerch 2026-05-14, self-cleared 05-19. Zero breach days
+across the other 26 straits, including Taiwan through its July AIS artifact. This is the
+first written answer to Known limit 1.
+
+**Leg discipline for the spread family.** `sofr_iorb_spread` now differences same-date
+legs only (an FOMC step can no longer manufacture a ~12-Qn jump out of misaligned
+publication schedules). `fx_parallel_premium` maps weekend republish stamps to their
+Friday, so obs-dedup finally fires for it (it had never fired once: frozen weekend
+quotes were scored three times each). `cnh_cny`'s weekend darkness is now labeled as
+market closure, which it is — the line goes dark every China-Sunday by construction,
+and a Sunday dark_count=1 is a market fact, not a reliability failure.
+`grid_frequency`'s Statnett fallback is disclosure-only now: a ~60-second max is not
+comparable to the line's 24-hour max and is no longer scored into the same series.
+
+**Pipeline honesty, after the audit.** Record audits (replay, component panel) moved
+BEHIND the daily commit — the pre-collect gate runs pure logic only, because a
+committed 27-strait day had made the old gate fail ahead of collection, which would
+have silently cost every snapshot line every day until someone noticed. The daily push
+rebases and retries instead of losing the day to a race with the intraday sampler.
+Charts render only after the data is pushed. The docs mirror is an allow-list. Keyless
+FRED requests are spaced 5s apart (the daily run was bursting five unspaced requests at
+an endpoint with a measured 10-in-20s lockout). Components are keyed by observation
+date. PortWatch short panels are disclosed in the note and acknowledged per-date in the
+audit — obs 2026-07-24 arrived with NO Hormuz row (absence, not zero) on day ~146 of
+the closure, the first short panel in 212 observations.
+
+**Queued with data, deliberately NOT decided here: the resonance ceiling.** Under
+current tier-1 baselines the headline count cannot structurally exceed ~2 of 4 —
+cnh_cny's alarm needs +211 pips against a record max of 143, net_outages needs 8.3
+countries against a record max of 6 — and a full replay of three years of real crises
+never produced a headline above 1. Whether that means a tier-1 swap, a per-line
+threshold review, or acceptance (a headline that is HARD to reach is not automatically
+wrong) is the next radar round's question, and it must be answered against the
+≥60-reading bar, not in a bookkeeping entry. `net_outages`' Qn-collapse exposure (47%
+of the tied pairs needed for a zero scale, on a line whose real spike would then score
+z=None) belongs to the same review.
