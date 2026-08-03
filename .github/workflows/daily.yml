@@ -70,18 +70,20 @@ jobs:
           echo "could not push the day after 3 attempts"
           exit 1
 
-      # Charts are presentation, so they render only after the data is safely
-      # pushed: a chart bug is worth an alarm, never worth a lost day. Their
-      # commit retries for the same reason as above.
-      - name: Render and commit the charts
+      # Everything second-order comes after the data is safely pushed: the
+      # level layer is DERIVED (recomputed in full from the component record)
+      # and the charts are presentation — a bug in either is worth an alarm,
+      # never worth a lost day. The commit retries for the same reason as above.
+      - name: Derive levels, render charts, commit both
         run: |
+          python tools/level_layer.py
           python render.py
-          git add charts/
+          git add charts/ data/levels.csv
           if git diff --cached --quiet; then
             echo "no chart changes"
             exit 0
           fi
-          git commit -m "charts: $(TZ=Asia/Shanghai date +%F)"
+          git commit -m "derived: $(TZ=Asia/Shanghai date +%F)"
           for attempt in 1 2 3; do
             git push && exit 0
             echo "push attempt $attempt rejected, rebasing and retrying"
