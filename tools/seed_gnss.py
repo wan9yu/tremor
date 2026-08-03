@@ -45,16 +45,34 @@ def _load_cache():
     if not os.path.exists(_CACHE):
         return {}
     with open(_CACHE, newline="") as f:
-        return {r["obs_date"]: r for r in csv.DictReader(f)}
+        return {r["obs_date"]: (_int(r["bad"]), _int(r["total"]))
+                for r in csv.DictReader(f)}
 
 
-def _append_cache(row):
+def _int(cell):
+    """A cache cell as a number; None for a day the source did not serve."""
+    return int(cell) if cell not in ("", None) else None
+
+
+def _append_cache(day, bad, total):
+    """Record one fetched day. The in-memory cache holds the SAME shape.
+
+    It did not, and that cost a 36-minute run: rows fetched this session were
+    cached as ints while rows re-read from disk were strings, and the
+    served-nothing guard only tested the string forms. Two days on which
+    GPSJam served a file that parsed to zero aircraft therefore passed the
+    guard on a FRESH run and divided by zero at the very end — while a resumed
+    run, reading those same rows back as strings, skipped them correctly. One
+    representation, one guard.
+    """
     exists = os.path.exists(_CACHE)
     with open(_CACHE, "a", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["obs_date", "bad", "total"])
         if not exists:
             w.writeheader()
-        w.writerow(row)
+        w.writerow({"obs_date": day,
+                    "bad": "" if bad is None else bad,
+                    "total": "" if total is None else total})
 
 
 def day_counts(day):
@@ -102,24 +120,23 @@ def main(argv):
           f"(~{len(todo) * _PAUSE_S / 60:.0f} min)")
     for i, d in enumerate(todo):
         bad, total = day_counts(d)
-        row = {"obs_date": d, "bad": "" if bad is None else bad,
-               "total": "" if total is None else total}
-        _append_cache(row)
-        cache[d] = row
+        _append_cache(d, bad, total)
+        cache[d] = (bad, total)
         if i % 100 == 0:
             print(f"  {d} ({i}/{len(todo)})")
         time.sleep(_PAUSE_S)
 
     history, absent, counts = [], [], {}
     for d in wanted:
-        r = cache[d]
-        if r["total"] in ("", "0"):
+        bad, total = cache[d]
+        # A 404 and a file that parses to zero aircraft are the same fact: the
+        # source served no observation that day. Neither can yield a ratio.
+        if not total:
             absent.append(d)
             continue
-        bad, total = int(r["bad"]), int(r["total"])
         counts[d] = (bad, total)
         history.append((d, round(bad / total * 100.0, 4)))
-    print(f"fetched: {len(history)} observations, {len(absent)} days not served"
+    print(f"fetched: {len(history)} observations, {len(absent)} days served nothing"
           + (f" ({absent[:5]}{'...' if len(absent) > 5 else ''})" if absent else ""))
     if dry:
         return 0
