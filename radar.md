@@ -838,8 +838,16 @@ sit at their calm nulls, so a double involving either is near-certainly signal (
 P(count≥2) = 0.0076%/day, once in 36 years), while `flights` is the headline's dominant
 noise source. The dashboard now names which lines are firing whenever the count exceeds 1.
 
+**The `flights` feed-dropout guard was examined and NOT built** — see the annotation of
+2026-08-04. It cannot live in a stateless fetcher without coupling it to the record, and
+more importantly the evidence does not support the diagnosis: on 2026-07-22 at least two
+of the three aggregators independently agreed the US East sky was that empty, so a
+shared-upstream failure and a real ground-stop are indistinguishable in what was recorded.
+The capability to tell them apart next time already exists (the intraday sampler from
+2026-07-29, per-provider components from 2026-08-02); it merely postdates the event. A
+rule that darkened such days would make the instrument assert a cause it cannot know.
+
 **Still open after this round:** the tier-1 composition question itself (a promotion review
 at the ≥60-reading bar, now that `net_outages` can no longer go silent and has a seed
-landing); a `flights` feed-dropout dark-guard, which the audit measured as the fix for its
-remaining artifact alarm; and whether `MAX_AGE_DAYS = 180` still binds correctly now that
-de-cycling shortens the effective baseline span.
+landing); and whether `MAX_AGE_DAYS = 180` still binds correctly now that de-cycling
+shortens the effective baseline span.
