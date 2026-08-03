@@ -66,10 +66,15 @@ LINE_HEADER = ["date", "raw_value", "z_score", "trembling", "direction", "source
 # Summary holds only the tier-1 aggregates; each line's own z lives in its CSV, so
 # the schema stays stable as indicators are added, promoted, or demoted.
 SUMMARY_HEADER = ["date", "trembling_count", "dark_count", "blind_count"]
-# Written under data/ but never served to the dashboard: diagnostic side-channels
-# that measure the instrument rather than the world. Nothing in collect.py or
-# core/normalize.py may read these either — see tests/test_side_channel.py.
-NOT_MIRRORED = {"intraday.csv"}
+# Only what the dashboard actually reads is mirrored into docs/: the line CSVs,
+# the summary, and the annotations. Everything else under data/ — the intraday
+# sampler, components, archives, derived layers — is a measurement ABOUT the
+# instrument and stays unserved BY DEFAULT: an allow-list, because a deny-list
+# lets the next diagnostic file leak onto the dashboard by being forgotten.
+# Nothing in collect.py or core/normalize.py may read the side channels either —
+# see tests/test_side_channel.py.
+MIRRORED = frozenset({"summary.csv", "annotations.csv"}
+                     | {mod.LINE + ".csv" for mod in LINES})
 
 COMPONENTS = os.path.join(DATA, "components")
 COMPONENT_HEADER = ["date", "component", "value"]
@@ -136,6 +141,13 @@ def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False):
     shape than live ones — most of some lines' history is written by a seeder,
     and that path is not exercised by the daily run.
     """
+    # Judge the value AS IT WILL BE STORED. The CSV keeps ``_fmt(raw)`` (four
+    # decimals) and replay re-parses that string, so judging the unrounded
+    # float would leave live-vs-replay equality resting on the coincidence that
+    # every fetcher pre-rounds. The record must be judged from what the record
+    # holds.
+    if raw is not None:
+        raw = float(_fmt(raw))
     history, hist_dates, hist_obs = _history(prior_rows, date)
     z, trembling, direction, verdict_note, status = normalize.judge(
         history, hist_dates, hist_obs, raw, obs_date, date,
@@ -272,12 +284,9 @@ def collect():
     print(f"\n== {today}: {trembling_count} line(s) trembling{extra} ==")
 
     # Mirror the data into docs/ so the GitHub Pages dashboard is self-contained.
-    # Diagnostic side-channels stay out: they are measurements ABOUT the
-    # instrument, the page never reads them, and intraday.csv grows a dozen rows
-    # a day.
     os.makedirs(DOCS_DATA, exist_ok=True)
     for name in os.listdir(DATA):
-        if name.endswith(".csv") and name not in NOT_MIRRORED:
+        if name in MIRRORED:
             shutil.copy2(os.path.join(DATA, name), os.path.join(DOCS_DATA, name))
 
 

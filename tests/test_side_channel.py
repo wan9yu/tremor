@@ -25,8 +25,13 @@ class TestSideChannelIsInert(unittest.TestCase):
             self.assertNotIn("sample_intraday", source, f"{rel} imports the sampler")
 
     def test_it_is_excluded_from_the_dashboard_mirror(self):
+        """The mirror is an ALLOW-list: a new diagnostic file under data/ stays
+        off the dashboard unless someone deliberately serves it."""
         import collect
-        self.assertIn("intraday.csv", collect.NOT_MIRRORED)
+        self.assertNotIn("intraday.csv", collect.MIRRORED)
+        self.assertNotIn("levels.csv", collect.MIRRORED)
+        for name in collect.MIRRORED:
+            self.assertTrue(name.endswith(".csv"))
         self.assertFalse(
             os.path.exists(os.path.join(ROOT, "docs", "data", "intraday.csv")),
             "the side channel was mirrored into the served data directory")

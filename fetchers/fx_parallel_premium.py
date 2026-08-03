@@ -15,7 +15,20 @@ regime where the premium runs in the tens of percent.
 
 Source: dolarapi.com (keyless JSON, updated intraday). Both legs are read in one
 pass; if either is missing the reading is empty rather than half-computed.
+
+THE SOURCE'S TIMESTAMP IS A REPUBLISH STAMP, NOT AN OBSERVATION DATE. dolarapi's
+fechaActualizacion advances every day even while both markets are closed: the
+identical frozen quotes (banks do not trade the oficial on weekends, and the
+premium cannot move without that leg) arrived under three distinct dates every
+weekend, so the dedup rule structurally never fired and each frozen quote was
+scored three times — the exact pseudo-replication obs_date exists to kill. A
+weekend stamp is therefore mapped back to its Friday, which is the day the
+quotes actually describe. (A weekday holiday still slips through — there is no
+keyless calendar of Argentine bank holidays — so the guard is honest for the
+52 weekends a year and silent on the handful of holidays.)
 """
+import datetime
+
 import requests
 
 LINE = "fx_parallel_premium"
@@ -37,6 +50,16 @@ def _leg(url):
     return float(d["venta"]), (d.get("fechaActualizacion") or "")[:10]
 
 
+def _observation_date(stamp):
+    """The trading day a quote describes: a weekend stamp maps to its Friday."""
+    try:
+        day = datetime.date.fromisoformat(stamp)
+    except ValueError:
+        return stamp
+    friday_shift = max(0, day.weekday() - 4)  # Sat -> 1, Sun -> 2
+    return (day - datetime.timedelta(days=friday_shift)).isoformat()
+
+
 def fetch_daily():
     try:
         blue, blue_date = _leg(_BLUE)
@@ -46,8 +69,11 @@ def fetch_daily():
     if oficial <= 0:
         return {"raw_value": None, "source_note": "dolarapi official rate not positive"}
     premium = (blue / oficial - 1.0) * 100.0
+    obs = _observation_date(blue_date)
+    mapped = f" [weekend stamp {blue_date} -> {obs}]" if obs != blue_date else ""
     return {
         "raw_value": round(premium, 3),
-        "source_note": f"dolarapi blue {blue:.0f} / oficial {oficial:.0f} = {premium:+.1f}% premium",
-        "obs_date": blue_date,
+        "source_note": (f"dolarapi blue {blue:.0f} / oficial {oficial:.0f} "
+                        f"= {premium:+.1f}% premium{mapped}"),
+        "obs_date": obs,
     }
