@@ -109,13 +109,23 @@ def _append_cache(day, hits, entities, names, unserved=""):
 # stays down. Backing off across a few minutes tells those two apart, and
 # ``_BACKOFF_S`` is what an unattended overnight run is worth.
 _BACKOFF_S = (5, 15, 30, 60, 120)
-# ...and this many refused days in a row means the service (or this network) is
-# down, not that those particular dates are broken. One is a hole in the source
-# worth recording; a run of them is a reason to stop and come back.
-_MAX_CONSECUTIVE_UNSERVED = 3
+# A run of refusals is ambiguous: either those DATES are broken at the source or
+# the service (or this network) is down. Counting them cannot tell the two
+# apart, so after this many in a row the sweep asks a date it has already
+# fetched successfully — a canary. If the canary answers, the service is fine
+# and the refusals belong to the dates; if it does not, the sweep stops rather
+# than marking months unserved on no evidence.
+_UNSERVED_BEFORE_CANARY = 3
+# Once the canary has established the service is healthy, the remaining days of
+# a broken RUN do not need the full four-minute climb each — the question they
+# have to answer is no longer "is the service up" but only "is this date the
+# same kind of broken as the last one". The source's gaps are contiguous
+# (2023-09-19..10-04 is the first found), so this saves an hour of pure waiting
+# on a known hole while keeping one real retry per day.
+_RUN_BACKOFF_S = (5, 20)
 
 
-def day_summary(day):
+def day_summary(day, backoff=_BACKOFF_S):
     """``(ping_slash24_count, total_entities, names)`` for one 24h window.
 
     Raises ``TransportError`` when the service will not answer after backing
@@ -126,7 +136,7 @@ def day_summary(day):
                                     datetime.timezone.utc)
     stamp = int(end.timestamp())
     last = None
-    for attempt in range(len(_BACKOFF_S) + 1):
+    for attempt in range(len(backoff) + 1):
         try:
             r = requests.get(net_outages._URL,
                              params={"from": stamp - 86400, "until": stamp,
@@ -150,16 +160,24 @@ def day_summary(day):
                     return len(hit), len(data), "; ".join(names)
             else:
                 last = f"HTTP {r.status_code}"
-        if attempt < len(_BACKOFF_S):
-            wait = _BACKOFF_S[attempt]
+        if attempt < len(backoff):
+            wait = backoff[attempt]
             print(f"  {day}: {last} — retrying in {wait}s "
-                  f"({attempt + 1}/{len(_BACKOFF_S)})")
+                  f"({attempt + 1}/{len(backoff)})")
             time.sleep(wait)
     raise TransportError(f"{day}: {last}")
 
 
 class TransportError(RuntimeError):
     """The service would not answer this day, after backing off."""
+
+
+def canary_answers(day):
+    """Does a date we have ALREADY fetched still answer? One try, no backoff."""
+    try:
+        return day_summary(day, backoff=())[1] is not None
+    except TransportError:
+        return False
 
 
 def _limit(argv):
@@ -196,25 +214,37 @@ def main(argv):
           f"{len(cache)} cached, {len(todo)} to fetch "
           f"(~{len(todo) * _SECONDS_PER_DAY / 3600:.1f} h)")
 
+    # The canary is the newest date already known to answer, so a "the service
+    # is down" verdict is never reached on the strength of broken dates alone.
+    good = [d for d, (h, e) in sorted(cache.items()) if e]
+    canary_day = datetime.date.fromisoformat(good[-1]) if good else FIRST_DAY
+
     fetched, stopped, consecutive_unserved = 0, False, 0
+    run_confirmed = False   # the canary has vouched for the service mid-run
     try:
         for i, d in enumerate([] if dry else todo):
             try:
-                hits, entities, names = day_summary(datetime.date.fromisoformat(d))
+                # Full patience on the first refusal of a run; once the canary
+                # has vouched for the service, a shorter one for the rest.
+                hits, entities, names = day_summary(
+                    datetime.date.fromisoformat(d),
+                    backoff=_RUN_BACKOFF_S if run_confirmed else _BACKOFF_S)
             except TransportError as e:
-                # A single date the backend cannot compute is a hole in the
-                # SOURCE, not a reason to stop: record why and move on. A run
-                # of them is a different animal — that is the service or this
-                # network being down, and continuing would quietly mark months
-                # unserved on no evidence at all.
+                # A date the backend cannot compute is a hole in the SOURCE, not
+                # a reason to stop. A run of them might still be the service
+                # falling over, so ask the canary before believing the dates.
                 consecutive_unserved += 1
-                if consecutive_unserved > _MAX_CONSECUTIVE_UNSERVED:
-                    raise
+                if consecutive_unserved > _UNSERVED_BEFORE_CANARY and not run_confirmed:
+                    if not canary_answers(canary_day):
+                        raise
+                    print(f"  canary {canary_day} still answers — the refusals are "
+                          f"these dates, not the service")
+                    run_confirmed = True
                 print(f"  {d}: unserved ({e}) — recorded and skipped")
                 _append_cache(d, None, None, "", unserved=str(e).split(": ", 1)[-1])
                 cache[d] = (None, None)
                 continue
-            consecutive_unserved = 0
+            consecutive_unserved, run_confirmed = 0, False
             _append_cache(d, hits, entities, names)
             cache[d] = (hits, entities)
             names_by_day[d] = names
@@ -231,10 +261,10 @@ def main(argv):
         # unattended sweep must not lose hours of work to one bad minute, and it
         # must not paper over a service that is really down either.
         stopped = True
-        print(f"\n  {_MAX_CONSECUTIVE_UNSERVED + 1} days in a row went unanswered "
-              f"(last: {e}) — that is the service or this network, not the dates. "
-              f"Stopped after {fetched} day(s) this sitting; everything fetched is "
-              f"cached and a rerun resumes")
+        print(f"\n  refusals ran on AND the canary {canary_day} stopped answering "
+              f"too (last: {e}) — that is the service or this network, not the "
+              f"dates. Stopped after {fetched} day(s) this sitting; everything "
+              f"fetched is cached and a rerun resumes")
 
     # A partial sweep must not write a line CSV with a hole where the rest of
     # history goes: the merge would treat the unfetched days as observations
