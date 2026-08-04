@@ -128,17 +128,17 @@ Written down because they are structural, not bugs, and a reader deserves them u
 
 ---
 
-## Tier 1 — primary  (4 / 4 ⚠️ one provisional)
+## Tier 1 — primary  (4 / 4 · reviewed R11)
 
 The four displayed, counted instruments — four distinct domains. Decided round 3,
 applied round 4.
 
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | Orthog | status |
 |---|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
-| flights | airspace (EU/US/JP) | 3 | 3 | 2 | — | — | — | ✅ |
-| credit_spread | financial (US→global) | 3 | 3 | 3 | — | — | — | ✅ global bellwether |
-| cnh_cny | capital controls (China) | 2 | 3 | 2 | — | — | — | ✅ slot 4 (user-decided) |
-| net_outages | communications (global) | 2 | 3 | 3 | 13/13 | — | 0.42 | ⚠️ **PROVISIONAL** — promoted R7 into the slot gnss vacated; only ~13 observations, does NOT meet the 60-reading bar (see the round-7 log) |
+| flights | airspace (EU/US/JP) | 3 | 3 | 2 | 44/44 | 1 alarm, the adjudicated 07-05 artifact | ≤0.10 (n<40) | ⚠️ **RETAINED WITH CONDITIONS, R11** — sole current-rule alarm is an artifact; review pre-committed 2026-08-31 (de-cycling engages, n≥60): demote if episode-rate Wilson LB >2%, or immediately on the next unadjudicable alarm |
+| credit_spread | financial (US→global) | 3 | 3 | 3 | 43/44 | 65 alarm days = 8 episodes, all 4 real events | 0.035 (n=766) | ✅ global bellwether; alarm at the 45th pctile of its 776-day record |
+| cnh_cny | capital controls (China) | 2 | 3 | — | 40/42* | 0 alarms in 32 scored | ≤0.09 (n<40) | ✅ slot 4 (user-decided); reach cell open — needs +222 pips vs a 42-obs record max of 143, insufficient to adjudicate below 60 (*2 darks are weekend closures, not failures) |
+| net_outages | communications (global) | 2 | 3 | 3 | 26/26 | 57 alarm days = 37 episodes; grid-strike + blackout events attributable | ≤0.141 | ✅ **CONFIRMED R11** — the pre-committed review was held and every gate passed; the tremble clause fired on its day-count letter and was amended to episode terms on measured evidence (see round 11) |
 
 ## Tier 2 — collected  (10 candidates + 4 context + 1 control · no cap)
 
@@ -190,12 +190,17 @@ above.)
 | entsog_gas_flow | energy (EU) | pipelines keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | point-selection design: the ENTSOG operationaldata API returns per-point per-operator flows; picking a non-diluting, non-frame-churning aggregate (which EU import points?) is real work, and aggregation dilution is a known failure mode |
 | bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | the right global formulation — RIPEstat routing-status for one AS is not a global instability measure; a withdrawal/update-rate is exposed to sensor-inflation and low-count-integer failure modes and must be designed against them |
 | cp_funding_spread | financial (US) | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | the correct CP-minus-funds construction: a single FRED `CPFF` series is not verified to be a spread; build it as (AA financial CP rate − OIS/funds), and confirm what each series actually is |
+| **fed_srf_takeup** | financial plumbing (US→global) | the Fed's Standing Repo Facility is a full-allotment ceiling defended twice daily → take-up leaks reserve/collateral scarcity borrowing from the guard itself | **BUILD-READY, probed R11**: NY Fed Markets API, keyless, real numbers returned twice and cross-checked against the reported $50.35B of 2025-10-31; same-day publication; calm ~$0-2B vs $74.6B year-end 2025 so the alarm is reachable on its own record; needs QUANTUM floor (regime-dependent zero runs) and month-end attribution. Awaiting build approval |
+| tga_balance | fiscal plumbing (US) | Treasury defends its cash buffer → a forced drawdown leaks debt-limit brinkmanship | probed keyless ($876.6B), but a −$121B routine day swing and a slow-drain crisis signature make it a DRIFT/LEVEL-layer candidate, not a z-line; needs that design first |
+| eu_gas_storage | energy (EU) | member states defend storage-fill trajectories → falling behind the injection path leaks supply cutoff | AGSI+ API is live and free-key documented, but registration plus a trajectory-anomaly design (vs the seasonal path, not a rolling median) are needed before a data-returning probe |
 
 ### Rejected
 | candidate | reason |
 |---|---|
 | stablecoin_peg | fails the **cadence gate** — depegs are intraday-transient, a daily snapshot aliases past them. |
 | tail_risk_market | fails the **guard gate** — prediction-market prices are a free-floating read with no defended equilibrium (Guard ~1). Interesting, but not a tension indicator. |
+| marine_war_risk | R11 non-find: war-risk insurance premia are the perfect orthogonal guard signal and have **no free daily machine-readable source** — recorded so the search is not repeated. |
+| sovereign_cds | R11 non-find: same shape — the guarded quantity is real, every daily source is paywalled. |
 
 ---
 
@@ -512,7 +517,12 @@ domain — is worse, and because the status column now makes the weakness legibl
 on the page rather than hidden. **Pre-committed review at 60 scored readings
 (~late September 2026):** if the tremble rate's Wilson lower bound exceeds 2%,
 or the line proves to track IODA's detector coverage rather than the world, it
-goes back to tier-2 and the slot runs empty and disclosed. Also fixed as a
+goes back to tier-2 and the slot runs empty and disclosed.
+> **REVIEW HELD IN ROUND 11 (2026-08-04)** — early, because the IODA seed
+> delivered 1,590 scored days at once. Outcome: CONFIRMED, with the tremble
+> clause amended to episode terms at the moment its day-count letter fired.
+> The full adjudication and the reason the letter was miscalibrated (applied
+> evenhandedly it demotes credit_spread first) are in round 11. Also fixed as a
 precondition: the fetcher now records WHICH countries are dark, because a count
 alone makes a tremble unattributable and every tremble here must be answerable.
 
@@ -863,3 +873,93 @@ and 45%. The line's promotion review can now actually be held.
 review at the ≥60-reading bar, which `net_outages` now clears by a factor of twenty-six;
 and whether `MAX_AGE_DAYS = 180` still binds correctly now that de-cycling shortens the
 effective baseline span.
+### Round 11 — 2026-08-04 (the tier-1 composition review: held, and the set survives it)
+
+The review the registry has owed since round 7.1 — held early because the IODA seed
+delivered `net_outages` 1,590 scored days at once. Every number below is replayed under
+STABLE_SINCE=2026-08-04 rules and the six that drive decisions were adversarially
+re-derived by independent verifiers. **No tier moves.** The composition survives its
+first full review, with one pre-commitment adjudicated and amended, one new
+pre-commitment issued, and two candidates entering the Backlog.
+
+**`net_outages`: CONFIRMED, and the pre-commitment is amended at the moment it fired —
+on the record, with the reason measured.** The round-7.1 clause said: demote if the
+tremble rate's Wilson lower bound exceeds 2%, or if the line tracks IODA's detector
+coverage rather than the world. Adjudication: the SECOND clause does not fire —
+corr(hits, coverage) = 0.184 excluding sweeps, and the median count stayed 2-4 while
+IODA's watched-entity count halved, which is what "measures the world, not the sensor"
+looks like. The FIRST clause fires on its day-count letter (57/1,625 = 3.51%, Wilson LB
+2.72%) and clears on episodes (37 episodes, rate 2.28%, LB 1.66%). The letter is
+provably miscalibrated: applied evenhandedly, a 2% day-rate bar demotes `credit_spread`
+FIRST (its replayed day-rate Wilson LB is 6.63% — 8 episodes, all four real events),
+and round 10's Known limit 3 already established that day counts overstate independent
+alarms on autocorrelated lines. The clause was written in round 7.1 before episodes
+existed as a vocabulary; its intent — "demote a line that cries wolf" — is what the
+episode reading measures. AMENDED: the demotion bar for any pre-committed rate review is
+the EPISODE-rate Wilson lower bound against 2%. Everything else about the line passed
+outright: all three gates (alarm at ≥9 countries today, the 93.6th percentile of its
+record, max observed z=20.2; 24h cadence, longest real run 7 days), zero-lag freshness,
+orthogonality ≤0.141 against every tier-1 line, 26/26 live reliability with 12/1,626
+source-integrity refusals (the guarded IODA sweeps) disclosed separately. Its largest
+attributable episodes: the November 2022 Ukraine grid-strike runs and the 2025 Iberian
+blackout.
+
+**A correction inside the confirmation:** the 2026-08-04 seed annotation called the
+45-country day of 2022-03-02 "the week of the Ukraine invasion." Its own country list
+contains neither Ukraine nor Russia; it is the sweep guard's nearest non-selected day
+(ratio 0.45) and its cause is unattributed. The attribution is withdrawn in
+annotations.csv. Also recorded: the seed's STORED verdicts differ from current-rule
+replay on 34 scored days / 2 trembles (pre-STABLE_SINCE seam, expected and legal) — any
+future arithmetic on this line must replay, not read stored cells.
+
+**`flights`: RETAINED WITH CONDITIONS — the honest middle of a genuinely split case.**
+Against: under current rules its entire alarm record is one fire, the adjudicated
+2026-07-05 artifact (replayed z=-5.726, a Sunday scored against a weekday-mixed window
+at same-weekday n=6), making it the only tier-1 line whose current-rule record contains
+zero real detections. For: the c(n) table has ALREADY retired its second artifact
+(07-22 replays at z=-3.014 against threshold_for(30)=3.291 — under today's rules it
+never fires); its rate at n=34 carries a Wilson interval of [0.5%, 15%], and Known
+limit 4 reads symmetrically — below 60 readings, rate evidence can neither promote nor
+demote; it was seated in round 1 with zero readings, a month before the bar existed —
+grandfathered, never promoted past it; it is the registry's only airspace line, with no
+tier-2 successor and a measured non-find where one was sought; and the instrumentation
+that would have adjudicated 07-22 (the intraday sampler, per-provider components) now
+exists but postdates the event. CONDITIONS, both pre-committed and both measurable:
+(a) review on **2026-08-31**, the day weekday de-cycling engages (row 71, verified
+through the scoring path) and the record passes 60 scored days — demote if the replayed
+episode-rate Wilson lower bound exceeds 2%, the same amended bar as everyone else;
+(b) demote immediately on the next alarm-direction tremble the new instrumentation
+cannot adjudicate — the ability to settle such a day now exists, so an unsettleable day
+is henceforth itself disqualifying.
+
+**Orthogonality, measured for the whole registry** (replayed z, obs-date keyed, Pearson
+with Spearman cross-check): the tier-1 set is clean where measurable — the one pair
+with ≥40 shared dates, credit_spread × net_outages, reads **+0.035** (n=766); the five
+thin pairs all sit ≤|0.103| but stay formally open until the young lines mature
+(~mid-September). The credit-fear family is the only correlated block anywhere
+(credit_spread / em_corp_oas / euro_hy_spread / vix, six pairs at 0.548-0.863), which
+**decisively bars em_corp_oas (+0.805) and euro_hy_spread (+0.737)** from tier-1 —
+depth was never their problem; independence is. Every non-credit candidate is
+orthogonal to tier-1 (max |r| 0.195) and barred by a different gate instead: reach
+(gnss — its alarm is reachable by exactly 1 observed day in 1,463; grid_frequency;
+capital_premium) or freshness (the PortWatch pair). The largest cross-family
+correlation in the registry is gnss × polar_temp at −0.325, plausibly seasonal, worth
+an eye and nothing more.
+
+**Diverge:** one build-ready candidate and two Backlog designs. `fed_srf_takeup` —
+the Fed's Standing Repo Facility take-up, a full-allotment ceiling defended twice
+daily, take-up IS the guard being borrowed from — probed keyless at the NY Fed Markets
+API with real numbers cross-checked against the reported record; reachable on its own
+record (calm ~$0-2B vs $74.6B year-end); awaiting build approval. `tga_balance` is
+real but drift-shaped (a −$121B routine swing dwarfs any z), and `eu_gas_storage`
+needs a free-key registration plus a trajectory design. The two most orthogonal
+guarded domains — marine war-risk premia and sovereign CDS — have **no free daily
+source**; recorded as non-finds so the search is not repeated.
+
+**What this round says about the instrument:** the first full composition review found
+the set defensible but young — one line confirmed on four years of evidence, one
+retained on grandfather rights with its exit conditions now written down, two slots
+(cnh_cny's reach cell, five of six orthogonality pairs) formally open until September.
+The review mechanism itself worked the way the project wants: a pre-commitment fired,
+was adjudicated against measurement rather than kept or waived by taste, and the
+amendment is recorded next to the clause it amends.
