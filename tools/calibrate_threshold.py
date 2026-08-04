@@ -25,6 +25,13 @@ The Qn here is a vectorized mirror of ``normalize._qn`` and is asserted equal
 to it before any table is produced — the calibration must be of the estimator
 the instrument actually uses, not of a lookalike.
 
+NUMPY AND SCIPY ARE DEV-ONLY. They are deliberately NOT in requirements.txt —
+the daily run must not depend on them, and nothing else in the repo imports
+them — so this tool needs requirements-dev.txt installed. The table it produces
+is vendored into core/normalize.py precisely so that collection never has to
+simulate anything.
+
+    pip install -r requirements-dev.txt
     python tools/calibrate_threshold.py            # print the table
     python tools/calibrate_threshold.py --check    # verify the shipped table
 """
@@ -47,9 +54,12 @@ TARGET_C = 3.0                   # ...at the threshold the instrument always had
 
 def qn_batch(samples):
     """Qn of every row of ``samples`` (m x n), matching normalize._qn exactly."""
-    m, n = samples.shape
-    iu = np.triu_indices(n, k=1)
-    diffs = np.abs(samples[:, :, None] - samples[:, None, :])[:, iu[0], iu[1]]
+    n = samples.shape[1]
+    # Index the pairs directly rather than building the full n x n cube and
+    # discarding half of it: measured 212ms against 274ms per 3000-window batch
+    # at n=90, and half the peak memory.
+    i, j = np.triu_indices(n, k=1)
+    diffs = np.abs(samples[:, i] - samples[:, j])
     h = n // 2 + 1
     k = h * (h - 1) // 2 - 1
     kth = np.partition(diffs, k, axis=1)[:, k]
@@ -85,8 +95,11 @@ def exceedance(meds, scales, c):
 
 
 def solve_c(meds, scales, target):
+    # 25 halvings of [2, 12] resolve 3e-7 — three orders below the rounding the
+    # table ships at, and far below the 0.02 tolerance --check allows. Sixty
+    # steps resolved float64 itself and cost ~40 wasted evaluations per entry.
     lo, hi = 2.0, 12.0
-    for _ in range(60):
+    for _ in range(25):
         mid = (lo + hi) / 2
         if exceedance(meds, scales, mid) > target:
             lo = mid
@@ -122,14 +135,17 @@ def monotone(values):
 def build():
     _assert_mirror()
     rng = np.random.default_rng(SEED)
-    meds, scales = window_stats(TARGET_N, rng)
-    target = exceedance(meds, scales, TARGET_C)
+    anchor_meds, anchor_scales = window_stats(TARGET_N, rng)
+    target = exceedance(anchor_meds, anchor_scales, TARGET_C)
     print(f"target rate = P(|z|>{TARGET_C}) at n={TARGET_N} = {target * 100:.4f}%/calm day",
           file=sys.stderr)
     sizes = list(range(N_MIN, N_MAX + 1))
     raw = []
     for n in sizes:
-        meds, scales = window_stats(n, rng)
+        # The anchor window was already simulated to fix the target rate; the
+        # largest size is the most expensive one and does not need it twice.
+        meds, scales = ((anchor_meds, anchor_scales) if n == TARGET_N
+                        else window_stats(n, rng))
         raw.append(solve_c(meds, scales, target))
         print(f"  n={n:3d}  c={raw[-1]:.3f}", file=sys.stderr)
     # Two constraints the simulation does not know, applied after the fit.
@@ -145,8 +161,8 @@ def build():
 def main(argv):
     target, table = build()
     if "--check" in argv:
-        bad = [(n, c, normalize.threshold_for(n)) for n, c in table.items()
-               if abs(normalize.threshold_for(n) - c) > 0.02]
+        bad = [(n, c, shipped) for n, c in table.items()
+               if abs((shipped := normalize.threshold_for(n)) - c) > 0.02]
         if bad:
             print(f"FAIL: {len(bad)} entries differ by more than 0.02: {bad[:5]}")
             return 1

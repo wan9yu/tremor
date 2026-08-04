@@ -52,13 +52,13 @@ _MIN_BURN_DAYS = 15  # ...below which the denominator is too thin to divide by
 _LOOKBACK_DAYS = 60  # calendar days requested, comfortably covering _BURN_DAYS
 
 
+_EMPTY = (None, "null", "", "*")
+
+
 def _value(row):
     """The row's number, from whichever field the schema is putting it in today."""
-    raw = row.get("close_today_bal")
-    if raw in (None, "null", "", "*"):
-        raw = row.get("open_today_bal")
-    if raw in (None, "null", "", "*"):
-        return None
+    raw = next((v for v in (row.get("close_today_bal"), row.get("open_today_bal"))
+                if v not in _EMPTY), None)
     try:
         return float(raw)
     except (TypeError, ValueError):
@@ -122,11 +122,12 @@ def fetch_daily():
                                 f"of an outflow that is not flowing")}
 
     balance = closing[obs]
+    days_cash = balance / burn
     return {
-        "raw_value": round(balance / burn, 3),
+        "raw_value": round(days_cash, 3),
         "source_note": (f"US Treasury cash ${balance:,.0f}m / ${burn:,.0f}m mean daily "
                         f"withdrawal over {len(days)} business days to {obs} "
-                        f"= {balance / burn:.2f} days of outflows"),
+                        f"= {days_cash:.2f} days of outflows"),
         "obs_date": obs,
         # A ratio destroys its own inputs. Both are stored so a later reader can
         # ask whether the buffer fell or the spending rose — the same argument

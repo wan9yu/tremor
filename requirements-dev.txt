@@ -1,0 +1,7 @@
+# Dev-only. NOT installed by the daily workflow — requirements.txt stays pinned
+# to what collection actually needs, and nothing in the collection path imports
+# either of these. Used by tools/calibrate_threshold.py, which regenerates the
+# tremble-threshold table vendored in core/normalize.py; the table is vendored
+# so the daily run never simulates anything.
+numpy==1.24.4
+scipy==1.13.1

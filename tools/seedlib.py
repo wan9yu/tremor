@@ -100,12 +100,12 @@ def merge(history, live_rows, import_note):
     return ordered, dropped
 
 
-def score_series(plan, weekly_cycle=False):
-    """Score a merged plan oldest-first; returns the full row list."""
+def score_series(plan, mod):
+    """Score a merged plan oldest-first through ``mod``'s own scoring options."""
+    opts = collect.scoring_attrs(mod)
     out = []
     for date, raw, note, obs in plan:
-        out.append(collect.score_row(date, raw, note, obs, out,
-                                     weekly_cycle=weekly_cycle))
+        out.append(collect.score_row(date, raw, note, obs, out, **opts))
     return out
 
 
@@ -117,12 +117,15 @@ def read_line(line):
 def run_seed(mod, history, import_note, dry=False):
     """The whole seeder tail: merge, disclose, archive, re-score, write, report.
 
-    Takes the fetcher MODULE, not a line name, so the re-score reads
-    ``WEEKLY_CYCLE`` exactly as the live collector does — a parameter a
-    hand-rolled seeder has to remember, at a seam that has already bitten
-    once. Each seeder is left with only what genuinely differs: acquiring the
-    history and wording the import note. Returns the written rows, or None on
-    a dry run.
+    Takes the fetcher MODULE, not a line name, so the re-score reads the same
+    per-line options the live collector does — via ``collect.scoring_attrs``,
+    which is the single place that knows which module attributes affect a
+    verdict. This function used to forward one of them by hand and the seam bit
+    twice: once when a seeder forgot ``WEEKLY_CYCLE``, and again when
+    ``QUANTUM`` was added to two callers and not this one, costing the
+    net_outages seed 34 unscoreable rows. Each seeder is left with only what
+    genuinely differs: acquiring the history and wording the import note.
+    Returns the written rows, or None on a dry run.
     """
     live = read_line(mod.LINE)
     plan, dropped = merge(history, live, import_note)
@@ -134,7 +137,7 @@ def run_seed(mod, history, import_note, dry=False):
     if dry:
         return None
     archive_current(mod.LINE, "preseed")
-    out = score_series(plan, weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False))
+    out = score_series(plan, mod)
     collect.write_line(mod.LINE, out)
     print(f"    -> {len(out)} rows, {sum(1 for r in out if r['z_score'])} scored, "
           f"{sum(int(r['trembling']) for r in out)} trembles, "

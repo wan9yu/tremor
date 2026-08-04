@@ -172,6 +172,26 @@ def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False,
     }
 
 
+def scoring_attrs(mod):
+    """The per-line options ``score_row`` needs, read off the fetcher module.
+
+    THE ONE PLACE THAT KNOWS WHICH MODULE ATTRIBUTES AFFECT A VERDICT. Three
+    callers score rows — the daily collector, ``tools/replay.py``, and the
+    seeders via ``seedlib`` — and every one of them must read the same set, or
+    a line is judged by different rules depending on who wrote the row.
+
+    That is not hypothetical. ``WEEKLY_CYCLE`` was forwarded by hand in each
+    caller; when ``QUANTUM`` arrived, two callers were updated and the seeder
+    was not, and the 1,626-day net_outages seed came back with 34 rows reading
+    `no-spread` — including the largest genuine reading in the whole record, a
+    45-country day that the floor exists precisely to keep scoreable. Adding a
+    fourth attribute must now be a one-line change here, not a three-file
+    memory test.
+    """
+    return {"weekly_cycle": getattr(mod, "WEEKLY_CYCLE", False),
+            "quantum": getattr(mod, "QUANTUM", None)}
+
+
 def write_line(line, rows):
     """Write a line's full row list to ``data/<line>.csv``."""
     _write_rows(os.path.join(DATA, line + ".csv"), LINE_HEADER, rows)
@@ -242,9 +262,7 @@ def collect():
         tier = getattr(mod, "TIER", 1)
         primary = tier == 1
 
-        row = score_row(today, raw, note, obs_date, rows,
-                        weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False),
-                        quantum=getattr(mod, "QUANTUM", None))
+        row = score_row(today, raw, note, obs_date, rows, **scoring_attrs(mod))
         status = row["status"]
         trembling = int(row["trembling"])
         # Only tier-1 instruments count, and only trembles in the line's declared
