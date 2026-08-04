@@ -36,6 +36,7 @@ import os
 import statistics
 import sys
 from bisect import bisect_left
+import datetime
 from datetime import date as _date
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -49,6 +50,7 @@ TRAIL_DAYS = 14          # trailing median window
 OPEN_RATIO = 0.5         # breach: trailing median <= this share of reference
 OPEN_PERSIST = 14        # consecutive breach days before a state opens
 CLEAR_RATIO = 0.8        # clear: trailing median back to this share of PINNED
+STALE_DAYS = 1           # an open state whose component stopped arriving says so
 
 SOURCE = os.path.join(collect.COMPONENTS, "chokepoint_breadth.csv")
 OUT = os.path.join(collect.DATA, "levels.csv")
@@ -123,9 +125,27 @@ def compute():
     return rows
 
 
+def last_seen():
+    """``(newest_date_in_file, {component: its own newest date})``.
+
+    A state cannot clear if its component stops being served, and a stale open
+    state reads exactly like a state still being watched. The Strait of Hormuz
+    stopped appearing in PortWatch's panel on 2026-07-24 while its state was
+    open — so the report has to distinguish "still observed broken" from "we
+    stopped being able to look".
+    """
+    newest, per_component = "", {}
+    for r in collect._read_rows(SOURCE):
+        newest = max(newest, r["date"])
+        name = r["component"]
+        per_component[name] = max(per_component.get(name, ""), r["date"])
+    return newest, per_component
+
+
 def main(argv):
     rows = compute()
     if "--report" in argv:
+        newest, seen = last_seen()
         open_now, opened = {}, {}
         for r in rows:
             if r["event"] == "open":
@@ -138,9 +158,14 @@ def main(argv):
         if not open_now:
             print("no state is open")
         for component, r in sorted(open_now.items()):
+            gone = (datetime.date.fromisoformat(newest)
+                    - datetime.date.fromisoformat(seen.get(component, newest))).days
+            stale = (f"  [NO LONGER SERVED: last seen {seen.get(component)}, "
+                     f"{gone} observation days ago — this state cannot clear "
+                     f"because nothing is watching it]" if gone > STALE_DAYS else "")
             print(f"OPEN {component}: since {opened[component]}, "
                   f"trailing {r['trail_median']} vs pinned {r['reference']} "
-                  f"({float(r['ratio']) * 100:.0f}%), as of {r['date']}")
+                  f"({float(r['ratio']) * 100:.0f}%), as of {r['date']}{stale}")
         return 0
     collect._write_rows(OUT, HEADER, rows)
     events = sum(1 for r in rows if r["event"] != "hold")

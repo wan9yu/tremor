@@ -49,6 +49,32 @@ ACKNOWLEDGED_SHORT = {
     "2026-07-24": {"Strait of Hormuz"},
 }
 
+# A strait the source has stopped serving ALTOGETHER, from the first date it
+# went missing. This is not the same acknowledgement as a one-off short day: it
+# says the panel itself has changed and the change has been investigated, so the
+# audit stops asking about every subsequent day. Removing an entry from here is
+# how the question gets reopened.
+#
+# Strait of Hormuz, from 2026-07-24: verified against PortWatch directly — obs
+# 07-24, 07-25 and 07-26 carry no Hormuz row at all, after 9/12/11/10 transits
+# on the four days before. Day ~146 of a closure the level layer has held open
+# since April. Whether the source is serving zero-traffic as no-row or has
+# dropped the strait cannot be told from the response, and the difference
+# matters: under the first reading a FULL closure is invisible to the sum by
+# construction. See annotations 2026-08-04.
+ONGOING_ABSENT = {
+    "Strait of Hormuz": "2026-07-24",
+}
+
+
+def _expected_missing(date, panel):
+    """Which components the record accepts as absent on ``date``."""
+    missing = set(ACKNOWLEDGED_SHORT.get(date, set()))
+    for name, since in ONGOING_ABSENT.items():
+        if name in panel and date >= since:
+            missing.add(name)
+    return missing
+
 
 class TestChokepointComponents(unittest.TestCase):
     PATH = os.path.join(ROOT, "data", "components", "chokepoint_breadth.csv")
@@ -93,7 +119,7 @@ class TestChokepointComponents(unittest.TestCase):
         for date, values in sorted(by_date.items()):
             missing = panel - set(values)
             self.assertEqual(
-                missing, ACKNOWLEDGED_SHORT.get(date, set()),
+                missing, _expected_missing(date, panel),
                 f"{date}: panel is missing {sorted(missing)} — either the "
                 f"source dropped a strait or a page was lost; investigate, "
                 f"then fix the capture or acknowledge it in this file")
