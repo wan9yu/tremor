@@ -330,6 +330,14 @@ const LINES = [
     explain:{
       en:"Not a tension indicator — nobody defends the Arctic's temperature at a set point, so this can never be counted. It is the slowest context line: today's mean temperature north of 80N against the fixed 1958-2002 normal, a direct LEVEL reading of how far the planet's coldest baseline has drifted. Seeded with seven years of the same DMI product; in that record the anomaly trembles warm 384 times and cold 4 — that asymmetry is the warming itself, visible without a model.",
       zh:"不是张力指标——没有谁把北极温度守在某个设定值上，所以它永不计数。它是最慢的背景线：80N 以北今日均温对固定的 1958-2002 气候常值，直接读出行星最冷基线漂了多远。用同一 DMI 产品播种了七年历史；这段记录里距平向暖颤动 384 次、向冷只有 4 次——这个不对称本身就是变暖，不需要模型也看得见。"} },
+  { id:"tga_days_cash", color:"#bf616a", alarm:"down", tier:2,
+    unit:{en:"days",zh:"天"},
+    domain:{en:"Fiscal plumbing (US)",zh:"财政管道（美国）"},
+    label:{en:"US Treasury cash buffer",zh:"美国财政部现金缓冲"},
+    source:{en:"Treasury Fiscal Data — Daily Treasury Statement",zh:"美国财政部 Fiscal Data — 每日财政报表"},
+    explain:{
+      en:"The Treasury keeps an operating cash balance at the Fed and defends it on purpose — it has said publicly it aims to hold about a week of outflows, and the data agrees: the median of this line over its whole history is 5.3 business days. When the buffer falls anyway, Treasury has lost the ability to refill it: a debt limit binding, an auction that did not clear, a funding market that will not take the paper. In June 2023 this read 0.21 days. It is measured as the closing balance divided by the recent average daily withdrawal, because a cash pile is only large or small relative to what is being spent — when outflows spike, the buffer really is shorter, and this line falls without the balance moving at all.",
+      zh:"财政部在美联储存有一笔运营现金，并且是有意守着它的——官方口径是保持约「一周的流出量」，数据也确实如此：这条线的历史中位数是 5.3 个工作日。当缓冲仍然下滑，说明财政部失去了补充它的能力：债务上限卡住、国债拍卖没卖掉、融资市场不肯接货。2023 年 6 月这个读数触及 0.21 天。它用「期末余额 ÷ 近期日均支出」来衡量，因为一笔现金是多是少，只相对于花钱的速度才有意义——当支出激增，缓冲是真的变短了，这条线会在余额纹丝不动的情况下下跌。"} },
   { id:"control_daylength", color:"#4c566a", alarm:"up", tier:2,
     unit:{en:"s",zh:"秒"},
     domain:{en:"Control (no world in it)",zh:"对照（不含世界）"},

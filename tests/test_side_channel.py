@@ -63,20 +63,41 @@ class TestGateNeverReadsTheCommittedRecord(unittest.TestCase):
         exists because it was broken twice: the component panel test and the
         control-line canary both sat in the gate reading data/.
         """
-        # Built by concatenation so this file's own source stays clean under
-        # its own rule — the scan includes this file too.
-        needle = '"da' + 'ta"'
-        docs_form = '"docs", ' + needle
+        # The rule forbids READING THE RECORD, so it names the ways the record
+        # is reached rather than the four letters d-a-t-a. Scanning for the bare
+        # word was the first attempt and it was wrong: it fires on any stubbed
+        # API response whose JSON envelope happens to be {"data": ...}, which is
+        # most of them. A guard with false positives gets weakened or deleted,
+        # and this one is load-bearing.
+        #
+        # This file is excluded from its own scan, and the exclusion is the
+        # honest version of the alternative: a guard that must not contain the
+        # strings it forbids can only be written by spelling every one of them
+        # in pieces, which is unreadable and would itself rot. What is lost is
+        # small and checkable by eye — the assertions below touch no record.
+        quote = '"'
+        forbidden = (
+            ", " + quote + "data" + quote,   # a path join into the record dir
+            "collect.DATA",                  # the constant itself
+            "collect.COMPONENTS",
+            "seedlib.read_line",             # loads a line's committed rows
+        )
+        allowed = quote + "docs" + quote + ", " + quote + "data" + quote
         tests_dir = os.path.dirname(os.path.abspath(__file__))
+        myself = os.path.basename(__file__)
         for name in sorted(os.listdir(tests_dir)):
             if not (name.startswith("test_") and name.endswith(".py")):
                 continue
+            if name == myself:
+                continue
             with open(os.path.join(tests_dir, name)) as f:
-                src = f.read().replace(docs_form, "")
-            self.assertNotIn(
-                needle, src,
-                f"{name} references the committed data directory — move that "
-                f"assertion to an audit_*.py file, which runs after the commit")
+                src = f.read().replace(allowed, "")   # docs/data is a code check
+            for needle in forbidden:
+                self.assertNotIn(
+                    needle, src,
+                    f"{name} reaches the committed record via {needle.strip()} — "
+                    f"move that assertion to an audit_*.py file, which runs "
+                    f"after the commit")
 
 
 if __name__ == "__main__":
