@@ -77,9 +77,15 @@ _CACHE = os.path.join(collect.DATA, "archive", "ioda_seed_fetch.csv")
 
 
 def _load_cache():
-    if not os.path.exists(_CACHE):
-        return {}
-    return {r["obs_date"]: (_int(r["hits"]), _int(r["entities"]))
+    """{obs_date: (hits, entities, names, unserved)} — ONE parse of the file.
+
+    It used to be parsed three times into three projections of the same rows,
+    two of them updated in memory during the sweep and one re-read from disk,
+    which is how the two representations in the sibling seeder drifted apart
+    and cost a 36-minute run.
+    """
+    return {r["obs_date"]: (_int(r["hits"]), _int(r["entities"]),
+                            r.get("countries", ""), r.get("unserved", ""))
             for r in collect._read_rows(_CACHE)}
 
 
@@ -175,7 +181,8 @@ class TransportError(RuntimeError):
 def canary_answers(day):
     """Does a date we have ALREADY fetched still answer? One try, no backoff."""
     try:
-        return day_summary(day, backoff=())[1] is not None
+        day_summary(day, backoff=())
+        return True
     except TransportError:
         return False
 
@@ -193,8 +200,6 @@ def _limit(argv):
 def main(argv):
     dry = "--dry-run" in argv
     cache = _load_cache()
-    names_by_day = {r["obs_date"]: r.get("countries", "")
-                    for r in collect._read_rows(_CACHE)}
     live = seedlib.read_line(net_outages.LINE)
 
     # The live rows carry no obs_date (the line reads a rolling 24h window), so
@@ -206,6 +211,14 @@ def main(argv):
         wanted.append(day.isoformat())
         day += datetime.timedelta(days=1)
 
+    if not wanted:
+        # Already seeded: the live record now starts at the seed's own first
+        # observation, so there is nothing before it to fetch. Say so instead
+        # of indexing an empty list.
+        print(f"nothing to seed: {net_outages.LINE} already covers "
+              f"{min(r['date'] for r in live)} onward")
+        return 0
+
     todo = [d for d in wanted if d not in cache]
     limit = _limit(argv)
     if limit is not None:
@@ -216,7 +229,7 @@ def main(argv):
 
     # The canary is the newest date already known to answer, so a "the service
     # is down" verdict is never reached on the strength of broken dates alone.
-    good = [d for d, (h, e) in sorted(cache.items()) if e]
+    good = [d for d, (_, entities, _, _) in sorted(cache.items()) if entities]
     canary_day = datetime.date.fromisoformat(good[-1]) if good else FIRST_DAY
 
     fetched, stopped, consecutive_unserved = 0, False, 0
@@ -241,13 +254,13 @@ def main(argv):
                           f"these dates, not the service")
                     run_confirmed = True
                 print(f"  {d}: unserved ({e}) — recorded and skipped")
-                _append_cache(d, None, None, "", unserved=str(e).split(": ", 1)[-1])
-                cache[d] = (None, None)
+                reason = str(e).split(": ", 1)[-1]
+                _append_cache(d, None, None, "", unserved=reason)
+                cache[d] = (None, None, "", reason)
                 continue
             consecutive_unserved, run_confirmed = 0, False
             _append_cache(d, hits, entities, names)
-            cache[d] = (hits, entities)
-            names_by_day[d] = names
+            cache[d] = (hits, entities, names, "")
             fetched += 1
             if i % 100 == 0:
                 print(f"  {d} ({i}/{len(todo)}) hits={hits} entities={entities}")
@@ -278,11 +291,10 @@ def main(argv):
                   "seed lands when the sweep is complete")
         return 0
 
-    unserved = {r["obs_date"]: r["unserved"]
-                for r in collect._read_rows(_CACHE) if r.get("unserved")}
+    unserved = [d for d in wanted if cache[d][3]]
     history, absent, swept = [], [], []
     for d in wanted:
-        hits, entities = cache[d]
+        hits, entities, _, _ = cache[d]
         if not entities:          # served nothing, or refused: not an observation
             absent.append(d)
             continue
@@ -299,22 +311,21 @@ def main(argv):
           f"({len(unserved)} the service refused outright, "
           f"{len(absent) - len(unserved)} answered but empty)")
     if unserved:
-        print(f"  refused: {sorted(unserved)[:6]}{'...' if len(unserved) > 6 else ''}")
+        print(f"  refused: {unserved[:6]}{'...' if len(unserved) > 6 else ''}")
     spikes = sorted(((v, d) for d, v in history if v is not None), reverse=True)[:5]
     print(f"  largest readings: {[(d, int(v)) for v, d in spikes]}")
     if dry:
         return 0
 
     def import_note(obs, value):
-        hits, entities = cache[obs]
+        hits, entities, names, _ = cache[obs]
         if value is None:
             return (f"no reading: IODA reported {hits} of {entities} watched "
                     f"entities in outage (24h to {obs} {_WINDOW_HOUR}:00Z) — a "
                     f"sweep of essentially everything it can see, which is the "
                     f"monitor losing its own vantage points, not the world going "
                     f"dark" + seedlib.IMPORT_MARK)
-        who = names_by_day.get(obs, "")
-        who = f" [{who.replace('; ', ', ')}]" if who else ""
+        who = f" [{names.replace('; ', ', ')}]" if names else ""
         return (f"IODA {int(value)} countries with {net_outages._DATASOURCE} "
                 f"outages (24h to {obs} {_WINDOW_HOUR}:00Z){who}"
                 + seedlib.IMPORT_MARK)

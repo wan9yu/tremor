@@ -34,20 +34,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import test_control  # the astronomy lives with the control line's logic tests
 from fetchers import control_daylength as control
 
-# Dates on which the source itself served an incomplete panel, with the missing
-# straits named. An entry here is a human acknowledgement: the shortfall was
-# investigated and found to be the source's, not a lost page of ours (and each
-# entry must have a matching annotations.csv row saying what was found). A NEW
-# short date fails the audit until someone looks and either fixes the capture
-# or acknowledges it here.
-#
-# 2026-07-24: PortWatch served 27 straits — no Strait of Hormuz row at all
-# (verified by direct single-date query). Absence, not zero: day ~146 of the
-# Hormuz closure, and the source stopped saying anything about the strait. The
-# fetcher now discloses short panels in source_note.
-ACKNOWLEDGED_SHORT = {
-    "2026-07-24": {"Strait of Hormuz"},
-}
+# ONE-OFF short days: {date: {missing components}}. An entry here is a human
+# acknowledgement that the shortfall was investigated and found to be the
+# source's, not a lost page of ours, and each must have a matching
+# annotations.csv row saying what was found. Empty today — the only short day
+# the record has seen turned out to be permanent and lives below.
+ACKNOWLEDGED_SHORT = {}
 
 # A strait the source has stopped serving ALTOGETHER, from the first date it
 # went missing. This is not the same acknowledgement as a one-off short day: it

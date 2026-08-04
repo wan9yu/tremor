@@ -47,12 +47,18 @@ from bisect import bisect_left
 from datetime import date as _date
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import collect
+import level_layer
+import seedlib
 
-REF_WINDOW = (365, 60)   # reference: median over days t-365..t-60
-REF_MIN_OBS = 30         # ...requiring at least this many observations
-TRAIL_DAYS = 14          # trailing median window
+# The window geometry is the sibling's, imported rather than restated so the
+# two detectors cannot drift apart on the parts that are deliberately identical.
+# What differs — the ratios, the persistence, the two-sidedness — is below.
+REF_WINDOW = level_layer.REF_WINDOW
+REF_MIN_OBS = level_layer.REF_MIN_OBS
+TRAIL_DAYS = level_layer.TRAIL_DAYS
 HIGH_RATIO = 1.5         # open-high: trailing median >= this share of reference
 LOW_RATIO = 1 / 1.5      # open-low: trailing median <= this share of reference
 PERSIST = 28             # consecutive breach days before a state opens
@@ -73,7 +79,10 @@ def walk(series):
     if any(v <= 0 for v in values):
         return []  # a ratio to a median is meaningless on a series crossing zero
     out = []
-    run_high = run_low = 0
+    # One counter, not two: HIGH_RATIO is above LOW_RATIO, so a day cannot
+    # breach in both directions and the side is already known when the run
+    # is extended.
+    side, run = "", 0
     pinned = None
     pinned_dir = ""
     for i, (date, _) in enumerate(series):
@@ -85,17 +94,16 @@ def walk(series):
             ref_vals = values[bisect_left(ords, ord_today - REF_WINDOW[0]):
                               bisect_left(ords, ord_today - REF_WINDOW[1] + 1)]
             if len(ref_vals) < REF_MIN_OBS:
-                run_high = run_low = 0
+                side, run = "", 0
                 continue
             ref = statistics.median(ref_vals)
-            if ref <= 0:
-                run_high = run_low = 0
-                continue
             ratio = trail_median / ref
-            run_high = run_high + 1 if ratio >= HIGH_RATIO else 0
-            run_low = run_low + 1 if ratio <= LOW_RATIO else 0
-            if run_high >= PERSIST or run_low >= PERSIST:
-                pinned, pinned_dir = ref, "high" if run_high >= PERSIST else "low"
+            today_side = ("high" if ratio >= HIGH_RATIO
+                          else "low" if ratio <= LOW_RATIO else "")
+            run = run + 1 if today_side and today_side == side else bool(today_side)
+            side = today_side
+            if run >= PERSIST:
+                pinned, pinned_dir = ref, side
                 out.append((date, "open", pinned_dir, trail_median, pinned, ratio))
         else:
             ratio = trail_median / pinned
@@ -104,13 +112,13 @@ def walk(series):
                         trail_median, pinned, ratio))
             if back:
                 pinned, pinned_dir = None, ""
-                run_high = run_low = 0
+                side, run = "", 0
     return out
 
 
 def series_for(line):
     """[(obs_date, value)] for a scored line, oldest first, deduplicated."""
-    rows = collect._read_rows(os.path.join(collect.DATA, line + ".csv"))
+    rows = seedlib.read_line(line)
     seen = {}
     for r in rows:
         if not r["raw_value"]:
@@ -136,21 +144,24 @@ def compute():
 def main(argv):
     rows = compute()
     if "--report" in argv:
-        open_now, opened = {}, {}
-        for r in rows:
-            if r["event"] == "open":
-                opened[r["line"]] = r["date"]
-                open_now[r["line"]] = r
-            elif r["event"] == "hold":
-                open_now[r["line"]] = r
-            else:
-                open_now.pop(r["line"], None)
+        open_now, opened = level_layer.open_states(rows, "line")
+        # The same disclosure the level layer carries: a drifted state whose
+        # line stops being served freezes at its last evidence and reads
+        # exactly like one still being watched.
+        newest = max((r["date"] for r in rows), default="")
+        last = {}
+        for mod in collect.LINES:
+            series = series_for(mod.LINE)
+            if series:
+                last[mod.LINE] = series[-1][0]
         if not open_now:
             print("no line is in a drifted state")
         for line, r in sorted(open_now.items()):
-            print(f"DRIFTED {direction_word(r)} {line}: since {opened[line]}, "
+            stale = level_layer.stale_note(max(newest, last.get(line, "")),
+                                           last.get(line))
+            print(f"DRIFTED {r['direction'].upper()} {line}: since {opened[line]}, "
                   f"two-week median {r['trail_median']} vs pinned {r['reference']} "
-                  f"({float(r['ratio']) * 100:.0f}%), as of {r['date']}")
+                  f"({float(r['ratio']) * 100:.0f}%), as of {r['date']}{stale}")
         closed = [r for r in rows if r["event"] in ("open", "clear")]
         if closed:
             print("\nevery state the record has ever held:")
@@ -163,9 +174,6 @@ def main(argv):
     print(f"drifts: {len(rows)} rows ({events} open/clear events) -> {OUT}")
     return 0
 
-
-def direction_word(row):
-    return "HIGH" if row["direction"] == "high" else "LOW"
 
 
 if __name__ == "__main__":

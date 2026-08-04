@@ -70,19 +70,23 @@ class TestGateNeverReadsTheCommittedRecord(unittest.TestCase):
         # most of them. A guard with false positives gets weakened or deleted,
         # and this one is load-bearing.
         #
-        # This file is excluded from its own scan, and the exclusion is the
-        # honest version of the alternative: a guard that must not contain the
-        # strings it forbids can only be written by spelling every one of them
-        # in pieces, which is unreadable and would itself rot. What is lost is
-        # small and checkable by eye — the assertions below touch no record.
-        quote = '"'
+        # This file is excluded from its own scan, which is what lets the
+        # needles be written plainly. The alternative — spelling each one in
+        # pieces so the file stays clean under its own rule — is unreadable and
+        # would itself rot. What is lost is small and checkable by eye: the
+        # assertions below touch no record.
+        #
+        # KNOWN-SPELLINGS CHECK, not a proof. It catches the access paths that
+        # exist; a new one (single quotes, `from collect import DATA`, a helper
+        # nobody listed) passes silently, and the failure mode is a green test.
+        # Extend the tuple whenever a new way to reach the record is written.
         forbidden = (
-            ", " + quote + "data" + quote,   # a path join into the record dir
-            "collect.DATA",                  # the constant itself
+            ', "data"',          # a path join into the record dir
+            "collect.DATA",      # the constant itself
             "collect.COMPONENTS",
-            "seedlib.read_line",             # loads a line's committed rows
+            "seedlib.read_line",  # loads a line's committed rows
         )
-        allowed = quote + "docs" + quote + ", " + quote + "data" + quote
+        allowed = '"docs", "data"'
         tests_dir = os.path.dirname(os.path.abspath(__file__))
         myself = os.path.basename(__file__)
         for name in sorted(os.listdir(tests_dir)):

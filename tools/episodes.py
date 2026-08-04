@@ -30,15 +30,16 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import collect
+import seedlib
 
 GAP = 1  # non-trembling days tolerated inside one episode
 
 
-def _lag1(values):
+def _lag1(clean):
     """Lag-1 autocorrelation of a value list, or None if it cannot be formed."""
-    clean = [v for v in values if v is not None]
     if len(clean) < 3:
         return None
     mean = sum(clean) / len(clean)
@@ -59,20 +60,22 @@ def episodes(observed, alarms, gap=GAP):
     the very factor this tool exists to correct.
     """
     index = {date: i for i, date in enumerate(observed)}
-    out = []
+    out, last_i = [], None
     for date in alarms:
         i = index.get(date)
         if i is None:
             continue
-        if out and i - out[-1][3] <= gap + 1:
-            out[-1] = (out[-1][0], date, out[-1][2] + 1, i)
+        if out and i - last_i <= gap + 1:
+            start, _, n = out[-1]
+            out[-1] = (start, date, n + 1)
         else:
-            out.append((date, date, 1, i))
-    return [(s, e, n) for s, e, n, _ in out]
+            out.append((date, date, 1))
+        last_i = i
+    return out
 
 
 def report_line(mod):
-    rows = collect._read_rows(os.path.join(collect.DATA, mod.LINE + ".csv"))
+    rows = seedlib.read_line(mod.LINE)
     if not rows:
         return None
     scored = [r for r in rows if r["z_score"]]
@@ -82,10 +85,11 @@ def report_line(mod):
     eps = episodes(observed, sorted(alarm))
     values = [float(r["raw_value"]) for r in rows if r["raw_value"]]
     rho = _lag1(values)
-    span_days = 0
-    if scored:
-        span_days = (datetime.date.fromisoformat(rows[-1]["date"])
-                     - datetime.date.fromisoformat(rows[0]["date"])).days
+    # The span the RATES describe, so it means what its name says: a line
+    # with rows but nothing scored has no span, not a span of everything.
+    span_days = ((datetime.date.fromisoformat(scored[-1]["date"])
+                  - datetime.date.fromisoformat(scored[0]["date"])).days
+                 if scored else 0)
     return {
         "line": mod.LINE,
         "tier": getattr(mod, "TIER", 1),
@@ -95,7 +99,7 @@ def report_line(mod):
         "episodes": len(eps),
         "longest_run": max((n for _, _, n in eps), default=0),
         "lag1": None if rho is None else round(rho, 3),
-        "episode_dates": [(s, e, n) for s, e, n in eps],
+        "episode_dates": eps,
     }
 
 

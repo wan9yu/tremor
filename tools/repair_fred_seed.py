@@ -31,10 +31,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import collect
 import seedlib
 
+from fetchers import credit_spread, em_oas, euro_hy_spread
+
 LINES = [
-    ("credit_spread", "BAMLH0A0HYM2", "OAS"),
-    ("em_corp_oas", "BAMLEMCBPIOAS", "OAS"),
-    ("euro_hy_spread", "BAMLHE00EHYIOAS", "OAS"),
+    (credit_spread, "BAMLH0A0HYM2", "OAS"),
+    (em_oas, "BAMLEMCBPIOAS", "OAS"),
+    (euro_hy_spread, "BAMLHE00EHYIOAS", "OAS"),
 ]
 
 
@@ -45,7 +47,8 @@ def _read(path):
         return list(csv.DictReader(f))
 
 
-def repair(line, series_id, label, dry):
+def repair(mod, series_id, label, dry):
+    line = mod.LINE
     current = _read(os.path.join(collect.DATA, line + ".csv"))
     preseed = _read(os.path.join(collect.DATA, "archive", f"{line}_preseed.csv"))
     if not current or not preseed:
@@ -80,7 +83,7 @@ def repair(line, series_id, label, dry):
         return True
 
     seedlib.archive_current(line, "seed1")
-    out = seedlib.score_series(plan)
+    out = seedlib.score_series(plan, mod)
     collect.write_line(line, out)
 
     dates = [r["date"] for r in out]
@@ -97,7 +100,7 @@ def repair(line, series_id, label, dry):
 def main(argv):
     dry = "--dry-run" in argv
     print("repairing the FRED seed collateral" + (" (dry run)" if dry else "") + "\n")
-    ok = all([repair(line, sid, label, dry) for line, sid, label in LINES])
+    ok = all([repair(mod, sid, label, dry) for mod, sid, label in LINES])
     print("\ndone" if ok else "\nFAILED for at least one line")
     return 0 if ok else 1
 

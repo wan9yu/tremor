@@ -125,6 +125,44 @@ def compute():
     return rows
 
 
+def open_states(rows, key):
+    """``(open_now, opened)`` — replay open/hold/clear rows into current states.
+
+    Shared with the drift layer: the two detectors calibrate differently and
+    deliberately keep separate ``walk`` functions, but replaying their event
+    rows into "what is open right now" is one mechanism, and the day it was
+    two, only one of them learned to disclose staleness.
+    """
+    open_now, opened = {}, {}
+    for r in rows:
+        if r["event"] == "open":
+            opened[r[key]] = r["date"]
+            open_now[r[key]] = r
+        elif r["event"] == "hold":
+            open_now[r[key]] = r
+        else:
+            open_now.pop(r[key], None)
+    return open_now, opened
+
+
+def stale_note(newest, last, gone_days=None):
+    """The NO LONGER SERVED banner, or "" while the input is still arriving.
+
+    A state cannot clear if the thing it watches stops being served, and a
+    frozen open state reads exactly like one still being observed. Hormuz left
+    PortWatch's panel on 2026-07-24 with its state open; the same exposure
+    exists for any drifted line whose source dies.
+    """
+    if not last:
+        return ""
+    gone = (datetime.date.fromisoformat(newest)
+            - datetime.date.fromisoformat(last)).days
+    if gone <= STALE_DAYS:
+        return ""
+    return (f"  [NO LONGER SERVED: last seen {last}, {gone} observation days ago "
+            f"— this state cannot clear because nothing is watching it]")
+
+
 def last_seen():
     """``(newest_date_in_file, {component: its own newest date})``.
 
@@ -146,23 +184,11 @@ def main(argv):
     rows = compute()
     if "--report" in argv:
         newest, seen = last_seen()
-        open_now, opened = {}, {}
-        for r in rows:
-            if r["event"] == "open":
-                opened[r["component"]] = r["date"]
-                open_now[r["component"]] = r
-            elif r["event"] == "hold":
-                open_now[r["component"]] = r
-            else:
-                open_now.pop(r["component"], None)
+        open_now, opened = open_states(rows, "component")
         if not open_now:
             print("no state is open")
         for component, r in sorted(open_now.items()):
-            gone = (datetime.date.fromisoformat(newest)
-                    - datetime.date.fromisoformat(seen.get(component, newest))).days
-            stale = (f"  [NO LONGER SERVED: last seen {seen.get(component)}, "
-                     f"{gone} observation days ago — this state cannot clear "
-                     f"because nothing is watching it]" if gone > STALE_DAYS else "")
+            stale = stale_note(newest, seen.get(component, newest))
             print(f"OPEN {component}: since {opened[component]}, "
                   f"trailing {r['trail_median']} vs pinned {r['reference']} "
                   f"({float(r['ratio']) * 100:.0f}%), as of {r['date']}{stale}")

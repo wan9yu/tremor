@@ -61,8 +61,7 @@ def seed(mod, today):
         # ever judged against readings from its own future.
         out.append(collect.score_row(
             row_date, value, f"{mod.NOTE} {obs_date}{IMPORT_MARK}",
-            obs_date.isoformat(), out,
-            weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False)))
+            obs_date.isoformat(), out, **collect.scoring_attrs(mod)))
     collect.write_line(mod.LINE, out)
 
     scored = sum(1 for r in out if r["z_score"])

@@ -7,7 +7,7 @@ score — the only composite tremor reports is a COUNT of how many lines are
 trembling on a given day.
 """
 import statistics
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from itertools import combinations
 
 WINDOW = 90        # rolling baseline: the last 90 available readings
@@ -24,7 +24,16 @@ DECYCLE_MIN = 70   # de-cycle a weekly-rhythm line only once the window is this 
 STATUS_SCORING = "scoring"      # enough clean history; a z was computed
 STATUS_WARMING = "warming-up"   # fewer than MIN_POINTS unique observations yet
 STATUS_STALE = "stale"          # the source republished an observation we hold
-STATUS_DARK = "dark"            # no reading at all — the fetch failed
+# No reading at all. TWO CAUSES, and the column does not yet separate them: the
+# fetch failed, or the fetch SUCCEEDED and the fetcher refused what came back —
+# IODA reporting every country it watches as dark, Yahoo quoting the two yuan
+# legs six hours apart, Fingrid down and a 60-second Statnett max being the
+# wrong quantity. Both are honest empties with a stated reason in source_note,
+# but "the source was down" and "we declined to read this" are different facts
+# and the record currently tells them apart only in prose — which is the shape
+# this column was invented to abolish. Splitting it changes a verdict field and
+# so bumps STABLE_SINCE; until then, do not read dark as "the source failed".
+STATUS_DARK = "dark"
 STATUS_FLAT = "no-spread"       # history has no resolvable dispersion to judge against
 # A line is BLIND when it holds a reading it cannot judge. Dark is not blindness
 # (it is already reported loudly); staleness is not either (the observation was
@@ -189,7 +198,10 @@ def _scale_z(values, today, quantum=None):
 
 
 def _weekday(date_str):
-    return datetime.strptime(date_str, "%Y-%m-%d").weekday()
+    # fromisoformat, not strptime: measured 0.10us against 2.47us, and this is
+    # called once per reading per de-cycled row — 94% of _decycled's cost before
+    # the change. The dates in this record are always ISO.
+    return date.fromisoformat(date_str).weekday()
 
 
 def _age_capped(history, dates, cycle_dates, today_date, max_age_days):
@@ -258,31 +270,27 @@ def _decycled(history, cycle_dates, today, today_cycle_date):
     weekday the false-alarm rate measures 18%, and it is still 2.7% at forty.
     Below the gate the caller keeps the plain pooled window and its range veto.
     """
-    by_weekday = {}
-    for value, date in zip(history, cycle_dates):
-        if value is None or not date:
-            continue
-        try:
-            by_weekday.setdefault(_weekday(date), []).append(value)
-        except (ValueError, TypeError):
-            return None, None
-    if not by_weekday:
+    # One pass: each reading's weekday is computed once and carried, rather
+    # than parsed again to build the residuals.
+    try:
+        dated = [(_weekday(when), value)
+                 for value, when in zip(history, cycle_dates)
+                 if value is not None and when]
+        today_weekday = _weekday(today_cycle_date)
+    except (ValueError, TypeError):
         return None, None
+    if not dated:
+        return None, None
+    by_weekday = {}
+    for weekday, value in dated:
+        by_weekday.setdefault(weekday, []).append(value)
     grand = statistics.median([v for values in by_weekday.values() for v in values])
     offsets = {day: statistics.median(values) - grand
                for day, values in by_weekday.items()}
-    try:
-        today_offset = offsets.get(_weekday(today_cycle_date))
-    except (ValueError, TypeError):
+    if today_weekday not in offsets:  # today's weekday is absent from the window
         return None, None
-    if today_offset is None:  # today's weekday is absent from the window
-        return None, None
-    residuals = []
-    for value, date in zip(history, cycle_dates):
-        if value is None or not date:
-            continue
-        residuals.append(value - offsets[_weekday(date)])
-    return residuals, today - today_offset
+    return ([value - offsets[weekday] for weekday, value in dated],
+            today - offsets[today_weekday])
 
 
 def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
@@ -318,16 +326,21 @@ def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
     history, cycle_dates = _age_capped(
         history, dates, cycle_dates, today_date, max_age_days)
     today_cycle_date = today_cycle_date or today_date
-    values = [v for v in history if v is not None][-window:]
+    decycling = (weekday_cycle and cycle_dates is not None
+                 and today_cycle_date is not None)
+    if decycling:
+        # Pair once and take the values from the pairing, so the None-filter and
+        # the trailing slice happen a single time on the path that needs both.
+        paired = [(v, c) for v, c in zip(history, cycle_dates) if v is not None][-window:]
+        values = [v for v, _ in paired]
+    else:
+        values = [v for v in history if v is not None][-window:]
     if len(values) < min_points:
         return None, STATUS_WARMING, len(values)
 
-    if (weekday_cycle and cycle_dates is not None and today_cycle_date is not None
-            and len(values) >= DECYCLE_MIN):
-        # Align the cycle dates to the same trailing slice the values came from.
-        paired = [(v, c) for v, c in zip(history, cycle_dates) if v is not None][-window:]
+    if decycling and len(values) >= DECYCLE_MIN:
         residuals, today_residual = _decycled(
-            [v for v, _ in paired], [c for _, c in paired], today, today_cycle_date)
+            values, [c for _, c in paired], today, today_cycle_date)
         if residuals is not None and len(residuals) >= min_points:
             z = _scale_z(residuals, today_residual, quantum=quantum)
             return ((z, STATUS_SCORING, len(residuals)) if z is not None
@@ -360,7 +373,11 @@ def threshold_for(n):
     """
     if n >= WINDOW:
         return THRESHOLD
-    return _C_N.get(n, _C_N[min(_C_N)] if n < min(_C_N) else THRESHOLD)
+    # The table covers MIN_POINTS..WINDOW exhaustively, and a shorter window
+    # never reaches here — robust_z returns warming-up with no z, and classify
+    # short-circuits on None. The floor is the bar for the thinnest window the
+    # instrument will judge at all.
+    return _C_N.get(n, _C_N[MIN_POINTS])
 
 
 def classify(z, n=WINDOW):

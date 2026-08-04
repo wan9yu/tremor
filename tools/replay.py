@@ -75,8 +75,7 @@ def replay_line(mod, since=None):
             "",                      # the note is not part of the verdict
             published.get("obs_date") or "",
             rows[:i],
-            weekly_cycle=getattr(mod, "WEEKLY_CYCLE", False),
-            quantum=getattr(mod, "QUANTUM", None),
+            **collect.scoring_attrs(mod),
         )
         out.append((published["date"], published, replayed))
     return out
