@@ -140,7 +140,7 @@ applied round 4.
 | cnh_cny | capital controls (China) | 2 | 3 | — | 40/42* | 0 alarms in 32 scored | ≤0.09 (n<40) | ✅ slot 4 (user-decided); reach cell open — needs +222 pips vs a 42-obs record max of 143, insufficient to adjudicate below 60 (*2 darks are weekend closures, not failures) |
 | net_outages | communications (global) | 2 | 3 | 3 | 26/26 | 57 alarm days = 37 episodes; grid-strike + blackout events attributable | ≤0.141 | ✅ **CONFIRMED R11** — the pre-committed review was held and every gate passed; the tremble clause fired on its day-count letter and was amended to episode terms on measured evidence (see round 11) |
 
-## Tier 2 — collected  (10 candidates + 4 context + 1 control · no cap)
+## Tier 2 — collected  (11 candidates + 4 context + 1 control · no cap)
 
 Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
 are tier-1 challengers banking evidence. There is no slot cap (round 8): any candidate
@@ -174,6 +174,7 @@ add, no premature reject. `polar_temp` is its first use.
 | — gdelt_tone | feel: news tone (global) | 1 | 0 | 3 | — | — | contrast line — full-day average tone, same pass as gdelt |
 | — vix | feel: priced fear (global) | 1 | 0 | 3 | — | — | contrast line — keyless FRED VIXCLS, seeded 180d from archive |
 | — polar_temp | context: planetary level (Arctic 80N) | 1 | 0 | 2 | — | — | context line, provisional-watch — DMI +80N daily anomaly vs the 1958-2002 normal (keyless, ~1d lag). A LEVEL read, not a tension indicator; the long baseline is vendored in core/arctic_clim.py. Seeded R9 to 2019 (2,740 rows): 384 warm trembles vs 4 cold — the asymmetry is the warming |
+| tga_days_cash | fiscal plumbing (US) | 3 | 3 | 2 | — | — | built R11.1 — Treasury cash buffer in DAYS OF ITS OWN OUTFLOWS (closing TGA balance / trailing-20-business-day mean withdrawal), keyless Treasury Fiscal Data, T+1. The guard is visible not asserted: median 5.3 business days against Treasury's announced ~1-week policy, and the June-2023 X-date reads 0.21 days |
 | — control_daylength | CONTROL: pipeline canary (no world) | 0 | 0 | — | — | — | control line, added 2026-07-30, registered R9 — day length at 51.4779N, 0.0E (sunrise-sunset.org). Set by orbital mechanics; nothing on Earth moves it, so any tremble here is measurement error by definition. obs_date is RECORDED, not inferred, so a one-day pipeline slip trips the ~1-minute canary tolerance even near the solstices |
 
 ## Backlog — ideas not yet built
@@ -190,9 +191,8 @@ above.)
 | entsog_gas_flow | energy (EU) | pipelines keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | point-selection design: the ENTSOG operationaldata API returns per-point per-operator flows; picking a non-diluting, non-frame-churning aggregate (which EU import points?) is real work, and aggregation dilution is a known failure mode |
 | bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | the right global formulation — RIPEstat routing-status for one AS is not a global instability measure; a withdrawal/update-rate is exposed to sensor-inflation and low-count-integer failure modes and must be designed against them |
 | cp_funding_spread | financial (US) | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | the correct CP-minus-funds construction: a single FRED `CPFF` series is not verified to be a spread; build it as (AA financial CP rate − OIS/funds), and confirm what each series actually is |
-| **fed_srf_takeup** | financial plumbing (US→global) | the Fed's Standing Repo Facility is a full-allotment ceiling defended twice daily → take-up leaks reserve/collateral scarcity borrowing from the guard itself | **BUILD-READY, probed R11**: NY Fed Markets API, keyless, real numbers returned twice and cross-checked against the reported $50.35B of 2025-10-31; same-day publication; calm ~$0-2B vs $74.6B year-end 2025 so the alarm is reachable on its own record; needs QUANTUM floor (regime-dependent zero runs) and month-end attribution. Awaiting build approval |
-| tga_balance | fiscal plumbing (US) | Treasury defends its cash buffer → a forced drawdown leaks debt-limit brinkmanship | probed keyless ($876.6B), but a −$121B routine day swing and a slow-drain crisis signature make it a DRIFT/LEVEL-layer candidate, not a z-line; needs that design first |
-| eu_gas_storage | energy (EU) | member states defend storage-fill trajectories → falling behind the injection path leaks supply cutoff | AGSI+ API is live and free-key documented, but registration plus a trajectory-anomaly design (vs the seasonal path, not a rolling median) are needed before a data-returning probe |
+| **fed_srf_takeup** | financial plumbing (US→global) | the Fed's Standing Repo Facility is a full-allotment ceiling defended twice daily → take-up leaks reserve/collateral scarcity borrowing from the guard itself | **BLOCKED on a scale design, R11.1** — guard and cadence gates pass cleanly and the source is keyless and complete (one request rebuilds 2021-07-28 onward), but the series is structurally zero: 61.4% of SRF-era days are EXACTLY 0, and replaying the repo's own normalize over 1,251 days gives Qn=0 on **79.4%** of windows without a floor (blind), or **174 trembles in 1,241 days with QUANTUM=1**, twenty-one of them firing on $4m of take-up against a $500bn facility. Needs a materiality floor with its own semantics, or an episode layer. Also needs month-end de-cycling, which this repo does not have |
+| eu_gas_storage | energy (EU) | member states defend storage-fill trajectories → falling behind the injection path leaks supply cutoff | designed R11.1 as `eu_gas_storage_path` — weekly fill change MINUS the seasonal-normal weekly change, because the raw level is all season. AGSI+ carries it (daily since 2011-01-01, zero missing days) but **requires a free registered key**, and the keyless path that works is a spoofed browser User-Agent, which this project will not ship. ACTIONABLE: register at agsi.gie.eu, add `AGSI_KEY` to repo Secrets, and it is build-ready; a 365-entry seasonal-normal table must be vendored alongside |
 
 ### Rejected
 | candidate | reason |
@@ -946,15 +946,14 @@ capital_premium) or freshness (the PortWatch pair). The largest cross-family
 correlation in the registry is gnss × polar_temp at −0.325, plausibly seasonal, worth
 an eye and nothing more.
 
-**Diverge:** one build-ready candidate and two Backlog designs. `fed_srf_takeup` —
-the Fed's Standing Repo Facility take-up, a full-allotment ceiling defended twice
-daily, take-up IS the guard being borrowed from — probed keyless at the NY Fed Markets
-API with real numbers cross-checked against the reported record; reachable on its own
-record (calm ~$0-2B vs $74.6B year-end); awaiting build approval. `tga_balance` is
-real but drift-shaped (a −$121B routine swing dwarfs any z), and `eu_gas_storage`
-needs a free-key registration plus a trajectory design. The two most orthogonal
-guarded domains — marine war-risk premia and sovereign CDS — have **no free daily
-source**; recorded as non-finds so the search is not repeated.
+**Diverge:** three candidates, all of which changed shape when probed properly in
+R11.1 — see that entry. Two of this paragraph's original claims did not survive
+(`fed_srf_takeup`'s "calm ~$0-2B" was off by three orders of magnitude and its
+"needs a QUANTUM floor" was the opposite of what the data says), and `tga_balance`
+turned out to be buildable after all once the reading was changed from the balance
+to the balance divided by the burn rate. The two most orthogonal guarded domains —
+marine war-risk premia and sovereign CDS — have **no free daily source**; recorded
+as non-finds so the search is not repeated.
 
 **What this round says about the instrument:** the first full composition review found
 the set defensible but young — one line confirmed on four years of evidence, one
@@ -963,3 +962,65 @@ retained on grandfather rights with its exit conditions now written down, two sl
 The review mechanism itself worked the way the project wants: a pre-commitment fired,
 was adjudicated against measurement rather than kept or waived by taste, and the
 amendment is recorded next to the clause it amends.
+
+### Round 11.1 — 2026-08-04 (the three candidates, probed properly; one built, two blocked)
+
+Round 11 named three candidates on a single reconnaissance pass. Probed properly — every
+claim below comes from a response actually received — **one is built, two are blocked,
+and two of round 11's own numbers were wrong.** The corrections are made in place above.
+
+**BUILT: `tga_days_cash`** (tier 2). Round 11 filed the Treasury General Account as
+drift-shaped and unscoreable, and on the BALANCE it is: routine single-day swings run to
+$121bn, the level regime moved by trillions after 2020, and tax dates impose a calendar
+rhythm this repo cannot remove. The reading was changed instead of the verdict — closing
+balance divided by the trailing 20-business-day mean withdrawal, giving **days of its own
+outflows**. That normalizes the level, the regime and most of the calendar at once, and it
+is not a statistical trick: a buffer is only large or small relative to what is being
+spent, so when outflows spike the buffer really is shorter and the line falls without the
+balance moving. The guard becomes VISIBLE rather than asserted — Treasury says it targets
+about a week of outflows, and the median of the served history is **5.3 business days**.
+The leak is sharp: **the June-2023 X-date reads 0.21 days**, and 72 days of 2023 sit below
+3.0. Keyless, business-daily, T+1. One field trap is recorded in the fetcher because a
+module written from the schema alone ships broken: `close_today_bal` is the literal string
+"null" on every modern row and the value lives in `open_today_bal`. Both sides of the ratio
+are captured as components, because a ratio destroys its own inputs and this project has
+paid for that lesson once already.
+
+**BLOCKED: `fed_srf_takeup`** — and round 11's entry for it was wrong twice. The guard is
+excellent (the Fed posts the SRF as a defended ceiling and allots in full twice every
+business day; take-up IS the guard being borrowed from) and both gates pass cleanly. The
+source is keyless and one request rebuilds the whole SRF era. What kills it is the scale:
+**61.4% of SRF-era days are exactly zero**. Replaying this repo's own `normalize` over
+1,251 days measures the two available options and neither is honest — with no floor, Qn is
+exactly zero on **79.4% of windows** and the line is blind four days in five (the
+`sofr99_dispersion` rejection was made at 23%); with `QUANTUM=1` at the source's true $1m
+resolution it fires **174 times in 1,241 days, twenty-one of them on $4 million** of
+take-up against a facility with a $500bn limit. Round 11 recorded "calm ~$0-2B" — the calm
+median is **$1 million**, three orders of magnitude out — and "needs a QUANTUM floor",
+which is precisely the fix the measurement disproves. It stays on the Backlog until there
+is a materiality floor with its own semantics, or an episode layer for structurally-zero
+series. Two traps are recorded there for whoever builds it: filtering on `method=allotment`
+returns HTTP 200 and silently truncates the history to 2025-12-11 (the Fed relabelled the
+operations mid-series), and seeding from the endpoint's full range splices in the 2019-20
+emergency repos and the 2000-08 daily OMOs — a different facility at $100-150bn scale that
+would make the real 2025 episode look unremarkable.
+
+**BLOCKED: `eu_gas_storage`**, designed and then declined on sourcing ethics. The design is
+right and worth keeping: the raw fill percentage is dominated by the seasonal injection
+cycle, so the honest reading is the **weekly fill change minus the seasonal-normal weekly
+change** — "did the EU lose ground against its own refill path this week". AGSI+ carries
+it cleanly (daily since 2011-01-01, 5,693 rows, zero missing days) and today reads −0.61
+pp/week against a level that is 15.5 points behind its same-day-of-year normal — which is
+exactly the split the design predicts, a line that correctly says "not getting worse this
+week" about a situation that is already bad. But AGSI+ **requires a free registered key**,
+and the only keyless path that works is a spoofed browser User-Agent. This project does not
+ship that: the service asked for a registration, and evading it with a fake identity is not
+a sourcing practice an instrument about honesty can hold. ACTIONABLE and one step: register
+at agsi.gie.eu, add `AGSI_KEY` to repo Secrets, vendor the 365-entry seasonal-normal table,
+and it is build-ready.
+
+**The pattern worth naming.** All three round-11 entries were written from one
+reconnaissance pass each, and all three were wrong in some load-bearing way — one verdict
+inverted, one line's calm regime off by 1000x, one design missing entirely. A candidate is
+not characterised until something has replayed the repo's own scoring over its actual
+history. That is now the bar for a Backlog entry claiming "build-ready".

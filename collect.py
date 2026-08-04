@@ -46,7 +46,7 @@ from fetchers import (capital_premium, chokepoint, cnh_cny, control_daylength,
                       credit_spread, em_oas, euro_hy_spread, flights,
                       fx_parallel_premium, gdelt, gdelt_tone, gnss, grid_frequency,
                       hkma_aggr_balance, net_outages, polar_temp, ports, sofr_iorb,
-                      vix)
+                      tga_days_cash, vix)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
 # (airspace / financial system / capital controls / communications), so several
@@ -57,6 +57,7 @@ LINES = [flights, credit_spread, cnh_cny, net_outages,  # tier 1 (primary, displ
          gnss, capital_premium, grid_frequency,         # tier 2 (demoted)
          chokepoint, sofr_iorb, em_oas, ports,          # tier 2 (candidates)
          euro_hy_spread, fx_parallel_premium, hkma_aggr_balance,  # tier 2 (built round 8)
+         tga_days_cash,                                 # tier 2 (built round 11)
          gdelt, gdelt_tone, vix, polar_temp,             # tier 2 (context, never promotable)
          control_daylength]                             # tier 2 (CONTROL — no world in it)
 
