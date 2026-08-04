@@ -211,4 +211,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-01,1907,-0.144,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-07-22 [sampled 23:06:48Z]",2026-07-22,scoring
 2026-08-02,1906,-0.160,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-07-23 [sampled 22:58:37Z]",2026-07-23,scoring
 2026-08-03,1782,-1.666,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-07-24 [sampled 22:59:43Z]",2026-07-24,scoring
-2026-08-04,1845,-0.848,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-07-25 [panel: 27 straits in the response, series expects 28] [sampled 23:07:07Z]",2026-07-25,scoring
+2026-08-04,1845,-0.848,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-07-25 [panel: 27 straits in the response, series expects 28] [sampled 00:53:21Z]",2026-07-25,scoring

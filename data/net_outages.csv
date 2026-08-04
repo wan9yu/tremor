@@ -1645,4 +1645,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-01,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h) [Tunisia, Us Virgin Islands] [sampled 23:06:43Z]",,scoring
 2026-08-02,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h) [Burundi] [sampled 22:58:32Z],,scoring
 2026-08-03,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h) [Syrian Arab Republic] [sampled 22:59:37Z],,scoring
-2026-08-04,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h) [Burkina Faso] [sampled 23:07:02Z],,scoring
+2026-08-04,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h) [Burkina Faso] [sampled 00:53:15Z],,scoring
