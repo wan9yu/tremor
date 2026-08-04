@@ -114,6 +114,25 @@ def read_line(line):
     return collect._read_rows(os.path.join(collect.DATA, line + ".csv"))
 
 
+def rerun_is_safe():
+    """Why a seeder can simply be RE-RUN, and must never be hand-restored.
+
+    ``merge`` preserves every published row and imports only observations no
+    row already carries, so running a seeder twice is idempotent: the second
+    run finds every observation covered, changes nothing, and keeps whatever
+    the daily collector has added since.
+
+    RESTORING THE PRE-SEED ARCHIVE FIRST IS NOT. That archive was captured at
+    the moment of the FIRST seed, so anything collected since — a live row the
+    daily run wrote yesterday — is not in it, and copying it back deletes that
+    row before the merge ever sees it. It happened on 2026-08-04: the
+    net_outages re-seed silently dropped the 08-04 live reading, recovered
+    from git. The seeders never ask for a restore; nothing in this module does
+    one; do not do it by hand.
+    """
+    return True
+
+
 def run_seed(mod, history, import_note, dry=False):
     """The whole seeder tail: merge, disclose, archive, re-score, write, report.
 

@@ -80,6 +80,29 @@ class TestMerge(unittest.TestCase):
             "n=1")
 
 
+class TestRerunIsIdempotent(unittest.TestCase):
+    """A seeder may be re-run; the record it has already written survives.
+
+    This is what makes hand-restoring a pre-seed archive unnecessary — and the
+    hand-restore is what deleted a published live row on 2026-08-04.
+    """
+
+    def test_a_second_merge_changes_nothing_and_keeps_later_rows(self):
+        history = [("2026-07-01", 1.0), ("2026-07-02", 2.0)]
+        first, _ = seedlib.merge(history, [], _note)
+        # ...then the daily collector adds a row the archive never had.
+        seeded = [{"date": d, "raw_value": "" if raw is None else str(raw),
+                   "obs_date": obs, "source_note": note}
+                  for d, raw, note, obs in first]
+        seeded.append({"date": "2026-07-09", "raw_value": "9",
+                       "obs_date": "2026-07-09", "source_note": "live"})
+        second, dropped = seedlib.merge(history, seeded, _note)
+        self.assertEqual([p[0] for p in second],
+                         ["2026-07-01", "2026-07-02", "2026-07-09"])
+        self.assertEqual(dropped, [])
+        self.assertEqual(second[-1][1], 9.0, "the live row did not survive")
+
+
 class TestLegDiscipline(unittest.TestCase):
     def test_fred_latest_common_pairs_only_shared_dates(self):
         from core import fred
