@@ -37,26 +37,30 @@ from fetchers import control_daylength as control
 # ONE-OFF short days: {date: {missing components}}. An entry here is a human
 # acknowledgement that the shortfall was investigated and found to be the
 # source's, not a lost page of ours, and each must have a matching
-# annotations.csv row saying what was found. Empty today — the only short day
-# the record has seen turned out to be permanent and lives below.
-ACKNOWLEDGED_SHORT = {}
-
-# A strait the source has stopped serving ALTOGETHER, from the first date it
-# went missing. This is not the same acknowledgement as a one-off short day: it
-# says the panel itself has changed and the change has been investigated, so the
-# audit stops asking about every subsequent day. Removing an entry from here is
-# how the question gets reopened.
-#
-# Strait of Hormuz, from 2026-07-24: verified against PortWatch directly — obs
-# 07-24, 07-25 and 07-26 carry no Hormuz row at all, after 9/12/11/10 transits
-# on the four days before. Day ~146 of a closure the level layer has held open
-# since April. Whether the source is serving zero-traffic as no-row or has
-# dropped the strait cannot be told from the response, and the difference
-# matters: under the first reading a FULL closure is invisible to the sum by
-# construction. See annotations 2026-08-04.
-ONGOING_ABSENT = {
-    "Strait of Hormuz": "2026-07-24",
+# annotations.csv row saying what was found.
+ACKNOWLEDGED_SHORT = {
+    # PortWatch served 27 straits on these two days — no Strait of Hormuz row
+    # at all, verified by direct query — after 9/12/11/10 transits on the four
+    # days before. It resumed on obs 07-26 at 3 transits, the lowest reading in
+    # the strait's 214-day record. So the absence was TWO DAYS, not a panel
+    # change: most likely the source emitting no row for near-zero traffic,
+    # which is the reading that matters, because under it a FULL closure is
+    # invisible to a 28-strait sum by construction. See annotations 2026-08-05.
+    "2026-07-24": {"Strait of Hormuz"},
+    "2026-07-25": {"Strait of Hormuz"},
 }
+
+# A component the source has stopped serving ALTOGETHER, from the first date it
+# went missing: {name: since}. Different from a one-off short day — it says the
+# panel itself changed, so the audit stops asking about every subsequent day.
+#
+# EMPTY, and the way it emptied is the mechanism working. Hormuz was entered
+# here on 2026-08-04 after three consecutive absences looked permanent; on
+# 2026-08-05 the audit failed in the OTHER direction — obs 07-26 was missing
+# nothing while this dict still expected a gap — which is precisely how a
+# standing acknowledgement is supposed to be revoked. It was two days, and they
+# are recorded above as what they were.
+ONGOING_ABSENT = {}
 
 
 def _expected_missing(date, panel):
