@@ -206,3 +206,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-03,17.09,,0,,FRED VIXCLS close 2026-07-30 [sampled 22:59:49Z] [stale: observation already recorded],2026-07-30,stale
 2026-08-04,15.99,-1.091,0,down,FRED VIXCLS close 2026-07-31 [sampled 00:53:39Z],2026-07-31,scoring
 2026-08-05,15.86,-1.182,0,down,FRED VIXCLS close 2026-08-03 [sampled 23:07:28Z],2026-08-03,scoring
+2026-08-06,16.5,-0.761,0,down,FRED VIXCLS close 2026-08-04 [sampled 23:05:43Z],2026-08-04,scoring

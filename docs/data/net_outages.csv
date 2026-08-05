@@ -1647,3 +1647,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-03,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h) [Syrian Arab Republic] [sampled 22:59:37Z],,scoring
 2026-08-04,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h) [Burkina Faso] [sampled 00:53:15Z],,scoring
 2026-08-05,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h) [Cote D Ivoire] [sampled 23:07:02Z],,scoring
+2026-08-06,3,0.469,0,up,"IODA 3 countries with ping-slash24 outages (24h) [Cote D Ivoire, Georgia, Liberia] [sampled 23:05:20Z]",,scoring
