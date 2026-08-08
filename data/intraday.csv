@@ -116,3 +116,6 @@ sampled_utc,line,raw_value,source_note
 2026-08-07T20:50:00Z,flights,1694,"ADS-B regions [W/C Europe=456, US East=548, US West=650, E Asia/Japan=40] via adsb.lol, airplanes.live"
 2026-08-07T20:50:00Z,cnh_cny,57,"Yahoo USDCNH 6.7429 − USDCNY 6.7372 (pips) [CNH 2026-08-07 20:50Z, CNY 2026-08-07 18:52Z, 118min apart]"
 2026-08-07T20:50:00Z,capital_premium,-1.1798,Upbit KRW-BTC vs Coinbase USD @ 1423.48 KRW/USD
+2026-08-08T03:39:36Z,flights,1062,"ADS-B regions [W/C Europe=177, US East=304, US West=391, E Asia/Japan=190] via adsb.fi, airplanes.live"
+2026-08-08T03:39:36Z,cnh_cny,,"no new observation: FX weekend, both legs frozen (CNH 2026-08-07 20:59Z, CNY 2026-08-08 03:30Z) — no simultaneous quote exists until Monday trade; dark by market closure, not failure"
+2026-08-08T03:39:36Z,capital_premium,-0.2248,Upbit KRW-BTC vs Coinbase USD @ 1411.63 KRW/USD
