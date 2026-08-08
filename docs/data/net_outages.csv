@@ -1650,3 +1650,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-06,3,0.469,0,up,"IODA 3 countries with ping-slash24 outages (24h) [Cote D Ivoire, Georgia, Liberia] [sampled 23:05:20Z]",,scoring
 2026-08-07,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h) [Cote D Ivoire] [sampled 01:30:52Z],,scoring
 2026-08-08,5,1.407,0,up,"IODA 5 countries with ping-slash24 outages (24h) [Burundi, Cote D Ivoire, Guinea, Rwanda, Turkmenistan] [sampled 22:41:39Z]",,scoring
+2026-08-09,4,0.938,0,up,"IODA 4 countries with ping-slash24 outages (24h) [Burundi, Cote D Ivoire, Rwanda, Turkmenistan] [sampled 22:34:20Z]",,scoring
