@@ -66,9 +66,10 @@ jobs:
         run: |
           python tools/level_layer.py
           python tools/drift_layer.py
+          python tools/stuck_panel.py
           python render.py
           tools/ci_push.sh "derived: $(TZ=Asia/Shanghai date +%F)" \
-            charts/ data/levels.csv data/drifts.csv
+            charts/ data/levels.csv data/drifts.csv docs/data/stuck.csv
 
       # VERIFY AFTER COMMITTING, NEVER BEFORE. Several lines are live snapshots
       # with no archive to re-fetch from, so a gate that fails before the commit
