@@ -19,18 +19,19 @@ verdict, and it is served BY THE REPORTER, never through collect.MIRRORED.
 
     python tools/stuck_panel.py    # rebuild docs/data/stuck.csv from data/levels.csv
 """
-import csv
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(_HERE)
+sys.path.insert(0, _HERE)   # tools/, for level_layer
+sys.path.insert(0, ROOT)    # repo root, for collect's shared CSV helpers
+import collect
 import level_layer
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEVELS = os.path.join(ROOT, "data", "levels.csv")
 OUT = os.path.join(ROOT, "docs", "data", "stuck.csv")
 HEADER = ["date", "component", "since", "pct", "stale"]
-OPEN_EVENTS = ("open", "hold")
 
 
 def build_panel(level_rows, stale_now=frozenset()):
@@ -56,8 +57,7 @@ def build_panel(level_rows, stale_now=frozenset()):
         elif event == "clear":
             opened.pop(comp, None)
             continue
-        if event not in OPEN_EVENTS:
-            continue
+        # event is "open" or "hold" here (walk emits nothing else): a stuck day
         stale = "1" if (date == latest and comp in stale_now) else ""
         out.append({"date": date, "component": comp,
                     "since": opened.get(comp, date),
@@ -65,15 +65,8 @@ def build_panel(level_rows, stale_now=frozenset()):
     return out
 
 
-def _read(path):
-    if not os.path.exists(path):
-        return []
-    with open(path, newline="") as f:
-        return list(csv.DictReader(f))
-
-
 def main():
-    level_rows = _read(LEVELS)
+    level_rows = collect._read_rows(LEVELS)
     # Staleness: which currently-open straits stopped being served (dropped out of
     # PortWatch's panel while their state was open, as Hormuz did on 2026-07-24).
     # Reuses the level layer's own last-seen bookkeeping so the two cannot disagree.
@@ -85,11 +78,7 @@ def main():
             if level_layer.stale_note(newest, seen.get(comp, newest)):
                 stale_now.add(comp)
     rows = build_panel(level_rows, stale_now)
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=HEADER)
-        w.writeheader()
-        w.writerows(rows)
+    collect._write_rows(OUT, HEADER, rows)
     latest = rows[-1]["date"] if rows else None
     n_now = sum(1 for r in rows if r["date"] == latest)
     print(f"stuck panel: {len(rows)} rows, {n_now} strait(s) open now -> {OUT}")

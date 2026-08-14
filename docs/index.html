@@ -393,9 +393,9 @@ const T = {
     feelGapNote:"divergence — felt hot, measured calm; cause unknown (anxiety premium or coverage gap)",
     stuckTitle:"Stuck quiet — what the resonance count can't see",
     stuckHint:"The scored chokepoint line is a SUM over 28 straits, and a sum cannot see one or two small straits go silent: a full closure of both straits below moves the 28-strait total only about 1 z, a third of the way to its own alarm (radar round 12). The level layer, drawn here, watches each strait against a pinned pre-event reference instead — a state opens after 14 days at or below half its normal traffic, and holds until it recovers. This reads the IMF PortWatch panel, which lags ~10 days, so it is as of the last served observation, not today.",
-    stuckHead:(n,d)=>(n===0?"No strait stuck quiet":n===1?"1 strait stuck quiet":n+" straits stuck quiet")+" — as of "+d,
+    stuckHead:(n,d)=>(n===1?"1 strait stuck quiet":n+" straits stuck quiet")+" — as of "+d,
     stuckSince:d=>"since "+d, stuckPct:p=>"at "+p+"% of normal traffic",
-    stuckStale:"no longer served", stuckBars:"straits stuck quiet", stuckAxis:"straits",
+    stuckStale:"no longer served", stuckAxis:"straits",
     covLead2:"Field of view: ",
     covTail:" Outside this, real strain can still read 0.",
     covMore:"what tremor cannot see ›",
@@ -444,9 +444,9 @@ const T = {
     feelGapNote:"背离 —— 感觉发烫，测量平静；成因未知（焦虑溢价或覆盖盲区）",
     stuckTitle:"静默卡死 —— 共振计数看不见的",
     stuckHint:"计分的海峡线是 28 条海峡的求和，而求和看不见一两条小海峡陷入静默：下面两条海峡即便同时完全封闭，28 海峡总量也只移动约 1 个 z，只走到自身报警线的三分之一（雷达第 12 轮）。这里画的是层级层——它改为把每条海峡对照一个在事发前钉住的基准来看：连续 14 天跌到正常流量的一半或以下即开启一个状态，直到恢复才解除。数据来自 IMF PortWatch 面板，约有 10 天滞后，所以这里是截至最近一次可得观测，而非今天。",
-    stuckHead:(n,d)=>(n===0?"没有海峡处于静默":n+" 条海峡静默卡死")+" —— 截至 "+d,
+    stuckHead:(n,d)=>n+" 条海峡静默卡死 —— 截至 "+d,
     stuckSince:d=>"自 "+d+" 起", stuckPct:p=>"仅为正常流量的 "+p+"%",
-    stuckStale:"已不再上报", stuckBars:"静默海峡数", stuckAxis:"海峡数",
+    stuckStale:"已不再上报", stuckAxis:"海峡数",
     covLead2:"视野范围：",
     covTail:"视野之外，真实的压力照样可能读作 0。",
     covMore:"tremor 看不见什么 ›",
@@ -781,22 +781,21 @@ function render(){
     const byDate={}; stuck.forEach(r=>{(byDate[r.date]||(byDate[r.date]=[])).push(r);});
     const sdates=Object.keys(byDate).sort();
     const latest=sdates[sdates.length-1];
-    const now=byDate[latest]||[];
+    const now=byDate[latest];
     const items=now.map(r=>{
       const staleTag=r.stale==="1"?` <span class="wl-blind">${T[lang].stuckStale}</span>`:"";
       return `<li><b>${straitLabel(r.component,lang)}</b> — ${T[lang].stuckPct(r.pct)} · ${T[lang].stuckSince(r.since)}${staleTag}</li>`;
     }).join("");
     document.getElementById("stuck-now").innerHTML=
-      `<p class="stuck-head">${T[lang].stuckHead(now.length,latest)}</p>`
-      +(items?`<ul class="stuck-list">${items}</ul>`:"");
+      `<p class="stuck-head">${T[lang].stuckHead(now.length,latest)}</p><ul class="stuck-list">${items}</ul>`;
     // count of straits stuck quiet per day — it stepped 1→2 on 2026-07-26 while the
     // scored chokepoint z sat at ±0.3, which is the whole point of the panel.
     let cdates=sdates; if(cutDate) cdates=cdates.filter(d=>d>=cutDate);
-    const counts=cdates.map(d=>(byDate[d]||[]).length);
+    const counts=cdates.map(d=>byDate[d].length);
     const ymax=Math.max(2,...counts);
     if(stuckChart) stuckChart.destroy();
     stuckChart=new Chart(document.getElementById("stuckchart"),{
-      type:"line", data:{labels:cdates, datasets:[{ label:T[lang].stuckBars, data:counts,
+      type:"line", data:{labels:cdates, datasets:[{ label:T[lang].stuckAxis, data:counts,
         stepped:true, borderColor:"#e0a83d", backgroundColor:"rgba(224,168,61,.18)",
         borderWidth:1.8, fill:true, pointRadius:0, pointHoverRadius:4 }]},
       options:{ responsive:true, animation:false, interaction:{mode:"index",intersect:false},
