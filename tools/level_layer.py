@@ -17,10 +17,13 @@ THE RULE (five parameters, no free lunch hidden in them):
     broken state cannot argue itself normal by becoming the baseline;
   * CLEAR when the trailing median recovers to 0.8x the PINNED reference.
 
-Replayed against the full component record this opens exactly two states:
-Hormuz (2026-04-06, still open, running ~14% of its pinned 72/day) and Kerch
-(2026-05-14, self-cleared 05-19). The other 26 straits produce zero breach
-days, including Taiwan through its July AIS-gap artifact.
+Replayed against the full component record this opens three states across two
+straits: Hormuz (2026-04-06, still open, running ~7% of its pinned 72/day) and
+Kerch (2026-05-14, self-cleared 05-19; RE-opened 2026-07-26, still open at ~0%
+of its pinned 12/day). Two states are open at once as of the latest served obs.
+The other 26 straits produce zero breach days, including Taiwan through its July
+AIS-gap artifact -- which was a gap-then-backfill in VALUES (present at 277->28
+->401), never a missing row, so it opens no state.
 
 WHAT THIS IS NOT. It is not a scored line: it has no z, no trembling flag, it
 is counted in no summary, and nothing in the scoring path reads its output

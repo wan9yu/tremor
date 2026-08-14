@@ -94,6 +94,15 @@ Written down because they are structural, not bugs, and a reader deserves them u
    becoming the baseline. It currently holds one state open: Hormuz since 2026-04-06, at
    ~14% of its pinned 72/day. Diagnostic, unscored, uncounted — but the level question now
    has a written answer instead of a shrug.
+   **Quantified and located** (2026-08-14, R12): the sum's blindness is now a measured fact,
+   not a worry — a full simultaneous closure of the two currently-stuck straits (Hormuz +
+   Kerch, pinned 72 + 12 = 84 transits) moves the 28-strait total 1.04 z, 35% of the way to
+   its −3z alarm; 3.4 Hormuz-sized straits must close at once for the sum to fire. The level
+   layer holds what the sum cannot (two states open now: Hormuz 7%, Kerch since 07-26 at 0%).
+   The remaining gap is that its count is not *served* — and the fix belongs OUTSIDE the
+   scoring path (a diagnostic panel), never as a `summary.csv` column, which would break the
+   side-channel firewall, replay's forward-only re-derivation, and the tier-1-only summary
+   contract at once. See round 12.
 2. **The tremble bar is not one number — it depends on how much evidence built the
    verdict.** A robust z measures today against an ESTIMATED median in units of an
    ESTIMATED scale, and estimates from ten readings wobble in a way estimates from ninety
@@ -161,7 +170,7 @@ add, no premature reject. `polar_temp` is its first use.
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | note |
 |---|---|:--:|:--:|:--:|:--:|:--:|---|
 | port_throughput | trade (global) | 3 | 3 | 3 | — | — | ~4729 global port calls/day (2065 ports) |
-| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810/day (Hormuz blockaded) — strong, but PortWatch lags ~8 days: too stale to display live |
+| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810/day (Hormuz blockaded) — strong, but PortWatch lags ~8 days: too stale to display live. R12: the SUM is structurally blind to 1–2 small straits going silent (a full Hormuz+Kerch closure = 84 transits = 1.04z, 35% to alarm) — the level layer, not this line, carries that signal |
 | sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | SOFR−IORB ~−2bps (calm) — keyless FRED |
 | em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | EM corp OAS ~1.38pp — orthogonal to US HY |
 | gnss_interference | navigation/EW (global) | 3 | 3 | 1* | 31/31 | 3.4% | demoted R7 — *effective* reach is 1, not 3: one worldwide ratio has no regional sensitivity. Seeded R9 to 2022-07 (1,466 rows): it fires 49 alarm-direction trembles in 1,452 scored days, and the Gulf window peaks at z=2.87 — under-powered, not motionless (see the R9 corrections). Its global floor rose 1.64x in four years with no single day ever unusual |
@@ -1024,3 +1033,94 @@ reconnaissance pass each, and all three were wrong in some load-bearing way — 
 inverted, one line's calm regime off by 1000x, one design missing entirely. A candidate is
 not characterised until something has replayed the repo's own scoring over its actual
 history. That is now the bar for a Backlog entry claiming "build-ready".
+
+### Round 12 — 2026-08-14 (the chokepoint blind spot: measured, sourced, and its fix located outside the scoring path)
+
+Triggered by the 2026-08-04 Hormuz correction (commit 6455f2a): two straits stuck quiet at
+once — Hormuz and Kerch — while the scored `chokepoint_breadth` z sat at ±0.3. The question
+was whether that is a coverage gap, a detector gap, or a reporting gap. Answer, every
+decision-driving number independently re-derived through the repo's own `normalize`: a
+**reporting gap in an organ that already exists and already fired**. No tier moves, no new
+fetcher; one honesty fix to the level layer's docstring, and one design recorded as
+recommended-but-approval-gated.
+
+**The SUM cannot reach its own alarm on a small-strait closure — measured, not argued.**
+Against the line's own machinery (`core/normalize`: Qn scale, `threshold_for(n)`) over the
+trailing WINDOW=90 of the 28-strait total: Qn ≈ **81 transits per z**, centre 1914, so the
+−3z alarm sits **243 transits below centre**. Hormuz's pinned reference is 72/day and
+Kerch's 12/day; a **full simultaneous closure of both** removes 84 transits = **1.04 z**,
+only **35%** of the way to the alarm — you would need **3.4 Hormuz-sized straits to close at
+once** for the sum to fire. This is the reachability gate (a standing absolute gate) failing
+not for the line but for a whole event class: "one or two small straits go silent" is
+unreachable for a 28-strait sum by construction. And because a closure ramps gradually the
+rolling baseline absorbs it (Known limit 1), so the sum reads calm on the way down as well
+as at the bottom. (Qn is 78.9 or 81.0 depending on whether today's just-written row sits in
+the window; the estimator-faithful history window — the one `robust_z` actually uses to
+score the newest reading — gives 81.0, and reproduces 1.04z / 35% / 3.4 exactly.)
+
+**Not a coverage gap.** A sweep for a free, ~daily, per-strait maritime source with a
+shorter lag than PortWatch's ~5–10 days returned a **non-find**, recorded so the search is
+not repeated. The nearest technical match, TankerMap (`/api/analytics/chokepoints`: keyless
+JSON, ~0 lag, and it emits explicit 0s — a better closure shape than PortWatch's missing
+row), is disqualified on data quality: tanker-only, self-declared `confidence=unknown`, and
+it undercounts Hormuz by ~90% (avg ~1.3/day vs the real ~25–30), so a genuine closure is
+indistinguishable from its everyday noise. Every free real-time AIS feed (AISstream, AISHub,
+StraitScope) needs a key, serves raw positions not per-strait counts, or covers one strait —
+i.e. re-implementing PortWatch against a worse terrestrial, coverage-gapped sensor.
+Kpler/MarineTraffic/Vortexa/EMSA are paywalled or access-restricted (the war-risk-premia /
+CDS pattern again). PortWatch stays the source; the fault is the aggregation, not the sensing.
+
+**Not a detector gap either — the level layer already fired.** `tools/level_layer.py` holds
+two states OPEN right now: Hormuz since 2026-04-06 (7% of its pinned 72) and Kerch since
+2026-07-26 (0% of its pinned 12) — the second a re-closure after the 05-14→05-19 self-clear.
+A COUNT over those states (a state/episode count, never a rolling z — a count-of-stuck-straits
+is structurally zero and would drive Qn=0 exactly as `fed_srf_takeup` does, R11.1) reads
+**2** on the day the sum reads calm. The organ exists and works.
+
+**The gap is that the count is not SERVED — and it must not be served through the summary.**
+The tempting move, a `stuck_count` column in `data/summary.csv`, was probed against the code
+and **rejected**: it breaks three load-bearing guards at once. (1) `tests/test_level.py`
+(`test_scoring_code_never_reads_the_level_file`) forbids the scoring path from containing
+even the string `"levels"` — the firewall whose stated why (`tests/test_side_channel.py`) is
+that "a diagnostic file becomes an input to a verdict, and the separation that makes it safe
+is gone". (2) `tools/replay.py` re-derives all three summary counts from the **replayed
+tier-1 rows** and fails `--check` on any mismatch; a count sourced from the tier-2 component
+record, recomputed from scratch over a growing union panel with backfillable values, is not
+forward-only and cannot be re-derived that way. (3) `collect.py` declares the summary holds
+"only the tier-1 aggregates" (and would not double-count — chokepoint is TIER=2, so it adds
+nothing to trembling/dark/blind today — but disjointness is bought by breaking the other two
+guards). The correct home is a **separately-served diagnostic**: mirror `levels.csv` (or a
+derived open-state count) into its own dashboard panel, read by `render.py` or a new `tools/`
+reporter that lives OUTSIDE the scoring path — which honors the mirror allow-list as a named
+serve and is legitimately exempt from forward-only because it is recomputed each run.
+**RECOMMENDED, approval-gated (touches the dashboard, not the scoring path); not built here.**
+
+**absence-as-breach: rejected.** The deeper worry the 08-04 commit named — PortWatch emits
+no row for near-zero traffic, so the most alarming state arrives as a missing row — cannot be
+promoted to a scored or counted breach. Two of this round's own working premises were wrong
+and are corrected here: no obs day ever served 4 straits (the component panel histogram is
+{27: 2, 28: 221}); the only short panels are obs 07-24/07-25 at 27 straits with the Hormuz
+row absent. And the Taiwan July artifact such a rule would have to survive was never an
+absence — Taiwan was present at low-then-backfilled values (277→28→401) — so a "require the
+rest of the panel complete" guard defends against the wrong artifact class while coupling
+each strait's alarm to every other strait's completeness (a real no-row closure coinciding
+with any unrelated single-strait drop would be silently suppressed). The one genuinely
+uncovered case — an instantaneous full closure served as no-row with no 14-day ramp — is,
+without a human, indistinguishable from a pipeline drop, which is exactly why it already
+lives correctly as a post-commit ALARM (`audit_record.py` ACKNOWLEDGED_SHORT / ONGOING_ABSENT):
+on 07-24/25 that alarm took three days of direct queries to classify, was briefly entered as
+ONGOING_ABSENT on 08-04, and self-revoked on 08-05 when obs 07-26 returned non-missing at 3
+transits (commit 6455f2a). An automated persistence threshold cannot beat that — short fires
+on transient hiccups, long adds nothing, because once the strait resumes at a low value the
+level layer's value-based OPEN already sees it.
+
+**Honesty fix applied:** `tools/level_layer.py`'s docstring said the record "opens exactly
+two states: Hormuz … and Kerch (2026-05-14, self-cleared 05-19)" at "~14%". It now opens
+three across two straits (Kerch re-closed 07-26, still open) and Hormuz runs at 7%. Docstring
+corrected to the live state; no logic touched.
+
+**Method note.** The reachability arithmetic, the source sweep, and the firewall analysis
+were each run as an independent agent and cross-checked against the raw CSVs and the actual
+tests — the R11 discipline ("a claim is not characterised until something has replayed the
+repo's own scoring / read the real code"), which this round twice needed: it caught the
+non-existent 4-strait day and the misspecified Taiwan guard before they reached this page.
