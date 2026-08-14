@@ -73,6 +73,9 @@
   .panel h2{font-size:14px;margin:0;font-weight:600}
   .panel .hint{color:var(--muted);font-size:12px;margin:2px 0 10px}
   .panelhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .stuck-head{font-size:15px;margin:2px 0 8px;color:#c7ccd6}
+  .stuck-list{margin:0 0 14px;padding-left:18px;font-size:14px;line-height:1.6;color:#c7ccd6}
+  .stuck-list li{margin:0 0 4px}
   .rangetoggle{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
   .rangetoggle button{background:transparent;color:var(--muted);border:0;padding:3px 9px;
     font-size:11px;cursor:pointer;font-family:inherit}
@@ -153,6 +156,13 @@
     <h2 id="feel-title"></h2>
     <p class="hint" id="feel-hint"></p>
     <canvas id="feelchart" height="120"></canvas>
+  </div>
+
+  <div class="panel" id="stuck-panel" style="margin-top:16px" hidden>
+    <h2 id="stuck-title"></h2>
+    <p class="hint" id="stuck-hint"></p>
+    <div id="stuck-now"></div>
+    <canvas id="stuckchart" height="110"></canvas>
   </div>
 
   <p class="watchlist" id="watchlist" hidden></p>
@@ -381,6 +391,11 @@ const T = {
     feelTitle:"Real vs felt — where they diverge",
     feelHint:"Bars: how many primary instruments trembled that day (the measured side). Lines: how disordered the world FEELS — priced fear (VIX) and global news tone/conflict share — shown as z toward each line's alarming direction. Feel lines are contrast only, never counted. Amber columns mark a DIVERGENCE: the felt side ran hot while every primary instrument read calm. A divergence has two possible causes and this chart cannot tell them apart — the feeling outran the world (an anxiety premium), or the strain fell outside what tremor watches (a coverage gap).",
     feelGapNote:"divergence — felt hot, measured calm; cause unknown (anxiety premium or coverage gap)",
+    stuckTitle:"Stuck quiet — what the resonance count can't see",
+    stuckHint:"The scored chokepoint line is a SUM over 28 straits, and a sum cannot see one or two small straits go silent: a full closure of both straits below moves the 28-strait total only about 1 z, a third of the way to its own alarm (radar round 12). The level layer, drawn here, watches each strait against a pinned pre-event reference instead — a state opens after 14 days at or below half its normal traffic, and holds until it recovers. This reads the IMF PortWatch panel, which lags ~10 days, so it is as of the last served observation, not today.",
+    stuckHead:(n,d)=>(n===0?"No strait stuck quiet":n===1?"1 strait stuck quiet":n+" straits stuck quiet")+" — as of "+d,
+    stuckSince:d=>"since "+d, stuckPct:p=>"at "+p+"% of normal traffic",
+    stuckStale:"no longer served", stuckBars:"straits stuck quiet", stuckAxis:"straits",
     covLead2:"Field of view: ",
     covTail:" Outside this, real strain can still read 0.",
     covMore:"what tremor cannot see ›",
@@ -427,6 +442,11 @@ const T = {
     feelTitle:"真实 vs 感觉 — 两者的背离",
     feelHint:"柱：当天一级仪器的颤抖根数（测量侧）。线：世界「感觉」有多乱——恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自报警方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 一次背离：感觉侧发烫，而所有一级仪器读数平静。背离有两种可能，这张图分不出是哪一种——要么是感觉跑在了世界前面（焦虑溢价），要么是压力落在了 tremor 的视野之外（覆盖盲区）。",
     feelGapNote:"背离 —— 感觉发烫，测量平静；成因未知（焦虑溢价或覆盖盲区）",
+    stuckTitle:"静默卡死 —— 共振计数看不见的",
+    stuckHint:"计分的海峡线是 28 条海峡的求和，而求和看不见一两条小海峡陷入静默：下面两条海峡即便同时完全封闭，28 海峡总量也只移动约 1 个 z，只走到自身报警线的三分之一（雷达第 12 轮）。这里画的是层级层——它改为把每条海峡对照一个在事发前钉住的基准来看：连续 14 天跌到正常流量的一半或以下即开启一个状态，直到恢复才解除。数据来自 IMF PortWatch 面板，约有 10 天滞后，所以这里是截至最近一次可得观测，而非今天。",
+    stuckHead:(n,d)=>(n===0?"没有海峡处于静默":n+" 条海峡静默卡死")+" —— 截至 "+d,
+    stuckSince:d=>"自 "+d+" 起", stuckPct:p=>"仅为正常流量的 "+p+"%",
+    stuckStale:"已不再上报", stuckBars:"静默海峡数", stuckAxis:"海峡数",
     covLead2:"视野范围：",
     covTail:"视野之外，真实的压力照样可能读作 0。",
     covMore:"tremor 看不见什么 ›",
@@ -508,7 +528,12 @@ function covModal(lang){
 }
 
 // ---------- data + render ----------
-let DATA=null, chart=null, feelChart=null;
+let DATA=null, chart=null, feelChart=null, stuckChart=null;
+// Straits that have ever opened a level state. Proper nouns fall back to their
+// English name in either language; only the two ever seen carry a translation.
+const STRAIT_LABEL={"Strait of Hormuz":{en:"Strait of Hormuz",zh:"霍尔木兹海峡"},
+                    "Kerch Strait":{en:"Kerch Strait",zh:"刻赤海峡"}};
+const straitLabel=(c,lang)=>(STRAIT_LABEL[c]||{})[lang]||c;
 // display-side hedge: MIN_POINTS=10 is the scoring floor, but a robust scale
 // stays jumpy on short windows until roughly this many unique observations exist
 const CALIBRATING_OBS=30;
@@ -523,12 +548,12 @@ const isBlind=r=>BLIND.includes(r.status);
 const FEEL_HOT=2;
 const isDivergent=(count,feelMax)=>count===0&&feelMax!==null&&feelMax>=FEEL_HOT;
 async function load(){
-  const [summary, annotations, ...lineArr]=await Promise.all([
-    getCSV("data/summary.csv"), getCSV("data/annotations.csv"),
+  const [summary, annotations, stuck, ...lineArr]=await Promise.all([
+    getCSV("data/summary.csv"), getCSV("data/annotations.csv"), getCSV("data/stuck.csv"),
     ...LINES.map(L=>getCSV("data/"+L.id+".csv"))]);
   const lines={}; LINES.forEach((L,i)=>lines[L.id]=lineArr[i]);
   const annoMap=new Map(annotations.map(a=>[a.line+"|"+a.date,a]));
-  DATA={summary, dates:summary.map(r=>r.date), lines, annotations, annoMap};
+  DATA={summary, dates:summary.map(r=>r.date), lines, annotations, annoMap, stuck};
 }
 // annotation lookup: notes live in data/annotations.csv (date,line,verdict,note)
 function annoOn(lineId,date){ return DATA.annoMap&&DATA.annoMap.get(lineId+"|"+date); }
@@ -742,6 +767,46 @@ function render(){
         y2:{position:"right",grid:{drawOnChartArea:false},ticks:{color:"#8a909c",font:{size:10}},
            title:{display:true,text:lang==="zh"?"感觉 z（报警方向）":"feel z (toward alarm)",color:"#8a909c",font:{size:10}}} } }
   });
+
+  // ---- chokepoint level layer: straits stuck quiet (what the 28-strait sum cannot see) ----
+  // Served by tools/stuck_panel.py from the derived levels.csv, OUTSIDE the scoring
+  // path — a diagnostic the scorer never reads (radar round 12).
+  const stuckPanel=document.getElementById("stuck-panel");
+  const stuck=DATA.stuck||[];
+  if(!stuck.length){ stuckPanel.hidden=true; if(stuckChart){stuckChart.destroy();stuckChart=null;} }
+  else{
+    stuckPanel.hidden=false;
+    document.getElementById("stuck-title").textContent=T[lang].stuckTitle;
+    document.getElementById("stuck-hint").textContent=T[lang].stuckHint;
+    const byDate={}; stuck.forEach(r=>{(byDate[r.date]||(byDate[r.date]=[])).push(r);});
+    const sdates=Object.keys(byDate).sort();
+    const latest=sdates[sdates.length-1];
+    const now=byDate[latest]||[];
+    const items=now.map(r=>{
+      const staleTag=r.stale==="1"?` <span class="wl-blind">${T[lang].stuckStale}</span>`:"";
+      return `<li><b>${straitLabel(r.component,lang)}</b> — ${T[lang].stuckPct(r.pct)} · ${T[lang].stuckSince(r.since)}${staleTag}</li>`;
+    }).join("");
+    document.getElementById("stuck-now").innerHTML=
+      `<p class="stuck-head">${T[lang].stuckHead(now.length,latest)}</p>`
+      +(items?`<ul class="stuck-list">${items}</ul>`:"");
+    // count of straits stuck quiet per day — it stepped 1→2 on 2026-07-26 while the
+    // scored chokepoint z sat at ±0.3, which is the whole point of the panel.
+    let cdates=sdates; if(cutDate) cdates=cdates.filter(d=>d>=cutDate);
+    const counts=cdates.map(d=>(byDate[d]||[]).length);
+    const ymax=Math.max(2,...counts);
+    if(stuckChart) stuckChart.destroy();
+    stuckChart=new Chart(document.getElementById("stuckchart"),{
+      type:"line", data:{labels:cdates, datasets:[{ label:T[lang].stuckBars, data:counts,
+        stepped:true, borderColor:"#e0a83d", backgroundColor:"rgba(224,168,61,.18)",
+        borderWidth:1.8, fill:true, pointRadius:0, pointHoverRadius:4 }]},
+      options:{ responsive:true, animation:false, interaction:{mode:"index",intersect:false},
+        plugins:{ legend:{display:false},
+          tooltip:{callbacks:{label:c=>c.parsed.y==null?null:`${c.dataset.label}: ${c.parsed.y}`}} },
+        scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
+          y:{min:0,max:ymax,ticks:{stepSize:1,color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"},
+             title:{display:true,text:T[lang].stuckAxis,color:"#8a909c",font:{size:10}}} } }
+    });
+  }
 
   // watchlist — tier-2 candidates: collected daily, not counted; click for data
   const wl=document.getElementById("watchlist");
