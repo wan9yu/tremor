@@ -348,6 +348,14 @@ const LINES = [
     explain:{
       en:"The Treasury keeps an operating cash balance at the Fed and defends it on purpose — it has said publicly it aims to hold about a week of outflows, and the data agrees: the median of this line over its whole history is 5.3 business days. When the buffer falls anyway, Treasury has lost the ability to refill it: a debt limit binding, an auction that did not clear, a funding market that will not take the paper. In June 2023 this read 0.21 days. It is measured as the closing balance divided by the recent average daily withdrawal, because a cash pile is only large or small relative to what is being spent — when outflows spike, the buffer really is shorter, and this line falls without the balance moving at all.",
       zh:"财政部在美联储存有一笔运营现金，并且是有意守着它的——官方口径是保持约「一周的流出量」，数据也确实如此：这条线的历史中位数是 5.3 个工作日。当缓冲仍然下滑，说明财政部失去了补充它的能力：债务上限卡住、国债拍卖没卖掉、融资市场不肯接货。2023 年 6 月这个读数触及 0.21 天。它用「期末余额 ÷ 近期日均支出」来衡量，因为一笔现金是多是少，只相对于花钱的速度才有意义——当支出激增，缓冲是真的变短了，这条线会在余额纹丝不动的情况下下跌。"} },
+  { id:"stablecoin_peg", color:"#8fbcbb", alarm:"up", tier:2,
+    unit:{en:"bp",zh:"个基点"},
+    domain:{en:"Crypto dollar peg (global)",zh:"加密美元锚（全球）"},
+    label:{en:"Stablecoin depeg — worst of USDC/USDT",zh:"稳定币脱锚 —— USDC/USDT 取其重"},
+    source:{en:"Bitstamp — settled daily close, keyless",zh:"Bitstamp —— 结算日收盘价，无需密钥"},
+    explain:{
+      en:"A fiat stablecoin issuer promises to redeem at $1 and defends that peg with reserves and arbitrage; a break leaks reserve stress or a redemption panic. This reads the day's deviation from $1, in basis points, for whichever of the two largest stablecoins (USDC, USDT) is furthest off — from the settled daily close, so a sustained depeg counts and a flash-wick that recovers by day's end does not. Its record holds the real ones: USDC's close fell to $0.9685 over the March-2023 SVB weekend (315bp, a z of 122), with the FTX and 2022 UST episodes in it too. Provisional: in calm a stablecoin sits a stable ~10bp off par, so a rolling score trips easily on ordinary fuzz — the line is collected and its history is real, but it is not counted, and a materiality floor is the open question before it could be.",
+      zh:"法币稳定币的发行方承诺按 $1 赎回，并用储备与套利守住这个锚；一旦破锚，就漏出储备承压或赎回挤兑。这条线读的是当天偏离 $1 的幅度（基点），取 USDC、USDT 两大稳定币里偏得最远的那个——用结算日收盘价，所以持续脱锚算数、当天就回锚的瞬时插针不算。它的记录里有真事件：2023 年 3 月 SVB 那个周末 USDC 收盘跌到 $0.9685（315 基点，z 高达 122），FTX 与 2022 年 UST 两次也都在。暂定状态：平静时稳定币会稳定地偏锚约 10 个基点，所以滚动计分很容易被日常噪声触发——数据在采集、历史是真的，但它不计数，而「重要性下限」是它更进一步之前尚待解决的问题。"} },
   { id:"control_daylength", color:"#4c566a", alarm:"up", tier:2,
     unit:{en:"s",zh:"秒"},
     domain:{en:"Control (no world in it)",zh:"对照（不含世界）"},
