@@ -144,10 +144,10 @@ applied round 4.
 
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | Orthog | status |
 |---|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
-| flights | airspace (EU/US/JP) | 3 | 3 | 2 | 44/44 | 1 alarm, the adjudicated 07-05 artifact | ≤0.10 (n<40) | ⚠️ **RETAINED WITH CONDITIONS, R11** — sole current-rule alarm is an artifact; review pre-committed 2026-08-31 (de-cycling engages, n≥60): demote if episode-rate Wilson LB >2%, or immediately on the next unadjudicable alarm |
-| credit_spread | financial (US→global) | 3 | 3 | 3 | 43/44 | 65 alarm days = 8 episodes, all 4 real events | 0.035 (n=766) | ✅ global bellwether; alarm at the 45th pctile of its 776-day record |
-| cnh_cny | capital controls (China) | 2 | 3 | — | 40/42* | 0 alarms in 32 scored | ≤0.09 (n<40) | ✅ slot 4 (user-decided); reach cell open — needs +222 pips vs a 42-obs record max of 143, insufficient to adjudicate below 60 (*2 darks are weekend closures, not failures) |
-| net_outages | communications (global) | 2 | 3 | 3 | 26/26 | 57 alarm days = 37 episodes; grid-strike + blackout events attributable | ≤0.141 | ✅ **CONFIRMED R11** — the pre-committed review was held and every gate passed; the tremble clause fired on its day-count letter and was amended to episode terms on measured evidence (see round 11) |
+| flights | airspace (EU/US/JP) | 3 | 3 | 2 | 55/55 | 1 alarm, the adjudicated 07-05 artifact | ≤0.088 (n 29–45, R13) | ⚠️ **RETAINED WITH CONDITIONS, R11** — sole current-rule alarm is an artifact; review pre-committed 2026-08-31 (de-cycling engages, n≥60): demote if episode-rate Wilson LB >2%, or immediately on the next unadjudicable alarm |
+| credit_spread | financial (US→global) | 3 | 3 | 3 | 43/44 | 65 alarm days = 8 episodes, all 4 real events | ≤0.036 (n=775, R13) | ✅ global bellwether; alarm at the 45th pctile of its 776-day record |
+| cnh_cny | capital controls (China) | 2 | 3 | — | 52/55* | 0 alarms (4 benign down-trembles) in 52 scored | ≤0.088 (n=40, R13) | ✅ slot 4 (user-decided); reach cell MEASURED R13 — the alarming (up) side needs +227 pips vs a 52-obs record high of 143 (a decoration WITHIN this young calm record; baseline-relative — real capital-flight episodes blow far past it), while all four |z|>3 events are benign DOWN trembles (offshore yuan stronger). Still <60, insufficient to adjudicate; refresh at the maturity review (*3 darks are weekend/leg-timing rejections, not failures) |
+| net_outages | communications (global) | 2 | 3 | 3 | 26/26 | 57 alarm days = 37 episodes; grid-strike + blackout events attributable | ≤0.036 (pairs ≥40, R13) | ✅ **CONFIRMED R11** — the pre-committed review was held and every gate passed; the tremble clause fired on its day-count letter and was amended to episode terms on measured evidence (see round 11) |
 
 ## Tier 2 — collected  (11 candidates + 4 context + 1 control · no cap)
 
@@ -199,7 +199,9 @@ above.)
 | euro_fragmentation | financial (EU) | ECB defends cohesion → a widening periphery-core 10y spread leaks euro-breakup stress | a DAILY periphery-core spread source — the probed ECB SDMX IRS series is MONTHLY, which can't be a daily line; find the daily government-yield series |
 | entsog_gas_flow | energy (EU) | pipelines keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | point-selection design: the ENTSOG operationaldata API returns per-point per-operator flows; picking a non-diluting, non-frame-churning aggregate (which EU import points?) is real work, and aggregation dilution is a known failure mode |
 | bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | the right global formulation — RIPEstat routing-status for one AS is not a global instability measure; a withdrawal/update-rate is exposed to sensor-inflation and low-count-integer failure modes and must be designed against them |
-| cp_funding_spread | financial (US) | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | the correct CP-minus-funds construction: a single FRED `CPFF` series is not verified to be a spread; build it as (AA financial CP rate − OIS/funds), and confirm what each series actually is |
+| cp_funding_spread | financial (US) | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | **construction RESOLVED R13, now cadence-BLOCKED** — `CPFF` IS exactly (3M AA-financial CP − fed funds), verified to the cent (2020-03-25 CPFF 2.43 = CP 2.53 − DFF 0.10; equivalently `RIFSPPFAAD90NB − DFF`), keyless daily, reachable (+240 bp in Mar-2020). BUT the term-CP leg is blank on a ~50%-and-rising, STRESS-CLUSTERED share of business days (2019 7% → 2024 56% → 2026 50%) and the ENTIRE 2023-03 SVB window is missing, so a daily differenced z would need a fill across exactly the gap carrying the signal; the only dense leg (overnight CP) is arbitrage-pinned and leaks nothing. Parked until a denser term-CP source appears or the repo gains a gap-tolerant / episode cadence layer (same need as `fed_srf_takeup`) |
+| **border_wait** | trade / mobility (US land borders) | borders are staffed open for trade → a sustained spike in commercial-lane wait times, or an UNSCHEDULED closure of a 24h crossing, leaks blockade / coercion / crisis at a land chokepoint the maritime (PortWatch) and air (ADS-B) lines cannot see | **new R13, live-probed** — `bwt.cbp.gov/api/waittimes` returns real keyless JSON, 85 land ports (55 MX, 30 CA), 2026-08-14 snapshot Laredo 55m / Otay Mesa 40m / median 0 / max 55. Needs an AGGREGATION DESIGN before it is a line: restrict to COMMERCIAL lanes, git-scrape at a FIXED daily UTC hour so same-hour comparison cancels the commuter intraday cycle (cadence gate), and count only closures UNSCHEDULED against each port's `hours` field (raw Closed is dominated by nightly scheduled closures). Reach NATIONAL (US-MX/CA); no free historical backfill — build forward, zero baseline day 1. Global land-border non-find: WFP/HDX is a static location inventory, no free daily waits |
+| usd_xccy_basis | financial plumbing (global) | central-bank USD swap lines cap the FX-swap-implied cost of borrowing dollars → a deeply negative 3M cross-currency basis leaks a dollar funding shortage, and swap-line drawings are the leaking hand | **new R13 — guard is arguably the cleanest defended equilibrium in the registry (it is literally what the swap lines defend); cadence + reachability pass (−150 to −200 bp in 2008, −80 to −140 bp Mar-2020).** BLOCKED on SOURCE: keyless daily basis is EXHAUSTED — FRED is spot-only (no forwards; `EURUSD3M*`/`XCCYBASIS` 404), OFR STFM carries no FX series, ECB spot-only, forward points paywalled, CME's daily basis index needs a self-service key. No free-pieces construction path (unlike cp_funding_spread — there are no forwards on FRED, do not re-attempt). Parked on sourcing like `eu_gas_storage`; downgrade to reject if no keyless forward-point feed ever appears |
 | **fed_srf_takeup** | financial plumbing (US→global) | the Fed's Standing Repo Facility is a full-allotment ceiling defended twice daily → take-up leaks reserve/collateral scarcity borrowing from the guard itself | **BLOCKED on a scale design, R11.1** — guard and cadence gates pass cleanly and the source is keyless and complete (one request rebuilds 2021-07-28 onward), but the series is structurally zero: 61.4% of SRF-era days are EXACTLY 0, and replaying the repo's own normalize over 1,251 days gives Qn=0 on **79.4%** of windows without a floor (blind), or **174 trembles in 1,241 days with QUANTUM=1**, twenty-one of them firing on $4m of take-up against a $500bn facility. Needs a materiality floor with its own semantics, or an episode layer. Also needs month-end de-cycling, which this repo does not have |
 | eu_gas_storage | energy (EU) | member states defend storage-fill trajectories → falling behind the injection path leaks supply cutoff | designed R11.1 as `eu_gas_storage_path` — weekly fill change MINUS the seasonal-normal weekly change, because the raw level is all season. AGSI+ carries it (daily since 2011-01-01, zero missing days) but **requires a free registered key**, and the keyless path that works is a spoofed browser User-Agent, which this project will not ship. ACTIONABLE: register at agsi.gie.eu, add `AGSI_KEY` to repo Secrets, and it is build-ready; a 365-entry seasonal-normal table must be vendored alongside |
 
@@ -1124,3 +1126,71 @@ were each run as an independent agent and cross-checked against the raw CSVs and
 tests — the R11 discipline ("a claim is not characterised until something has replayed the
 repo's own scoring / read the real code"), which this round twice needed: it caught the
 non-existent 4-strait day and the misspecified Taiwan guard before they reached this page.
+
+### Round 13 — 2026-08-15 (metrics refresh + three candidates probed live; no tier move is due)
+
+A general calibration round with no forced decision: the two tier-1 lines carrying open
+questions are both under the ≥60-reading bar — **flights** at 55 scored (review pre-committed
+2026-08-31) and **cnh_cny** at 52 — so the discipline says refresh the numbers and defer the
+rulings, which is what this round does. **No tier moves.** Every figure below is computed
+against the repo's own `core/normalize` (Qn, `threshold_for(n)`) or a hand Pearson, on the
+committed CSVs; the three candidates were each live-probed (an endpoint actually hit).
+
+**Reliability, refreshed.** Tier-1 is near-perfect: flights 55/55, credit_spread 0.999,
+net_outages 0.993 (12 IODA all-dark days), cnh_cny 0.945 — and cnh_cny's 3 dark rows are all
+yuan-spread rejections (legs quoted ~24 h apart / weekend freeze), a market fact the line
+discloses, not a fetch failure. The one weak line anywhere is `hkma_aggr_balance` at 0.833
+(4 dark of 24) — young and thin; watch, do not rule (n=24).
+
+**Reachability, recomputed for the three maturing lines.** flights (n=55) REACHABLE with room
+(alarm 566 flights off the median vs an observed 683 move, 0.83×); sofr_iorb_spread (n=54)
+comfortable (0.58×). **cnh_cny (n=52) is the finding:** its threshold is symmetric, but its
+guard is not — the ALARMING direction is UP (offshore yuan weaker = capital flight), and a +3z
+up-alarm needs **+227 pips against a 52-obs record high of 143**, so within this young calm
+record the alarm side is a decoration. Two things keep that from being a demotion. First it is
+**baseline-relative** (the standing caution since R7/R9): the record is 52 days of calm, and
+real capital-flight episodes have blown CNH−CNY hundreds of pips wide, so a world-resembling
+stress day *does* reach the alarm — the young record simply has not sampled the tail. Second,
+the line is not motionless: it fired four |z|>3 trembles (to −45 pips), but **all four are
+DOWN** — the benign direction (offshore yuan *stronger*, the guard comfortable), which do not
+feed the alarm count, so R11's "0 alarms" stands exactly. Queued for the maturity review:
+recompute this at n≥60 and decide whether the alarm-direction reach is a young-record artifact
+(expected) or a real ceiling.
+
+**Orthogonality — the R11 open question largely closes.** R11 could measure only one tier-1
+pair at ≥40 shared dates (credit_spread × net_outages, +0.035). Now **four of six pairs cross
+≥40**: credit × net_outages +0.036 (n=775, the anchor, unchanged), flights × net_outages
++0.013 (45), flights × cnh_cny +0.088 (40), cnh_cny × net_outages +0.017 (40). Every measured
+pair sits **below |0.09|** — the tier-1 set is confirmed orthogonal where it can be measured,
+the largest coupling being the young, bare-40 flights × cnh_cny at 0.088. Two pairs remain thin
+(flights × credit_spread n=29, credit_spread × cnh_cny n=27) and should cross ≥40 around
+mid-September; nothing about them looks non-orthogonal.
+
+**Explore — three candidates, each live-probed; two added to the Backlog, one advanced.**
+- **border_wait (ADDED).** A genuinely new domain — land chokepoints, orthogonal to the
+  maritime (PortWatch) and air (ADS-B) lines. `bwt.cbp.gov/api/waittimes` is live, keyless, real
+  JSON (85 land ports). Guard real; but the raw feed fails the cadence gate until an aggregation
+  design removes the commuter intraday cycle (fixed-hour daily scrape of COMMERCIAL lanes) and
+  separates UNSCHEDULED closures from the nightly scheduled ones. National reach, no historical
+  backfill (build forward). Strongest new find of the round; parked on the aggregation design.
+- **usd_xccy_basis (ADDED).** The cleanest guard in the whole registry — a deeply negative
+  cross-currency basis is *literally* what the central-bank USD swap lines defend, cadence and
+  reachability both pass (−150 to −200 bp in 2008, −80 to −140 bp in Mar-2020). But keyless daily
+  sourcing is **EXHAUSTED**: FRED is spot-only (no forwards), OFR STFM has no FX series, ECB
+  spot-only, forward points paywalled, CME's index needs a key. Recorded as a non-find so the
+  keyless search is not repeated; parked on sourcing like `eu_gas_storage`.
+- **cp_funding_spread (ADVANCED, still blocked).** The open construction doubt is resolved:
+  FRED's `CPFF` IS exactly (3M AA-financial CP − fed funds), verified to the cent. But the probe
+  moved the blocker from construction to **cadence** — the term-CP leg is blank on a
+  ~50%-and-rising, stress-clustered share of business days, with the entire 2023-03 SVB window
+  missing, so a daily differenced z would have to fill across exactly the gap that carries the
+  signal. It needs a denser term-CP source or the same gap-tolerant / episode cadence layer that
+  `fed_srf_takeup` is waiting on — a second Backlog line now pointing at the same missing organ.
+
+**What the round says about the instrument.** The two structural gaps the Backlog keeps
+re-deriving are now named twice each: a **sourcing** wall (guarded quantities with no free daily
+feed — marine war-risk, sovereign CDS, the xccy basis) and a **cadence** wall (guarded quantities
+that are keyless and daily-shaped but structurally sparse — `fed_srf_takeup`, `cp_funding_spread`).
+Neither is closed by more coverage; the first needs a key the project will accept, the second an
+episode/gap-tolerant scoring layer this repo does not yet have. Both are the honest next frontiers,
+recorded so the next round starts from them rather than rediscovering them.
