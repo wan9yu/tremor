@@ -149,7 +149,7 @@ applied round 4.
 | cnh_cny | capital controls (China) | 2 | 3 | — | 52/55* | 0 alarms (4 benign down-trembles) in 52 scored | ≤0.088 (n=40, R13) | ✅ slot 4 (user-decided); reach cell MEASURED R13 — the alarming (up) side needs +227 pips vs a 52-obs record high of 143 (a decoration WITHIN this young calm record; baseline-relative — real capital-flight episodes blow far past it), while all four |z|>3 events are benign DOWN trembles (offshore yuan stronger). Still <60, insufficient to adjudicate; refresh at the maturity review (*3 darks are weekend/leg-timing rejections, not failures) |
 | net_outages | communications (global) | 2 | 3 | 3 | 26/26 | 57 alarm days = 37 episodes; grid-strike + blackout events attributable | ≤0.036 (pairs ≥40, R13) | ✅ **CONFIRMED R11** — the pre-committed review was held and every gate passed; the tremble clause fired on its day-count letter and was amended to episode terms on measured evidence (see round 11) |
 
-## Tier 2 — collected  (11 candidates + 4 context + 1 control · no cap)
+## Tier 2 — collected  (12 candidates + 4 context + 1 control · no cap)
 
 Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
 are tier-1 challengers banking evidence. There is no slot cap (round 8): any candidate
@@ -184,6 +184,7 @@ add, no premature reject. `polar_temp` is its first use.
 | — vix | feel: priced fear (global) | 1 | 0 | 3 | — | — | contrast line — keyless FRED VIXCLS, seeded 180d from archive |
 | — polar_temp | context: planetary level (Arctic 80N) | 1 | 0 | 2 | — | — | context line, provisional-watch — DMI +80N daily anomaly vs the 1958-2002 normal (keyless, ~1d lag). A LEVEL read, not a tension indicator; the long baseline is vendored in core/arctic_clim.py. Seeded R9 to 2019 (2,740 rows): 384 warm trembles vs 4 cold — the asymmetry is the warming |
 | tga_days_cash | fiscal plumbing (US) | 3 | 3 | 2 | — | — | built R11.1 — Treasury cash buffer in DAYS OF ITS OWN OUTFLOWS (closing TGA balance / trailing-20-business-day mean withdrawal), keyless Treasury Fiscal Data, T+1. The guard is visible not asserted: median 5.3 business days against Treasury's announced ~1-week policy, and the June-2023 X-date reads 0.21 days |
+| stablecoin_peg | crypto dollar peg (global) | 3 | 3 | 3 | — | — | **built R14** — worst-of-{USDC,USDT} deviation-from-$1 in bp, from the settled daily CLOSE (not the intraday low — a systemic depeg persists to the close, a flash-wick does not), keyless Bitstamp OHLC, seeded 2020-10→now (2127 obs). Guard clean; the cadence rejection is OVERTURNED — SVB was a multi-day, close-visible depeg (USDC close $0.9685 → **z=122**; FTX and the 2022 UST episode are in the record too). BUT scored through the rolling z it fires **214 trembles ≈ 10%** (15% across 2026) on USDT's normal ~10bp Bitstamp venue discount (z=3 at ~19bp) — the **`fed_srf_takeup` materiality wall**: a folded near-constant series has a tiny Qn, and a hard floor to zero flips it to the structural-zero failure. Collected + **PROVISIONAL**, not promotable until a materiality-floor / episode layer exists |
 | — control_daylength | CONTROL: pipeline canary (no world) | 0 | 0 | — | — | — | control line, added 2026-07-30, registered R9 — day length at 51.4779N, 0.0E (sunrise-sunset.org). Set by orbital mechanics; nothing on Earth moves it, so any tremble here is measurement error by definition. obs_date is RECORDED, not inferred, so a one-day pipeline slip trips the ~1-minute canary tolerance even near the solstices |
 
 ## Backlog — ideas not yet built
@@ -201,6 +202,7 @@ above.)
 | bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | the right global formulation — RIPEstat routing-status for one AS is not a global instability measure; a withdrawal/update-rate is exposed to sensor-inflation and low-count-integer failure modes and must be designed against them |
 | cp_funding_spread | financial (US) | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | **construction RESOLVED R13, now cadence-BLOCKED** — `CPFF` IS exactly (3M AA-financial CP − fed funds), verified to the cent (2020-03-25 CPFF 2.43 = CP 2.53 − DFF 0.10; equivalently `RIFSPPFAAD90NB − DFF`), keyless daily, reachable (+240 bp in Mar-2020). BUT the term-CP leg is blank on a ~50%-and-rising, STRESS-CLUSTERED share of business days (2019 7% → 2024 56% → 2026 50%) and the ENTIRE 2023-03 SVB window is missing, so a daily differenced z would need a fill across exactly the gap carrying the signal; the only dense leg (overnight CP) is arbitrage-pinned and leaks nothing. Parked until a denser term-CP source appears or the repo gains a gap-tolerant / episode cadence layer (same need as `fed_srf_takeup`) |
 | **border_wait** | trade / mobility (US land borders) | borders are staffed open for trade → a sustained spike in commercial-lane wait times, or an UNSCHEDULED closure of a 24h crossing, leaks blockade / coercion / crisis at a land chokepoint the maritime (PortWatch) and air (ADS-B) lines cannot see | **new R13, live-probed** — `bwt.cbp.gov/api/waittimes` returns real keyless JSON, 85 land ports (55 MX, 30 CA), 2026-08-14 snapshot Laredo 55m / Otay Mesa 40m / median 0 / max 55. Needs an AGGREGATION DESIGN before it is a line: restrict to COMMERCIAL lanes, git-scrape at a FIXED daily UTC hour so same-hour comparison cancels the commuter intraday cycle (cadence gate), and count only closures UNSCHEDULED against each port's `hours` field (raw Closed is dominated by nightly scheduled closures). Reach NATIONAL (US-MX/CA); no free historical backfill — build forward, zero baseline day 1. Global land-border non-find: WFP/HDX is a static location inventory, no free daily waits |
+| crypto_capital_flight_premium | capital controls (per country) | a state defends an official FX rate / capital controls → residents buy USDT to move value out, so its local-currency P2P price trades ABOVE the official rate; a widening premium leaks accelerating flight — the same guard as cnh_cny / fx_parallel_premium, a faster mechanism | **probed R14 — guard real, cadence PASSES (a structural premium persists for weeks, unlike a transient depeg), Binance P2P adv/search is keyless + live.** BLOCKED because reachable ∩ orthogonal ∩ strong-guard ∩ clean-keyless-official-leg is nearly empty: ARS (+4%) and CNY (−1%, a banned gray discount) are redundant with existing lines, NGN/RUB return 0 ads (Binance banned/exited), TRY/EGP are weak-guard floats, and the one orthogonal hard-controlled case — Venezuela VES (+14% vs a near-parallel rate; the true BCV gap is 85%+) — has no keyless TRUE-official leg. Parked on official-leg sourcing + order-book aggregation, same shape as `usd_xccy_basis`. If ever built: a single USDT/VES line with a keyless BCV official leg, not China/Argentina, not Nigeria via Binance |
 | usd_xccy_basis | financial plumbing (global) | central-bank USD swap lines cap the FX-swap-implied cost of borrowing dollars → a deeply negative 3M cross-currency basis leaks a dollar funding shortage, and swap-line drawings are the leaking hand | **new R13 — guard is arguably the cleanest defended equilibrium in the registry (it is literally what the swap lines defend); cadence + reachability pass (−150 to −200 bp in 2008, −80 to −140 bp Mar-2020).** BLOCKED on SOURCE: keyless daily basis is EXHAUSTED — FRED is spot-only (no forwards; `EURUSD3M*`/`XCCYBASIS` 404), OFR STFM carries no FX series, ECB spot-only, forward points paywalled, CME's daily basis index needs a self-service key. No free-pieces construction path (unlike cp_funding_spread — there are no forwards on FRED, do not re-attempt). Parked on sourcing like `eu_gas_storage`; downgrade to reject if no keyless forward-point feed ever appears |
 | **fed_srf_takeup** | financial plumbing (US→global) | the Fed's Standing Repo Facility is a full-allotment ceiling defended twice daily → take-up leaks reserve/collateral scarcity borrowing from the guard itself | **BLOCKED on a scale design, R11.1** — guard and cadence gates pass cleanly and the source is keyless and complete (one request rebuilds 2021-07-28 onward), but the series is structurally zero: 61.4% of SRF-era days are EXACTLY 0, and replaying the repo's own normalize over 1,251 days gives Qn=0 on **79.4%** of windows without a floor (blind), or **174 trembles in 1,241 days with QUANTUM=1**, twenty-one of them firing on $4m of take-up against a $500bn facility. Needs a materiality floor with its own semantics, or an episode layer. Also needs month-end de-cycling, which this repo does not have |
 | eu_gas_storage | energy (EU) | member states defend storage-fill trajectories → falling behind the injection path leaks supply cutoff | designed R11.1 as `eu_gas_storage_path` — weekly fill change MINUS the seasonal-normal weekly change, because the raw level is all season. AGSI+ carries it (daily since 2011-01-01, zero missing days) but **requires a free registered key**, and the keyless path that works is a spoofed browser User-Agent, which this project will not ship. ACTIONABLE: register at agsi.gie.eu, add `AGSI_KEY` to repo Secrets, and it is build-ready; a 365-entry seasonal-normal table must be vendored alongside |
@@ -208,7 +210,6 @@ above.)
 ### Rejected
 | candidate | reason |
 |---|---|
-| stablecoin_peg | fails the **cadence gate** — depegs are intraday-transient, a daily snapshot aliases past them. |
 | tail_risk_market | fails the **guard gate** — prediction-market prices are a free-floating read with no defended equilibrium (Guard ~1). Interesting, but not a tension indicator. |
 | marine_war_risk | R11 non-find: war-risk insurance premia are the perfect orthogonal guard signal and have **no free daily machine-readable source** — recorded so the search is not repeated. |
 | sovereign_cds | R11 non-find: same shape — the guarded quantity is real, every daily source is paywalled. |
@@ -1194,3 +1195,51 @@ that are keyless and daily-shaped but structurally sparse — `fed_srf_takeup`, 
 Neither is closed by more coverage; the first needs a key the project will accept, the second an
 episode/gap-tolerant scoring layer this repo does not yet have. Both are the honest next frontiers,
 recorded so the next round starts from them rather than rediscovering them.
+
+### Round 14 — 2026-08-15 (crypto, probed and built: one line ships, and its own replay names the wall)
+
+Three crypto candidates were live-probed (an endpoint actually hit each time), and the
+strongest was BUILT — then its own replay against this repo's scoring told the honest story.
+
+**BTC/ETH price — contrast-only, not a candidate.** A free-floating asset with no defended
+anchor fails the guard gate, exactly as `tail_risk_market` did. It could only ever be a
+felt-vs-real contrast read like `vix`, never a counted tension line; recorded so it is not
+re-proposed as an indicator.
+
+**`stablecoin_peg` — BUILT (tier 2), and moved out of Rejected.** Its old rejection
+("depegs are intraday-transient, a daily snapshot aliases past them") does not survive the
+SVB counter-example: USDC held below peg for ~3 days over the March-2023 weekend, a
+**close-visible, multi-day** event, not a flash-wick. The line scores the worst-of-{USDC,USDT}
+deviation-from-$1 in bp, off the **settled daily close** (so a sustained depeg counts and a
+recover-by-close wick does not — the cadence objection answered by design), from keyless
+Bitstamp OHLC, one source for both the live feed and a **seed back to 2020-10 (2127 obs)**.
+The guard is clean and the reachability is not arithmetic but **demonstrated**: USDC's SVB
+close $0.9685 scores **z=122**, and the FTX (Nov-2022) and UST (May-2022) episodes are in
+the record. Guard 3 / Reach 3 (global) / source keyless + deep.
+
+**But the build's own replay found the wall, and it is the Round-13 wall.** Scored through
+the current rolling z the line fires **214 trembles ≈ 10% of days** (15% across 2026) — not
+on stress, but on USDT's ordinary ~10bp Bitstamp venue discount, because a folded
+near-constant series has a Qn of ~3bp and z=3 arrives at ~19bp. It cannot be fixed by a hard
+floor to zero: that recreates the **structural-zero** failure that blocks `fed_srf_takeup`
+(Qn→0). So `stablecoin_peg` ships **collected + PROVISIONAL** — the data is real and the
+crises are in it, it is tier-2 and therefore uncounted, and it is **not promotable until a
+materiality-floor / episode layer exists**. That is now the SECOND line (with `fed_srf_takeup`,
+and adjacent to `cp_funding_spread`) waiting on the same missing organ — the cadence wall
+Round 13 named, now with a shipped, replayable line sitting against it rather than a Backlog note.
+
+**`crypto_capital_flight_premium` — Backlog.** Guard real (the cnh_cny / fx_parallel_premium
+capital-controls guard) and it PASSES the cadence gate a depeg fails (a controls premium is
+structural, persisting for weeks). Binance P2P adv/search is keyless and live. But the set
+reachable ∩ orthogonal ∩ strong-guard ∩ clean-keyless-official-leg is nearly empty: ARS and
+CNY are redundant with existing lines, NGN/RUB return zero ads (Binance banned/exited),
+TRY/EGP are weak-guard floats, and the one orthogonal hard-controlled case (Venezuela VES)
+has no keyless TRUE-official leg — the easy source tracks a near-parallel rate and collapses a
+real 85% gap to 14%. Parked on official-leg sourcing, the `usd_xccy_basis` shape.
+
+**What the round adds to the instrument.** A candidate was not just characterised on paper but
+BUILT and run against the repo's own scoring — and the scoring, not an argument, is what set
+its disposition: guard and source clean, cadence-reject overturned, yet provisional because the
+rolling z is the wrong organ for a pegged instrument. The materiality-floor / episode layer is
+no longer a Backlog footnote; it is the thing standing between three real, sourced, guarded
+candidates (`fed_srf_takeup`, `stablecoin_peg`, `cp_funding_spread`) and a countable reading.
