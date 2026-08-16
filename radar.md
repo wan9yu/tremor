@@ -145,7 +145,7 @@ applied round 4.
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | Orthog | status |
 |---|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
 | flights | airspace (EU/US/JP) | 3 | 3 | 2 | 55/55 | 1 alarm, the adjudicated 07-05 artifact | ≤0.088 (n 29–45, R13) | ⚠️ **RETAINED WITH CONDITIONS, R11** — sole current-rule alarm is an artifact; review pre-committed 2026-08-31 (de-cycling engages, n≥60): demote if episode-rate Wilson LB >2%, or immediately on the next unadjudicable alarm |
-| credit_spread | financial (US→global) | 3 | 3 | 3 | 43/44 | 65 alarm days = 8 episodes, all 4 real events | ≤0.036 (n=775, R13) | ✅ global bellwether; alarm at the 45th pctile of its 776-day record |
+| credit_spread | financial (US→global) | 3 | 3 | 3 | 43/44 | 66 alarm days = 8 episodes, all 4 real events | ≤0.036 (n=775, R13) | ✅ global bellwether; alarm at the 45th pctile of its 776-day record |
 | cnh_cny | capital controls (China) | 2 | 3 | — | 52/55* | 0 alarms (4 benign down-trembles) in 52 scored | ≤0.088 (n=40, R13) | ✅ slot 4 (user-decided); reach cell MEASURED R13 — the alarming (up) side needs +227 pips vs a 52-obs record high of 143 (a decoration WITHIN this young calm record; baseline-relative — real capital-flight episodes blow far past it), while all four |z|>3 events are benign DOWN trembles (offshore yuan stronger). Still <60, insufficient to adjudicate; refresh at the maturity review (*3 darks are weekend/leg-timing rejections, not failures) |
 | net_outages | communications (global) | 2 | 3 | 3 | 26/26 | 57 alarm days = 37 episodes; grid-strike + blackout events attributable | ≤0.036 (pairs ≥40, R13) | ✅ **CONFIRMED R11** — the pre-committed review was held and every gate passed; the tremble clause fired on its day-count letter and was amended to episode terms on measured evidence (see round 11) |
 
@@ -855,6 +855,14 @@ motion is visible to any single day's z.
 **The resonance ceiling claim of round 9 is retracted** — see the note inline above. The
 headline reaches 2 about 1.9 days a year at the lines' own measured rates; the record has
 none because ≥2 tier-1 lines were simultaneously scoring on only 33 of 800 replayed days.
+> **CORRECTED R16.** Both figures in that last sentence are wrong. Re-measured from the
+> replay: ≥2 tier-1 lines were simultaneously SCORING on **~778 of 796 days (97.7%)**, not 33 —
+> the "33" was the ≥3-scoring count (~32), mislabelled and paired with the wrong denominator.
+> So the record's lack of a 2 is NOT a co-scoring problem; the lines co-score almost always.
+> The real reasons: the alarms are rare and near-independent (credit 8.3%, net 3.5%, flights
+> 2.2%, cnh_cny 0.0% of scoring days), so a same-day double is intrinsically ~1/year (the
+> "1.9/yr" is the iid MODEL; the realized rate over 3.04y is 3 doubles ≈ 0.99/yr), and the
+> live 4-line record is only 56 days old with cnh_cny never once trembling in alarm. See round 16.
 What survives is that the PAIR matters more than the count: `cnh_cny` and `net_outages`
 sit at their calm nulls, so a double involving either is near-certainly signal (all-null
 P(count≥2) = 0.0076%/day, once in 36 years), while `flights` is the headline's dominant
@@ -1296,3 +1304,40 @@ behind it are cleared of the scoring blocker, and the third is down to a data-co
 is a declared judgment and must be replay-validated to the R11 bar per line, and the episode /
 serial-dependence overlay is the second gate before any of the three becomes a counted tier-1
 instrument. None is promoted this round; `stablecoin_peg` stays TIER=2, now honestly scored.
+
+### Round 16 — 2026-08-16 (the registry corrects its own arithmetic, and the counts get a source)
+
+A holistic audit replayed the whole record and found this log had drifted from its own data in
+three places — so this round is bookkeeping, no tier moves, no scoring change: the registry stops
+lying about numbers it hand-copied, and the numbers most prone to it are given a computed source.
+
+**Three corrections, all replay-measured.** (1) The round-10 retraction says "≥2 tier-1 lines were
+simultaneously scoring on only 33 of 800 replayed days" — **both figures are wrong** and the causal
+claim built on them is too. Re-measured: ≥2 lines co-score on **~778 of 796 days (97.7%)**; the "33"
+was the ≥3-scoring count (~32), mislabelled and paired with the full-replay denominator. The record's
+lack of a "2" is therefore NOT a co-scoring failure — the lines co-score almost always — but the
+compound of near-independent rare alarms (credit 8.3%, net 3.5%, flights 2.2%, **cnh_cny 0.0%** of
+scoring days → an intrinsic ~1 double/year) and a 56-day-young 4-line record. The correction is
+inline at the round-10 claim. (2) The round-10 "1.9 days a year" is the iid MODEL (1.94/yr); the
+REALIZED rate is 3 doubles over 3.04y ≈ 0.99/yr — the model runs ~2×. Labelled as such. (3) The
+tier-1 table read `credit_spread 65 alarm days` while the body two paragraphs up and `episodes.py`
+both say **66**; fixed to 66. README's "Fifteen more lines ride the watchlist" was stale at Round 9;
+tier-2 is now 17, corrected.
+
+**The counts now have a computed source (止漂).** `tools/episodes.py` — which the same audit flagged
+as orphaned: named in the scorer's own docstring as THE remedy for serial-dependence over-counting,
+yet not in the pipeline and producing no artifact — is now run in the daily derived step and writes
+`data/episodes.json` (alarm days, episode count, longest run, lag-1 per line), regenerated from the
+committed record every run. The alarm/episode numbers this log quotes (credit's 66=8 episodes,
+net's 57=37, and the rest) are hand-transcribed from exactly this tool; giving it a committed,
+CI-refreshed output means the next drift is a diff, not a discovery. What SURVIVED the audit
+unblemished is worth recording too: the `_C_N` calibrated-threshold table and every completed-year
+yearly-median reproduce from the data to <1e-6 — the discipline holds wherever a number was treated
+as load-bearing rather than prose.
+
+**Why this mattered enough to spend a round on.** The audit's larger finding — that the counted
+change-resonance is near-mute by construction (0 on 92.8% of 1664 replayed days, never above 2)
+while the uncounted layers held ~273 state-days of real broken/drifted conditions the headline read
+0 on — is the subject of the next round's structural work (a second, level-based headline). This
+round only clears the ground: an instrument whose whole thesis is honesty cannot carry three wrong
+numbers in its own ledger while arguing about what to build next.
