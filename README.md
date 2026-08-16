@@ -12,7 +12,7 @@ tremor watches a few **tension indicators**: guarded equilibria that something p
 - **Internet outages** — how many countries are dark at once (IODA)
 
 The primary set is chosen and re-chosen by a scored radar process — see `radar.md` for the
-current tiers, the metrics, and every calibration decision. Fifteen more lines ride the
+current tiers, the metrics, and every calibration decision. Seventeen more lines ride the
 watchlist — shown on the dashboard, collected daily while they earn (or lose) a place —
 including contrast lines (VIX, news tone) that measure how disordered the world FEELS,
 a planetary context line, and one control line with no world in it at all.
