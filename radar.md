@@ -184,7 +184,7 @@ add, no premature reject. `polar_temp` is its first use.
 | — vix | feel: priced fear (global) | 1 | 0 | 3 | — | — | contrast line — keyless FRED VIXCLS, seeded 180d from archive |
 | — polar_temp | context: planetary level (Arctic 80N) | 1 | 0 | 2 | — | — | context line, provisional-watch — DMI +80N daily anomaly vs the 1958-2002 normal (keyless, ~1d lag). A LEVEL read, not a tension indicator; the long baseline is vendored in core/arctic_clim.py. Seeded R9 to 2019 (2,740 rows): 384 warm trembles vs 4 cold — the asymmetry is the warming |
 | tga_days_cash | fiscal plumbing (US) | 3 | 3 | 2 | — | — | built R11.1 — Treasury cash buffer in DAYS OF ITS OWN OUTFLOWS (closing TGA balance / trailing-20-business-day mean withdrawal), keyless Treasury Fiscal Data, T+1. The guard is visible not asserted: median 5.3 business days against Treasury's announced ~1-week policy, and the June-2023 X-date reads 0.21 days |
-| stablecoin_peg | crypto dollar peg (global) | 3 | 3 | 3 | — | — | **built R14** — worst-of-{USDC,USDT} deviation-from-$1 in bp, from the settled daily CLOSE (not the intraday low — a systemic depeg persists to the close, a flash-wick does not), keyless Bitstamp OHLC, seeded 2020-10→now (2127 obs). Guard clean; the cadence rejection is OVERTURNED — SVB was a multi-day, close-visible depeg (USDC close $0.9685 → **z=122**; FTX and the 2022 UST episode are in the record too). BUT scored through the rolling z it fires **214 trembles ≈ 10%** (15% across 2026) on USDT's normal ~10bp Bitstamp venue discount (z=3 at ~19bp) — the **`fed_srf_takeup` materiality wall**: a folded near-constant series has a tiny Qn, and a hard floor to zero flips it to the structural-zero failure. Collected + **PROVISIONAL**, not promotable until a materiality-floor / episode layer exists |
+| stablecoin_peg | crypto dollar peg (global) | 3 | 3 | 3 | — | 3 trembles (SVB z=12.6) in 2128 | — | **built R14, scored R15** — worst-of-{USDC,USDT} deviation-from-$1 in bp, settled daily CLOSE, keyless Bitstamp OHLC, seeded 2020-10→now. Guard clean; cadence-reject OVERTURNED (SVB was a multi-day close-visible depeg, USDC close $0.9685). Now scored in **anchored scale-mode** (ANCHOR=0, MATERIALITY=25bp → alarm at 75bp) instead of the rolling z: the R14 build fired 214 trembles ≈10%/day on USDT's normal ~10bp venue discount; scale-mode drops that to **3 real trembles (SVB 03-11 z=12.6, 03-12 z=3.4, a 2021-01-07 wobble), 0 blind**, ordinary fuzz z<1. Honestly scored now; promotion still gated on materiality-validation + an episode / serial-dependence overlay |
 | — control_daylength | CONTROL: pipeline canary (no world) | 0 | 0 | — | — | — | control line, added 2026-07-30, registered R9 — day length at 51.4779N, 0.0E (sunrise-sunset.org). Set by orbital mechanics; nothing on Earth moves it, so any tremble here is measurement error by definition. obs_date is RECORDED, not inferred, so a one-day pipeline slip trips the ~1-minute canary tolerance even near the solstices |
 
 ## Backlog — ideas not yet built
@@ -200,11 +200,11 @@ above.)
 | euro_fragmentation | financial (EU) | ECB defends cohesion → a widening periphery-core 10y spread leaks euro-breakup stress | a DAILY periphery-core spread source — the probed ECB SDMX IRS series is MONTHLY, which can't be a daily line; find the daily government-yield series |
 | entsog_gas_flow | energy (EU) | pipelines keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | point-selection design: the ENTSOG operationaldata API returns per-point per-operator flows; picking a non-diluting, non-frame-churning aggregate (which EU import points?) is real work, and aggregation dilution is a known failure mode |
 | bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | the right global formulation — RIPEstat routing-status for one AS is not a global instability measure; a withdrawal/update-rate is exposed to sensor-inflation and low-count-integer failure modes and must be designed against them |
-| cp_funding_spread | financial (US) | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | **construction RESOLVED R13, now cadence-BLOCKED** — `CPFF` IS exactly (3M AA-financial CP − fed funds), verified to the cent (2020-03-25 CPFF 2.43 = CP 2.53 − DFF 0.10; equivalently `RIFSPPFAAD90NB − DFF`), keyless daily, reachable (+240 bp in Mar-2020). BUT the term-CP leg is blank on a ~50%-and-rising, STRESS-CLUSTERED share of business days (2019 7% → 2024 56% → 2026 50%) and the ENTIRE 2023-03 SVB window is missing, so a daily differenced z would need a fill across exactly the gap carrying the signal; the only dense leg (overnight CP) is arbitrage-pinned and leaks nothing. Parked until a denser term-CP source appears or the repo gains a gap-tolerant / episode cadence layer (same need as `fed_srf_takeup`) |
+| cp_funding_spread | financial (US) | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | **construction RESOLVED R13, now cadence-BLOCKED** — `CPFF` IS exactly (3M AA-financial CP − fed funds), verified to the cent (2020-03-25 CPFF 2.43 = CP 2.53 − DFF 0.10; equivalently `RIFSPPFAAD90NB − DFF`), keyless daily, reachable (+240 bp in Mar-2020). BUT the term-CP leg is blank on a ~50%-and-rising, STRESS-CLUSTERED share of business days (2019 7% → 2024 56% → 2026 50%) and the ENTIRE 2023-03 SVB window is missing, so a daily differenced z would need a fill across exactly the gap carrying the signal; the only dense leg (overnight CP) is arbitrage-pinned and leaks nothing. **Scoring UNBLOCKED R15** (anchored scale-mode, ANCHOR=0, MATERIALITY≈15bp → alarm 45bp, Mar-2020 +240bp → z=16, each PRESENT day honest with no differencing-across-a-gap) — but scale-mode cannot conjure the missing days; still BLOCKED on SOURCING, a denser term-CP feed, not on scale |
 | **border_wait** | trade / mobility (US land borders) | borders are staffed open for trade → a sustained spike in commercial-lane wait times, or an UNSCHEDULED closure of a 24h crossing, leaks blockade / coercion / crisis at a land chokepoint the maritime (PortWatch) and air (ADS-B) lines cannot see | **new R13, live-probed** — `bwt.cbp.gov/api/waittimes` returns real keyless JSON, 85 land ports (55 MX, 30 CA), 2026-08-14 snapshot Laredo 55m / Otay Mesa 40m / median 0 / max 55. Needs an AGGREGATION DESIGN before it is a line: restrict to COMMERCIAL lanes, git-scrape at a FIXED daily UTC hour so same-hour comparison cancels the commuter intraday cycle (cadence gate), and count only closures UNSCHEDULED against each port's `hours` field (raw Closed is dominated by nightly scheduled closures). Reach NATIONAL (US-MX/CA); no free historical backfill — build forward, zero baseline day 1. Global land-border non-find: WFP/HDX is a static location inventory, no free daily waits |
 | crypto_capital_flight_premium | capital controls (per country) | a state defends an official FX rate / capital controls → residents buy USDT to move value out, so its local-currency P2P price trades ABOVE the official rate; a widening premium leaks accelerating flight — the same guard as cnh_cny / fx_parallel_premium, a faster mechanism | **probed R14 — guard real, cadence PASSES (a structural premium persists for weeks, unlike a transient depeg), Binance P2P adv/search is keyless + live.** BLOCKED because reachable ∩ orthogonal ∩ strong-guard ∩ clean-keyless-official-leg is nearly empty: ARS (+4%) and CNY (−1%, a banned gray discount) are redundant with existing lines, NGN/RUB return 0 ads (Binance banned/exited), TRY/EGP are weak-guard floats, and the one orthogonal hard-controlled case — Venezuela VES (+14% vs a near-parallel rate; the true BCV gap is 85%+) — has no keyless TRUE-official leg. Parked on official-leg sourcing + order-book aggregation, same shape as `usd_xccy_basis`. If ever built: a single USDT/VES line with a keyless BCV official leg, not China/Argentina, not Nigeria via Binance |
 | usd_xccy_basis | financial plumbing (global) | central-bank USD swap lines cap the FX-swap-implied cost of borrowing dollars → a deeply negative 3M cross-currency basis leaks a dollar funding shortage, and swap-line drawings are the leaking hand | **new R13 — guard is arguably the cleanest defended equilibrium in the registry (it is literally what the swap lines defend); cadence + reachability pass (−150 to −200 bp in 2008, −80 to −140 bp Mar-2020).** BLOCKED on SOURCE: keyless daily basis is EXHAUSTED — FRED is spot-only (no forwards; `EURUSD3M*`/`XCCYBASIS` 404), OFR STFM carries no FX series, ECB spot-only, forward points paywalled, CME's daily basis index needs a self-service key. No free-pieces construction path (unlike cp_funding_spread — there are no forwards on FRED, do not re-attempt). Parked on sourcing like `eu_gas_storage`; downgrade to reject if no keyless forward-point feed ever appears |
-| **fed_srf_takeup** | financial plumbing (US→global) | the Fed's Standing Repo Facility is a full-allotment ceiling defended twice daily → take-up leaks reserve/collateral scarcity borrowing from the guard itself | **BLOCKED on a scale design, R11.1** — guard and cadence gates pass cleanly and the source is keyless and complete (one request rebuilds 2021-07-28 onward), but the series is structurally zero: 61.4% of SRF-era days are EXACTLY 0, and replaying the repo's own normalize over 1,251 days gives Qn=0 on **79.4%** of windows without a floor (blind), or **174 trembles in 1,241 days with QUANTUM=1**, twenty-one of them firing on $4m of take-up against a $500bn facility. Needs a materiality floor with its own semantics, or an episode layer. Also needs month-end de-cycling, which this repo does not have |
+| **fed_srf_takeup** | financial plumbing (US→global) | the Fed's Standing Repo Facility is a full-allotment ceiling defended twice daily → take-up leaks reserve/collateral scarcity borrowing from the guard itself | **scale design UNBLOCKED R15** — the structural-zero wall (61.4% of days EXACTLY $0; Qn=0 on 79.4% of windows without a floor → blind, or 174 spurious trembles with QUANTUM=1, 21 on $4m) is exactly what R15's **anchored scale-mode** answers: ANCHOR=0, MATERIALITY≈$5000m → a $0 day scores an honest z=0 (not blind), $4m dust → z≈0.0008, a $20bn scramble → z=4 fires. Now BUILD-READY (keyless, one request rebuilds 2021-07-28 onward); the one remaining caveat is month-end/quarter-end calendar friction — set MATERIALITY above it, or add de-cycling (this repo still has none) |
 | eu_gas_storage | energy (EU) | member states defend storage-fill trajectories → falling behind the injection path leaks supply cutoff | designed R11.1 as `eu_gas_storage_path` — weekly fill change MINUS the seasonal-normal weekly change, because the raw level is all season. AGSI+ carries it (daily since 2011-01-01, zero missing days) but **requires a free registered key**, and the keyless path that works is a spoofed browser User-Agent, which this project will not ship. ACTIONABLE: register at agsi.gie.eu, add `AGSI_KEY` to repo Secrets, and it is build-ready; a 365-entry seasonal-normal table must be vendored alongside |
 
 ### Rejected
@@ -1243,3 +1243,56 @@ its disposition: guard and source clean, cadence-reject overturned, yet provisio
 rolling z is the wrong organ for a pegged instrument. The materiality-floor / episode layer is
 no longer a Backlog footnote; it is the thing standing between three real, sourced, guarded
 candidates (`fed_srf_takeup`, `stablecoin_peg`, `cp_funding_spread`) and a countable reading.
+
+### Round 15 — 2026-08-16 (the materiality wall, answered: anchored scale-mode, built into the scorer)
+
+Round 14 ended with three real candidates jammed against one wall. Rather than bolt a fourth
+fix on, this round stepped back to the whole scoring structure and asked what that wall actually
+is. It is one wrong assumption: the change layer's rolling z assumes **normal = the recent
+window**. For an anchored series that is false — normal is a DECLARED constant (a $1 peg, a $0
+facility take-up), and the rolling window is a broken estimator of it (tiny Qn → cries wolf; zero
+Qn → goes blind). This is the same realization `level_layer` (pinned reference) and `drift_layer`
+(year-ago reference) already made about the CENTRE; scale-mode makes it about the SCALE.
+
+**The design was adjudicated, not guessed.** Three independent architectures were proposed and
+adversarially scored: a minimal scale-mode, a new diagnostic episode/breach layer, and a full
+per-line reference+scale abstraction. The **minimal scale-mode won**: it is the smallest change
+that is still fully general, and the only one that keeps these lines COUNTED (a depeg is a genuine
+onset the resonance should count, not a slow level state) — for an anchored series the CHANGE
+question and the LEVEL question coincide, because the recent past IS the anchor. The episode
+layer's best idea (a multi-day crisis is one episode, not N independent alarms) is grafted as a
+FUTURE diagnostic overlay via `episodes.py`, gating promotion; it is not a reason to exile these
+lines to an unscored layer.
+
+**What shipped (opt-in, provably additive).** A line may declare `ANCHOR` + `MATERIALITY`
+(module attrs, exactly like `WEEKLY_CYCLE` / `QUANTUM`). When `MATERIALITY` is set, `robust_z`
+short-circuits immediately after the `today is None → DARK` guard: `z = (today − ANCHOR) /
+MATERIALITY`, status SCORING, n = window → the flat 3.0 bar, so **3·MATERIALITY IS the smallest
+material move**. Four small edits carry it — the one branch in `normalize.robust_z`, the forward
+in `normalize.judge`, and two keys in `collect.scoring_attrs` (the single place three callers read,
+so replay and the seeders inherit it for free, the seam the net_outages QUANTUM bug taught). It
+**reads only `today`, never `history`**, so it structurally cannot forward-fill a gap (a missing
+reading still returns DARK); a declared constant has no sampling wobble, so it needs no warm-up
+and takes the flat bar honestly; `_scale_z`, `classify`, `threshold_for`, `_qn` are byte-for-byte
+untouched. `QUANTUM` and `MATERIALITY` are asserted mutually exclusive. **Proof of no blast
+radius: 111 tests green, and `replay.py --check` shows 0 post-STABLE_SINCE divergence on every
+existing line** — a line that does not opt in scores identically, so no STABLE_SINCE bump.
+
+**`stablecoin_peg` retrofit, replayed.** `QUANTUM=1` removed; `ANCHOR=0`, `MATERIALITY=25bp`
+(alarm at 75bp). Over the 2127-obs seed the rolling z fired **214 trembles ≈10%/day** on USDT's
+ordinary ~10bp Bitstamp venue discount; scale-mode drops that to **3 (SVB 2023-03-11 z=12.6,
+03-12 z=3.4, a 2021-01-07 wobble), 0 blind**, and 2026-06-01 falls from z=5.3 to z=0.51. The
+close-based measure keeps FTX (~31bp) and UST (~48bp) as visible ~z=1.3 bumps, not trembles —
+disclosed, not hidden; drop MATERIALITY toward ~12–15bp if that class is later judged material.
+
+**What it unblocks.** `fed_srf_takeup` is now BUILD-READY — its structural-zero wall is exactly
+what an anchored z with a declared materiality dissolves ($0 → honest z=0, a $20bn scramble →
+z=4). `cp_funding_spread`'s scoring is unblocked too (each present day honest, no
+differencing-across-a-gap), but it stays parked on SOURCING — scale-mode cannot conjure its
+missing stress days. The wall Round 13 named now has a mechanism; two of the three candidates
+behind it are cleared of the scoring blocker, and the third is down to a data-coverage problem.
+
+**Still gated.** Scale-mode makes these lines SCORE honestly; it does not promote them. `MATERIALITY`
+is a declared judgment and must be replay-validated to the R11 bar per line, and the episode /
+serial-dependence overlay is the second gate before any of the three becomes a counted tier-1
+instrument. None is promoted this round; `stablecoin_peg` stays TIER=2, now honestly scored.

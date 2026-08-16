@@ -34,8 +34,20 @@ LABEL = "Stablecoin depeg — worst of USDC/USDT (bp from $1)"
 UNIT = "bp"
 ANOMALY_DIRECTION = "up"
 TIER = 2
-QUANTUM = 1  # 1 bp: below the peg's own resolution is noise, and it floors the
-             # robust scale so a calm run of near-perfect pegs cannot zero it
+# Anchored scale-mode (round 14): normal is the $1 peg, not a rolling window, so
+# the reading is scored against a DECLARED anchor + materiality rather than an
+# estimated Qn — see the fetcher contract in collect.py and normalize.robust_z.
+# Without it a folded near-constant series fired 214 trembles (~10%/day, 15% in
+# 2026) on USDT's ordinary ~10bp Bitstamp venue discount; a hard Qn floor instead
+# goes blind. With it, replayed over the 2127-obs seed: 214 -> 3 trembles, 0 blind,
+# and the real events keep their size (USDC's SVB close 314.7bp -> z=12.6).
+ANCHOR = 0        # a perfect $1 peg, in bp of deviation
+MATERIALITY = 25  # bp; alarm at 3*25 = 75bp. Calm venue discount ~10bp -> z=0.4;
+                  # FTX close ~31bp -> z=1.2 and UST/Luna ~48bp -> z=1.9 (visible
+                  # bumps, not trembles — the close, not the intraday wick, is
+                  # scored on purpose); SVB 314.7bp -> z=12.6 fires. Declared, so
+                  # replay-validate before any promotion; drop toward ~12-15bp if
+                  # FTX/UST-class stress is later judged material.
 
 PAIRS = {"USDC": "usdcusd", "USDT": "usdtusd"}
 _OHLC = "https://www.bitstamp.net/api/v2/ohlc/{pair}/"

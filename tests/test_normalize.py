@@ -289,5 +289,54 @@ class TestDecycling(unittest.TestCase):
         self.assertAlmostEqual(today, 100.0, delta=3.0)
 
 
+class TestAnchoredScaleMode(unittest.TestCase):
+    """A line whose normal is a DECLARED constant scores against anchor+materiality,
+    not a rolling window — fixing both the tiny-Qn hypersensitivity and the Qn=0
+    blindness that a near-constant series hits. Opt-in only."""
+
+    def test_scores_from_declared_constants(self):
+        # 3*materiality is by construction the trembling bar; no history needed.
+        z, status, n = N.robust_z([], 75.0, anchor=0, materiality=25)
+        self.assertAlmostEqual(z, 3.0)
+        self.assertEqual(status, N.STATUS_SCORING)
+        self.assertEqual(n, N.WINDOW)                       # flat 3.0 bar
+        z2, _, _ = N.robust_z([], 314.7, anchor=0, materiality=25)
+        self.assertAlmostEqual(z2, 12.588, places=3)        # USDC's SVB close fires
+
+    def test_needs_no_warmup(self):
+        # declared constants, so a depeg in the first days is caught, not hidden.
+        z, status, n = N.robust_z([10.0, 11.0], 90.0, anchor=0, materiality=25)
+        self.assertEqual(status, N.STATUS_SCORING)
+        self.assertGreater(z, 3.0)
+
+    def test_perfect_value_is_a_scoreable_zero_not_blind(self):
+        # a $0/perfect-peg day is an honest 0, never STATUS_FLAT — the structural
+        # -zero blindness (Qn=0 -> "cannot score" looking like "calm") is gone.
+        z, status, n = N.robust_z([], 0.0, anchor=0, materiality=25)
+        self.assertEqual(z, 0.0)
+        self.assertEqual(status, N.STATUS_SCORING)
+        self.assertEqual(N.classify(0.0, n), (0, "flat"))
+
+    def test_a_gap_stays_dark_never_forward_filled(self):
+        # the branch reads only `today`; a missing reading hits the DARK guard.
+        z, status, n = N.robust_z([10.0] * 90, None, anchor=0, materiality=25)
+        self.assertIsNone(z)
+        self.assertEqual(status, N.STATUS_DARK)
+
+    def test_absent_materiality_is_byte_identical(self):
+        # the opt-in guarantee: without MATERIALITY the rolling path is untouched.
+        rng = Random(7)
+        hist = [rng.gauss(100, 5) for _ in range(90)]
+        base = N.robust_z(list(hist), 130.0)
+        self.assertEqual(N.robust_z(list(hist), 130.0, anchor=None, materiality=None), base)
+        # a QUANTUM line is likewise unchanged
+        q = N.robust_z([1.0] * 20, 5.0, quantum=1)
+        self.assertEqual(N.robust_z([1.0] * 20, 5.0, quantum=1, materiality=None), q)
+
+    def test_quantum_and_materiality_are_exclusive(self):
+        with self.assertRaises(AssertionError):
+            N.robust_z([], 50.0, quantum=1, materiality=25)
+
+
 if __name__ == "__main__":
     unittest.main()
