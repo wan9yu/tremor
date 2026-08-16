@@ -30,10 +30,17 @@ STATUS_STALE = "stale"          # the source republished an observation we hold
 # legs six hours apart, Fingrid down and a 60-second Statnett max being the
 # wrong quantity. Both are honest empties with a stated reason in source_note,
 # but "the source was down" and "we declined to read this" are different facts
-# and the record currently tells them apart only in prose — which is the shape
-# this column was invented to abolish. Splitting it changes a verdict field and
-# so bumps STABLE_SINCE; until then, do not read dark as "the source failed".
+# and the record told them apart only in prose. The FIRST split lands in round 18
+# (STABLE_SINCE 2026-08-17): a market closure — the onshore yuan simply not trading
+# on a weekend — now writes ``closed`` (below) instead of dark. The rest of the
+# ambiguity (a real outage vs a weekday declined read) still lives in ``dark``;
+# do not read dark as "the source failed".
 STATUS_DARK = "dark"
+# Market closure, split from dark (round 18): a line whose underlying market is
+# shut on weekends (WEEKEND_MARKET) and has no reading on a Sat/Sun is CLOSED, not
+# failed — there is no observation to miss when the market is not open. It counts
+# toward neither the dark nor the blind tally; weekday holidays stay dark.
+STATUS_CLOSED = "closed"
 STATUS_FLAT = "no-spread"       # history has no resolvable dispersion to judge against
 # A line is BLIND when it holds a reading it cannot judge. Dark is not blindness
 # (it is already reported loudly); staleness is not either (the observation was
@@ -296,7 +303,7 @@ def _decycled(history, cycle_dates, today, today_cycle_date):
 def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
              window=WINDOW, min_points=MIN_POINTS, max_age_days=MAX_AGE_DAYS,
              cycle_dates=None, today_cycle_date=None, quantum=None,
-             anchor=None, materiality=None):
+             anchor=None, materiality=None, weekend_market=False):
     """``(z, status, n)`` for ``today`` against the trailing ``window`` of history.
 
     ``n`` is the number of readings the verdict was actually built from, which
@@ -323,6 +330,11 @@ def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
     de-seasonalization waits on a full year of history.)
     """
     if today is None:
+        # A weekend with no reading on a line whose market shuts weekends is a
+        # market CLOSURE, not a failure — deterministic from the date, so replay
+        # reproduces it without any signal from the (long-gone) fetch.
+        if weekend_market and today_date and _weekday(today_date) >= 5:
+            return None, STATUS_CLOSED, 0
         return None, STATUS_DARK, 0
     if materiality:
         # Anchored scale-mode: a line whose "normal" is a DECLARED constant (a $1
@@ -445,7 +457,8 @@ def weekday_range_veto(history, dates, today, today_date,
 
 
 def judge(history, dates, obs_dates, today, today_obs, today_date,
-          weekly_cycle=False, quantum=None, anchor=None, materiality=None):
+          weekly_cycle=False, quantum=None, anchor=None, materiality=None,
+          weekend_market=False):
     """Today's verdict: ``(z, trembling, direction, note, status)``.
 
     Owns the whole scoring sequence in one place — observation dedup (lagged
@@ -479,7 +492,7 @@ def judge(history, dates, obs_dates, today, today_obs, today_date,
         values, today, dates=kept_dates, today_date=today_date,
         weekday_cycle=weekly_cycle,
         cycle_dates=kept_cycle, today_cycle_date=today_cycle, quantum=quantum,
-        anchor=anchor, materiality=materiality)
+        anchor=anchor, materiality=materiality, weekend_market=weekend_market)
     trembling, direction = classify(z, n)
     # The veto guards the weekend dip only in the pooled regime; once the window
     # is deep enough to have the rhythm removed outright, it has nothing to add.

@@ -145,7 +145,7 @@ def _fmt(value):
 
 
 def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False,
-              quantum=None, anchor=None, materiality=None):
+              quantum=None, anchor=None, materiality=None, weekend_market=False):
     """Judge one reading against ``prior_rows`` and return the CSV row for it.
 
     The ONLY place a line row is built. The daily collector and the archive
@@ -165,7 +165,7 @@ def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False,
     z, trembling, direction, verdict_note, status = normalize.judge(
         history, hist_dates, hist_obs, raw, obs_date, date,
         weekly_cycle=weekly_cycle, quantum=quantum,
-        anchor=anchor, materiality=materiality,
+        anchor=anchor, materiality=materiality, weekend_market=weekend_market,
     )
     if verdict_note:
         note += f" {verdict_note}"
@@ -200,7 +200,8 @@ def scoring_attrs(mod):
     return {"weekly_cycle": getattr(mod, "WEEKLY_CYCLE", False),
             "quantum": getattr(mod, "QUANTUM", None),
             "anchor": getattr(mod, "ANCHOR", None),
-            "materiality": getattr(mod, "MATERIALITY", None)}
+            "materiality": getattr(mod, "MATERIALITY", None),
+            "weekend_market": getattr(mod, "WEEKEND_MARKET", False)}
 
 
 def write_line(line, rows):

@@ -33,6 +33,11 @@ LABEL = "Offshore−onshore yuan spread (pips)"
 UNIT = "pips"
 ANOMALY_DIRECTION = "up"  # offshore yuan weakening past onshore is the alarming move
 TIER = 1  # primary indicator
+# The onshore yuan (CNY) does not trade on weekends, so there is no simultaneous
+# CNH/CNY quote to difference — a Sat/Sun empty is a market CLOSURE, not a fetch
+# failure, and is scored ``closed`` rather than ``dark`` (round 18). Weekday
+# holidays have no keyless calendar and stay ``dark``, as before.
+WEEKEND_MARKET = True
 
 _CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}"
 _HEADERS = {"User-Agent": "Mozilla/5.0 (tremor; +https://github.com/wan9yu/tremor)"}

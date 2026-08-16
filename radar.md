@@ -1381,3 +1381,37 @@ is stuck broken" does not complicate the headline — it keeps it a simple integ
 front page finally say what the instrument has known for months: the world can be calm in the change
 probe and have two straits shut at once. Neither number is a doom score; together they are a
 truer reading than either alone.
+
+### Round 18 — 2026-08-16 (a status the dark column always owed: market closure, split from failure)
+
+One scoring-core change the record has owed since the status column was invented, plus two
+dashboard changes that follow from round 17.
+
+**`dark` splits, and `closed` is the first piece.** The status column's own comment has said for
+months that "no reading at all" hides two different facts — the source FAILED, or the source
+answered and the fetcher DECLINED what came back — and that separating them "changes a verdict
+field and so bumps STABLE_SINCE." This round takes the cleanest piece: a MARKET CLOSURE.
+`cnh_cny` measures offshore−onshore yuan, and the onshore leg does not trade on weekends, so a
+Saturday/Sunday has no simultaneous quote to difference — an empty by the calendar, not by
+failure. A line that declares `WEEKEND_MARKET` now scores such a day **`closed`**, decided
+deterministically from the date (so replay reproduces it with no signal from the long-gone
+fetch), and it counts toward NEITHER the dark nor the blind tally. Weekday holidays — this repo
+has no keyless holiday calendar — stay `dark`, honestly. The change bumps **STABLE_SINCE to
+2026-08-17**, grandfathering the two existing weekend dark rows (08-09, 08-16); every non-opting
+line scores byte-identical, and it rides the same `scoring_attrs` seam as WEEKLY_CYCLE / QUANTUM /
+MATERIALITY (116 tests green, `replay.py --check` clean).
+
+Why it is more than tidiness: R9 already ruled that "a Sunday dark_count=1 is a market fact, not a
+reliability failure," but the dashboard still rendered it as an outage — "0/3 · 1 line dark" every
+weekend, an alarm shape for a calendar fact. The front page now reads "0/4 · yuan spread closed
+(weekend market)," neutral, and a real `dark` again means what it says: the source is down.
+
+**The level layer is a headline now, so its panel is redundant.** Round 17 promoted the
+stuck-strait count to a second headline number; the standalone stuck PANEL below it (a chart plus
+a strait list) said the same thing twice, so it is removed — the headline number plus its
+click-through modal carry it, and `stuck_panel.py` / `stuck.csv` stay as that number's source.
+The two headlines are now framed as an explicit PAIR: a kicker over each names the probe and its
+question — "① the change probe · what suddenly moved today" and "② the level probe · what is stuck
+broken now" — and the tag says the instrument reads with two probes. Simple numbers, two of them,
+each a probe of the world; the accumulation the level probe needs (a pinned pre-event normal over
+a year) is exactly why it could only be built now. No tier moves.

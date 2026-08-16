@@ -51,7 +51,7 @@ from core import normalize
 # first collection the new rules govern; everything before it is the older
 # instrument's voice and diverges by design.
 # (2026-07-23 was the previous mark: Qn + the no-RMS-fallback rule.)
-STABLE_SINCE = "2026-08-04"
+STABLE_SINCE = "2026-08-17"
 
 
 def replay_line(mod, since=None):
