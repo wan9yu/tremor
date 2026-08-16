@@ -1201,3 +1201,30 @@ question — "① the change probe · what suddenly moved today" and "② the le
 broken now" — and the tag says the instrument reads with two probes. Simple numbers, two of them,
 each a probe of the world; the accumulation the level probe needs (a pinned pre-event normal over
 a year) is exactly why it could only be built now. No tier moves.
+
+### Round 19 — 2026-08-16 (housekeeping: the log moves out, and the one dead file leaves)
+
+Not a scoring round — no tier moves, no rule change. A holistic audit (the architect-lens kind,
+whole-repo) found the instrument sound but its APPARATUS growing faster than its reach, and named a
+slice of debt worth paying now. This round pays it, in the R9/R16 lineage of the registry
+maintaining itself.
+
+**The registry and its log are now two files.** This file had grown to 1,417 lines, ~97% of it an
+append-only calibration log that the radar skill re-read in full every round — so the living law
+(the scoring rubric, the three gates, the tier tables, the Backlog) sat buried under 1,200 lines of
+history. Split: **radar.md is the registry (~250 lines)** — current state plus a one-line round
+INDEX — and **radar-log.md is the full round-by-round record**, every round intact, nothing pruned.
+The skill now loads ~250 lines to see the live instrument and opens the log only for the reasoning
+behind a past decision. The two files link both ways; a new round appends here and adds one index
+line there.
+
+**The archive's one dead file leaves; every record stays.** The audit found exactly one piece of
+genuine dead weight in `data/archive/`: the three `<line>_seed1.csv` broken-FRED intermediates
+(~337 KB) written by the spent `repair_fred_seed.py`, read by nothing, and reconstructible from the
+`_preseed` + live pair the repair itself relies on. Deleted — git history is the backstop, the same
+recovered-from-git rule the record already lives by. Everything else was kept and is load-bearing:
+the `_preseed` reproducible pairs, the `_seed_fetch` re-run caches the seeders actually read, and
+the `_v1` / `_prerescore` / `_retired` snapshots that document a rebuild, a rescore, or a retirement
+— the provenance ledger that makes a forward-only record auditable. This sits alongside round 16's
+own cleanup (three drifted numbers corrected, the alarm/episode counts given a CI-refreshed source
+in `episodes.json`): keep the reasoning, shed the weight, make the current state readable at a glance.
