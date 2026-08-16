@@ -40,6 +40,8 @@
   .count .calibnote{color:var(--muted);font-size:13px}
   .count .pairnote{color:#e0a83d;font-size:13px}
   .count .q{margin-left:auto;color:var(--muted);font-size:13px;align-self:center}
+  .count-level{margin:2px 0 8px;padding-top:10px;border-top:1px solid var(--line)}
+  .count-level .n{font-size:44px}
   .asof{color:var(--muted);font-size:13px;margin:0 0 16px}
   .sysstatus{border-radius:10px;padding:11px 15px;margin:0 0 18px;font-size:13px;
     border:1px solid var(--line);background:var(--panel)}
@@ -132,6 +134,11 @@
     <span class="of">/ <span id="count-of">4</span></span>
     <span class="label" id="count-label"></span>
     <span class="q" id="count-q"></span>
+  </div>
+  <div class="count count-level" id="level-count" hidden>
+    <span class="n" id="level-n">–</span>
+    <span class="label" id="level-label"></span>
+    <span class="q" id="level-q"></span>
   </div>
   <p class="asof" id="asof"></p>
 
@@ -404,6 +411,11 @@ const T = {
     stuckHead:(n,d)=>(n===1?"1 strait stuck quiet":n+" straits stuck quiet")+" — as of "+d,
     stuckSince:d=>"since "+d, stuckPct:p=>"at "+p+"% of normal traffic",
     stuckStale:"no longer served", stuckAxis:"straits",
+    levelHead:n=>(n===1?"guarded state broken now":"guarded states broken now"),
+    levelWhich:names=>" · "+names.join(" + "),
+    levelAsof:d=>" · as of "+d+" (PortWatch ~10d lag)",
+    levelTitle:"The second probe — what is stuck broken now",
+    levelBody:"The count at the top asks 'what suddenly moved today' — a change detector across the four primary lines, and by design it falls quiet once a disruption has run a while (a war in its third week sits inside its own baseline and reads calm). This number asks the other half of the founding question: what guarded state is broken RIGHT NOW. A chokepoint strait counts here when its traffic has held at or below half of a PINNED pre-event normal for 14+ days — the reference is frozen the day it breaks, so a closure cannot quiet itself by becoming its own baseline. It reads the IMF PortWatch panel, which publishes ~10 days late, so it is as of the last served observation. Two probes, two questions: the sudden onset, and the stuck state.",
     covLead2:"Field of view: ",
     covTail:" Outside this, real strain can still read 0.",
     covMore:"what tremor cannot see ›",
@@ -455,6 +467,11 @@ const T = {
     stuckHead:(n,d)=>n+" 条海峡静默卡死 —— 截至 "+d,
     stuckSince:d=>"自 "+d+" 起", stuckPct:p=>"仅为正常流量的 "+p+"%",
     stuckStale:"已不再上报", stuckAxis:"海峡数",
+    levelHead:n=>"个被守护的状态此刻卡死破锚",
+    levelWhich:names=>" · "+names.join(" ＋ "),
+    levelAsof:d=>" · 截至 "+d+"（PortWatch 约 10 天滞后）",
+    levelTitle:"第二个探针 —— 此刻有什么卡死破锚",
+    levelBody:"最上面那个数字问的是「今天什么骤然异动了」——四条主线的变化探测器，而且它按设计会在扰动持续一段之后转静（第三周的战争落在自己的基线里、读作平静）。这个数字问的是创立问题的另一半：此刻有哪个被守护的状态是破的。一条海峡计入这里，是当它的流量连续 14 天以上跌到某个「事发前正常值」的一半或以下——那个基准在它破的当天就被钉死，所以封锁无法靠把自己变成基线来自我安静。数据来自 IMF PortWatch 面板，约有 10 天发布滞后，所以这是截至最近一次可得观测。两个探针，两个问题：骤然的发作，与持续的卡死。",
     covLead2:"视野范围：",
     covTail:"视野之外，真实的压力照样可能读作 0。",
     covMore:"tremor 看不见什么 ›",
@@ -526,6 +543,7 @@ function lineModal(L,lang){
     <p>${L.explain[lang]}</p>${annoHtml}`;
 }
 function resoModal(lang){ return `<h3>${T[lang].resoTitle}</h3><p>${T[lang].resoBody}</p>`; }
+function levelModal(lang){ return `<h3>${T[lang].levelTitle}</h3><p>${T[lang].levelBody}</p>`; }
 // Built FROM each tier-1 line's own `watches` field, so the disclosure cannot go
 // stale independently of the instruments it describes.
 function covModal(lang){
@@ -622,6 +640,29 @@ function render(){
     document.getElementById("asof").textContent=T[lang].asof(last.date);
   }
   document.getElementById("count").onclick=()=>openModal(resoModal(lang));
+
+  // ---- second headline: the LEVEL probe — guarded states broken right now ----
+  // A different question from the resonance above: not "what suddenly moved today"
+  // but "what is stuck broken". Fed by the already-served stuck.csv, which the R12
+  // firewall keeps OUT of summary.csv and the scoring path — so this count never
+  // feeds the trembling resonance; it is its own probe of the world.
+  const lc=document.getElementById("level-count");
+  const stuckRows=DATA.stuck||[];
+  if(stuckRows.length){
+    lc.hidden=false;
+    const lByDate={}; stuckRows.forEach(r=>{(lByDate[r.date]||(lByDate[r.date]=[])).push(r);});
+    const lLatest=Object.keys(lByDate).sort().pop();
+    const openNow=lByDate[lLatest];
+    const cnt=openNow.length;
+    const lnEl=document.getElementById("level-n"); lnEl.textContent=cnt; lnEl.style.color=countColor(cnt);
+    const names=openNow.map(r=>straitLabel(r.component,lang));
+    document.getElementById("level-label").innerHTML=
+      T[lang].levelHead(cnt)
+      +(cnt?`<span class="pairnote">${T[lang].levelWhich(names)}</span>`:"")
+      +`<span class="calibnote">${T[lang].levelAsof(lLatest)}</span>`;
+    document.getElementById("level-q").textContent=T[lang].countQ;
+    lc.onclick=()=>openModal(levelModal(lang));
+  } else { lc.hidden=true; }
 
   // chart range: slice the shared date axis to the selected window
   const range=getRange();

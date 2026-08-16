@@ -1341,3 +1341,43 @@ while the uncounted layers held ~273 state-days of real broken/drifted condition
 0 on — is the subject of the next round's structural work (a second, level-based headline). This
 round only clears the ground: an instrument whose whole thesis is honesty cannot carry three wrong
 numbers in its own ledger while arguing about what to build next.
+
+### Round 17 — 2026-08-16 (the second headline: the level layer becomes a counted probe)
+
+The deep dive that drove round 16 also settled a structural question: the counted change-resonance
+is near-mute by construction (0 on 92.8% of 1,664 replayed days, never above 2, ~1 double/year by
+its lines' own independent alarm rates), and it is mute not from a broken pipeline but because a
+count of sudden, near-independent alarms across four lines simply IS rare — while the diagnostic
+layers held **~273 state-days** of real broken/drifted conditions the headline read 0 on (Hormuz
+121 days at ~6% of pinned, Kerch twice, a 134-day GNSS drift, four multi-year median regimes).
+The signal had migrated to the uncounted layers; the headline had not followed. This round it does.
+
+**A second headline, a second probe.** The dashboard now shows two simple numbers side by side.
+The founding one — "N / 4 lines trembling" — is the CHANGE probe: what suddenly moved today, which
+by design falls quiet once a disruption has been running a while (Known limit 1). Beside it now sits
+the LEVEL probe — "**N guarded states broken now**" — the count of chokepoint states currently OPEN
+in the level layer (today: 2, Hormuz + Kerch), each a strait held at or below half a PINNED
+pre-event normal for 14+ days so a closure cannot quiet itself by becoming its own baseline. Two
+questions the founding thesis always asked and only one of which was ever counted: the sudden onset,
+and the stuck state.
+
+**Firewall-clean by construction.** The level headline is fed by `docs/data/stuck.csv` — the file
+`tools/stuck_panel.py` already serves from the derived level record, OUTSIDE the scoring path (the
+round-12 finding: a level count must never enter `summary.csv`, or the side-channel firewall, the
+replay re-derivation, and the tier-1-only summary contract all break). So this is a presentation
+elevation of an organ that already existed, not a new scored line: it emits no z, feeds no
+trembling_count, and the dashboard reads it with the same `getCSV` the stuck panel uses. It carries
+its own as-of date and names the ~10-day PortWatch lag, because a level read is only as fresh as the
+panel it derives from. What it does NOT yet count is deliberate and recorded: drift states
+(`drift_layer`) and anchored materiality breaches (stablecoin/SRF/CP, once the episode overlay
+lands) are the natural next members of a "broken now" count — this round seats the chokepoint
+straits, the one level detector with a live consumer and a proven event, and leaves the rest to
+earn their place the way every probe here does.
+
+**Why this is the right shape for the instrument.** Tremor is a set of simple numbers, each a probe
+of the world, re-chosen over time so that accumulation becomes insight. For fifteen rounds the only
+counted probe was "what changed," and the record shows that probe is honest but narrow. Adding "what
+is stuck broken" does not complicate the headline — it keeps it a simple integer — but it lets the
+front page finally say what the instrument has known for months: the world can be calm in the change
+probe and have two straits shut at once. Neither number is a doom score; together they are a
+truer reading than either alone.
