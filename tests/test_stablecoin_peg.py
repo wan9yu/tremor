@@ -63,5 +63,31 @@ class TestFetchDaily(unittest.TestCase):
         self.assertIn("unavailable", r["source_note"])
 
 
+class TestScaleModeWiring(unittest.TestCase):
+    """The line opts into anchored scale-mode; the declaration must reach the scorer
+    so a real depeg fires while USDT's ordinary venue discount does not."""
+
+    def test_declares_anchor_and_materiality_not_quantum(self):
+        self.assertEqual(sp.ANCHOR, 0)
+        self.assertEqual(sp.MATERIALITY, 25)
+        self.assertFalse(hasattr(sp, "QUANTUM"))   # the two are mutually exclusive
+
+    def test_scoring_attrs_carries_the_declaration(self):
+        import collect
+        attrs = collect.scoring_attrs(sp)
+        self.assertEqual(attrs["anchor"], 0)
+        self.assertEqual(attrs["materiality"], 25)
+
+    def test_score_row_fires_on_a_depeg_not_on_venue_fuzz(self):
+        import collect
+        attrs = collect.scoring_attrs(sp)
+        # an anchored line needs no history to score
+        depeg = collect.score_row("2023-03-11", 314.7, "", "2023-03-11", [], **attrs)
+        self.assertEqual(depeg["trembling"], "1")
+        self.assertEqual(depeg["direction"], "up")
+        fuzz = collect.score_row("2026-06-01", 12.7, "", "2026-06-01", [], **attrs)
+        self.assertEqual(fuzz["trembling"], "0")     # 12.7bp -> z=0.5, calm
+
+
 if __name__ == "__main__":
     unittest.main()

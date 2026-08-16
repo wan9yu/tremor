@@ -21,7 +21,14 @@ Fetcher contract — each module in ``fetchers/`` provides:
     (True for lines with a weekday rhythm, e.g. flights), optional ``QUANTUM``
     (the measurement resolution of a COUNTED reading — one country, one basis
     point — which floors the robust scale so a calm stretch of identical
-    integers cannot leave the line unable to judge the spike that follows).
+    integers cannot leave the line unable to judge the spike that follows), and
+    optional ``ANCHOR`` + ``MATERIALITY`` for an ANCHORED line whose normal is a
+    DECLARED constant, not a rolling window (a $1 peg, a $0 facility take-up).
+    When ``MATERIALITY`` is set the rolling scale is bypassed entirely — the
+    verdict is ``z = (raw - ANCHOR) / MATERIALITY``, so ``3*MATERIALITY`` is the
+    smallest material move — which is the only honest reading for a near-constant
+    series (a tiny rolling Qn cries wolf on ordinary fuzz; a zero Qn goes blind).
+    A line declares ``QUANTUM`` or ``MATERIALITY``, never both.
 
 Two tiers (each fetcher sets ``TIER``; absent means 1):
   - TIER 1 — primary instruments: displayed, and counted in the trembling
@@ -138,7 +145,7 @@ def _fmt(value):
 
 
 def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False,
-              quantum=None):
+              quantum=None, anchor=None, materiality=None):
     """Judge one reading against ``prior_rows`` and return the CSV row for it.
 
     The ONLY place a line row is built. The daily collector and the archive
@@ -158,6 +165,7 @@ def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False,
     z, trembling, direction, verdict_note, status = normalize.judge(
         history, hist_dates, hist_obs, raw, obs_date, date,
         weekly_cycle=weekly_cycle, quantum=quantum,
+        anchor=anchor, materiality=materiality,
     )
     if verdict_note:
         note += f" {verdict_note}"
@@ -190,7 +198,9 @@ def scoring_attrs(mod):
     memory test.
     """
     return {"weekly_cycle": getattr(mod, "WEEKLY_CYCLE", False),
-            "quantum": getattr(mod, "QUANTUM", None)}
+            "quantum": getattr(mod, "QUANTUM", None),
+            "anchor": getattr(mod, "ANCHOR", None),
+            "materiality": getattr(mod, "MATERIALITY", None)}
 
 
 def write_line(line, rows):

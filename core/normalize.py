@@ -295,7 +295,8 @@ def _decycled(history, cycle_dates, today, today_cycle_date):
 
 def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
              window=WINDOW, min_points=MIN_POINTS, max_age_days=MAX_AGE_DAYS,
-             cycle_dates=None, today_cycle_date=None, quantum=None):
+             cycle_dates=None, today_cycle_date=None, quantum=None,
+             anchor=None, materiality=None):
     """``(z, status, n)`` for ``today`` against the trailing ``window`` of history.
 
     ``n`` is the number of readings the verdict was actually built from, which
@@ -323,6 +324,24 @@ def robust_z(history, today, dates=None, today_date=None, weekday_cycle=False,
     """
     if today is None:
         return None, STATUS_DARK, 0
+    if materiality:
+        # Anchored scale-mode: a line whose "normal" is a DECLARED constant (a $1
+        # peg, a $0 facility take-up), not a rolling window. On such a near-constant
+        # series both rolling estimates are degenerate — the centre is always the
+        # anchor, and the Qn is either tiny (hypersensitive: a peg's ordinary ~10bp
+        # venue fuzz reads z>3) or exactly zero (blind: a facility at $0 most days),
+        # the one wall stablecoin_peg and fed_srf_takeup both hit. A declared ANCHOR
+        # + MATERIALITY replaces both estimates with the truth: z = (today - anchor)
+        # / materiality, so 3*MATERIALITY IS the smallest material move. It reads
+        # only `today`, never `history`, so it structurally cannot forward-fill a
+        # gap — a missing reading already returned DARK one line above — and a
+        # declared constant has no sampling wobble, so n=window routes classify to
+        # the flat 3.0 bar via the unchanged threshold_for. This is the
+        # absolute-anchor / fixed-scale corner of the same "normal is not the
+        # rolling window" idea that level_layer (pinned) and drift_layer (year-ago)
+        # occupy; the concept is shared, the code stays separate.
+        assert quantum is None, "a line declares QUANTUM or MATERIALITY, never both"
+        return (today - (anchor or 0.0)) / materiality, STATUS_SCORING, window
     history, cycle_dates = _age_capped(
         history, dates, cycle_dates, today_date, max_age_days)
     today_cycle_date = today_cycle_date or today_date
@@ -426,7 +445,7 @@ def weekday_range_veto(history, dates, today, today_date,
 
 
 def judge(history, dates, obs_dates, today, today_obs, today_date,
-          weekly_cycle=False, quantum=None):
+          weekly_cycle=False, quantum=None, anchor=None, materiality=None):
     """Today's verdict: ``(z, trembling, direction, note, status)``.
 
     Owns the whole scoring sequence in one place — observation dedup (lagged
@@ -459,7 +478,8 @@ def judge(history, dates, obs_dates, today, today_obs, today_date,
     z, status, n = robust_z(
         values, today, dates=kept_dates, today_date=today_date,
         weekday_cycle=weekly_cycle,
-        cycle_dates=kept_cycle, today_cycle_date=today_cycle, quantum=quantum)
+        cycle_dates=kept_cycle, today_cycle_date=today_cycle, quantum=quantum,
+        anchor=anchor, materiality=materiality)
     trembling, direction = classify(z, n)
     # The veto guards the weekend dip only in the pooled regime; once the window
     # is deep enough to have the rhythm removed outright, it has nothing to add.
