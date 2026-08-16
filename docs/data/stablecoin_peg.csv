@@ -2127,3 +2127,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-14,9.9,0.396,0,up,"Bitstamp settled daily close, worst 9.9bp from $1 [archive import: scored retroactively, not a live reading]",2026-08-14,scoring
 2026-08-15,11.5,0.460,0,up,"Bitstamp settled daily close, worst 11.5bp from $1 [archive import: scored retroactively, not a live reading]",2026-08-15,scoring
 2026-08-16,11.1,0.444,0,up,"Bitstamp settled daily close, worst 11.1bp from $1 [archive import: scored retroactively, not a live reading]",2026-08-16,scoring
+2026-08-17,11.1,,0,,"Bitstamp settled close: USDC 0.9998 (2.0bp), USDT 0.9989 (11.1bp) -> worst USDT 11.1bp from $1 [sampled 22:26:53Z] [stale: observation already recorded]",2026-08-15,stale
