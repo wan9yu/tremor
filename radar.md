@@ -247,3 +247,4 @@ decision. A new round is appended to `radar-log.md` and gets one line added here
 - **Round 16** — 2026-08-16 · the registry corrects its own arithmetic, and the counts get a source
 - **Round 17** — 2026-08-16 · the second headline: the level layer becomes a counted probe
 - **Round 18** — 2026-08-16 · a status the dark column always owed: market closure, split from failure
+- **Round 19** — 2026-08-16 · housekeeping: the log moves out to radar-log.md, and the one dead file leaves
