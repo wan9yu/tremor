@@ -338,5 +338,42 @@ class TestAnchoredScaleMode(unittest.TestCase):
             N.robust_z([], 50.0, quantum=1, materiality=25)
 
 
+class TestClosedStatus(unittest.TestCase):
+    """A weekend with no reading on a WEEKEND_MARKET line is a market closure, not a
+    failure — deterministic from the date, so replay reproduces it. Opt-in only; a
+    weekday empty (a holiday, an outage) stays dark."""
+
+    def test_a_weekend_empty_is_closed(self):
+        # 2026-08-16 is a Sunday, 2026-08-15 a Saturday
+        self.assertEqual(N.robust_z([], None, today_date="2026-08-16", weekend_market=True),
+                         (None, N.STATUS_CLOSED, 0))
+        self.assertEqual(N.robust_z([], None, today_date="2026-08-15",
+                                    weekend_market=True)[1], N.STATUS_CLOSED)
+
+    def test_a_weekday_empty_stays_dark(self):
+        # 2026-08-13 is a Thursday — a weekday empty is not a market closure
+        self.assertEqual(N.robust_z([], None, today_date="2026-08-13",
+                                    weekend_market=True)[1], N.STATUS_DARK)
+
+    def test_absent_weekend_market_is_byte_identical(self):
+        # a line that does not opt in scores a weekend empty as dark, exactly as before
+        base = N.robust_z([], None, today_date="2026-08-16")
+        self.assertEqual(base, (None, N.STATUS_DARK, 0))
+        self.assertEqual(N.robust_z([], None, today_date="2026-08-16",
+                                    weekend_market=False), base)
+
+    def test_closure_only_on_an_empty_a_weekend_reading_still_scores(self):
+        rng = Random(3)
+        hist = [rng.gauss(100, 5) for _ in range(90)]
+        _, status, _ = N.robust_z(hist, 130.0, today_date="2026-08-15", weekend_market=True)
+        self.assertEqual(status, N.STATUS_SCORING)   # a present Saturday quote is judged
+
+    def test_cnh_cny_declares_it_and_the_scorer_reads_it(self):
+        import collect
+        from fetchers import cnh_cny
+        self.assertTrue(cnh_cny.WEEKEND_MARKET)
+        self.assertTrue(collect.scoring_attrs(cnh_cny)["weekend_market"])
+
+
 if __name__ == "__main__":
     unittest.main()
