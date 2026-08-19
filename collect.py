@@ -50,7 +50,7 @@ from datetime import datetime, timezone
 from core import clock, normalize
 
 from fetchers import (capital_premium, chokepoint, cnh_cny, control_daylength,
-                      credit_spread, em_oas, euro_hy_spread, flights,
+                      credit_spread, em_oas, euro_hy_spread, fed_srf_takeup, flights,
                       fx_parallel_premium, gdelt, gdelt_tone, gnss, grid_frequency,
                       hkma_aggr_balance, net_outages, polar_temp, ports, sofr_iorb,
                       stablecoin_peg, tga_days_cash, vix)
@@ -66,6 +66,7 @@ LINES = [flights, credit_spread, cnh_cny, net_outages,  # tier 1 (primary, displ
          euro_hy_spread, fx_parallel_premium, hkma_aggr_balance,  # tier 2 (built round 8)
          tga_days_cash,                                 # tier 2 (built round 11)
          stablecoin_peg,                                # tier 2 (built round 14)
+         fed_srf_takeup,                                # tier 2 (built round 20)
          gdelt, gdelt_tone, vix, polar_temp,             # tier 2 (context, never promotable)
          control_daylength]                             # tier 2 (CONTROL — no world in it)
 
