@@ -1228,3 +1228,91 @@ the `_v1` / `_prerescore` / `_retired` snapshots that document a rebuild, a resc
 — the provenance ledger that makes a forward-only record auditable. This sits alongside round 16's
 own cleanup (three drifted numbers corrected, the alarm/episode counts given a CI-refreshed source
 in `episodes.json`): keep the reasoning, shed the weight, make the current state readable at a glance.
+
+### Round 20 — 2026-08-19 (the possibilities sweep: six probes, and what is actually reachable)
+
+The prompt was "看一下我们的可能性" — survey what is reachable. So this round is mostly the DIVERGE
+step, run as six parallel source-probes across domains, each required to actually FETCH its endpoint
+and return the real number, not assert plausibility. The score step first, because it decides
+whether any diverge even matters.
+
+**No tier-1 move is due — measured, same verdict as R13.** The orthogonality of every tier-2 line's
+z-history against the live four: the only MATURE lines that clear the ≥60-reading bar are all
+credit-correlated and would duplicate an existing slot — `em_corp_oas` +0.80, `euro_hy_spread`
++0.74, `vix` +0.75 against the credit family. Every line that is genuinely ORTHOGONAL and FRESH is
+still too young to adjudicate: `sofr_iorb_spread` 36 scored (−/+0.34), `stablecoin_peg` 2129 rows but
+only ~4 days LIVE (seeded rows are not live detections; −0.13), `tga_days_cash` n=1, `fx_parallel`
+n=14, `hkma` n=6. The two strong-and-orthogonal mature ones — `port_throughput` (−0.34) and
+`chokepoint_breadth` (−0.19), both 214/218 scored — are frozen out of tier-1 by the freshness rule
+(PortWatch obs lag 10 days). Nothing to promote; the value of the round is the survey.
+
+**The six probes (each fetched live, 2026-08-19):**
+
+1. **`fed_srf_takeup` — BUILD-READY, CONFIRMED.** The registry has carried this as build-ready since
+   R15; this round proves the source is live+keyless+daily+zero-lag TODAY. NY Fed markets API,
+   `https://markets.newyorkfed.org/api/rp/all/all/results/last/N.json` (HTTP 200, no key), returns
+   `repo.operations[]` with `operationDate` / `operationType` / `totalAmtAccepted`. Today's rows:
+   2026-08-18 Repo $0 and a $1,000,000 Repo; Reverse Repo $155m. Guard passes cleanly (SRF is a
+   full-allotment ceiling the Fed defends at a ~$0 equilibrium — nonzero take-up is a bank borrowing
+   from the guard itself, the leaking hand); cadence passes (daily-settled); reachability passes (a
+   Sept-2019-style squeeze draws tens of billions against ANCHOR=0/MATERIALITY≈$5000m → |z|≫3). Two
+   corrections vs the registry's carried plan: the URL needs the `/all/all/` method segment (the
+   `/rp/all/results/` form 400s), and there are TWO "Repo" ops per day — the recurring **$1m is the
+   Fed's standing small-value exercise (SVE)** and must be filtered from the genuine SRF take-up. Both
+   are build-time detail, not blockers. This is the one actionable "possibility" of the round.
+
+2. **`onrrp_takeup` — REJECTED on the guard gate (new).** A new idea, and a clean kill. The source is
+   live/keyless/daily/fresh (FRED `RRPONTSYD`, 2026-08-18 = $0.155B, drained from a $2.55T Dec-2022
+   peak), so it fails nothing on plumbing. It fails on the FOUNDING QUESTION: the Fed defends the RRP
+   offering RATE (the corridor floor), not the take-up QUANTITY. Take-up is a market-determined
+   residual — the cash money funds park when private rates sink to the floor — with no guardian
+   holding it at any equilibrium, so nothing "leaks" when it moves. It is a scarcity LEVEL, not a
+   defended-equilibrium leak. The genuinely-guarded number in this exact plumbing is the rate spread,
+   which the registry already collects as `sofr_iorb_spread`. Recorded in Rejected so it is not
+   re-probed. (This is the guard gate doing precisely its job — screening out an interesting number
+   that has no guardian.)
+
+3. **`ais_dark_activity` — NON-FIND (sourcing) and guard-questionable.** The idea: vessels going dark
+   (disabling AIS) leak sanctions evasion / pre-conflict staging, orthogonal to PortWatch transit
+   counts. Two walls. Sourcing: every real dark-ship feed is key-gated or commercial — Global Fishing
+   Watch Events (the canonical one) returns HTTP 401 without a mandatory free-registration token;
+   SkyTruth/Skylight is a platform not a feed; Datalastic/VesselFinder/MarineTraffic/UN Global
+   Platform all require keys. Guard: an AIS-gap is an INFERRED detection (someone's smuggling model),
+   closer to a sentiment read than a number a guardian defends. Recorded in Rejected in the
+   `marine_war_risk` / `sovereign_cds` lineage — the guarded quantity is real, no keyless daily source
+   exists — so the search is not repeated.
+
+4. **`bgp_instability` — re-probe, STILL BLOCKED.** The backlog blocker holds. RIPEstat is keyless
+   but every routing endpoint (`routing-status`, `bgp-updates`, `bgp-update-activity`) makes
+   `resource=` mandatory → SINGLE-AS only (e.g. AS3333: 6 IPv4 prefixes, 325/325 RIS peers), which is
+   dominated by low-count-integer and sensor-inflation noise, not a global instability measure. The
+   one true global aggregate — Cloudflare Radar BGP timeseries — requires an `Authorization: Bearer`
+   token even on the free tier. No keyless GLOBAL daily aggregate exists; note updated with the
+   concrete endpoints tried.
+
+5. **`entsog_gas_flow` — BACKLOG, but the source is now PROBED keyless-live (real progress).** The one
+   backlog item that moved forward. The ENTSOG operational-data API is KEYLESS and returns real daily
+   per-point physical flows: `.../api/v1/operationaldata?indicator=Physical%20Flow&periodType=day` →
+   Fos LNG (FR) entry 129,088,330 kWh/d for 2026-08-16 (updated 08-18), Blaregnies L (BE/FR) 51.6
+   GWh/d, ~2-day lag. Guard passes (cross-border physical flow is a real defended quantity — Nord
+   Stream 2022 went to zero), cadence passes (kWh/**d**), reachability passes (a cutoff drives flow to
+   0). The blocker was never sourcing — it is the AGGREGATION DESIGN the registry already named:
+   choosing a non-diluting, non-frame-churning set of import points. Backlog note upgraded from
+   "source uncertain" to "source confirmed keyless-live; only point-selection design remains." (AGSI+
+   storage, the separate `eu_gas_storage` item, was re-checked and STILL returns "invalid/missing API
+   key" — unchanged, still needs a free registered key.)
+
+6. **`usd_xccy_basis` — re-probe, STILL EXHAUSTED.** The cleanest guard in the whole registry (USD
+   swap lines literally defend this exact number) remains unbuildable for lack of a feed. Re-verified
+   by fetching: OFR STFM exposes only {FNYR, MMF, NYPD, REPO, TYLD} — zero FX/swap series; FRED
+   `XCCYBASIS3M` 403/absent; cbonds and CME paywalled/keyed. No keyless daily basis number obtainable.
+   Note stamped with the re-probe date so the exhaustion is dated, not perpetual.
+
+**Decisions.** No tier move. `fed_srf_takeup` is RECOMMENDED to build (financial-plumbing, the
+structural-zero wall already solved by the R15 anchored scale-mode) — building a fetcher needs the
+user's go, so it is proposed, not shipped, this round. Mechanical registry writes applied: `onrrp_takeup`
+and `ais_dark_activity` → Rejected with their reasons; `entsog_gas_flow` source confirmed keyless;
+`bgp_instability` and `usd_xccy_basis` re-probe notes dated; `fed_srf_takeup` backlog note corrected
+(URL `/all/all/`, SVE filter). The survey's shape: the registry's plumbing corner is well-mapped —
+the reachable next line is `fed_srf_takeup`, and beyond it the frontier is not more sources but the
+DESIGN work already named (entsog point-selection) or a key we've chosen not to ship (AGSI+, xccy).
