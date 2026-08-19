@@ -27,19 +27,16 @@ _START = "2021-07-28"   # SRF inception
 
 
 def history():
-    """``[(operation_date, total-accepted-$m)]`` oldest-first, all business days.
+    """``[(operation_date, total-accepted-$m)]`` oldest-first, all complete days.
 
-    Stops strictly BEFORE today, the same settle rule the live fetcher applies, so
-    the seed never records a partial current day (the afternoon SRF op may not have
-    settled when a re-run fires) and the live tail picks up today cleanly.
+    Uses ``srf.settled_takeup`` — the SAME settle rule the live fetcher applies —
+    so the seed never records a partial current day and the live tail picks up
+    where the seed stops, one series. ``today`` is computed once (explicit UTC) and
+    used for both the query bound and the settle boundary so they cannot diverge.
     """
-    # Explicit UTC, identical to the live fetcher — so a manual re-seed from a
-    # machine whose local date runs ahead of US-Eastern (e.g. a China box during US
-    # market hours) can never record a day whose afternoon SRF op has not settled.
     today = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
-    ops = srf.search(_START, today)
-    takeup = srf.daily_takeup(ops)
-    return [(day, round(amt, 1)) for day, amt in sorted(takeup.items()) if day < today]
+    takeup = srf.settled_takeup(srf.search(_START, today), today)
+    return [(day, round(amt, 1)) for day, amt in sorted(takeup.items())]
 
 
 def import_note(obs, value):

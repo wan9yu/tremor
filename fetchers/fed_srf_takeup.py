@@ -88,22 +88,23 @@ def search(start, end):
     return _get(_SEARCH, {"startDate": start, "endDate": end, "operationTypes": "Repo"})
 
 
-def _repo_ops(operations):
-    """Only the Standing Repo Facility legs — every ``Repo`` op, both auction
-    formats (Full Allotment, Multiple Price) and both overnight and the rare term
-    ops; reverse-repo (RRP) is a different facility and is dropped."""
-    return [o for o in operations if o.get("operationType") == "Repo"]
+def _is_repo(op):
+    """One Standing Repo Facility leg — a ``Repo`` op in either auction format
+    (Full Allotment, Multiple Price) and any term. Reverse-repo (RRP) is a
+    different facility and is not take-up."""
+    return op.get("operationType") == "Repo"
 
 
 def daily_takeup(operations):
     """Sum accepted across each day's SRF repo ops: ``{operationDate: $m}``.
 
-    Shared by the live fetcher and the seeder so both measure take-up the same
-    way. The morning and afternoon operations (and any term op) on a day are
-    summed; amounts arrive in dollars and are returned in $m.
+    The morning and afternoon operations (and any term op) on a day are summed;
+    amounts arrive in dollars and are returned in $m.
     """
     by_day = {}
-    for o in _repo_ops(operations):
+    for o in operations:
+        if not _is_repo(o):
+            continue
         day = o.get("operationDate")
         if not day:
             continue
@@ -111,27 +112,37 @@ def daily_takeup(operations):
     return {day: amt / 1e6 for day, amt in by_day.items()}
 
 
+def settled_takeup(operations, today=None):
+    """Take-up for every COMPLETE operation day: ``{operationDate: $m}`` for days
+    strictly before ``today`` (an explicit UTC date, defaulted here).
+
+    The ONE settle rule, shared by the live fetcher and the seeder the same way
+    ``daily_takeup`` is — so history and the live tail stay one series. The
+    boundary is UTC, NOT naive date.today(): it must not depend on the runner's
+    timezone. A US-Eastern operation day is fully settled (both the ~08:30 and
+    ~13:45 ET ops closed) well before UTC rolls past it, so ``< today (UTC)`` never
+    selects a day whose afternoon op has not yet settled — the partial-day trap a
+    local clock ahead of ET would fall into.
+    """
+    if today is None:
+        today = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    return {day: amt for day, amt in daily_takeup(operations).items() if day < today}
+
+
 def fetch_daily():
-    # The settle boundary is an explicit UTC date, NOT naive date.today(): it must
-    # not depend on the runner's timezone. A US-Eastern operation day is fully
-    # settled (both the ~08:30 and ~13:45 ET ops closed) well before UTC rolls past
-    # it, so "< today (UTC)" never selects a day whose afternoon op has not yet
-    # settled — the partial-day trap a local clock ahead of ET would fall into.
-    today = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
     try:
         ops = _recent(40)   # ~2 ops/business day -> a comfortable settled window
-        takeup = daily_takeup(ops)
+        takeup = settled_takeup(ops)
     except (requests.RequestException, ValueError, KeyError, TypeError) as e:
         return {"raw_value": None,
                 "source_note": f"NY Fed markets API unavailable: {type(e).__name__}"}
 
-    settled = [d for d in takeup if d < today]
-    if not settled:
+    obs = max(takeup, default=None)
+    if obs is None:
         return {"raw_value": None,
-                "source_note": f"NY Fed SRF: no settled operation day before {today}"}
-    obs = max(settled)
+                "source_note": "NY Fed SRF: no settled operation day found"}
     val = round(takeup[obs], 1)
-    n_ops = sum(1 for o in _repo_ops(ops) if o.get("operationDate") == obs)
+    n_ops = sum(1 for o in ops if _is_repo(o) and o.get("operationDate") == obs)
     return {
         "raw_value": val,
         "source_note": (f"NY Fed SRF total accepted {val:,.1f}$m across "
