@@ -1316,3 +1316,36 @@ and `ais_dark_activity` → Rejected with their reasons; `entsog_gas_flow` sourc
 (URL `/all/all/`, SVE filter). The survey's shape: the registry's plumbing corner is well-mapped —
 the reachable next line is `fed_srf_takeup`, and beyond it the frontier is not more sources but the
 DESIGN work already named (entsog point-selection) or a key we've chosen not to ship (AGSI+, xccy).
+
+**Build follow-through (same round, approved): `fed_srf_takeup` ships as tier 2.** Files:
+`fetchers/fed_srf_takeup.py`, `tools/seed_fed_srf.py`, `tests/test_fed_srf_takeup.py`, registered in
+`collect.py`. The reading is the day's TOTAL amount accepted across all SRF repo operations, in $m,
+scored in anchored scale-mode (ANCHOR=0, MATERIALITY=$10,000m). One correction to the pre-build
+recommendation: the "$1m SVE to filter" turned out NOT to be a fixed exercise — the small afternoon
+amounts vary ($0/$1m/$2m/$3m/$100m) and are indistinguishable in the API's fields (same `Full
+Allotment` method, empty note), so they are not filtered but SUMMED IN; at <$100m they are z<0.01
+against the $10bn materiality, immaterial by construction. Take-up = every `Repo` op that day (both
+auction formats — Full Allotment and Multiple Price — and the three rare term ops); reverse-repo (RRP,
+a different facility) is excluded by the `operationType=="Repo"` filter.
+
+**MATERIALITY set on the friction band, not fitted to a count.** The full 2021-07-28-> record pulls in
+one keyless request: 1262 operation days, 60.8% exactly $0 (the registry's 61.4% claim, confirmed on
+live data), 767 zero-days scoring an honest z=0. The post-2025 regime brought genuine month/quarter-end
+reserve scarcity — the friction band now sits at ~$20-26bn — so MATERIALITY=$10bn puts the alarm at
+$30bn, comfortably above it. Replayed, the line fires on exactly three days, all genuine: year-end
+2025 $74.6bn (z=7.5, the record SRF print), the Oct-2025 month-end $50.4bn (z=5.0), and a mid-month
+2026-02-17 $30.5bn (z=3.05) that no calendar explains. The sub-alarm month-end cluster ($20-26bn → z
+2.0-2.6) reads as a visible bump, not a tremble — a calendar structure this line does not yet
+de-cycle, which is the named gate on any future tier-1 promotion (this repo still has no de-cycling).
+
+**Verified before commit.** An adversarial four-lens review (contract/registration, financial
+semantics, settle-timezone-dedup, robustness) ran over the built files. Two lenses clean; it surfaced
+two worth-fixing items, both applied: (1) the settle boundary now uses an explicit UTC date, not naive
+`date.today()`, so a manual re-seed from a machine ahead of US-Eastern can never record a partial
+AM-only day as the full total (the concrete hazard: 2025-12-31 would have posted $60bn instead of
+$74.6bn); (2) `_get` now validates the response shape and `daily_takeup` moved inside the try, so a
+malformed HTTP-200 degrades to the module's own stated-empty instead of a generic crash-dark row. The
+2026-02-17 print clears the $30bn bar by only ~$0.5bn — documented as a descriptive fact, deliberately
+NOT tuned away, since the tremble count is a replay output, not an invariant to defend. Final state:
+126 tests pass, `replay --check` re-derives the post-STABLE_SINCE rows with zero divergence, no
+forbidden string. The line collects daily from the next CI run forward.
