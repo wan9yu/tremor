@@ -37,6 +37,17 @@ class TestDailyTakeup(unittest.TestCase):
         self.assertEqual(t["2026-08-14"], 0.0)
 
 
+class TestSettledTakeup(unittest.TestCase):
+    """The shared settle rule: only days strictly before `today` are complete."""
+
+    def test_drops_the_forming_day(self):
+        ops = [_op("2026-01-01", "Repo", 5_000_000_000),
+               _op("2026-01-02", "Repo", 9_000_000_000)]   # the forming day
+        t = srf.settled_takeup(ops, today="2026-01-02")
+        self.assertEqual(sorted(t), ["2026-01-01"])         # 01-02 not yet settled
+        self.assertEqual(t["2026-01-01"], 5000.0)
+
+
 class TestFetchDaily(unittest.TestCase):
     def setUp(self):
         self._real = srf._recent
