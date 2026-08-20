@@ -1349,3 +1349,58 @@ malformed HTTP-200 degrades to the module's own stated-empty instead of a generi
 NOT tuned away, since the tremble count is a replay output, not an invariant to defend. Final state:
 126 tests pass, `replay --check` re-derives the post-STABLE_SINCE rows with zero divergence, no
 forbidden string. The line collects daily from the next CI run forward.
+
+### Round 21 — 2026-08-20 (the 5S round: an audit sweeps the whole shop, and the port slide gets its attribution)
+
+Two things happened at once this round: a full three-mode audit (waste / drift / strategic — nine
+parallel evidence-first lanes over the whole repo) ran as the round's calibration event, and the
+instrument's strongest sustained tier-2 signal to date demanded an attribution ruling. No tier
+moves; no new candidates (the frontier was mapped one day ago in R20 — the R9/R16/R19 precedent
+for a bookkeeping-weighted round applies).
+
+**The port slide is REAL, and the revision-artifact hypothesis is refuted by measurement.**
+`port_throughput` fired four alarm-direction trembles in five business days (08-16 z=-4.4,
+08-17 z=-6.8, 08-19 z=-5.2, 08-20 z=-7.3; obs 08-06..08-10) — global port calls fell from July's
+~4,800-5,250 band to a 4,055 trough. The obvious suspect was a PortWatch trailing-revision
+artifact (newest days provisionally undercounted). Tested directly: re-querying today the same
+obs days recorded a week ago shows revisions of **+0 to +34 calls (<1%)** — nowhere near the
+10-15% dip. So the slide is real in the source: a broad-based fall across ordinary ports, NOT
+chokepoint-concentrated (same-source `chokepoint_breadth`, 28 straits, read z=-0.28 flat through
+it), already recovering by obs 08-13/14 (4,648). Cause not identifiable from this data; what the
+record can say is measured and now says it. The z will keep firing while the rolling baseline
+still remembers July — correct behavior for a change detector.
+
+**fed_srf_takeup's first live contact worked exactly as designed.** The first CI pass after the
+R20 build read obs 2026-08-18 — already carried by the seed — and wrote an honest `stale`
+republish rather than a duplicate observation. The line runs T+1 by its strict UTC settle rule.
+Watch note, not signal: `capital_premium` swung -0.61 → -3.23% in a day (Upbit discount
+deepening, z=-2.9) — the benign direction (alarm is premium UP = capital flight), below its bar,
+but the sharpest one-day move in its record.
+
+**The audit, in one paragraph each.** WASTE: two completed one-off tools with zero consumers
+(`tools/repair_fred_seed.py`, `tools/backfill_components.py`), one abstraction whose second
+consumer died (`core/adsb.py`, extracted for cn_flights which R8 retired), two unused imports,
+and one explicit keep (`tools/rescore.py`, a twice-used standing repair) — all surfaced for the
+user, none deleted (waste is report-only by protocol). DRIFT: the R20 build had left the
+dashboard's JS registry without fed_srf_takeup — the third registry (collect.py LINES /
+index.html / radar.md) misses a build ~50% of the time historically; fixed, along with the
+dashboard's four-domain list still naming navigation (demoted R7), a stablecoin explainer still
+describing the pre-R15 rolling-z world, README's hand-copied counts, and this registry's own
+drift (the 9-cell stablecoin row, ~8-day PortWatch claims vs the measured 10, the R9 "currently"
+paragraph, R11-stamped tier-1 cells — all corrected in this round's edit). STRATEGIC, the three
+findings that matter: (1) `charts/*.png` is ~94% of all pack growth (353 blob versions, 12.8MB of
+a 13.6MB pack, ~160KB/cycle — the CSVs delta to almost nothing); (2) the dashboard ships every
+line's full seeded history on every page load (2.3MB and step-growing with each deep seed);
+(3) registry membership is triple-maintained with no sync test. All three are decision points
+surfaced to the user, not unilateral changes.
+
+**Standardize: promises now live in a list, not in prose.** The audit found six standing
+commitments floating in narrative (the flights 08-31 review, cnh_cny's maturity refresh, the R15
+anchored-scale promotion gates, the de-cycling debt, xccy's unfireable "ever" condition) — a
+pattern, not an accident. radar.md now carries a **"Pending reviews & tripwires"** block: every
+open commitment in one place, each with its trigger, closed only by editing it out with a round
+reference. Two new tripwires were declared while formalizing: roll radar-log.md to an archive at
+2,000 lines (~R32-35 at the measured ~57 lines/round), and re-probe xccy sourcing every ~10
+rounds with a downgrade decision at R30. One timing seam recorded: the 08-16 cnh_cny dark ran
+hours before R18's closed-status landed — the first live weekend for `closed` is 08-22/23, and
+its verification is on the list.

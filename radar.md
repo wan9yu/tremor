@@ -9,7 +9,7 @@ we have.
 | tier | role | target |
 |---|---|---|
 | **1 — primary** | displayed on the dashboard, counted in the trembling resonance | 4 |
-| **2 — collected** | scraped every day, building history; not shown or counted; no cap | all that qualify |
+| **2 — collected** | scraped every day, building history; shown only as a muted watchlist, never counted; no cap | all that qualify |
 
 Anything with a real guard and a **verified, working, keyless daily fetcher** is built
 and collected immediately, banking evidence toward tier-1. Collection is nearly free in
@@ -55,7 +55,7 @@ data exists):
   that deepens the baseline voids the previous arithmetic (this bit the FRED lines, R9).
 
 **Freshness rule for tier-1:** a displayed instrument must be FRESH (low publication lag). A
-line that is daily but lags a week (e.g. IMF PortWatch, ~8 days) only shows a disruption long
+line that is daily but lags a week (e.g. IMF PortWatch, ~10 days measured) only shows a disruption long
 after it began — fine for tier-2 (history accumulates, the lag washes out in the rolling
 baseline), but too stale to be a live tier-1 instrument. Prefer ≤ ~2-day lag for tier-1.
 
@@ -91,9 +91,9 @@ Written down because they are structural, not bugs, and a reader deserves them u
    **Partially answered** (2026-08-03, R9): the LEVEL LAYER (`tools/level_layer.py`) walks
    the per-strait component record with a pinned pre-event reference — the reference is
    frozen the day a state opens, so a broken state can no longer argue itself normal by
-   becoming the baseline. It currently holds one state open: Hormuz since 2026-04-06, at
-   ~14% of its pinned 72/day. Diagnostic, unscored, uncounted — but the level question now
-   has a written answer instead of a shrug.
+   becoming the baseline. At R9 it held one state open — Hormuz since 2026-04-06, then at
+   ~14% of its pinned 72/day (see the R12 update below for the current states). Diagnostic,
+   unscored, uncounted — but the level question now has a written answer instead of a shrug.
    **Quantified and located** (2026-08-14, R12): the sum's blindness is now a measured fact,
    not a worry — a full simultaneous closure of the two currently-stuck straits (Hormuz +
    Kerch, pinned 72 + 12 = 84 transits) moves the 28-strait total 1.04 z, 35% of the way to
@@ -135,23 +135,45 @@ Written down because they are structural, not bugs, and a reader deserves them u
    confidence interval is wider than the difference being argued about. Radar rounds
    should say so rather than rule on n≈20.
 
+### Pending reviews & tripwires (added R21 — promises live here, not in prose)
+
+Every open commitment in one place, so a radar round can check this list instead of
+re-reading the log. Close an item by editing it out with a round reference.
+
+- **flights pre-committed review** — due **2026-08-31** (de-cycling engages, n≥60): demote if
+  episode-rate Wilson LB >2%, or immediately on the next unadjudicable alarm (set R11).
+- **cnh_cny maturity refresh** — at n≥60 scored (~same window): re-measure the reach cell +
+  benign-tremble recount (queued R13).
+- **anchored-scale promotion gates** (R15, standing): before ANY anchored line promotes,
+  its MATERIALITY must be replay-validated to the R11 bar and an episode/serial-dependence
+  overlay run. Applies to stablecoin_peg, fed_srf_takeup.
+- **calendar de-cycling debt** (named R20): month/quarter-end rhythm gates fed_srf_takeup's
+  promotion and warps tga_days_cash; payable on fed_srf's 1,262-day seed. This repo still
+  has no de-cycling beyond weekday.
+- **closed-status first live weekend** — 08-22/23 is the first weekend after R18 landed;
+  verify cnh_cny reads `closed`, not `dark` (the 08-16 dark predates R18 by hours).
+- **radar-log.md roll tripwire** — split the log into an archive file when it crosses
+  **2,000 lines** (1,406 after R21; ~57 lines/round → around R31-R33).
+- **usd_xccy_basis parking review** — re-probe sourcing every ~10 rounds (last: R20);
+  downgrade to Rejected if still keyless-blocked at R30.
+
 ---
 
-## Tier 1 — primary  (4 / 4 · reviewed R11)
+## Tier 1 — primary  (4 / 4 · reviewed R11 · metrics refreshed R21)
 
 The four displayed, counted instruments — four distinct domains. Decided round 3,
 applied round 4.
 
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | Orthog | status |
 |---|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
-| flights | airspace (EU/US/JP) | 3 | 3 | 2 | 55/55 | 1 alarm, the adjudicated 07-05 artifact | ≤0.088 (n 29–45, R13) | ⚠️ **RETAINED WITH CONDITIONS, R11** — sole current-rule alarm is an artifact; review pre-committed 2026-08-31 (de-cycling engages, n≥60): demote if episode-rate Wilson LB >2%, or immediately on the next unadjudicable alarm |
-| credit_spread | financial (US→global) | 3 | 3 | 3 | 43/44 | 66 alarm days = 8 episodes, all 4 real events | ≤0.036 (n=775, R13) | ✅ global bellwether; alarm at the 45th pctile of its 776-day record |
-| cnh_cny | capital controls (China) | 2 | 3 | — | 52/55* | 0 alarms (4 benign down-trembles) in 52 scored | ≤0.088 (n=40, R13) | ✅ slot 4 (user-decided); reach cell MEASURED R13 — the alarming (up) side needs +227 pips vs a 52-obs record high of 143 (a decoration WITHIN this young calm record; baseline-relative — real capital-flight episodes blow far past it), while all four |z|>3 events are benign DOWN trembles (offshore yuan stronger). Still <60, insufficient to adjudicate; refresh at the maturity review (*3 darks are weekend/leg-timing rejections, not failures) |
-| net_outages | communications (global) | 2 | 3 | 3 | 26/26 | 57 alarm days = 37 episodes; grid-strike + blackout events attributable | ≤0.036 (pairs ≥40, R13) | ✅ **CONFIRMED R11** — the pre-committed review was held and every gate passed; the tremble clause fired on its day-count letter and was amended to episode terms on measured evidence (see round 11) |
+| flights | airspace (EU/US/JP) | 3 | 3 | 2 | 60/60 | 1 alarm in 50 scored, the adjudicated 07-05 artifact | ≤0.08 (n≈50, R21) | ⚠️ **RETAINED WITH CONDITIONS, R11** — sole current-rule alarm is an artifact; review pre-committed 2026-08-31 (de-cycling engages, n≥60): demote if episode-rate Wilson LB >2%, or immediately on the next unadjudicable alarm |
+| credit_spread | financial (US→global) | 3 | 3 | 3 | 816/817 | 66 alarm days = 8 episodes, all 4 real events | ≤0.08 (n=788, R21) | ✅ global bellwether; alarm at the 45th pctile of its 788-day record |
+| cnh_cny | capital controls (China) | 2 | 3 | — | 56/60* | 0 alarms (4 benign down-trembles) in 44 scored | ≤0.12 (n≈44, R21) | ✅ slot 4 (user-decided); reach cell MEASURED R13 — the alarming (up) side needs +227 pips vs a 52-obs record high of 143 (a decoration WITHIN this young calm record; baseline-relative — real capital-flight episodes blow far past it), while all four |z|>3 events are benign DOWN trembles (offshore yuan stronger). Still <60, insufficient to adjudicate; refresh at the maturity review (*4 darks are weekend/leg-timing rejections, not failures; the 08-16 dark ran hours before R18's closed status landed — weekends read `closed` from the first post-R18 weekend, 08-22/23, on) |
+| net_outages | communications (global) | 2 | 3 | 3 | 1651/1663 | 57 alarm days = 37 episodes; grid-strike + blackout events attributable | ≤0.12 (R21) | ✅ **CONFIRMED R11** — the pre-committed review was held and every gate passed; the tremble clause fired on its day-count letter and was amended to episode terms on measured evidence (see round 11) |
 
 ## Tier 2 — collected  (13 candidates + 4 context + 1 control · no cap)
 
-Collected daily by CI, building history; not shown or counted. The global 3/3/3 lines
+Collected daily by CI, building history; shown only as a muted watchlist, never counted. The global 3/3/3 lines
 are tier-1 challengers banking evidence. There is no slot cap (round 8): any candidate
 with a real guard and a probed, working fetcher is collected. Below them sit the **context lines** — they fail
 the guard gate and can never promote or be counted; they ride along only to aid
@@ -170,7 +192,7 @@ add, no premature reject. `polar_temp` is its first use.
 | indicator | domain | Lev | Guard | Reach | Reliab | Respons | note |
 |---|---|:--:|:--:|:--:|:--:|:--:|---|
 | port_throughput | trade (global) | 3 | 3 | 3 | — | — | ~4729 global port calls/day (2065 ports) |
-| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810/day (Hormuz blockaded) — strong, but PortWatch lags ~8 days: too stale to display live. R12: the SUM is structurally blind to 1–2 small straits going silent (a full Hormuz+Kerch closure = 84 transits = 1.04z, 35% to alarm) — the level layer, not this line, carries that signal |
+| chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810/day (Hormuz blockaded) — strong, but PortWatch lags ~10 days: too stale to display live. R12: the SUM is structurally blind to 1–2 small straits going silent (a full Hormuz+Kerch closure = 84 transits = 1.04z, 35% to alarm) — the level layer, not this line, carries that signal |
 | sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | SOFR−IORB ~−2bps (calm) — keyless FRED |
 | em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | EM corp OAS ~1.38pp — orthogonal to US HY |
 | gnss_interference | navigation/EW (global) | 3 | 3 | 1* | 31/31 | 3.4% | demoted R7 — *effective* reach is 1, not 3: one worldwide ratio has no regional sensitivity. Seeded R9 to 2022-07 (1,466 rows): it fires 49 alarm-direction trembles in 1,452 scored days, and the Gulf window peaks at z=2.87 — under-powered, not motionless (see the R9 corrections). Its global floor rose 1.64x in four years with no single day ever unusual |
@@ -185,7 +207,7 @@ add, no premature reject. `polar_temp` is its first use.
 | — polar_temp | context: planetary level (Arctic 80N) | 1 | 0 | 2 | — | — | context line, provisional-watch — DMI +80N daily anomaly vs the 1958-2002 normal (keyless, ~1d lag). A LEVEL read, not a tension indicator; the long baseline is vendored in core/arctic_clim.py. Seeded R9 to 2019 (2,740 rows): 384 warm trembles vs 4 cold — the asymmetry is the warming |
 | tga_days_cash | fiscal plumbing (US) | 3 | 3 | 2 | — | — | built R11.1 — Treasury cash buffer in DAYS OF ITS OWN OUTFLOWS (closing TGA balance / trailing-20-business-day mean withdrawal), keyless Treasury Fiscal Data, T+1. The guard is visible not asserted: median 5.3 business days against Treasury's announced ~1-week policy, and the June-2023 X-date reads 0.21 days |
 | fed_srf_takeup | financial plumbing (US→global) | 3 | 3 | 3 | 1.00 (0 dark / 1262) | 3 trembles in 1262 scored | **built R20** — daily Standing Repo Facility take-up ($m), keyless NY Fed markets API (`/api/rp/...`), seeded to 2021-07-28 (SRF inception). Take-up = Σ accepted across the day's Repo ops (RRP excluded); anchored scale-mode (ANCHOR=0, MATERIALITY=$10bn → alarm $30bn, set ABOVE the ~$20-26bn month/quarter-end friction band). 767/1262 days are exactly $0 and score an honest z=0; only the three genuine >$30bn scarcity spikes fire — year-end 2025 $74.6bn (z=7.5, the record), Oct-2025 $50.4bn (z=5.0), mid-month 2026-02-17 $30.5bn (z=3.05, no calendar). Settle boundary is explicit UTC (TZ-robust, never partial). Promotion gated on a de-cycling pass for the sub-alarm month-end clustering (this repo has none) |
-| stablecoin_peg | crypto dollar peg (global) | 3 | 3 | 3 | — | 3 trembles (SVB z=12.6) in 2128 | — | **built R14, scored R15** — worst-of-{USDC,USDT} deviation-from-$1 in bp, settled daily CLOSE, keyless Bitstamp OHLC, seeded 2020-10→now. Guard clean; cadence-reject OVERTURNED (SVB was a multi-day close-visible depeg, USDC close $0.9685). Now scored in **anchored scale-mode** (ANCHOR=0, MATERIALITY=25bp → alarm at 75bp) instead of the rolling z: the R14 build fired 214 trembles ≈10%/day on USDT's normal ~10bp venue discount; scale-mode drops that to **3 real trembles (SVB 03-11 z=12.6, 03-12 z=3.4, a 2021-01-07 wobble), 0 blind**, ordinary fuzz z<1. Honestly scored now; promotion still gated on materiality-validation + an episode / serial-dependence overlay |
+| stablecoin_peg | crypto dollar peg (global) | 3 | 3 | 3 | — | 3 trembles (SVB z=12.6) in 2128 | **built R14, scored R15** — worst-of-{USDC,USDT} deviation-from-$1 in bp, settled daily CLOSE, keyless Bitstamp OHLC, seeded 2020-10→now. Guard clean; cadence-reject OVERTURNED (SVB was a multi-day close-visible depeg, USDC close $0.9685). Now scored in **anchored scale-mode** (ANCHOR=0, MATERIALITY=25bp → alarm at 75bp) instead of the rolling z: the R14 build fired 214 trembles ≈10%/day on USDT's normal ~10bp venue discount; scale-mode drops that to **3 real trembles (SVB 03-11 z=12.6, 03-12 z=3.4, a 2021-01-07 wobble), 0 blind**, ordinary fuzz z<1. Honestly scored now; promotion still gated on materiality-validation + an episode / serial-dependence overlay |
 | — control_daylength | CONTROL: pipeline canary (no world) | 0 | 0 | — | — | — | control line, added 2026-07-30, registered R9 — day length at 51.4779N, 0.0E (sunrise-sunset.org). Set by orbital mechanics; nothing on Earth moves it, so any tremble here is measurement error by definition. obs_date is RECORDED, not inferred, so a one-day pipeline slip trips the ~1-minute canary tolerance even near the solstices |
 
 ## Backlog — ideas not yet built
@@ -251,3 +273,4 @@ decision. A new round is appended to `radar-log.md` and gets one line added here
 - **Round 18** — 2026-08-16 · a status the dark column always owed: market closure, split from failure
 - **Round 19** — 2026-08-16 · housekeeping: the log moves out to radar-log.md, and the one dead file leaves
 - **Round 20** — 2026-08-19 · the possibilities sweep: six probes across domains; fed_srf confirmed build-ready then BUILT (tier 2, seeded to 2021, 3 trembles), onrrp + ais_dark rejected, entsog source confirmed keyless, bgp + xccy still blocked
+- **Round 21** — 2026-08-20 · the 5S round: whole-repo audit (waste/drift/strategic) drives registry corrections + a Pending-reviews block; port slide attributed (real, broad-based, revision artifact refuted <1%); fed_srf first live seam clean; no tier moves
