@@ -34,7 +34,7 @@ Two tiers (each fetcher sets ``TIER``; absent means 1):
   - TIER 1 — primary instruments: displayed, and counted in the trembling
     resonance and the dark-line count.
   - TIER 2 — watchlist: scraped every day so history and z-score accumulate, but
-    NOT counted and NOT shown. Candidates under observation; promote by setting
+    NOT counted (shown only as a muted watchlist). Candidates under observation; promote by setting
     ``TIER = 1``. This lets the set of instruments diverge (add candidates) and
     converge (graduate the good ones) over time.
 
