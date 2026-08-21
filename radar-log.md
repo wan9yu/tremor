@@ -1498,3 +1498,37 @@ confounder-subtractor (space_weather). "It's free to collect" is refused by name
 liability the bar exists to stop. Written into radar.md's tier-2 section. This is why the tropical
 cyclone idea is being evaluated against a real test rather than a shrug: it must show it resolves a
 NAMED ambiguity (weather-vs-tension in port_throughput/flights) with payoff worth the liability.
+
+**The tropical cyclone probe — a build-ready source, rejected on measured payoff (R22).** The
+weather-confounder idea (disambiguate weather- vs tension-driven dips in port_throughput / flights)
+got a full exploration: a 10-agent workflow scouted six source families with live web verification,
+and the SOURCE question came back solved — two independent keyless, all-basin feeds, both fetched
+and verified 2026-08-20: GDACS `EVENTS4APP` GeoJSON (live, ~hourly, every active global TC with
+km/h intensity, CORS-open) and IBTrACS v04r01 `since1980.list` CSV at NCEI (seed, dense 6-hourly
+best-track 1980→present; `last3years.csv` as the 90-day window; `ALL` to 1842). Both close the
+West-Pacific gap that killed NHC/CPHC (SAUDEL-26, a live WP typhoon, is in the feed). The design
+question came back solved too: a port/hub-**gated worst-of** (strongest storm within ~500 km of a
+fixed top-20 hub list) is a MAX-form that kills the dilution and frame-churn that block a global
+count or ACE sum. The workflow returned **BUILD-READY, clears the admission bar**.
+
+Then the load-bearing claim was MEASURED, and it failed. The workflow's case rested on "a typhoon
+over East-Asian airspace dips flights — full real-time payoff" (flights being near-real-time and,
+crucially, COUNTED). But it never measured the magnitude. Measured: E-Asia/Japan is ~8% of the
+flights line (~126 of ~1496 aircraft), and flights' own robust scale is Qn ≈ 199 aircraft — so the
+ENTIRE Japanese airspace going dark moves flights only **z=0.63**, nowhere near the |z|>3 alarm.
+port_throughput is worse: a global sum of 2065 ports, Qn ≈ 245 calls, so a full Shanghai+Ningbo
+closure (~120 calls) moves it **z=0.49**. Both lines are diluted below their own alarm by the same
+mechanism — the storm's footprint is a small slice of a global aggregate whose intrinsic daily
+noise is larger than the whole slice. So a cyclone essentially never creates a weather-tremble in
+either line, and a confounder-subtractor with nothing to subtract is decoration. It fails the
+admission bar's PAYOFF half even though it passes the "names an ambiguity" half.
+
+This is the precise opposite of space_weather, and the contrast is the lesson: a geomagnetic storm
+degrades the WHOLE global GNSS ratio at once (gnss_interference is globally sensitive to its
+confounder — undiluted), which is why Kp cleared the same bar the same round. A confounder only
+earns its keep when the line it serves is GLOBALLY sensitive to the confounding force, not locally.
+Recorded in Rejected with the sources banked and a revival precondition (a globally-cyclone-
+sensitive line, or per-hub sub-lines — a Shanghai-only port line, a Japan-only flights line — where
+the storm isn't diluted). And a method note for the log: a scouting workflow returned BUILD-READY on
+qualitative reasoning; the discipline that caught it was refusing to build until the one number that
+mattered was on the table. Adversarial measurement over plausible narrative, every time.
