@@ -1485,3 +1485,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-18,5.333,1.878,0,up,"GFZ Potsdam planetary Kp daily max 5.333 on 2026-08-18 [archive import: scored retroactively, not a live reading]",2026-08-18,scoring
 2026-08-19,4.667,1.409,0,up,"GFZ Potsdam planetary Kp daily max 4.667 on 2026-08-19 [archive import: scored retroactively, not a live reading]",2026-08-19,scoring
 2026-08-20,3.333,0.469,0,up,"GFZ Potsdam planetary Kp daily max 3.333 on 2026-08-20 [archive import: scored retroactively, not a live reading]",2026-08-20,scoring
+2026-08-22,3.33,,0,,NOAA SWPC planetary Kp daily max 3.33 on 2026-08-20 [sampled 22:30:33Z] [stale: observation already recorded],2026-08-20,stale

@@ -60,3 +60,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-19,113,0.483,0,up,"Yahoo USDCNH 6.7455 − USDCNY 6.7342 (pips) [CNH 2026-08-18 22:28Z, CNY 2026-08-18 21:32Z, 56min apart] [sampled 22:28:28Z]",2026-08-18,scoring
 2026-08-20,97,0.097,0,up,"Yahoo USDCNH 6.7297 − USDCNY 6.7200 (pips) [CNH 2026-08-19 22:28Z, CNY 2026-08-19 21:32Z, 57min apart] [sampled 22:28:47Z]",2026-08-19,scoring
 2026-08-21,67,-0.659,0,down,"Yahoo USDCNH 6.7229 − USDCNY 6.7162 (pips) [CNH 2026-08-20 22:32Z, CNY 2026-08-20 21:32Z, 60min apart] [sampled 22:32:19Z]",2026-08-20,scoring
+2026-08-22,83,-0.243,0,down,"Yahoo USDCNH 6.7201 − USDCNY 6.7118 (pips) [CNH 2026-08-21 20:59Z, CNY 2026-08-21 21:32Z, 33min apart] [sampled 22:29:39Z]",2026-08-21,scoring
