@@ -1463,3 +1463,25 @@ is not repeated (the marine_war_risk / sovereign_cds non-find pattern).
 claims); one standing bar (single credit slot); one build-ready context candidate (space_weather)
 awaiting approval; one sweep closed (NOAA). The instrument's honesty held: a note that claimed
 independence was checked against the data and found wanting, and the record now says so.
+
+**Build follow-through (R22, same day).** space_weather shipped end-to-end the moment the
+evaluation cleared it, the fed_srf pattern reused wholesale: a live fetcher (NOAA SWPC planetary-K
+JSON, 3-hourly → daily MAX, settled to the last complete UTC day so the still-forming nowcast is
+never recorded), a seeder off a SEPARATE keyless archive (GFZ Potsdam definitive Kp since 1932,
+CC BY 4.0) that emits the same (date, Kp) pairs into the fetcher's OWN daily_max/settled — so the
+1932-source history and the SWPC live tail are one measure by construction, not by matching
+docstrings. Seed start pinned to 2022-07-27 to align with gnss_interference, the line it most
+disambiguates, so the confounder comparison is day-for-day from row one. Scored on the ordinary
+rolling z (WINDOW=90) with QUANTUM=1/3 (Kp's reporting resolution) as the scale floor — NOT
+anchored: Kp is not a near-constant defended level, it genuinely varies day to day, so "storm"
+means unusual-vs-recent, which is exactly the confounder question. Seeded 1,486 days, 1,476
+scored, 0 dark, 39 trembles. Validated against ground truth rather than asserted: every up-tremble
+is a real G1-G5 storm, and the May-2024 Gannon superstorm (Kp 9, the strongest geomagnetic storm
+in two decades) trembles on BOTH peak days (05-10 Kp 8.667 z=4.23, 05-11 Kp 9 z=4.34), as do the
+Oct-2024, Mar-2024, and Apr-2023 storms. A handful of DOWN trembles (Kp≈0.3-1 after a
+storm-elevated window) are recorded but uncounted — an honest "unusually calm" read, and this line
+is uncounted anyway. 9 new tests (aggregation/settle/fetch-degradation/context-wiring), full suite
+136 green, replay --check 0 divergence since STABLE_SINCE, registered on the dashboard as a
+"space weather (confounder)" context line. The confounder is now live: the next time
+gnss_interference or grid_frequency trembles, there is a Kp column beside it to say whether the
+Sun or a hand did it.

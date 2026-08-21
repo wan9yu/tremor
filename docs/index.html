@@ -341,6 +341,14 @@ const LINES = [
     explain:{
       en:"Not a tension indicator — nobody defends the Arctic's temperature at a set point, so this can never be counted. It is the slowest context line: today's mean temperature north of 80N against the fixed 1958-2002 normal, a direct LEVEL reading of how far the planet's coldest baseline has drifted. Seeded with seven years of the same DMI product; in that record the anomaly trembles warm 384 times and cold 4 — that asymmetry is the warming itself, visible without a model.",
       zh:"不是张力指标——没有谁把北极温度守在某个设定值上，所以它永不计数。它是最慢的背景线：80N 以北今日均温对固定的 1958-2002 气候常值，直接读出行星最冷基线漂了多远。用同一 DMI 产品播种了七年历史；这段记录里距平向暖颤动 384 次、向冷只有 4 次——这个不对称本身就是变暖，不需要模型也看得见。"} },
+  { id:"space_weather", color:"#ebcb8b", alarm:"up", tier:2,
+    unit:{en:"Kp",zh:"Kp"},
+    domain:{en:"Space weather (confounder)",zh:"太空天气（混淆项）"},
+    label:{en:"Geomagnetic storm — daily max Kp",zh:"地磁暴 —— 当日最大 Kp"},
+    source:{en:"NOAA SWPC live + GFZ Potsdam archive, keyless, seeded to 2022",zh:"NOAA SWPC 实时 + GFZ Potsdam 档案，无需密钥，播种至 2022"},
+    explain:{
+      en:"Not a tension indicator — the Sun defends no equilibrium a hidden hand overpowers; it IS the force. So this can never be counted. Its job is to subtract a confounder from two lines that CAN be: GNSS interference and grid frequency. A severe geomagnetic storm degrades satellite navigation worldwide and induces currents that stress power grids — the same signatures a human hand (jamming, a grid attack) would leave. Read beside this line the ambiguity resolves: those lines trembling while Kp is calm is a real terrestrial disturbance; trembling together with a storm is just the Sun. This reads the day's maximum planetary Kp (the global geomagnetic-disturbance index, 0–9), scored against the last ~90 days. Its seeded record fires on the real storms — the May-2024 Gannon superstorm (Kp 9, the strongest in two decades) trembles on both peak days, as do the October-2024 and March-2024 storms.",
+      zh:"不是张力指标——太阳不守护任何会被隐藏之手压过的均衡，它本身就是那股力量，所以永不计数。它的职责是替另外两条能计数的线扣掉一个混淆项：GNSS 干扰与电网频率。一场强地磁暴会在全球范围内劣化卫星导航、并感应出冲击电网的电流——这与人为之手（干扰、攻击电网）留下的痕迹如出一辙。把这条线并排来看，歧义就消解了：那两条线颤动而 Kp 平静，是真实的地面扰动；与地磁暴一同颤动，那只是太阳。它读的是当天最大的行星 Kp 指数（全球地磁扰动指数，0–9），对最近约 90 天计分。种子记录会在真实的暴发上触发——2024 年 5 月的 Gannon 超级地磁暴（Kp 9，二十年来最强）在两个峰值日都颤动，2024 年 10 月与 2024 年 3 月的风暴亦然。"} },
   { id:"tga_days_cash", color:"#bf616a", alarm:"down", tier:2,
     unit:{en:"days",zh:"天"},
     domain:{en:"Fiscal plumbing (US)",zh:"财政管道（美国）"},
