@@ -2,12 +2,12 @@
   {
     "line": "flights",
     "tier": 1,
-    "scored_days": 51,
+    "scored_days": 52,
     "span_years": 0.14,
     "alarm_days": 1,
     "episodes": 1,
     "longest_run": 1,
-    "lag1": 0.205,
+    "lag1": 0.193,
     "episode_dates": [
       [
         "2026-07-05",
@@ -19,7 +19,7 @@
   {
     "line": "credit_spread",
     "tier": 1,
-    "scored_days": 789,
+    "scored_days": 790,
     "span_years": 3.02,
     "alarm_days": 66,
     "episodes": 8,
@@ -71,7 +71,7 @@
   {
     "line": "cnh_cny",
     "tier": 1,
-    "scored_days": 45,
+    "scored_days": 46,
     "span_years": 0.14,
     "alarm_days": 0,
     "episodes": 0,
@@ -82,7 +82,7 @@
   {
     "line": "net_outages",
     "tier": 1,
-    "scored_days": 1642,
+    "scored_days": 1643,
     "span_years": 4.54,
     "alarm_days": 57,
     "episodes": 37,
@@ -279,12 +279,12 @@
   {
     "line": "gnss_interference",
     "tier": 2,
-    "scored_days": 1468,
+    "scored_days": 1469,
     "span_years": 4.04,
     "alarm_days": 49,
     "episodes": 28,
     "longest_run": 10,
-    "lag1": 0.894,
+    "lag1": 0.895,
     "episode_dates": [
       [
         "2022-12-25",
@@ -431,23 +431,23 @@
   {
     "line": "capital_premium",
     "tier": 2,
-    "scored_days": 51,
+    "scored_days": 52,
     "span_years": 0.14,
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.461,
+    "lag1": 0.449,
     "episode_dates": []
   },
   {
     "line": "grid_frequency",
     "tier": 2,
-    "scored_days": 51,
+    "scored_days": 52,
     "span_years": 0.14,
     "alarm_days": 2,
     "episodes": 2,
     "longest_run": 1,
-    "lag1": -0.139,
+    "lag1": -0.141,
     "episode_dates": [
       [
         "2026-07-12",
@@ -464,12 +464,12 @@
   {
     "line": "chokepoint_breadth",
     "tier": 2,
-    "scored_days": 220,
+    "scored_days": 221,
     "span_years": 0.6,
     "alarm_days": 3,
     "episodes": 3,
     "longest_run": 1,
-    "lag1": 0.301,
+    "lag1": 0.305,
     "episode_dates": [
       [
         "2026-01-10",
@@ -491,12 +491,12 @@
   {
     "line": "sofr_iorb_spread",
     "tier": 2,
-    "scored_days": 38,
+    "scored_days": 39,
     "span_years": 0.14,
     "alarm_days": 2,
     "episodes": 2,
     "longest_run": 1,
-    "lag1": 0.811,
+    "lag1": 0.81,
     "episode_dates": [
       [
         "2026-06-30",
@@ -513,7 +513,7 @@
   {
     "line": "em_corp_oas",
     "tier": 2,
-    "scored_days": 789,
+    "scored_days": 790,
     "span_years": 3.02,
     "alarm_days": 48,
     "episodes": 7,
@@ -560,7 +560,7 @@
   {
     "line": "port_throughput",
     "tier": 2,
-    "scored_days": 216,
+    "scored_days": 217,
     "span_years": 0.6,
     "alarm_days": 6,
     "episodes": 2,
@@ -582,7 +582,7 @@
   {
     "line": "euro_hy_spread",
     "tier": 2,
-    "scored_days": 790,
+    "scored_days": 791,
     "span_years": 3.02,
     "alarm_days": 39,
     "episodes": 6,
@@ -624,12 +624,12 @@
   {
     "line": "fx_parallel_premium",
     "tier": 2,
-    "scored_days": 16,
+    "scored_days": 17,
     "span_years": 0.05,
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.82,
+    "lag1": 0.817,
     "episode_dates": []
   },
   {
@@ -646,18 +646,18 @@
   {
     "line": "tga_days_cash",
     "tier": 2,
-    "scored_days": 3,
+    "scored_days": 4,
     "span_years": 0.01,
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.556,
+    "lag1": 0.608,
     "episode_dates": []
   },
   {
     "line": "stablecoin_peg",
     "tier": 2,
-    "scored_days": 2131,
+    "scored_days": 2132,
     "span_years": 5.84,
     "alarm_days": 3,
     "episodes": 2,
@@ -679,7 +679,7 @@
   {
     "line": "fed_srf_takeup",
     "tier": 2,
-    "scored_days": 1263,
+    "scored_days": 1264,
     "span_years": 5.07,
     "alarm_days": 3,
     "episodes": 3,
@@ -706,23 +706,23 @@
   {
     "line": "gdelt",
     "tier": 2,
-    "scored_days": 30,
-    "span_years": 0.08,
+    "scored_days": 31,
+    "span_years": 0.09,
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.391,
+    "lag1": 0.412,
     "episode_dates": []
   },
   {
     "line": "gdelt_tone",
     "tier": 2,
-    "scored_days": 30,
-    "span_years": 0.08,
+    "scored_days": 31,
+    "span_years": 0.09,
     "alarm_days": 1,
     "episodes": 1,
     "longest_run": 1,
-    "lag1": 0.492,
+    "lag1": 0.488,
     "episode_dates": [
       [
         "2026-07-19",
@@ -734,12 +734,12 @@
   {
     "line": "vix",
     "tier": 2,
-    "scored_days": 200,
+    "scored_days": 201,
     "span_years": 0.78,
     "alarm_days": 13,
     "episodes": 5,
     "longest_run": 6,
-    "lag1": 0.898,
+    "lag1": 0.899,
     "episode_dates": [
       [
         "2025-11-13",
@@ -771,7 +771,7 @@
   {
     "line": "polar_temp",
     "tier": 2,
-    "scored_days": 2747,
+    "scored_days": 2748,
     "span_years": 7.61,
     "alarm_days": 384,
     "episodes": 34,
@@ -951,14 +951,146 @@
     ]
   },
   {
+    "line": "space_weather",
+    "tier": 2,
+    "scored_days": 1476,
+    "span_years": 4.04,
+    "alarm_days": 35,
+    "episodes": 24,
+    "longest_run": 4,
+    "lag1": 0.447,
+    "episode_dates": [
+      [
+        "2022-08-07",
+        "2022-08-08",
+        2
+      ],
+      [
+        "2022-08-17",
+        "2022-08-17",
+        1
+      ],
+      [
+        "2023-02-15",
+        "2023-02-15",
+        1
+      ],
+      [
+        "2023-02-26",
+        "2023-02-28",
+        3
+      ],
+      [
+        "2023-03-15",
+        "2023-03-15",
+        1
+      ],
+      [
+        "2023-03-23",
+        "2023-03-24",
+        2
+      ],
+      [
+        "2023-04-23",
+        "2023-04-24",
+        2
+      ],
+      [
+        "2023-09-02",
+        "2023-09-03",
+        2
+      ],
+      [
+        "2023-11-05",
+        "2023-11-05",
+        1
+      ],
+      [
+        "2024-03-03",
+        "2024-03-03",
+        1
+      ],
+      [
+        "2024-03-21",
+        "2024-03-25",
+        4
+      ],
+      [
+        "2024-04-16",
+        "2024-04-16",
+        1
+      ],
+      [
+        "2024-04-19",
+        "2024-04-19",
+        1
+      ],
+      [
+        "2024-04-26",
+        "2024-04-26",
+        1
+      ],
+      [
+        "2024-05-10",
+        "2024-05-11",
+        2
+      ],
+      [
+        "2024-06-28",
+        "2024-06-28",
+        1
+      ],
+      [
+        "2024-08-04",
+        "2024-08-04",
+        1
+      ],
+      [
+        "2024-08-12",
+        "2024-08-12",
+        1
+      ],
+      [
+        "2024-09-12",
+        "2024-09-12",
+        1
+      ],
+      [
+        "2024-09-17",
+        "2024-09-17",
+        1
+      ],
+      [
+        "2024-10-10",
+        "2024-10-11",
+        2
+      ],
+      [
+        "2025-01-01",
+        "2025-01-01",
+        1
+      ],
+      [
+        "2025-11-12",
+        "2025-11-12",
+        1
+      ],
+      [
+        "2026-01-19",
+        "2026-01-19",
+        1
+      ]
+    ]
+  },
+  {
     "line": "control_daylength",
     "tier": 2,
-    "scored_days": 12,
+    "scored_days": 13,
     "span_years": 0.03,
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.879,
+    "lag1": 0.884,
     "episode_dates": []
   }
 ]
