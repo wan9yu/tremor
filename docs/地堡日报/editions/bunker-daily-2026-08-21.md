@@ -1,4 +1,4 @@
-# Bunker Morning Post — Surface Report · 2026-08-21
+# Bunker Daily — Surface Report · 2026-08-21
 
 > Channel: X (English) · handle: tremor
 
