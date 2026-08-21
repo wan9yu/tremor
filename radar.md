@@ -156,6 +156,12 @@ re-reading the log. Close an item by editing it out with a round reference.
   **2,000 lines** (1,406 after R21; ~57 lines/round → around R31-R33).
 - **usd_xccy_basis parking review** — re-probe sourcing every ~10 rounds (last: R20);
   downgrade to Rejected if still keyless-blocked at R30.
+- **the single-credit-slot bar** (measured R22, standing): US HY (credit_spread, tier-1), EM
+  corp (em_corp_oas) and Euro HY (euro_hy_spread) are ONE global credit factor — |max corr|
+  +0.80 / +0.74 vs the tier-1 credit line, +0.86 to each other. NO second credit-family line
+  may be promoted to tier-1: it would fail the orthogonality gate AND break the headline's iid
+  null (Known limits #3). The genuinely-orthogonal financial challenger is `sofr_iorb_spread`
+  (max corr +0.34, n=35 — defer until ≥60 scored).
 
 ---
 
@@ -194,11 +200,11 @@ add, no premature reject. `polar_temp` is its first use.
 | port_throughput | trade (global) | 3 | 3 | 3 | — | — | ~4729 global port calls/day (2065 ports) |
 | chokepoint_breadth | trade (global) | 3 | 3 | 3 | — | — | 28 straits, ~1810/day (Hormuz blockaded) — strong, but PortWatch lags ~10 days: too stale to display live. R12: the SUM is structurally blind to 1–2 small straits going silent (a full Hormuz+Kerch closure = 84 transits = 1.04z, 35% to alarm) — the level layer, not this line, carries that signal |
 | sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | — | — | SOFR−IORB ~−2bps (calm) — keyless FRED |
-| em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | EM corp OAS ~1.38pp — orthogonal to US HY |
+| em_corp_oas | EM financial (global) | 3 | 2 | 3 | — | — | EM corp OAS ~1.38pp. R22 MEASURES the standing "orthogonal to US HY" claim FALSE: |max corr| vs the live tier-1 set = **+0.80 vs credit_spread** (n=789) — the same global credit factor, not an orthogonal domain. Stays tier-2 for breadth/confirmation; NOT a tier-1 promotion candidate (would fail the orthogonality gate and break the headline's iid null — see Known limits #3) |
 | gnss_interference | navigation/EW (global) | 3 | 3 | 1* | 31/31 | 3.4% | demoted R7 — *effective* reach is 1, not 3: one worldwide ratio has no regional sensitivity. Seeded R9 to 2022-07 (1,466 rows): it fires 49 alarm-direction trembles in 1,452 scored days, and the Gulf window peaks at z=2.87 — under-powered, not motionless (see the R9 corrections). Its global floor rose 1.64x in four years with no single day ever unusual |
 | capital_premium | capital controls (Korea) | 2 | 3 | 1 | — | — | demoted R4 (redundant with China); kept on watch |
 | grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | — | — | demoted R4 (regional); kept on watch — may re-challenge on orthogonality |
-| euro_hy_spread | financial (EU) | 3 | 2 | 2 | — | — | built R8 — ICE BofA Euro HY OAS ~2.5pp, keyless FRED; orthogonal to US HY (different central bank) |
+| euro_hy_spread | financial (EU) | 3 | 2 | 2 | — | — | built R8 — ICE BofA Euro HY OAS ~2.5pp, keyless FRED. R22: the "different central bank → orthogonal" intuition is MEASURED FALSE — |max corr| = **+0.74 vs credit_spread** (n=783), and +0.86 vs em_corp_oas: US HY, EM corp and Euro HY are ONE global credit factor at daily z. Tier-2 for breadth; not a tier-1 candidate (redundant with the credit slot) |
 | fx_parallel_premium | capital controls (AR) | 2 | 3 | 2 | — | — | built R8 — Argentina blue-vs-official FX premium, keyless dolarapi; a hard-controlled regime, distinct from cnh_cny/kimchi |
 | hkma_aggr_balance | capital (HK) | 3 | 3 | 2 | — | — | built R8 — HK currency-board aggregate balance, keyless HKMA API; falls as the peg is defended under outflow |
 | — gdelt | feel: conflict share (global) | 1 | 0 | 3 | — | — | contrast line (guard gate) — v2 full-day aggregation, not a candidate slot |
@@ -228,6 +234,22 @@ above.)
 | crypto_capital_flight_premium | capital controls (per country) | a state defends an official FX rate / capital controls → residents buy USDT to move value out, so its local-currency P2P price trades ABOVE the official rate; a widening premium leaks accelerating flight — the same guard as cnh_cny / fx_parallel_premium, a faster mechanism | **probed R14 — guard real, cadence PASSES (a structural premium persists for weeks, unlike a transient depeg), Binance P2P adv/search is keyless + live.** BLOCKED because reachable ∩ orthogonal ∩ strong-guard ∩ clean-keyless-official-leg is nearly empty: ARS (+4%) and CNY (−1%, a banned gray discount) are redundant with existing lines, NGN/RUB return 0 ads (Binance banned/exited), TRY/EGP are weak-guard floats, and the one orthogonal hard-controlled case — Venezuela VES (+14% vs a near-parallel rate; the true BCV gap is 85%+) — has no keyless TRUE-official leg. Parked on official-leg sourcing + order-book aggregation, same shape as `usd_xccy_basis`. If ever built: a single USDT/VES line with a keyless BCV official leg, not China/Argentina, not Nigeria via Binance |
 | usd_xccy_basis | financial plumbing (global) | central-bank USD swap lines cap the FX-swap-implied cost of borrowing dollars → a deeply negative 3M cross-currency basis leaks a dollar funding shortage, and swap-line drawings are the leaking hand | **new R13 — guard is arguably the cleanest defended equilibrium in the registry (it is literally what the swap lines defend); cadence + reachability pass (−150 to −200 bp in 2008, −80 to −140 bp Mar-2020).** BLOCKED on SOURCE: keyless daily basis is EXHAUSTED — FRED is spot-only (no forwards; `EURUSD3M*`/`XCCYBASIS` 404), OFR STFM carries no FX series, ECB spot-only, forward points paywalled, CME's daily basis index needs a self-service key. No free-pieces construction path (unlike cp_funding_spread — there are no forwards on FRED, do not re-attempt). **Re-probed 2026-08-19 (R20), STILL exhausted:** OFR STFM exposes only {FNYR, MMF, NYPD, REPO, TYLD} — no FX; FRED `XCCYBASIS3M` 403; cbonds + CME paywalled/keyed. Parked on sourcing like `eu_gas_storage`; downgrade to reject if no keyless forward-point feed ever appears |
 | eu_gas_storage | energy (EU) | member states defend storage-fill trajectories → falling behind the injection path leaks supply cutoff | designed R11.1 as `eu_gas_storage_path` — weekly fill change MINUS the seasonal-normal weekly change, because the raw level is all season. AGSI+ carries it (daily since 2011-01-01, zero missing days) but **requires a free registered key**, and the keyless path that works is a spoofed browser User-Agent, which this project will not ship. ACTIONABLE: register at agsi.gie.eu, add `AGSI_KEY` to repo Secrets, and it is build-ready; a 365-entry seasonal-normal table must be vendored alongside |
+
+### Context / confounder candidates (no guard by design — never counted)
+
+Not in the Backlog above, because that table demands a real guard. These fail the guard gate
+on purpose and can never be tier-1 or counted — they ride along only to help INTERPRET the
+guarded lines (the `polar_temp` / `vix` disposition). Registered here when live-probed.
+
+| candidate | source | role | disposition |
+|---|---|---|---|
+| **space_weather** | NOAA SWPC planetary **Kp** index, keyless JSON (`services.swpc.noaa.gov/products/noaa-planetary-k-index.json`), 3-hourly → aggregate to **daily MAX Kp** (the `grid_frequency` cadence pattern) | **confounder-subtractor for `gnss_interference` and `grid_frequency`**: when either trembles, Kp says whether a geomagnetic storm (exogenous) or a human hand (jamming / grid attack) drove it — GNSS tremble + calm Kp = real interference; both up = the sun. The sun is not a guarded equilibrium → **fails the guard gate**, context line only | **live-probed R22, BUILD-READY, pending approval.** HTTP 200, real data (Kp 2.67 on 2026-08-14); reachability wide (quiet ~2 → G5 storm Kp 9); orthogonality unmeasurable pre-collection. Failure mode: SWPC endpoint rot → `dark` row, same as any fetch. Companion SWPC feeds also 200/keyless if ever wanted: F10.7 solar flux, GOES X-ray flares |
+
+**NOAA sweep (R22):** the rest of NOAA is a guard-gate desert for this instrument. Its daily
+keyless feeds are physical/natural (weather, CO2 at Mauna Loa, river gauges, seismic) — nature
+defends no equilibrium a hidden hand can overpower, so they are context at best and mostly
+redundant with `polar_temp`'s planetary-level role. **Space weather (SWPC) is the one NOAA feed
+that adds orthogonal value**, and only as the confounder line above — not as a counted indicator.
 
 ### Rejected
 | candidate | reason |
@@ -274,3 +296,4 @@ decision. A new round is appended to `radar-log.md` and gets one line added here
 - **Round 19** — 2026-08-16 · housekeeping: the log moves out to radar-log.md, and the one dead file leaves
 - **Round 20** — 2026-08-19 · the possibilities sweep: six probes across domains; fed_srf confirmed build-ready then BUILT (tier 2, seeded to 2021, 3 trembles), onrrp + ais_dark rejected, entsog source confirmed keyless, bgp + xccy still blocked
 - **Round 21** — 2026-08-20 · the 5S round: whole-repo audit (waste/drift/strategic) drives registry corrections + a Pending-reviews block; port slide attributed (real, broad-based, revision artifact refuted <1%); fed_srf first live seam clean; no tier moves
+- **Round 22** — 2026-08-21 · the credit-redundancy + space sweep: the "orthogonal to US HY" claims on em_corp_oas (+0.80) and euro_hy_spread (+0.74) MEASURED FALSE — one global credit factor, a single-credit-slot bar registered; space_weather (NOAA SWPC Kp) evaluated as a confounder-subtractor for gnss/grid (fails guard gate, context only) and live-probed build-ready; NOAA sweep = guard-gate desert otherwise; no tier moves
