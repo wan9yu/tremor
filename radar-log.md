@@ -1485,3 +1485,16 @@ is uncounted anyway. 9 new tests (aggregation/settle/fetch-degradation/context-w
 "space weather (confounder)" context line. The confounder is now live: the next time
 gnss_interference or grid_frequency trembles, there is a Kp column beside it to say whether the
 Sun or a hand did it.
+
+**The context-line admission bar (formalized R22).** Building space_weather exposed a gap in the
+method: tier-2 candidate lines have a stated three-part admission bar, but CONTEXT lines had none —
+they were added case by case (vix/gdelt as "felt vs real", polar_temp as a "level" read, now
+space_weather as a "confounder"), with no written rule for what earns a context slot. A context
+line is exempt from the guard gate by design, but NOT from the survivability liability every
+collected source carries, so the bar is now explicit: a context line must NAME the specific
+ambiguity it resolves in an existing line, and fall into one of three established roles —
+felt-vs-real contrast (gdelt/gdelt_tone/vix), slow-level read (polar_temp), or
+confounder-subtractor (space_weather). "It's free to collect" is refused by name; that is the
+liability the bar exists to stop. Written into radar.md's tier-2 section. This is why the tropical
+cyclone idea is being evaluated against a real test rather than a shrug: it must show it resolves a
+NAMED ambiguity (weather-vs-tension in port_throughput/flights) with payoff worth the liability.

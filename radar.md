@@ -183,12 +183,27 @@ Collected daily by CI, building history; shown only as a muted watchlist, never 
 are tier-1 challengers banking evidence. There is no slot cap (round 8): any candidate
 with a real guard and a probed, working fetcher is collected. Below them sit the **context lines** — they fail
 the guard gate and can never promote or be counted; they ride along only to aid
-interpretation. Three are "felt vs real" reads (gdelt, gdelt_tone, vix); the fourth,
-`polar_temp`, is a planetary-baseline (LEVEL) read, added round 8 under the
-**provisional-watch** disposition (see below). None occupy a candidate slot.
-Below even those sits `control_daylength`, the CONTROL line: it contains no world at
-all — it exists to catch the pipeline lying, and any signal in it is measurement error
-by definition.
+interpretation.
+
+**The context-line admission bar** (formalized R22): a context line is exempt from the guard
+gate BY DESIGN, but not from earning its keep — every collected line is a survivability liability
+(one more source that can rot, one more fetch that can flake). So a context line must NAME the
+specific ambiguity it resolves in an existing line, falling into one of three established roles,
+or it is decoration and is rejected. "It's free to collect" is never a reason — that is exactly
+the liability this bar refuses. The three roles, with the five context lines placed:
+
+- **felt-vs-real contrast** — how disordered the world FEELS, set against how disordered it
+  measurably IS: `gdelt`, `gdelt_tone`, `vix`.
+- **slow-level read** — an external "normal" for the LEVEL question the rolling z answers poorly:
+  `polar_temp`, against a fixed 1958-2002 climate normal (added round 8 under the
+  **provisional-watch** disposition, see below).
+- **confounder-subtractor** — strips an exogenous driver out of a counted/tension line's reading:
+  `space_weather` (daily-max Kp, R22), which says whether a `gnss_interference` / `grid_frequency`
+  tremble was a geomagnetic storm or a human hand.
+
+None occupy a candidate slot. Below even those sits `control_daylength`, the CONTROL line: it
+contains no world at all — it exists to catch the pipeline lying, and any signal in it is
+measurement error by definition.
 
 **Provisional-watch** (disposition added round 8): a source that is verified free+daily
 but whose ROLE is undecided is collected now — never counted — so its history accumulates
