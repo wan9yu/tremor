@@ -1404,3 +1404,62 @@ reference. Two new tripwires were declared while formalizing: roll radar-log.md 
 rounds with a downgrade decision at R30. One timing seam recorded: the 08-16 cnh_cny dark ran
 hours before R18's closed-status landed — the first live weekend for `closed` is 08-22/23, and
 its verification is on the list.
+
+---
+
+### Round 22 — 2026-08-21 (the credit-redundancy + space sweep)
+
+Three questions, all data-backed: is the credit family redundant, does a space-weather line
+belong, and is there other usable NOAA data. No tier moves — but two standing registry claims
+were measured FALSE and corrected, one new bar was registered, and one context candidate was
+live-probed to build-ready.
+
+**The credit family is ONE factor, and the registry said otherwise.** Two tier-2 credit
+challengers carried a note claiming orthogonality to the US HY tier-1 line — em_corp_oas
+"orthogonal to US HY", euro_hy_spread "orthogonal to US HY (different central bank)". Measured
+against the live tier-1 set on shared z-history, both claims are false:
+
+| challenger | \|max corr\| vs tier-1 | vs which | n |
+|---|---|---|---|
+| em_corp_oas | **+0.80** | credit_spread | 789 |
+| euro_hy_spread | **+0.74** | credit_spread | 783 |
+| (em ~ euro) | **+0.86** | — | 783 |
+| vix | +0.75 | credit_spread | 194 |
+| sofr_iorb_spread | **+0.34** | credit_spread | 35 |
+
+US HY, EM corp and Euro HY move together as a single global credit factor at daily z — the
+"different central bank" intuition does not survive contact with the data. Both notes corrected.
+This is not a demotion (they were never tier-1) and not a deletion (they earn their tier-2 keep
+as breadth/confirmation — the March-2026 x5 resonance day fired on all three agreeing). It is a
+**promotion bar**: a new **"single-credit-slot bar"** now lives in Pending reviews — no second
+credit-family line may reach tier-1, because it would fail the orthogonality gate AND break the
+headline's iid null (Known limits #3 warned of exactly this; R22 measures the number behind the
+warning). The genuinely-orthogonal financial challenger is `sofr_iorb_spread` at +0.34 — but
+n=35, under the 60-reading bar, so it defers.
+
+**Space weather belongs — as a confounder, not a counted line.** NOAA SWPC's planetary Kp index
+is keyless JSON, live-probed R22 (HTTP 200; Kp 2.67 on 2026-08-14; 3-hourly, aggregate to daily
+MAX like grid_frequency; reachability wide — quiet ~2 to a G5 storm's Kp 9). But the sun defends
+no equilibrium; it IS the exogenous force. So space_weather **fails the guard gate** and can
+never be tier-1 or counted — the polar_temp/vix disposition. Its real value is as a
+**confounder-subtractor**: two lines already in the registry (gnss_interference, grid_frequency)
+have a space-weather failure mode baked in. When GNSS interference spikes, is it geopolitical
+jamming or a geomagnetic storm? A Kp line disambiguates — GNSS tremble + calm Kp = real human
+interference; both up = the sun. That materially sharpens two existing lines rather than adding
+a decorative one. Registered in a NEW radar.md subsection, "Context / confounder candidates (no
+guard by design)", separate from the guard-based Backlog because forcing a no-guard line into a
+guard-required table is exactly the kind of category error the guard gate exists to prevent.
+Disposition: BUILD-READY, pending approval (per the standing rule that building a fetcher needs
+a green light; the user asked to evaluate first).
+
+**NOAA is otherwise a guard-gate desert for this instrument.** Swept for other daily keyless
+feeds: NOAA's are physical/natural (weather, Mauna Loa CO2, river gauges, seismic). Nature
+defends no equilibrium a hidden hand overpowers, so these are context at best and mostly
+redundant with polar_temp's planetary-level role. Space weather (SWPC) is the single NOAA feed
+that adds orthogonal value, and only as the confounder line above. Recorded so the NOAA search
+is not repeated (the marine_war_risk / sovereign_cds non-find pattern).
+
+**Net:** no tier moves; two measured corrections (em_corp_oas, euro_hy_spread orthogonality
+claims); one standing bar (single credit slot); one build-ready context candidate (space_weather)
+awaiting approval; one sweep closed (NOAA). The instrument's honesty held: a note that claimed
+independence was checked against the data and found wanting, and the record now says so.
