@@ -1664,3 +1664,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-20,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h) [Armenia] [sampled 22:28:47Z],,scoring
 2026-08-21,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h) [Burundi, Ghana] [sampled 22:32:19Z]",,scoring
 2026-08-22,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h) [Cape Verde, Madagascar] [sampled 22:29:40Z]",,scoring
+2026-08-23,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h) [Benin, Cape Verde] [sampled 22:26:34Z]",,scoring
