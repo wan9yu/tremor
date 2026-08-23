@@ -299,3 +299,6 @@ sampled_utc,line,raw_value,source_note
 2026-08-23T03:09:50Z,flights,764,"ADS-B regions [W/C Europe=90, US East=242, US West=223, E Asia/Japan=209] via adsb.lol"
 2026-08-23T03:09:50Z,cnh_cny,,"no new observation: FX weekend, both legs frozen (CNH 2026-08-21 20:59Z, CNY 2026-08-23 02:32Z) — no simultaneous quote exists until Monday trade; dark by market closure, not failure"
 2026-08-23T03:09:50Z,capital_premium,-0.6563,Upbit KRW-BTC vs Coinbase USD @ 1384.51 KRW/USD
+2026-08-23T08:38:38Z,flights,1354,"ADS-B regions [W/C Europe=1051, US East=42, US West=53, E Asia/Japan=208] via adsb.fi, adsb.lol"
+2026-08-23T08:38:38Z,cnh_cny,,"no new observation: FX weekend, both legs frozen (CNH 2026-08-21 20:59Z, CNY 2026-08-23 03:30Z) — no simultaneous quote exists until Monday trade; dark by market closure, not failure"
+2026-08-23T08:38:38Z,capital_premium,-1.158,Upbit KRW-BTC vs Coinbase USD @ 1384.51 KRW/USD
