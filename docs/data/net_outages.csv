@@ -1666,3 +1666,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-22,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h) [Cape Verde, Madagascar] [sampled 22:29:40Z]",,scoring
 2026-08-23,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h) [Benin, Cape Verde] [sampled 22:26:34Z]",,scoring
 2026-08-24,12,4.691,1,up,"IODA 12 countries with ping-slash24 outages (24h) [Cambodia, Cape Verde, Indonesia, Japan, Maldives, Mexico, Myanmar, New Zealand, Singapore, Thailand, Tunisia, Viet Nam] [sampled 22:26:35Z]",,scoring
+2026-08-25,4,0.938,0,up,"IODA 4 countries with ping-slash24 outages (24h) [Cape Verde, Gabon, Syrian Arab Republic, Tunisia] [sampled 22:31:17Z]",,scoring
