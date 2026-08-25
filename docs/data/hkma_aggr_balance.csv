@@ -33,3 +33,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-23,53968,-1.262,0,down,HKMA aggregate balance 53968 HK$m (2026-08-21) [sampled 22:26:54Z],2026-08-21,scoring
 2026-08-24,53968,,0,,HKMA aggregate balance 53968 HK$m (2026-08-21) [sampled 22:26:56Z] [stale: observation already recorded],2026-08-21,stale
 2026-08-25,,,0,,HKMA request failed: ReadTimeout [sampled 22:31:39Z],,dark
+2026-08-26,54049,-0.280,0,down,HKMA aggregate balance 54049 HK$m (2026-08-25) [sampled 22:32:27Z],2026-08-25,scoring
