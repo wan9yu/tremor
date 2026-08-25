@@ -1532,3 +1532,67 @@ sensitive line, or per-hub sub-lines — a Shanghai-only port line, a Japan-only
 the storm isn't diluted). And a method note for the log: a scouting workflow returned BUILD-READY on
 qualitative reasoning; the discipline that caught it was refusing to build until the one number that
 mattered was on the table. Adversarial measurement over plausible narrative, every time.
+
+---
+
+### Round 23 — 2026-08-25 (the false-alarm round)
+
+A metrics refresh that turned into an adjudication. On 2026-08-24 the tier-1 line net_outages spiked
+to 12 countries dark (z=4.69, its 58th alarm day) — the first tier-1 tremble since the 07-05 flights
+artifact, breaking a 45-day calm. The cluster (Cambodia, Cape Verde, Indonesia, Japan, Maldives,
+Mexico, Myanmar, New Zealand, Singapore, Thailand, Tunisia, Viet Nam) LOOKED like a regional
+submarine-cable disruption — heavy in SE Asia + Indian Ocean + Pacific. A 5-agent probe (re-query
+IODA / web-attribute / cable-infrastructure / tremor-internal cross-check / adversarial synthesis)
+refuted that hypothesis three independent ways and returned **likely-IODA-artifact, high confidence**.
+The cable story was mine; the data killed it. That is the round.
+
+**The evidence that it was a FALSE ALARM (a real IODA reading of a non-real-world event):**
+- **Timing (the smoking gun).** Re-querying IODA's own per-event data: 10 of the 12 (Indonesia,
+  Maldives, Cambodia, Singapore, Thailand, Myanmar, Mexico, Japan, Vietnam, New Zealand) are each a
+  SINGLE brief ping-slash24 event with onsets synchronized into a 20-minute window (01:00–01:20 UTC,
+  23 Aug), all 30–60 min long, all recovered by ~02:00Z, low tightly-banded magnitudes (692–1517),
+  no BGP corroboration. A 40-minute blip-and-recover that simultaneously hits the E. Pacific (Mexico),
+  NW Pacific (Japan), SW Pacific (NZ), Indian Ocean (Maldives) and SE Asia cannot be one cable — no
+  system spans those basins, and cuts cause sustained (hours–weeks) coherent outages, not synchronized
+  global blips. Cross-basin 20-minute onset synchrony is the common-mode signature of IODA's own
+  active-probing vantage.
+- **Windowing instability.** The trailing-24h count is latency-driven: re-querying the exact window
+  that produced the reading returns only 4 (Tunisia, Cape Verde, Syria, Gabon); the 12 came in via
+  IODA's ~24h detection latency and settled out. The 08-25 recorded row (4 countries: Cape Verde,
+  Gabon, Syria, Tunisia) equals that settled set — the two genuine survivors are the sustained
+  multi-day AFRICAN outages (Cape Verde 13 events to 13.3h; Tunisia 14 events), which merely co-occurred.
+- **Infrastructure.** The SE-Asia core six (SG/TH/VN/KH/MM/ID) do share systems (AAE-1 etc.), but Japan,
+  NZ and the Maldives are on non-overlapping cable families; reproducing the exact set needs 4+
+  simultaneous independent cuts, which do not heal in an hour.
+- **Web.** No dated report of any cable cut or regional outage on 2026-08-24; a live outage tracker
+  affirmatively denies any submarine-cable incident Aug 23–25 (the date is not a coverage gap — cloud
+  incidents that day are documented).
+- **Cross-check.** net_outages moved essentially ALONE: gnss (z1.6, but 2-day-lagged and global),
+  grid_frequency (z1.0, Nordic), flights (z0.6, Japan component in-range) do not corroborate a physical
+  event, and space_weather was quiet (Kp 2), ruling out a solar common cause. A single line moving
+  alone is a LOCAL event by the thesis — and here "local" resolves to the sensor, not the world.
+
+**The guard gap this exposed.** Annotation 97 (2026-08-04) already documented twelve IODA "monitor
+swept" self-outage days and installed a guard: `monitor_swept` fires only at hits≥100 AND
+hits/entities≥0.8 — deliberately a conjunction, so it would never refuse a genuine catastrophe, and its
+nearest non-selected day was 45 countries at ratio 0.45. The 08-24 event is a NEW, smaller sibling:
+a 12-country (~5% share) synchronized-onset common-mode blip that sails cleanly under both thresholds
+yet is just as much an artifact. Verified in-repo: `_SWEEP_MIN_COUNTRIES=100`, `_SWEEP_MIN_SHARE=0.8`.
+So a Pending-review item is queued — a finer filter keyed on onset-synchrony + BGP-corroboration +
+single-window transience, before a spike of this shape counts as world-signal. Building it is a fetcher
+change and needs approval; net_outages is NOT demoted (its 37 real episodes stand, and the artifact is
+now caught and documented), but a second such artifact before the fix reopens its tier-1 status.
+
+**The rest of the refresh.** cnh_cny is the most active tier-1 line today (z−2.49, raw −4, benign DOWN)
+but is still n=48<60 — maturity refresh keeps waiting; record range is −45..143, all 4 trembles benign
+DOWN. The closed-status first-live-weekend tripwire: 08-23 (Sun) correctly read `closed`; 08-22 (Sat)
+re-scored Friday's close (raw 83, z−0.24) because the weekend guard keys on the newer leg being Sat/Sun
+and Saturday morning still holds two Friday timestamps — follow-up queued. flights' pre-committed review
+holds to 08-31 (n=55 now, no new alarm since the 07-05 artifact). No tier moves.
+
+**Method note.** This is the second round running where a scouting workflow proposed the exciting story
+(R22 cyclone BUILD-READY; R23 subsea-cable event) and the discipline that held was refusing to write it
+until the load-bearing claim was measured. Here the measurement was IODA's own per-event onset timing,
+and it turned a 12-country "regional cable cut" into a 40-minute measurement hiccup. Attribution is a
+claim about evidence, not about how good the story is — the same lesson annotation 102 recorded when it
+withdrew the 2022-03-02 Ukraine attribution.

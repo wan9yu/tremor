@@ -142,16 +142,27 @@ re-reading the log. Close an item by editing it out with a round reference.
 
 - **flights pre-committed review** — due **2026-08-31** (de-cycling engages, n≥60): demote if
   episode-rate Wilson LB >2%, or immediately on the next unadjudicable alarm (set R11).
-- **cnh_cny maturity refresh** — at n≥60 scored (~same window): re-measure the reach cell +
-  benign-tremble recount (queued R13).
+- **cnh_cny maturity refresh** — at n≥60 scored: re-measure the reach cell + benign-tremble
+  recount (queued R13). R23: now n=48 (record range −45..143; 4 trembles, all benign DOWN),
+  still <60 — keep waiting.
 - **anchored-scale promotion gates** (R15, standing): before ANY anchored line promotes,
   its MATERIALITY must be replay-validated to the R11 bar and an episode/serial-dependence
   overlay run. Applies to stablecoin_peg, fed_srf_takeup.
 - **calendar de-cycling debt** (named R20): month/quarter-end rhythm gates fed_srf_takeup's
   promotion and warps tga_days_cash; payable on fed_srf's 1,262-day seed. This repo still
   has no de-cycling beyond weekday.
-- **closed-status first live weekend** — 08-22/23 is the first weekend after R18 landed;
-  verify cnh_cny reads `closed`, not `dark` (the 08-16 dark predates R18 by hours).
+- **closed-status first live weekend** — RESULT (R23): 08-23 (Sun) correctly read `closed` ✓;
+  08-22 (Sat) read `scoring` raw 83 (z−0.24) — Friday's close re-scored, because the weekend
+  guard keys on the NEWER leg being Sat/Sun and Saturday-morning still sees two Friday timestamps.
+  Follow-up: confirm obs-dedup isn't double-counting Friday's close, and decide whether the guard
+  should also cover Saturday (a fetcher change → needs approval).
+- **net_outages sub-sweep artifact guard** (opened R23) — the `monitor_swept` guard fires only at
+  ≥100 countries AND ≥80% share (annotation 97), so the 08-24 **12-country synchronized-onset**
+  common-mode artifact (z=4.69 false alarm, no BGP, settles 12→4) sailed under it. Queue a finer
+  filter before a spike of this shape counts as world-signal: onset-synchrony (many countries
+  starting within ~20 min) + BGP-corroboration + single-window transience (clears within 24h).
+  Fetcher change → needs approval. If another such artifact alarms before the fix, revisit
+  net_outages' tier-1 status (its 37 real episodes otherwise stand).
 - **radar-log.md roll tripwire** — split the log into an archive file when it crosses
   **2,000 lines** (1,406 after R21; ~57 lines/round → around R31-R33).
 - **usd_xccy_basis parking review** — re-probe sourcing every ~10 rounds (last: R20);
@@ -175,7 +186,7 @@ applied round 4.
 | flights | airspace (EU/US/JP) | 3 | 3 | 2 | 60/60 | 1 alarm in 50 scored, the adjudicated 07-05 artifact | ≤0.08 (n≈50, R21) | ⚠️ **RETAINED WITH CONDITIONS, R11** — sole current-rule alarm is an artifact; review pre-committed 2026-08-31 (de-cycling engages, n≥60): demote if episode-rate Wilson LB >2%, or immediately on the next unadjudicable alarm |
 | credit_spread | financial (US→global) | 3 | 3 | 3 | 816/817 | 66 alarm days = 8 episodes, all 4 real events | ≤0.08 (n=788, R21) | ✅ global bellwether; alarm at the 45th pctile of its 788-day record |
 | cnh_cny | capital controls (China) | 2 | 3 | — | 56/60* | 0 alarms (4 benign down-trembles) in 44 scored | ≤0.12 (n≈44, R21) | ✅ slot 4 (user-decided); reach cell MEASURED R13 — the alarming (up) side needs +227 pips vs a 52-obs record high of 143 (a decoration WITHIN this young calm record; baseline-relative — real capital-flight episodes blow far past it), while all four |z|>3 events are benign DOWN trembles (offshore yuan stronger). Still <60, insufficient to adjudicate; refresh at the maturity review (*4 darks are weekend/leg-timing rejections, not failures; the 08-16 dark ran hours before R18's closed status landed — weekends read `closed` from the first post-R18 weekend, 08-22/23, on) |
-| net_outages | communications (global) | 2 | 3 | 3 | 1651/1663 | 57 alarm days = 37 episodes; grid-strike + blackout events attributable | ≤0.12 (R21) | ✅ **CONFIRMED R11** — the pre-committed review was held and every gate passed; the tremble clause fired on its day-count letter and was amended to episode terms on measured evidence (see round 11) |
+| net_outages | communications (global) | 2 | 3 | 3 | 1656/1668 | 58 alarm days; 37 real episodes; grid-strike + blackout events attributable. **R23: the 2026-08-24 z=4.69 spike (12 countries) was a FALSE ALARM** — an IODA active-probing common-mode artifact (10 synced ~40-min ping-slash24 events across 4 ocean basins, no BGP, settles 12→4 on re-query), triple-refuted (timing/infra/web); a sub-scrub sibling of the annotation-97 monitor sweeps (see log R23) | ≤0.12 (R23) | ✅ **CONFIRMED R11** — every gate passed at the pre-committed review (see round 11). **R23:** one false alarm (08-24 artifact) exposed a guard gap — the sweep guard misses a 12-country synchronized-onset artifact; a synchrony/BGP/transience filter is queued (Pending reviews). NOT a demotion — 37 real episodes stand, the artifact is caught and documented |
 
 ## Tier 2 — collected  (13 candidates + 5 context + 1 control · no cap)
 
@@ -313,4 +324,5 @@ decision. A new round is appended to `radar-log.md` and gets one line added here
 - **Round 19** — 2026-08-16 · housekeeping: the log moves out to radar-log.md, and the one dead file leaves
 - **Round 20** — 2026-08-19 · the possibilities sweep: six probes across domains; fed_srf confirmed build-ready then BUILT (tier 2, seeded to 2021, 3 trembles), onrrp + ais_dark rejected, entsog source confirmed keyless, bgp + xccy still blocked
 - **Round 21** — 2026-08-20 · the 5S round: whole-repo audit (waste/drift/strategic) drives registry corrections + a Pending-reviews block; port slide attributed (real, broad-based, revision artifact refuted <1%); fed_srf first live seam clean; no tier moves
+- **Round 23** — 2026-08-25 · the false-alarm round: the 2026-08-24 net_outages spike (12 countries, z=4.69, a tier-1 alarm) adjudicated by a 5-agent probe as a FALSE ALARM — an IODA active-probing common-mode artifact (10 synced ~40-min ping events across 4 ocean basins, no BGP, settles 12→4 on re-query), triple-refuted (timing/infra/web); a guard gap opened (the ≥100-country sweep guard misses a 12-country synchronized-onset sibling); closed-status tripwire result (Sun closed ✓, Sat re-scored Friday's close); cnh_cny still n=48<60; flights review holds to 08-31; no tier moves
 - **Round 22** — 2026-08-21 · the credit-redundancy + space sweep, then a build: the "orthogonal to US HY" claims on em_corp_oas (+0.80) and euro_hy_spread (+0.74) MEASURED FALSE — one global credit factor, a single-credit-slot bar registered; NOAA sweep = guard-gate desert except space weather; **space_weather BUILT** (tier-2 context, daily max Kp, SWPC live + GFZ seed to 2022, 1,486 days / 39 storm trembles, a confounder-subtractor for gnss/grid — Gannon Kp-9 superstorm caught); the **context-line admission bar formalized** (name the ambiguity you resolve, or you're decoration — three roles); **tropical_cyclone REJECTED on measured payoff** (sources excellent & banked — GDACS+IBTrACS keyless global — but a full Shanghai+Ningbo closure moves port z=0.49, all-Japan airspace dark moves flights z=0.63, both under alarm: the confounder has nothing to subtract); no tier moves among counted lines
