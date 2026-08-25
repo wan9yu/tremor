@@ -1596,3 +1596,60 @@ until the load-bearing claim was measured. Here the measurement was IODA's own p
 and it turned a 12-country "regional cable cut" into a 40-minute measurement hiccup. Attribution is a
 claim about evidence, not about how good the story is — the same lesson annotation 102 recorded when it
 withdrew the 2022-03-02 Ukraine attribution.
+
+---
+
+### Round 23.1 — 2026-08-25 (settle + last-mile tightening)
+
+An implementation round, not an adjudication: R23 diagnosed the 08-24 tier-1 false alarm as an IODA
+latency artifact; R23.1 fixes it at the source, and folds in the low-risk hygiene items a holistic
+review surfaced. Brainstormed, plan-reviewed by a fresh pass that caught eight bugs before any code was
+written (a gate that would have bricked every collection, a docs/data test that would self-brick, a
+wrong stale-claim in a test, and more) — the discipline that made this round cheap was refusing to
+implement until the plan was adversarially read.
+
+**The settle fix.** `net_outages` counted a trailing 24h window ending at collection time; its last hours
+sat inside IODA's ~24h detection latency, which retimes and inflates the count. The live fetcher now
+counts a COMPLETED window ending at the most recent 22:00:00Z at least a day old (`_settled_window`),
+`obs_date` = that day — the exact convention the seed already used (`_WINDOW_HOUR=22`), so history and the
+live tail are one measure. This is the GENERAL fix — it removes the whole latency-injection class — and it
+was chosen over the R23-queued onset-synchrony/BGP/transience filter precisely because that filter was
+fitted to the 08-24 signature (the "tuned to the last crisis" failure the ethos names). `monitor_swept`
+is untouched (it catches ≥100-country vantage-loss sweeps, a different class; the two are complementary).
+
+**Validated against the record before shipping** (live IODA re-queries, 2026-08-25): the 08-24 settled
+window returns 4 (Cape Verde, Gabon, Syria, Tunisia) vs the live 12 → the false alarm is dropped; and
+7 historical single-day alarms reproduce BYTE-EXACT (2022-03-02=45, 2023-06-18=40, 2024-10-03=44,
+2025-04-30=41, 2026-04-08=15, 2026-03-06=11, 2025-06-19=9) — big and small alike, so settle refuses no
+real episode. The record's 43 episodes are 37 isolated single-days + 6 multi-day runs; the seed (97% of
+rows) was already settled, so the only unsettled stretch is 2026-07-10 → 2026-08-25, which held exactly
+one alarm — the 08-24 artifact. The decisive argument is regime consistency, not the n=1 adjudication:
+the live fetcher had been measuring a different quantity (latency-inflated) than the settled baseline it
+was judged against. STABLE_SINCE untouched, `replay --check` stays 0-divergence (settle changes only the
+live fetcher forward; obs_date is data replayed from the CSV). The 08-24 row STAYS forward-only (the raw
+12 is the v2 instrument's true reading, not a bug — not rescore-eligible), annotated as the artifact.
+The residual risk (IODA's "~24h" is typical, not a bound; the fresh-settled-vs-archive bridge is n=1) is
+held by a standing reconciliation tripwire in Pending-reviews, which also carries R23's clause forward.
+Cost: net_outages goes from zero-lag to ~1-day-lagged, inside the tier-1 ≤2-day freshness bar (gnss
+already runs 2-day-lagged at tier-1); the TIER comment is updated to say so.
+
+**The reachability gate, amended.** A young line whose own calm record is too shallow to contain its
+alarm now passes if the alarm is reachable under a documented REFERENCE REGIME — real historical episodes
+of the guarded quantity — the same baseline-relativity the gate already declared, made explicit. cnh_cny
+passes on it (its UP alarm needs +227 pips vs a 52-obs high of 143, but real capital-flight episodes have
+run hundreds of pips); re-checked at n≥60. This closes the R23 open fork.
+
+**eu_gas_storage — probed and off eternal parking.** AGSI+ answered HTTP 200 with a registered key (EU
+aggregate daily fill 62.99% on 2026-08-23, injection/withdrawal/full% fields, ~2-day lag), key set locally
+and as a CI Secret. Marked BUILD-READY, and named the registry's FIRST LOAD-BEARING key (no keyless
+fallback, unlike the optional FRED/FINGRID keys); the "keyless daily fetcher" build criterion is amended
+to allow a declared load-bearing key as a stated exception. Building the line (fetcher + a vendored
+365-entry seasonal-normal table for the de-cycling) is its own next round.
+
+**Two integrity tests.** A docs/data SUBSET gate (`docs/data ⊆ MIRRORED ∪ {stuck.csv}`) closes the hole
+that `stuck_panel.py` writes around the allow-list by design, without the equality version that would brick
+the first collect after any new fetcher. A pre-collect LINES-invariant gate asserts ¬(QUANTUM ∧
+MATERIALITY), a present ANOMALY_DIRECTION, and unique LINE names — catching a misdeclared module before its
+AssertionError in `score_row` can abort a whole day's run. Plus: the covBlind field-of-view sentence drops
+"Latin America" (fx_parallel_premium is a scored Argentina line), and the round index's R22/R23 ordering
+glitch is corrected. No tier moves.

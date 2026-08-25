@@ -6,8 +6,8 @@ country goes dark, a larger force overwhelmed that — a censorship shutdown, a 
 a major cable cut, a grid failure. Counting how many countries are in outage at
 once turns local incidents into a global breadth-of-disruption signal.
 
-Reading: number of countries with a ping-slash24-detected outage in the trailing
-24h. A rise is the alarming move.
+Reading: number of countries with a ping-slash24-detected outage in the day's
+completed 24h window (settled, see v3). A rise is the alarming move.
 
 Measurement definition (v2, fixed 2026-07-10): count ONLY outages detected by
 IODA's ping-slash24 (active probing) datasource. The v1 series counted events
@@ -17,9 +17,21 @@ baseline — sensor inflation, exactly the trap this project bans. Pinning the
 datasource makes the definition stable and auditable; the v1 series is archived
 at data/archive/net_outages_v1.csv and this series starts fresh.
 
+Window definition (v3, R23.1, 2026-08-25): count a COMPLETED window ending at the
+most recent 22:00:00Z at least a day old, not a trailing window ending at
+collection time. The trailing window's last hours were inside IODA's ~24h
+detection latency, which retimes and inflates the count: on 2026-08-24 it read 12
+countries (z=4.69, a tier-1 FALSE ALARM) where the completed window settles to 4.
+Settling removes that whole latency-injection class and aligns the live tail with
+the seed, which already fetched each day at 22:00Z. Rows 2026-07-10 -> 2026-08-25
+are the unsettled trailing-window stretch (and hold the adjudicated 08-24
+artifact, kept forward-only); the switch day carries a one-time ~24h window
+overlap with the last unsettled row. Cost: a ~1-day lag (was zero-lag), inside the
+tier-1 freshness bar. See annotations.csv for the method row.
+
 Source: IODA (Georgia Tech) outages summary API. Keyless.
 """
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -28,8 +40,9 @@ LABEL = "Countries with internet outages (IODA ping)"
 UNIT = "countries"
 ANOMALY_DIRECTION = "up"
 TIER = 1  # promoted round 7 into the slot gnss_interference vacated. PROVISIONAL:
-# it is the only candidate that is global, zero-lag, and a domain no other line
-# covers, but v2 has only a handful of scored readings and does NOT meet the
+# it is the only candidate that is global and a domain no other line covers
+# (settled to a completed D-1 22:00Z window since R23.1 — ~1-day lagged, was
+# zero-lag before then), but v2 has only a handful of scored readings and does NOT meet the
 # 60-reading promotion bar. Reviewed at 60; the status column reports its
 # blindness on the page meanwhile.
 QUANTUM = 1  # countries: a count, and the resolution of the reading is one of them.
@@ -75,14 +88,37 @@ def monitor_swept(hits, entities):
             and hits / entities >= _SWEEP_MIN_SHARE)
 
 
+def _settled_window(now_ts):
+    """``(from, until, obs_date)`` for the latest COMPLETE 24h window ending at the
+    most recent 22:00:00Z that is at least a full day before ``now_ts``.
+
+    THE SETTLE RULE (R23.1). The live line used to count a trailing 24h window
+    ending at collection time; that window's last hours sit inside IODA's ~24h
+    detection latency, which retimes and inflates the count — on 2026-08-24 it
+    read 12 countries (z=4.69, a tier-1 false alarm) where the completed window
+    settles to 4. Counting a COMPLETED window instead removes the whole
+    latency-injection class, and it aligns the live tail with the seed, which
+    already fetched each day's window at ``_WINDOW_HOUR=22`` (97% of the record).
+    A run firing before 22:00Z self-corrects one day earlier rather than reading a
+    still-forming edge. The cost is a ~1-day lag, inside the tier-1 freshness bar.
+    """
+    cutoff = now_ts - 86400
+    end = datetime.fromtimestamp(cutoff, timezone.utc).replace(
+        hour=22, minute=0, second=0, microsecond=0)
+    if end.timestamp() > cutoff:
+        end -= timedelta(days=1)
+    start = end - timedelta(days=1)
+    return int(start.timestamp()), int(end.timestamp()), end.date().isoformat()
+
+
 def fetch_daily():
-    now = int(datetime.now(timezone.utc).timestamp())
+    frm, until, obs = _settled_window(int(datetime.now(timezone.utc).timestamp()))
     try:
         r = requests.get(
             _URL,
-            params={"from": now - 86400, "until": now, "entityType": "country", "limit": 300},
+            params={"from": frm, "until": until, "entityType": "country", "limit": 400},
             headers=_HEADERS,
-            timeout=25,
+            timeout=40,
         )
     except requests.RequestException as e:
         return {"raw_value": None, "source_note": f"IODA request failed: {type(e).__name__}"}
@@ -104,6 +140,8 @@ def fetch_daily():
         for d in hit
     )
     count = len(hit)
+    # A sweep / error / dark return carries NO obs_date: a refused window's date
+    # must not stale-block a later genuine read of that same settled window.
     if monitor_swept(count, len(data)):
         return {
             "raw_value": None,
@@ -115,5 +153,6 @@ def fetch_daily():
     who = f" [{', '.join(names)}]" if names else ""
     return {
         "raw_value": float(count),
-        "source_note": f"IODA {count} countries with {_DATASOURCE} outages (24h){who}",
+        "source_note": f"IODA {count} countries with {_DATASOURCE} outages (24h to {obs} 22:00Z){who}",
+        "obs_date": obs,
     }

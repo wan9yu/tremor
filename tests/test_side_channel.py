@@ -36,6 +36,21 @@ class TestSideChannelIsInert(unittest.TestCase):
             os.path.exists(os.path.join(ROOT, "docs", "data", "intraday.csv")),
             "the side channel was mirrored into the served data directory")
 
+    def test_served_files_are_a_subset_of_the_allow_list(self):
+        """The dashboard's served surface is docs/data. stuck_panel.py writes
+        stuck.csv there OUTSIDE collect.MIRRORED (by design), so the true allow-list
+        is MIRRORED + stuck.csv, and without this check the served surface was only
+        deny-checked (intraday.csv by name) — the next reporter that writes into
+        docs/data leaks onto the dashboard with nothing failing. SUBSET, not
+        equality: a new fetcher grows MIRRORED at once while its docs/data CSV
+        appears only after the first collect, so equality would brick that collect."""
+        import collect
+        served = {f for f in os.listdir(os.path.join(ROOT, "docs", "data"))
+                  if not f.startswith(".")
+                  and os.path.isfile(os.path.join(ROOT, "docs", "data", f))}
+        leaked = served - (set(collect.MIRRORED) | {"stuck.csv"})
+        self.assertFalse(leaked, f"unallow-listed files served on the dashboard: {leaked}")
+
     def test_the_sampler_writes_only_its_own_file(self):
         with open(os.path.join(ROOT, "tools", "sample_intraday.py")) as f:
             source = f.read()

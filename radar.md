@@ -12,7 +12,10 @@ we have.
 | **2 — collected** | scraped every day, building history; shown only as a muted watchlist, never counted; no cap | all that qualify |
 
 Anything with a real guard and a **verified, working, keyless daily fetcher** is built
-and collected immediately, banking evidence toward tier-1. Collection is nearly free in
+and collected immediately, banking evidence toward tier-1. (Keyless is the default;
+a source may instead use a **declared load-bearing key** — one with no keyless fallback,
+unlike the optional `FRED_API_KEY` / `FINGRID_API_KEY` — only as a stated exception recorded
+in the registry. The first is `AGSI_KEY` for eu_gas_storage, R23.1.) Collection is nearly free in
 a git-scraping architecture; the history you don't collect is the expensive thing.
 
 The bar to ENTER tier-2 is real, because every collected line is a survivability
@@ -53,6 +56,14 @@ data exists):
   a decoration, not an instrument. Measured as the threshold distance in Qn units against
   the record's observed range. NOTE: reachability numbers are baseline-relative — a seed
   that deepens the baseline voids the previous arithmetic (this bit the FRED lines, R9).
+  **Amended R23.1 (baseline-relative in a young calm record):** a line PASSES if its alarm
+  is reachable within its own record OR under a documented **reference regime** — real
+  historical episodes of the guarded quantity that blew past the alarm. This is the
+  same baseline-relativity the NOTE already declares, made explicit for a young line whose
+  own record is too calm to contain its alarm. Applied to cnh_cny: its UP alarm needs +227
+  pips vs a 52-obs high of 143 (unreachable WITHIN the record) but real capital-flight
+  episodes have run hundreds of pips — it passes. The reference regime must be cited, not
+  assumed, and is re-checked at the line's maturity review.
 
 **Freshness rule for tier-1:** a displayed instrument must be FRESH (low publication lag). A
 line that is daily but lags a week (e.g. IMF PortWatch, ~10 days measured) only shows a disruption long
@@ -156,13 +167,22 @@ re-reading the log. Close an item by editing it out with a round reference.
   guard keys on the NEWER leg being Sat/Sun and Saturday-morning still sees two Friday timestamps.
   Follow-up: confirm obs-dedup isn't double-counting Friday's close, and decide whether the guard
   should also cover Saturday (a fetcher change → needs approval).
-- **net_outages sub-sweep artifact guard** (opened R23) — the `monitor_swept` guard fires only at
-  ≥100 countries AND ≥80% share (annotation 97), so the 08-24 **12-country synchronized-onset**
-  common-mode artifact (z=4.69 false alarm, no BGP, settles 12→4) sailed under it. Queue a finer
-  filter before a spike of this shape counts as world-signal: onset-synchrony (many countries
-  starting within ~20 min) + BGP-corroboration + single-window transience (clears within 24h).
-  Fetcher change → needs approval. If another such artifact alarms before the fix, revisit
-  net_outages' tier-1 status (its 37 real episodes otherwise stand).
+- **net_outages settle — reconciliation tripwire** (R23.1, CLOSES the R23 sub-sweep-filter item):
+  the 08-24 artifact class is fixed by settling the live fetcher to a completed D-1 22:00Z window — the
+  GENERAL fix (it removes the whole latency-injection class) rather than a filter fitted to the 08-24
+  signature; the queued onset-synchrony/BGP/transience filter is NOT built. `monitor_swept` untouched.
+  Standing check: each round (a `tools/` step, live network — never a gate/test) re-query the last ~7
+  settled windows vs their stored raws; any mismatch that would flip a verdict reopens the D-2 question
+  with data. One-time on the FIRST post-switch round: re-query every seam-era row (2026-07-10→2026-08-25)
+  + one interior day of each of the 6 multi-day runs. Carry forward: a synchronized-onset artifact that
+  still ALARMS after settle means the mechanism diagnosis was wrong → reopens net_outages' tier-1 status
+  (its 37 real episodes stand).
+- **level-layer → flights** (opened R23.1) — decide ~Nov 2026 (once flights per-region components banked
+  since 08-02 can populate an honest reference window) whether to extend the level layer to flights
+  regions; the second headline currently rides one lagging, panel-churning source (PortWatch, ~10d).
+- **cnh_cny reachability reference-regime re-check** (R23.1) — the reachability gate passed cnh_cny on a
+  cited reference regime (real capital-flight episodes past +227 pips). Re-confirm at n≥60 that the
+  reference-regime evidence still holds, alongside the maturity refresh.
 - **radar-log.md roll tripwire** — split the log into an archive file when it crosses
   **2,000 lines** (1,406 after R21; ~57 lines/round → around R31-R33).
 - **usd_xccy_basis parking review** — re-probe sourcing every ~10 rounds (last: R20);
@@ -260,7 +280,7 @@ above.)
 | **border_wait** | trade / mobility (US land borders) | borders are staffed open for trade → a sustained spike in commercial-lane wait times, or an UNSCHEDULED closure of a 24h crossing, leaks blockade / coercion / crisis at a land chokepoint the maritime (PortWatch) and air (ADS-B) lines cannot see | **new R13, live-probed** — `bwt.cbp.gov/api/waittimes` returns real keyless JSON, 85 land ports (55 MX, 30 CA), 2026-08-14 snapshot Laredo 55m / Otay Mesa 40m / median 0 / max 55. Needs an AGGREGATION DESIGN before it is a line: restrict to COMMERCIAL lanes, git-scrape at a FIXED daily UTC hour so same-hour comparison cancels the commuter intraday cycle (cadence gate), and count only closures UNSCHEDULED against each port's `hours` field (raw Closed is dominated by nightly scheduled closures). Reach NATIONAL (US-MX/CA); no free historical backfill — build forward, zero baseline day 1. Global land-border non-find: WFP/HDX is a static location inventory, no free daily waits |
 | crypto_capital_flight_premium | capital controls (per country) | a state defends an official FX rate / capital controls → residents buy USDT to move value out, so its local-currency P2P price trades ABOVE the official rate; a widening premium leaks accelerating flight — the same guard as cnh_cny / fx_parallel_premium, a faster mechanism | **probed R14 — guard real, cadence PASSES (a structural premium persists for weeks, unlike a transient depeg), Binance P2P adv/search is keyless + live.** BLOCKED because reachable ∩ orthogonal ∩ strong-guard ∩ clean-keyless-official-leg is nearly empty: ARS (+4%) and CNY (−1%, a banned gray discount) are redundant with existing lines, NGN/RUB return 0 ads (Binance banned/exited), TRY/EGP are weak-guard floats, and the one orthogonal hard-controlled case — Venezuela VES (+14% vs a near-parallel rate; the true BCV gap is 85%+) — has no keyless TRUE-official leg. Parked on official-leg sourcing + order-book aggregation, same shape as `usd_xccy_basis`. If ever built: a single USDT/VES line with a keyless BCV official leg, not China/Argentina, not Nigeria via Binance |
 | usd_xccy_basis | financial plumbing (global) | central-bank USD swap lines cap the FX-swap-implied cost of borrowing dollars → a deeply negative 3M cross-currency basis leaks a dollar funding shortage, and swap-line drawings are the leaking hand | **new R13 — guard is arguably the cleanest defended equilibrium in the registry (it is literally what the swap lines defend); cadence + reachability pass (−150 to −200 bp in 2008, −80 to −140 bp Mar-2020).** BLOCKED on SOURCE: keyless daily basis is EXHAUSTED — FRED is spot-only (no forwards; `EURUSD3M*`/`XCCYBASIS` 404), OFR STFM carries no FX series, ECB spot-only, forward points paywalled, CME's daily basis index needs a self-service key. No free-pieces construction path (unlike cp_funding_spread — there are no forwards on FRED, do not re-attempt). **Re-probed 2026-08-19 (R20), STILL exhausted:** OFR STFM exposes only {FNYR, MMF, NYPD, REPO, TYLD} — no FX; FRED `XCCYBASIS3M` 403; cbonds + CME paywalled/keyed. Parked on sourcing like `eu_gas_storage`; downgrade to reject if no keyless forward-point feed ever appears |
-| eu_gas_storage | energy (EU) | member states defend storage-fill trajectories → falling behind the injection path leaks supply cutoff | designed R11.1 as `eu_gas_storage_path` — weekly fill change MINUS the seasonal-normal weekly change, because the raw level is all season. AGSI+ carries it (daily since 2011-01-01, zero missing days) but **requires a free registered key**, and the keyless path that works is a spoofed browser User-Agent, which this project will not ship. ACTIONABLE: register at agsi.gie.eu, add `AGSI_KEY` to repo Secrets, and it is build-ready; a 365-entry seasonal-normal table must be vendored alongside |
+| eu_gas_storage | energy (EU) | member states defend storage-fill trajectories → falling behind the injection path leaks supply cutoff | designed R11.1 as `eu_gas_storage_path` — weekly fill change MINUS the seasonal-normal weekly change, because the raw level is all season. **BUILD-READY, PROBED R23.1:** AGSI+ live with a registered `AGSI_KEY` (HTTP 200, EU aggregate daily fill 62.99% on 2026-08-23, injection/withdrawal/full% fields, ~2-day lag) — key set locally and as a CI Secret. This is the registry's **first LOAD-BEARING key** (no keyless fallback; the spoofed-User-Agent path this project won't ship is retired) — see the amended build criterion above. Remaining to build (its own round): the fetcher + a vendored 365-entry seasonal-normal table for the de-cycling |
 
 ### Context / confounder candidates (no guard by design — never counted)
 
@@ -324,5 +344,6 @@ decision. A new round is appended to `radar-log.md` and gets one line added here
 - **Round 19** — 2026-08-16 · housekeeping: the log moves out to radar-log.md, and the one dead file leaves
 - **Round 20** — 2026-08-19 · the possibilities sweep: six probes across domains; fed_srf confirmed build-ready then BUILT (tier 2, seeded to 2021, 3 trembles), onrrp + ais_dark rejected, entsog source confirmed keyless, bgp + xccy still blocked
 - **Round 21** — 2026-08-20 · the 5S round: whole-repo audit (waste/drift/strategic) drives registry corrections + a Pending-reviews block; port slide attributed (real, broad-based, revision artifact refuted <1%); fed_srf first live seam clean; no tier moves
-- **Round 23** — 2026-08-25 · the false-alarm round: the 2026-08-24 net_outages spike (12 countries, z=4.69, a tier-1 alarm) adjudicated by a 5-agent probe as a FALSE ALARM — an IODA active-probing common-mode artifact (10 synced ~40-min ping events across 4 ocean basins, no BGP, settles 12→4 on re-query), triple-refuted (timing/infra/web); a guard gap opened (the ≥100-country sweep guard misses a 12-country synchronized-onset sibling); closed-status tripwire result (Sun closed ✓, Sat re-scored Friday's close); cnh_cny still n=48<60; flights review holds to 08-31; no tier moves
 - **Round 22** — 2026-08-21 · the credit-redundancy + space sweep, then a build: the "orthogonal to US HY" claims on em_corp_oas (+0.80) and euro_hy_spread (+0.74) MEASURED FALSE — one global credit factor, a single-credit-slot bar registered; NOAA sweep = guard-gate desert except space weather; **space_weather BUILT** (tier-2 context, daily max Kp, SWPC live + GFZ seed to 2022, 1,486 days / 39 storm trembles, a confounder-subtractor for gnss/grid — Gannon Kp-9 superstorm caught); the **context-line admission bar formalized** (name the ambiguity you resolve, or you're decoration — three roles); **tropical_cyclone REJECTED on measured payoff** (sources excellent & banked — GDACS+IBTrACS keyless global — but a full Shanghai+Ningbo closure moves port z=0.49, all-Japan airspace dark moves flights z=0.63, both under alarm: the confounder has nothing to subtract); no tier moves among counted lines
+- **Round 23** — 2026-08-25 · the false-alarm round: the 2026-08-24 net_outages spike (12 countries, z=4.69, a tier-1 alarm) adjudicated by a 5-agent probe as a FALSE ALARM — an IODA active-probing common-mode artifact (10 synced ~40-min ping events across 4 ocean basins, no BGP, settles 12→4 on re-query), triple-refuted (timing/infra/web); a guard gap opened (the ≥100-country sweep guard misses a 12-country synchronized-onset sibling); closed-status tripwire result (Sun closed ✓, Sat re-scored Friday's close); cnh_cny still n=48<60; flights review holds to 08-31; no tier moves
+- **Round 23.1** — 2026-08-25 · settle + last-mile tightening: net_outages SETTLED to a completed D-1 22:00Z window (the general fix — validated: 08-24 settles 12→4, 7 historical alarms reproduce byte-exact incl. small; the queued signature-filter dropped, monitor_swept untouched, replay 0-divergence); the reachability gate AMENDED (baseline-relative in a young calm record → cnh_cny passes on a cited reference regime); eu_gas_storage BUILD-READY-probed (AGSI+ live, the registry's first load-bearing key); two integrity tests (docs/data subset-gate, LINES-invariant gate); covBlind + round-index-order fixes; no tier moves
