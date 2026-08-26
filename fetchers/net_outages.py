@@ -22,12 +22,19 @@ most recent 22:00:00Z at least a day old, not a trailing window ending at
 collection time. The trailing window's last hours were inside IODA's ~24h
 detection latency, which retimes and inflates the count: on 2026-08-24 it read 12
 countries (z=4.69, a tier-1 FALSE ALARM) where the completed window settles to 4.
-Settling removes that whole latency-injection class and aligns the live tail with
-the seed, which already fetched each day at 22:00Z. Rows 2026-07-10 -> 2026-08-25
-are the unsettled trailing-window stretch (and hold the adjudicated 08-24
-artifact, kept forward-only); the switch day carries a one-time ~24h window
-overlap with the last unsettled row. Cost: a ~1-day lag (was zero-lag), inside the
-tier-1 freshness bar. See annotations.csv for the method row.
+Settling makes the count STABLE (reproducible, no longer query-time-dependent)
+and aligned with the seed, which already fetched each day at 22:00Z. CORRECTED
+2026-08-26: the earlier "removes the whole latency-injection class" was overstated.
+Settle does NOT filter the artifact — a synchronized-onset common-mode cluster is a
+stable set of IODA events at a real timestamp, so it lives in one settled window and
+would tremble there. The 08-24 cluster's true home is the 08-23 settled window (the
+same twelve countries, stably), so a future artifact of this shape WOULD alarm on
+its own date; it is a DETECT-AND-ADJUDICATE class (the reconciliation tripwire flags
+it, the R23 five-agent playbook attributes it), not one settle closes. Rows
+2026-07-10 -> 2026-08-25 are the unsettled trailing-window stretch (and hold the
+adjudicated 08-24 artifact, kept forward-only); the switch day carries a one-time
+~24h window overlap with the last unsettled row. Cost: a ~1-day lag (was zero-lag),
+inside the tier-1 freshness bar. See annotations.csv for the method + correction rows.
 
 Source: IODA (Georgia Tech) outages summary API. Keyless.
 """
@@ -96,11 +103,14 @@ def _settled_window(now_ts):
     ending at collection time; that window's last hours sit inside IODA's ~24h
     detection latency, which retimes and inflates the count — on 2026-08-24 it
     read 12 countries (z=4.69, a tier-1 false alarm) where the completed window
-    settles to 4. Counting a COMPLETED window instead removes the whole
-    latency-injection class, and it aligns the live tail with the seed, which
-    already fetched each day's window at ``_WINDOW_HOUR=22`` (97% of the record).
-    A run firing before 22:00Z self-corrects one day earlier rather than reading a
-    still-forming edge. The cost is a ~1-day lag, inside the tier-1 freshness bar.
+    settles to 4. Counting a COMPLETED window makes the count STABLE (reproducible,
+    not query-time-dependent) and aligns the live tail with the seed, which already
+    fetched each day's window at ``_WINDOW_HOUR=22`` (97% of the record). It does NOT
+    filter the artifact itself (a synchronized-onset cluster lives, stably, in its
+    own settled window and would tremble there — see the module docstring's 2026-08-26
+    correction and the reconciliation tripwire). A run firing before 22:00Z
+    self-corrects one day earlier rather than reading a still-forming edge. The cost is
+    a ~1-day lag, inside the tier-1 freshness bar.
     """
     cutoff = now_ts - 86400
     end = datetime.fromtimestamp(cutoff, timezone.utc).replace(

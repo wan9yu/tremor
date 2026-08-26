@@ -1653,3 +1653,28 @@ MATERIALITY), a present ANOMALY_DIRECTION, and unique LINE names — catching a 
 AssertionError in `score_row` can abort a whole day's run. Plus: the covBlind field-of-view sentence drops
 "Latin America" (fx_parallel_premium is a scored Argentina line), and the round index's R22/R23 ordering
 glitch is corrected. No tier moves.
+
+---
+
+### Round 23.2 — 2026-08-26 (the settle claim, corrected by its own tripwire)
+
+The reconciliation tripwire, built and first-run the same day, corrected R23.1's overstated claim
+before CI ever exercised it. R23.1 said settling to a completed window "removes the whole
+latency-injection class." The first-run seam audit re-queried the 2026-07-10 → 08-25 unsettled
+stretch against IODA's now-settled windows and found the load-bearing counterexample: the 08-24
+twelve-country synchronized-onset cluster is a stable set of ping-slash24 events at ~08-23 01:00Z,
+so it lives in the SETTLED window ending 08-23 22:00Z — the exact same twelve countries (Cambodia,
+Indonesia, Japan, Maldives, Myanmar, New Zealand, Singapore, Thailand, Viet Nam, plus Cape Verde,
+Mexico, Tunisia) — while the window ending 08-24 22:00Z holds only the four genuine survivors.
+Settle relocates the cluster to its true date and makes the count stable and reproducible; it does
+NOT recognize it as an artifact. A future synchronized-onset common-mode cluster would alarm on its
+own date under settle — the same tremble the trailing window produced, now stably timed rather than
+eliminated.
+
+Corrected: settle's benefit is count-stability and seed-alignment, not artifact-elimination; the
+synchronized-onset class stays DETECT-AND-ADJUDICATE (the reconciliation tripwire flags a settled
+tremble, the R23 five-agent playbook attributes it). Settle is kept — the trailing window was
+genuinely unstable, the seam audit showing old rows and settled windows disagreeing day to day —
+and net_outages is not demoted (its 37 real episodes stand). The lesson is the tool's, not the
+claim's: insisting on a reconciliation tripwire, over the objection that settle had "closed" the
+class, is exactly what caught the class still open. No tier moves.
