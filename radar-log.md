@@ -1678,3 +1678,37 @@ genuinely unstable, the seam audit showing old rows and settled windows disagree
 and net_outages is not demoted (its 37 real episodes stand). The lesson is the tool's, not the
 claim's: insisting on a reconciliation tripwire, over the objection that settle had "closed" the
 class, is exactly what caught the class still open. No tier moves.
+
+---
+
+### Round 24 — 2026-08-26 (park eu_gas, and a state check)
+
+**eu_gas_storage, parked on the reachability gate.** The AGSI+ source is confirmed and keyed
+(HTTP 200, EU daily fill, ~2-day lag; key banked locally + as a CI Secret), so sourcing is no
+longer the blocker. The metric is. The natural line — fill DEVIATION from the seasonal-normal
+full% (day-of-year median over 3,889 daily points, 2016-2026) — fails reachability: the deviation's
+own normal spread is ±14pp (p5 −14.4, p95 +22.2) while the worst downside in ten years is only
+~−16pp. No MATERIALITY threads that needle: an alarm reachable at ≤ −16pp fires on ordinary ±14pp
+variation, and a clean −3z alarm lands near −33pp, which has never occurred. The cause is
+structural: EU storage LEVEL is a defended-holds quantity. The 2022 war-onset crisis — the worst
+gas shock on the record — dented fill by only −9pp in March and refilled to ~95% by November via
+record prices and demand destruction; the stress showed in PRICE, not in the level, because the
+guard held. The seasonal baseline is additionally regime-confounded: the post-2022 90%-by-November
+mandate lifted 2023-25 fill structurally, dragging the ten-year median up. This is the
+tropical_cyclone shape again — an excellent source whose natural metric does not clear a gate.
+Un-parking needs a cleaner guard: deviation from the EU regulatory TARGET PATH (the actual defended
+trajectory of intermediate fill mandates), not a blended seasonal median — more work, uncertain
+payoff, deferred. One live fact is worth carrying regardless: EU storage in 2026 sits at −15pp
+(63.3% against a 78.4% seasonal normal), the ten-year deviation low — genuinely running behind,
+a candidate line for the dashboard's field-of-view or a briefing note even though it is not scored.
+
+**State check after the R23.1/R23.2 settle work.** The headline is calm: resonance 0 on 2026-08-26,
+a two-day zero streak; flights (z 0.72), credit_spread (2.69%, z −0.94) and net_outages (2 countries,
+z 0) all quiet; the felt layer calm too (VIX z −0.74, GDELT conflict z −0.90, tone z +0.90). The one
+mover is cnh_cny at −43 pips, z −3.24 — its FIFTH benign DOWN tremble (offshore yuan stronger than
+onshore, the opposite of the capital-flight direction the line guards), so uncounted, consistent
+with the reachability-gate amendment that kept it tier-1 on a cited reference regime. Its scored n
+is climbing toward the 60-reading maturity review, where the reference-regime evidence and the
+benign-tremble recount both come due. net_outages runs on its settled window now, its artifact class
+documented as detect-and-adjudicate; the reconciliation tripwire is a standing round-time check. No
+tier moves.
