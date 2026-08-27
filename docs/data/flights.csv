@@ -65,3 +65,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-24,1743,0.569,0,up,"ADS-B regions [W/C Europe=189, US East=912, US West=533, E Asia/Japan=109] via adsb.fi, adsb.lol [sampled 22:26:30Z]",,scoring
 2026-08-25,1817,0.931,0,up,"ADS-B regions [W/C Europe=248, US East=881, US West=574, E Asia/Japan=114] via adsb.fi, adsb.lol [sampled 22:30:59Z]",,scoring
 2026-08-26,1782,0.722,0,up,"ADS-B regions [W/C Europe=206, US East=923, US West=542, E Asia/Japan=111] via adsb.fi, adsb.lol [sampled 22:31:46Z]",,scoring
+2026-08-27,1095,-2.820,0,down,"ADS-B regions [W/C Europe=123, US East=399, US West=371, E Asia/Japan=202] via adsb.fi, adsb.lol [sampled 02:47:59Z]",,scoring
