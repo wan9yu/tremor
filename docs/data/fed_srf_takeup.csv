@@ -1270,3 +1270,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-26,0,0.000,0,flat,NY Fed SRF total accepted 0.0$m across 2 repo op(s) on 2026-08-24 [sampled 22:32:30Z],2026-08-24,scoring
 2026-08-27,3,0.000,0,up,NY Fed SRF total accepted 3.0$m across 2 repo op(s) on 2026-08-26 [sampled 02:48:55Z],2026-08-26,scoring
 2026-08-28,101,0.010,0,up,NY Fed SRF total accepted 101.0$m across 2 repo op(s) on 2026-08-27 [sampled 05:55:13Z],2026-08-27,scoring
+2026-08-29,1,0.000,0,up,NY Fed SRF total accepted 1.0$m across 2 repo op(s) on 2026-08-28 [sampled 03:27:23Z],2026-08-28,scoring
