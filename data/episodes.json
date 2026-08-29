@@ -2,12 +2,12 @@
   {
     "line": "flights",
     "tier": 1,
-    "scored_days": 59,
+    "scored_days": 60,
     "span_years": 0.16,
     "alarm_days": 2,
     "episodes": 2,
     "longest_run": 1,
-    "lag1": 0.265,
+    "lag1": 0.302,
     "episode_dates": [
       [
         "2026-07-05",
@@ -87,7 +87,7 @@
   {
     "line": "net_outages",
     "tier": 1,
-    "scored_days": 1650,
+    "scored_days": 1651,
     "span_years": 4.56,
     "alarm_days": 58,
     "episodes": 38,
@@ -441,23 +441,23 @@
   {
     "line": "capital_premium",
     "tier": 2,
-    "scored_days": 59,
+    "scored_days": 60,
     "span_years": 0.16,
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.488,
+    "lag1": 0.52,
     "episode_dates": []
   },
   {
     "line": "grid_frequency",
     "tier": 2,
-    "scored_days": 59,
+    "scored_days": 60,
     "span_years": 0.16,
     "alarm_days": 2,
     "episodes": 2,
     "longest_run": 1,
-    "lag1": -0.116,
+    "lag1": -0.122,
     "episode_dates": [
       [
         "2026-07-12",
@@ -474,12 +474,12 @@
   {
     "line": "chokepoint_breadth",
     "tier": 2,
-    "scored_days": 228,
+    "scored_days": 229,
     "span_years": 0.62,
     "alarm_days": 3,
     "episodes": 3,
     "longest_run": 1,
-    "lag1": 0.311,
+    "lag1": 0.31,
     "episode_dates": [
       [
         "2026-01-10",
@@ -570,7 +570,7 @@
   {
     "line": "port_throughput",
     "tier": 2,
-    "scored_days": 223,
+    "scored_days": 224,
     "span_years": 0.62,
     "alarm_days": 9,
     "episodes": 2,
@@ -639,7 +639,7 @@
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.807,
+    "lag1": 0.811,
     "episode_dates": []
   },
   {
@@ -661,7 +661,7 @@
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.733,
+    "lag1": 0.757,
     "episode_dates": []
   },
   {
@@ -672,7 +672,7 @@
     "alarm_days": 3,
     "episodes": 2,
     "longest_run": 2,
-    "lag1": 0.416,
+    "lag1": 0.417,
     "episode_dates": [
       [
         "2021-01-07",
@@ -721,7 +721,7 @@
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.546,
+    "lag1": 0.583,
     "episode_dates": []
   },
   {
@@ -732,7 +732,7 @@
     "alarm_days": 1,
     "episodes": 1,
     "longest_run": 1,
-    "lag1": 0.473,
+    "lag1": 0.481,
     "episode_dates": [
       [
         "2026-07-19",
@@ -749,7 +749,7 @@
     "alarm_days": 13,
     "episodes": 5,
     "longest_run": 6,
-    "lag1": 0.899,
+    "lag1": 0.9,
     "episode_dates": [
       [
         "2025-11-13",
@@ -1105,7 +1105,7 @@
     "alarm_days": 0,
     "episodes": 0,
     "longest_run": 0,
-    "lag1": 0.906,
+    "lag1": 0.915,
     "episode_dates": []
   }
 ]
