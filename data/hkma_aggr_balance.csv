@@ -40,3 +40,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-30,,,0,,HKMA request failed: ReadTimeout [sampled 23:50:54Z],,dark
 2026-08-31,,,0,,HKMA HTTP 502 [sampled 00:09:28Z],,dark
 2026-09-01,,,0,,HKMA HTTP 502 [sampled 00:57:09Z],,dark
+2026-09-02,,,0,,HKMA request failed: ReadTimeout [sampled 22:30:34Z],,dark
