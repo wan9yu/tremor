@@ -1712,3 +1712,79 @@ is climbing toward the 60-reading maturity review, where the reference-regime ev
 benign-tremble recount both come due. net_outages runs on its settled window now, its artifact class
 documented as detect-and-adjudicate; the reconciliation tripwire is a standing round-time check. No
 tier moves.
+
+---
+
+### Round 25 — 2026-09-01 (the flights pre-committed review — retained, its two alarms share one clock)
+
+The R11 pre-commitment came due: **flights** review "due 2026-08-31 (de-cycling engages, n≥60):
+demote if the replayed episode-rate Wilson lower bound exceeds 2%, or immediately on the next
+unadjudicable alarm." A tremble had fired on 2026-08-28 (z=−3.05, DOWN) — the "next alarm" — so the
+review had a live case to adjudicate. It was run this round and **externally audited** (an external
+model, GO-WITH-CHANGES; its three must-fixes are folded into what follows — the audit corrected a
+factual error in the first draft, supplied the decisive evidence, and reframed an overstated claim).
+
+**Condition (a) — the replayed episode-rate. NOT met.** flights has 62 scored readings; the
+current-rule replay (`tools/replay.py`) returns exactly two alarm-direction trembles — 2026-07-05
+(−5.73, the long-adjudicated artifact) and 2026-08-28 (−3.05) — two isolated episodes. Point rate
+3.23%, **Wilson 95% lower bound 0.89%** (one-sided LB 1.07%), both under the 2% bar. Stated as
+replayed, per the clause's wording.
+
+**Condition (b) — an unadjudicable alarm. NOT met; the 08-28 alarm is ADJUDICATED.** flights reads a
+CONCURRENT SNAPSHOT of aircraft over four fixed airspaces, and its baseline assumes the snapshot is
+taken at the same time each day (the fetcher docstring says so). It is not: the CI cron is fixed at
+`0 22 * * *`, but GitHub-Actions queue latency drifts the actual sample hour, and on 2026-08-27/28/29
+it slipped to **02.8 / 5.9 / 3.4 Z** — four to seven hours off the ~22.5Z baseline median, into the
+diurnal trough (US East asleep, Europe pre-peak). The three off-hour samples ARE the three lowest
+recent counts (1095 / 1035 / 1019); all 31 near-baseline (21–01.5Z) samples read 1230–1908 with a
+minimum z of −2.31 and never alarmed. Sample hour separates the trembling regime from calm perfectly.
+
+The decisive proof is the **intraday sampler** — the very instrument clause (b) named. On the alarm
+day, 2026-08-28T23:22Z (baseline hour) read **1660**, normal; 08-27T23:28Z read 1398 and
+08-29T22:11Z read 1562. The airspaces were measurably normal at the baseline hour on all three low
+days — the alarm is the clock, proven, not inferred. The 08-28 daily snapshot's regional mix
+(Europe 546 UP, Asia 221 UP, US East 86) is a ~06Z dawn signature, and two regions rising is
+impossible under any real flight-suppressing event. Adjudicated as a sample-hour artifact.
+
+**Verdict: RETAINED.** Neither pre-committed demotion condition fired, and "a line is never demoted
+without evidence" — the evidence indicts the CI schedule, not the guard. flights is not inert:
+07-22 (FAA ground stops, replays −3.01) and 07-19 (−3.41) are real events read correctly just under
+the bar. But the honest record is that BOTH of flights' |z|>3 alarms are now artifacts, and the
+08-28 mechanism is structural.
+
+**One factual correction folded in.** The first draft claimed weekday de-cycling had not yet
+engaged (reasoning from scored n=62 vs `DECYCLE_MIN=70`). Wrong: the gate counts WINDOW readings
+(including the ten warming-up rows), so window depth reached 70 on 2026-08-31 and de-cycling engaged
+exactly as R11 foretold ("row 71, verified through the scoring path"). The 08-28 alarm was scored at
+window-depth 67, before de-cycling; 08-31 and 09-01 were scored WITH it and still read hour-depressed
+— because weekday de-cycling removes the WEEKDAY rhythm, which is orthogonal to an HOUR-of-day
+confound. De-cycling was never going to fix this.
+
+**The fix (queued, needs approval).** Pinning the CI sample hour is not achievable — the delay is
+the platform's. The smallest honest fix is a **sample-hour guard**: a reading sampled more than ~Nh
+from the 22:00Z target is written dark-with-reason rather than scored, consistent with the
+side-channel firewall (the scorer must NOT read intraday.csv) and with flights' own "a partial sum
+would look like a flight drop → write empty" precedent. Recorded with an **anti-loophole clause**: a
+repeat of this same adjudicated artifact class after the fix ships is itself demotion-disqualifying —
+an adjudicable-but-recurring artifact must not shield the line forever. The drift is ONGOING (the
+08-30/31 daily samples still ran 1.8–3h late and hour-depressed, recovering only in intraday —
+08-30T22:18Z read 1731), so the fix is urgent, not leisurely. Also worth recording: the 07-05
+artifact (945, a Sunday) sits in the weekday-range envelope and suppressed the replayed 07-19 real
+event (−3.41 vs bar 3.34) — a measured instance of one artifact contaminating a real detection.
+
+**The rest of the round.** The net_outages reconciliation tripwire ran (live, a round-time check):
+
+    row          win-end      stored settled
+    2026-07-09   2026-07-09        2       2
+    2026-08-27   2026-08-25        2       2
+    2026-08-28   2026-08-26        8       8
+    2026-08-29   2026-08-27        4       4
+    2026-08-30   2026-08-28        3       3
+    2026-08-31   2026-08-29        3       3
+    2026-09-01   2026-08-30        4       4
+    7 rows checked, 0 mismatch(es) >= 3 countries.
+
+Zero mismatches — the settle holds, and the 08-26 window's 8 countries (z=2.81, sub-threshold, did
+not tremble) is a STABLE real reading, not a trailing-window inflation. cnh_cny is at n=52 scored
+(<60), still short of the maturity review. No new candidate is due — the round was the review. No
+tier moves.
