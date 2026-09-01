@@ -205,6 +205,43 @@ def scoring_attrs(mod):
             "weekend_market": getattr(mod, "WEEKEND_MARKET", False)}
 
 
+def _hours_from_target(sampled_utc, target_h):
+    """Signed hours of ``sampled_utc`` from ``target_h`` (UTC hours), wrapped to
+    [-12, 12) so the distance is always the short way round the clock."""
+    h = sampled_utc.hour + sampled_utc.minute / 60 + sampled_utc.second / 3600
+    return ((h - target_h + 12) % 24) - 12
+
+
+def apply_sample_guard(raw, note, obs_date, sampled_utc, target_h, tol_h):
+    """Refuse a SNAPSHOT reading taken too far from its fixed sample hour.
+
+    A concurrent-snapshot line (only flights, which declares ``SAMPLE_TARGET_UTC_H``)
+    is scored against a baseline built at one hour of day; a reading sampled far from
+    it measures the diurnal cycle, not the world. ``daily.yml`` sleeps to the target
+    so the sample lands there; this is the backstop for a run delayed PAST the sleep
+    window. Returns ``(raw, note, obs_date)`` unchanged when the line declares no
+    target or the fetch already failed, else — when the sample is more than ``tol_h``
+    from target — sets ``raw`` to None (a dark row) with the reason stated and the
+    original breakdown preserved. A refused reading carries NO obs_date (net_outages
+    precedent: it must not stale-block a later genuine read).
+
+    COLLECTION-TIME ONLY. This never enters ``scoring_attrs`` — replay and the seeders
+    have no sample time, and the refusal is frozen into the stored raw as dark, which
+    replays deterministically. So STABLE_SINCE is untouched.
+    """
+    if target_h is None or raw is None:
+        return raw, note, obs_date
+    off = _hours_from_target(sampled_utc, target_h)
+    if abs(off) <= tol_h:
+        return raw, note, obs_date
+    th, tm = divmod(round(target_h * 60), 60)
+    tgt = f"{th:02d}:{tm:02d}Z"
+    note = (f"no reading: sampled {off:+.1f}h from the {tgt} target (CI delayed past "
+            f"the sleep window) — a snapshot this far into the diurnal cycle misreads "
+            f"the clock as a flight change; not scored :: {note}")
+    return None, note, ""
+
+
 def write_line(line, rows):
     """Write a line's full row list to ``data/<line>.csv``."""
     _write_rows(os.path.join(DATA, line + ".csv"), LINE_HEADER, rows)
@@ -256,7 +293,8 @@ def collect():
         # than the 3.0 its own alarm requires. Without the stamp that is
         # invisible after the fact. It goes in source_note, which is prose and
         # is not part of the replayed verdict, so it adds no drift.
-        sampled = datetime.now(timezone.utc).strftime("%H:%M:%SZ")
+        sampled_utc = datetime.now(timezone.utc)
+        sampled = sampled_utc.strftime("%H:%M:%SZ")
         try:
             result = mod.fetch_daily()
         except Exception as e:  # one bad source must never abort the whole run
@@ -272,6 +310,13 @@ def collect():
         raw = result["raw_value"]
         note = f"{result['source_note']} [sampled {sampled}]"
         obs_date = result.get("obs_date") or ""
+        # Snapshot lines (flights) refuse a reading sampled too far from their fixed
+        # hour — read the target off the module here, never in scoring_attrs (a
+        # collection-time input, not a verdict rule; see apply_sample_guard).
+        raw, note, obs_date = apply_sample_guard(
+            raw, note, obs_date, sampled_utc,
+            getattr(mod, "SAMPLE_TARGET_UTC_H", None),
+            getattr(mod, "SAMPLE_TOL_H", 1.5))
         tier = getattr(mod, "TIER", 1)
         primary = tier == 1
 

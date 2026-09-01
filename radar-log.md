@@ -1788,3 +1788,48 @@ Zero mismatches — the settle holds, and the 08-26 window's 8 countries (z=2.81
 not tremble) is a STABLE real reading, not a trailing-window inflation. cnh_cny is at n=52 scored
 (<60), still short of the maturity review. No new candidate is due — the round was the review. No
 tier moves.
+
+---
+
+### Round 25.1 — 2026-09-01 (the flights sample-hour fix, shipped — sleep-to-target)
+
+R25 retained flights and queued a fix for the sample-hour artifact. This ships it, after two
+external-model review rounds that killed two earlier designs. The problem, restated at its root:
+flights is a concurrent SNAPSHOT scored against a baseline built at a fixed hour, so a mistimed
+sample measures the diurnal cycle (aircraft aloft swing ~150/hour ≈ 0.9z around the target), not
+the world — the 2026-08-28 z=−3.05 tremble was a run delayed by GitHub-Actions queue latency into
+the 05:54Z trough.
+
+The load-bearing fact, measured over 34 days: **the delay is one-sided — always late, never early
+(+0.44h to +7.91h).** So the fix does not detect, discard, or correct a mistimed sample; it makes
+the sample LAND on target. The daily workflow now schedules early (`0 18 * * *`) and SLEEPS until
+22:30:00Z before collecting (only when 22:30Z is 0–4.5h ahead, so an overnight-wrapped delay never
+sleeps ~20h). Whenever the queue delay is inside the 4.5h head-start — all 31 non-trough days of the
+record — the sample lands exactly at 22:30Z. 22:30Z is the historical effective sample hour (the
+record's samples cluster there, minimum 22:26; flights was never once sampled at 22:00), so the
+baseline is continuous — no reseed. A declarative backstop guard (`collect.py::apply_sample_guard`,
+read via `flights.SAMPLE_TARGET_UTC_H=22.5` / `SAMPLE_TOL_H=1.5`) darks any reading still sampled
+more than 1.5h off on a run delayed past the sleep window (~1/34). The guard decision is frozen into
+the stored raw as a dark row, never a scoring attribute, so replay stays 0-divergence and
+STABLE_SINCE is untouched; a test binds the CI sleep target to the module constant so the two cannot
+silently diverge.
+
+Two designs were rejected on the way here, both correctly. A **discard-guard** (dark every off-hour
+day) throws away coverage that already exists — on 08-28 a good 23:22Z reading of 1660 sits in the
+intraday record — and leaves the +2–3.5h regime bias scored. A **settle-from-intraday** design
+(compose the daily value from the intraday samples) looked elegant but the data broke it: at the
+specified ±1h tolerance only 11 of 34 days have a usable sample (68% dark), its settle-day formula
+lost observations under the exact delays it fought, it froze the components bank (colliding with the
+level-layer→flights pending item), it made the "deliberately inert" intraday sampler load-bearing,
+and it cost flights its zero-lag. Sleep-to-target fixes the same root cause with none of that: no
+firewall change, no lag, no seam, no sampler dependency, one workflow edit plus a declarative guard.
+
+Validated: 15 new tests (green); full suite 162 tests; `replay.py --check` flights 0-divergence
+since 2026-08-17; the sleep shell logic correct on GitHub GNU-date including the overnight wrap; a
+34-day timing simulation — 31/34 days land exactly at 22:30Z, the 08-28 false tremble darks, the
+other two troughs (08-27/29) sample near-target and score without trembling, and no clean day newly
+darkens. Orphaned comments in daily.yml and core/clock.py corrected. STILL OPEN (Pending reviews): a
+re-review after an observation window, since the 18Z cron's OWN delay distribution is unmeasured (2pm
+ET may differ) — the failure mode is benign (delays ≤4.5h still land on target, >6h dark). The R25
+anti-loophole clause stands: a repeat of this adjudicated artifact class after the fix is itself
+demotion-disqualifying. No tier moves.

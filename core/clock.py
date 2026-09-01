@@ -1,7 +1,8 @@
 """The one definition of "today" for tremor.
 
-Rows are dated in China time (UTC+8, no DST): the daily run fires at 06:00
-China, so a row dated D was collected on the morning of D, China time — which
+Rows are dated in China time (UTC+8, no DST): the daily run collects at ~22:30Z =
+06:30 China (the schedule fires earlier and sleeps to the fixed sample hour — see
+daily.yml), so a row dated D was collected on the morning of D, China time — which
 matches how the project reads the calendar.
 
 The value is resolved ONCE per process and reused. The collector and the lagged

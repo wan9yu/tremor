@@ -27,6 +27,18 @@ UNIT = "aircraft"
 ANOMALY_DIRECTION = "down"  # a drop in flight volume is the alarming move
 WEEKLY_CYCLE = True  # flight volume has a strong weekday rhythm; de-cycle by weekday
 
+# A concurrent-snapshot line is only comparable day to day if sampled at a FIXED
+# hour: aircraft aloft swing ~150/hour (~0.9z) around the target, so a mistimed
+# sample measures the diurnal cycle, not the world — the 2026-08-28 z=-3.05 false
+# tremble was a run delayed into the 05:54Z trough (R25). daily.yml now schedules
+# early and SLEEPS to 22:30Z so the sample lands on target; on the rare run delayed
+# PAST the sleep window, collect.py's guard refuses the off-hour reading (dark)
+# rather than score a trough as a flight drop. 22:30Z is the historical effective
+# hour (the record's samples cluster there); these are COLLECTION-time attrs, read
+# only by collect(), never scoring attrs (replay/seeders have no sample time).
+SAMPLE_TARGET_UTC_H = 22.5  # target sample hour (22:30Z); the baseline is built here
+SAMPLE_TOL_H = 1.5          # a reading more than this from the target is not comparable
+
 # Fixed, non-overlapping regions with dense community ADS-B coverage.
 _REGIONS = [
     ("W/C Europe", 48.5, 9.0),

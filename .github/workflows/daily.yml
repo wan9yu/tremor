@@ -2,8 +2,14 @@ name: tremor daily
 
 on:
   schedule:
-    - cron: "0 22 * * *"  # daily at 22:00 UTC = 06:00 China (after the onshore FX close)
-  workflow_dispatch: {}    # allow manual runs
+    # Fire EARLY (18:00Z) and sleep to the 22:30Z sample target below. GitHub-Actions
+    # queue latency is one-sided (jobs start late, never early), so a head-start plus a
+    # sleep makes the collection land at a FIXED hour — flights is a concurrent snapshot
+    # and a mistimed sample reads the diurnal cycle as a flight change (R25). Collection
+    # still happens ~22:30Z = 06:30 China (after the onshore FX close); the row date is
+    # unchanged.
+    - cron: "0 18 * * *"
+  workflow_dispatch: {}    # allow manual runs (fire 18:00-22:30Z so the sample lands on target)
 
 permissions:
   contents: write          # commit the day's data back to the repo
@@ -31,9 +37,29 @@ jobs:
       # ONLY pure logic may run in this gate. Nothing here may assert a property
       # of already-committed data — an upstream surprise in yesterday's files
       # would then abort every subsequent run before it collected anything.
-      # Those checks live in audit_*.py and run AFTER the commit below.
+      # Those checks live in audit_*.py and run AFTER the commit below. (Runs
+      # BEFORE the sleep below, so broken rules fail fast without a 4.5h wait.)
       - name: Check the scoring rules
         run: python -m unittest discover tests
+
+      # Land the collection at the FIXED 22:30Z sample hour. The schedule fires at
+      # 18:00Z to absorb GitHub-Actions queue latency, which is one-sided (jobs start
+      # late, never early). Sleep until today's 22:30:00Z — but only when it is 0-4.5h
+      # ahead (the intended pre-target window), so a run whose queue delay wrapped it
+      # past midnight never sleeps ~20h. A run delayed PAST the window collects
+      # immediately and collect.py's flights sample-hour guard darks the off-hour read.
+      # 22:30Z is the historical effective sample hour, so the baseline is continuous.
+      - name: Sleep until the 22:30Z sample target
+        run: |
+          export TZ=UTC
+          target=$(date -d 'today 22:30:00' +%s)
+          now=$(date +%s)
+          wait=$(( target - now ))
+          if [ "$wait" -gt 0 ] && [ "$wait" -le 16200 ]; then
+            echo "sleeping ${wait}s until 22:30:00Z"; sleep "$wait"
+          else
+            echo "not in the pre-target window (wait=${wait}s) — collecting now; the guard handles the hour"
+          fi
 
       - name: Collect today's readings
         env:

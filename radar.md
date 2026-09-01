@@ -152,21 +152,22 @@ Written down because they are structural, not bugs, and a reader deserves them u
 Every open commitment in one place, so a radar round can check this list instead of
 re-reading the log. Close an item by editing it out with a round reference.
 
-- **flights sample-hour fix** (opened R25, CLOSES the R11 pre-committed review — RESULT: RETAINED,
-  neither demotion condition met; replayed episode-rate Wilson LB 0.89% < 2%, and the 08-28 alarm
-  ADJUDICATED via the intraday sampler as a CI-queue sample-hour artifact). The open work: flights
-  is a concurrent SNAPSHOT scored against a baseline that assumes a fixed daily sample hour, but the
-  GitHub-Actions cron (`0 22 * * *`) is delayed by queue latency — on 2026-08-27..29 the sample
-  slipped to 02-06Z, into the diurnal trough, and printed a −3z "flight drop" the intraday 22-23Z
-  reads (1660/1398/1562) refute. Weekday de-cycling (now engaged) cannot touch an hour-of-day
-  confound. FIX (fetcher/CI change → needs approval): a **sample-hour guard** — a reading sampled
-  more than ~Nh from the 22:00Z target is written dark-with-reason, not scored (consistent with the
-  side-channel firewall — do NOT read intraday.csv into the scorer — and with flights' own "a partial
-  sum would look like a flight drop → write empty" precedent). Pinning the CI hour is NOT achievable
-  (the delay is the platform's). ANTI-LOOPHOLE: a repeat of this same adjudicated artifact class
-  AFTER the fix ships is itself demotion-disqualifying — an adjudicable-but-recurring artifact must
-  not shield the line forever. Re-review after the fix + a defined observation window. Drift is
-  ONGOING (08-30/31 daily samples still ran 1.8-3h late), so the fix is urgent, not leisurely.
+- **flights sample-hour fix — SHIPPED R25.1** (opened R25, which CLOSED the R11 pre-committed
+  review: RETAINED, neither demotion condition met; replayed episode-rate Wilson LB 0.89% < 2%, the
+  08-28 alarm ADJUDICATED via the intraday sampler as a CI-queue sample-hour artifact). The fix
+  fixes the sample TIME, not the reading: the daily workflow schedules early (`0 18 * * *`) and
+  SLEEPS to 22:30:00Z before collecting, so — GH queue delay being one-sided (always late, measured
+  +0.44..+7.91h) — the sample lands on the fixed hour whenever the delay is within the 4.5h
+  head-start (all 31 non-trough days of the record). 22:30Z is the historical effective hour, so the
+  baseline is continuous (no reseed). A backstop guard (`collect.py apply_sample_guard`, declared via
+  `flights.SAMPLE_TARGET_UTC_H`=22.5 / `SAMPLE_TOL_H`=1.5, bound to the CI target by a test) darks a
+  reading still >1.5h off on a run delayed past the sleep window (~1/34). Collection-time decision
+  frozen into the stored raw → replay 0-divergence, STABLE_SINCE untouched; the 3 pre-fix off-hour
+  rows stay forward-only. Simulated over 34 days: 31/34 land exactly at 22:30Z, 08-28 darks, the other
+  two troughs score near-target without trembling, 0 clean days newly darken. STILL OPEN: **re-review
+  after a defined observation window** confirming the live 18Z-cron delay distribution behaves (its
+  own delay is unmeasured — 2pm ET may differ) and that no artifact of this class recurs. ANTI-LOOPHOLE
+  (standing): a repeat of this adjudicated artifact class AFTER the fix is itself demotion-disqualifying.
 - **cnh_cny maturity refresh** — at n≥60 scored: re-measure the reach cell + benign-tremble
   recount (queued R13). R23: now n=48 (record range −45..143; 4 trembles, all benign DOWN),
   still <60 — keep waiting.
@@ -364,3 +365,4 @@ decision. A new round is appended to `radar-log.md` and gets one line added here
 - **Round 23.2** — 2026-08-26 · the settle claim, corrected by its own tripwire: the reconciliation tool's first-run seam audit found settle STABILIZES the count but does NOT filter the artifact — the 08-24 twelve-country synchronized-onset cluster lives, stably, in the settled 08-23 window (the same 12 countries), so a future artifact of this shape would still alarm on its own date. Settle kept (count-stability + seed-alignment are real; the trailing window was genuinely unstable); the synchronized-onset class stays DETECT-AND-ADJUDICATE via the tripwire + R23 playbook; net_outages not demoted; no tier moves
 - **Round 24** — 2026-08-26 · park + state check: eu_gas_storage PARKED on the reachability gate (AGSI source/keyed confirmed, but the fill-deviation metric fails — normal ±14pp vs a worst downside of −16pp over 2016-2026; the storage level is a defended-holds quantity, 2022 stayed near-full via price/demand; un-park needs the EU regulatory target path, not a blended seasonal median). State: headline calm (resonance 0, 2-day streak), cnh_cny's 5th benign DOWN tremble (−43 pips, offshore-yuan strength, uncounted), mood calm; live note EU gas storage at a ten-year deviation low (−15pp). No tier moves
 - **Round 25** — 2026-09-01 · the flights pre-committed review: RETAINED. The 2026-08-31 review ran (weekday de-cycling engaged on schedule at window-row 71); the 2026-08-28 tremble (z=−3.05, the "next alarm") is ADJUDICATED — not merely adjudicable — as a CI-queue SAMPLE-HOUR artifact: flights is a concurrent snapshot, its GH-Actions cron (`0 22 * * *`) slipped to 02-06Z on 08-27..29 (into the diurnal trough), and the R11-named intraday sampler read 1660/1398/1562 at 22-23Z the same days (airspace normal). Replayed episode-rate Wilson 95% LB = 0.89% < 2% bar; sample hour perfectly separates the 3 off-hour lows from all 31 near-baseline reads (min z −2.31). Neither pre-committed demotion condition met → retained; both of flights' alarms are now artifacts; a sample-hour guard is queued (needs approval) with an anti-loophole clause. Reconciliation tripwire clean (0/7); cnh_cny n=52 (<60); no tier moves. Audited by an external model (GO-WITH-CHANGES; three must-fixes folded in)
+- **Round 25.1** — 2026-09-01 · the flights sample-hour fix SHIPPED: sleep-to-target. The daily workflow schedules early (18Z) and sleeps to 22:30:00Z before collecting, so the one-sided GH queue delay lands the sample on a fixed hour (all 31 non-trough days of the record); a declarative backstop guard (`collect.py apply_sample_guard`, `flights.SAMPLE_TARGET_UTC_H`=22.5/`SAMPLE_TOL_H`=1.5, bound to the CI target by a test) darks the rare run delayed past the window. Fixes the sample TIME not the reading; no firewall change, no lag, no reseed, replay 0-divergence, STABLE_SINCE untouched. Chosen over a discard-guard (loses coverage) and a settle-from-intraday design (rejected: ±1h→68% dark, components freeze, ~1-day lag, load-bearing sampler) after two external-model review rounds. 15 new tests; simulated over 34 days (31/34 land exactly at 22:30Z, 08-28 darks, 0 clean days newly dark)
