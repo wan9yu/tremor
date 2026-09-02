@@ -23,6 +23,7 @@ re-derivation. One owner, one O(n^2) replay per day.
 """
 import csv
 import datetime
+import glob
 import os
 import re
 import sys
@@ -260,6 +261,30 @@ class TestCnhCnyLegIdentity(unittest.TestCase):
                     and ("cnh_cny", row["date"]) not in ACKNOWLEDGED_DOUBLE_SCORED:
                 offenders.append(f"cnh_cny {row['date']} scores obs {obs}, a weekend date "
                                  f"— _session_date should have snapped this to Friday")
+        self.assertEqual(offenders, [], "\n".join(offenders))
+
+
+class TestArchivesAreNotSeededOutput(unittest.TestCase):
+    """An archive is the OLD series. A file that is a byte-prefix of its live
+    line is the seeded output written over the archive it was meant to preserve
+    — which is how two v1 archives were lost twelve minutes after creation.
+
+    A *_preseed archive legitimately equals the live file when the seed appended
+    nothing, so only *_v1 archives are held to this.
+    """
+
+    def test_no_v1_archive_is_a_prefix_of_its_live_line(self):
+        import collect
+        offenders = []
+        for path in glob.glob(os.path.join(collect.DATA, "archive", "*_v1.csv")):
+            line = os.path.basename(path)[: -len("_v1.csv")]
+            live = os.path.join(collect.DATA, line + ".csv")
+            if not os.path.exists(live):
+                continue
+            archived = open(path).read().splitlines()
+            head = open(live).read().splitlines()[: len(archived)]
+            if archived == head:
+                offenders.append(f"{os.path.basename(path)} is a byte-prefix of {line}.csv")
         self.assertEqual(offenders, [], "\n".join(offenders))
 
 
