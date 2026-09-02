@@ -829,3 +829,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-08-31,1.39,,0,,FRED BAMLEMCBPIOAS OAS 2026-08-27 [sampled 00:09:17Z] [stale: observation already recorded],2026-08-27,stale
 2026-09-01,1.36,-1.876,0,down,FRED BAMLEMCBPIOAS OAS 2026-08-28 [sampled 00:56:59Z],2026-08-28,scoring
 2026-09-02,1.37,-1.642,0,down,FRED BAMLEMCBPIOAS OAS 2026-08-31 [sampled 22:30:23Z],2026-08-31,scoring
+2026-09-03,1.36,-1.876,0,down,FRED BAMLEMCBPIOAS OAS 2026-09-01 [sampled 22:30:20Z],2026-09-01,scoring
