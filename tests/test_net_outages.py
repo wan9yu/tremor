@@ -47,8 +47,7 @@ class _Resp:
 
 class TestFetchDaily(unittest.TestCase):
     def _run(self, payload, status=200):
-        import requests
-        with support.stub_attr(requests, "get", lambda *a, **k: _Resp(payload, status)):
+        with support.stub_requests(no, get=lambda *a, **k: _Resp(payload, status)):
             return no.fetch_daily()
 
     def test_success_carries_obs_and_settled_note(self):

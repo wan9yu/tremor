@@ -57,8 +57,6 @@ class TestSettled(unittest.TestCase):
 
 class TestFetchDaily(unittest.TestCase):
     def _run(self, payload, status=200, today="2026-08-15"):
-        import requests
-
         class _Resp:
             status_code = status
             def json(self_inner):
@@ -66,7 +64,7 @@ class TestFetchDaily(unittest.TestCase):
 
         # pin the settle boundary without a network or a clock
         orig_settled = sw.settled
-        with support.stub_attr(requests, "get", lambda *a, **k: _Resp()), \
+        with support.stub_requests(sw, get=lambda *a, **k: _Resp()), \
              support.stub_attr(sw, "settled",
                                lambda daily, today=today: orig_settled(daily, today)):
             return sw.fetch_daily()

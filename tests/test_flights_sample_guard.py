@@ -111,20 +111,18 @@ class TestScheduleArithmetic(unittest.TestCase):
 
     def setUp(self):
         self.daily = os.path.join(ROOT, ".github/workflows/daily.yml")
+        self.blob = "\n".join(support.workflow_run_steps(self.daily))
+        target_h, target_m = re.search(r"today (\d\d):(\d\d):\d\d", self.blob).groups()
+        self.target = int(target_h) + int(target_m) / 60
 
     def test_the_wait_cap_equals_the_gap_between_cron_and_target(self):
         (cron_h,) = support.cron_hours(self.daily)
-        blob = "\n".join(support.workflow_run_steps(self.daily))
-        target_h, target_m = re.search(r"today (\d\d):(\d\d):\d\d", blob).groups()
-        cap = int(re.search(r"-le\s+(\d+)", blob).group(1))
-        target = int(target_h) + int(target_m) / 60
-        self.assertEqual(cap, int(round((target - cron_h) * 3600)),
+        cap = int(re.search(r"-le\s+(\d+)", self.blob).group(1))
+        self.assertEqual(cap, int(round((self.target - cron_h) * 3600)),
                          "the sleep cap must equal the cron-to-target gap")
 
     def test_the_sleep_target_is_the_module_target(self):
-        blob = "\n".join(support.workflow_run_steps(self.daily))
-        target_h, target_m = re.search(r"today (\d\d):(\d\d):\d\d", blob).groups()
-        self.assertEqual(int(target_h) + int(target_m) / 60, flights.SAMPLE_TARGET_UTC_H)
+        self.assertEqual(self.target, flights.SAMPLE_TARGET_UTC_H)
 
     def test_the_head_start_exceeds_the_tolerance(self):
         (cron_h,) = support.cron_hours(self.daily)
@@ -133,12 +131,9 @@ class TestScheduleArithmetic(unittest.TestCase):
 
 
 class TestCnhCnyDeclaresTheGuard(unittest.TestCase):
-    """cnh_cny's hour-means run -2 (21Z, n=6), 48 (22Z, n=3), 66 (23Z, n=3) --
-    adjacent slopes of 50 pips/h (21Z->22Z) and 18 pips/h (22Z->23Z) against a
-    Qn of 44.1. The near-target sample is thin, so the +/-0.5h tolerance is set
-    conservatively off the steeper slope: ~25 pips (0.57 Qn) worst case, against
-    ~75 pips (1.70 Qn) at flights' +/-1.5h. Its tolerance is therefore tighter
-    than the flights line's."""
+    """cnh_cny's tolerance is derived from its own measured hour-means and
+    slopes — see the SAMPLE_TOL_H comment in fetchers/cnh_cny.py for the
+    numbers — and is tighter than the flights line's."""
 
     def test_it_declares_the_shared_target(self):
         self.assertEqual(cnh_cny.SAMPLE_TARGET_UTC_H, flights.SAMPLE_TARGET_UTC_H)
