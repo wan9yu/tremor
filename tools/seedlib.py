@@ -88,12 +88,12 @@ def merge(history, live_rows, import_note, row_date=None):
         holder = live_by_date.get(at(obs))
         if holder is None:
             plan[at(obs)] = (raw, import_note(obs, value), obs)
-        elif obs in republish_dates:
+        elif at(obs) in republish_dates:
             # The stale republish's observation lives elsewhere in the file;
             # the archive observation does not. The observation wins the date.
-            dropped.append(f"live republish row {obs} yields its date to the "
-                           f"archive observation (its own observation is "
-                           f"recorded on an earlier row)")
+            dropped.append(f"live republish row {at(obs)} yields to archive "
+                           f"observation {obs} (the republish's own "
+                           f"observation is recorded on an earlier row)")
             plan[at(obs)] = (raw, import_note(obs, value), obs)
         else:
             dropped.append(f"archive observation {obs} not imported: the date "

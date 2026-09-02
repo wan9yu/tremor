@@ -166,6 +166,27 @@ class TestMergeDatesRowsThroughRowDate(unittest.TestCase):
         self.assertEqual(plan[0][0], "2026-07-20", "the row moves to its publication date")
         self.assertEqual(plan[0][3], "2026-07-10", "the observation date is preserved")
 
+    def test_republish_collision_is_checked_in_row_space_not_observation_space(self):
+        """Regression: the republish-collision check once compared the raw
+        observation date against republish_dates, which is keyed by row date
+        (not observation date). Under a lagged row_date the two values never
+        coincide, so a live republish sitting on the row date a lagged import
+        maps to was mistaken for a hard first-occurrence collision, and the
+        archive observation that should win that date was dropped instead."""
+        live = [
+            _live("2026-07-11", "2.9", "2026-07-09"),  # first occurrence
+            _live("2026-07-12", "2.9", "2026-07-09"),  # republish, row date 2026-07-12
+        ]
+        # obs 2026-07-10 lags 2 days -> row date 2026-07-12, the republish's date.
+        history = [("2026-07-10", 3.1)]
+        plan, dropped = seedlib.merge(
+            history, live, _note,
+            row_date=lambda obs: {"2026-07-10": "2026-07-12"}[obs])
+        by_date = {p[0]: p for p in plan}
+        self.assertEqual(by_date["2026-07-12"][1], 3.1,
+                          "the archive observation should win the republish's row date")
+        self.assertTrue(dropped)
+
 
 if __name__ == "__main__":
     unittest.main()
