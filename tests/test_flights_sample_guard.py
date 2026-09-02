@@ -99,16 +99,6 @@ class TestFlightsDeclaration(unittest.TestCase):
         self.assertNotIn("sample_target_utc_h", collect.scoring_attrs(flights))
         self.assertNotIn("SAMPLE_TARGET_UTC_H", collect.scoring_attrs(flights))
 
-    def test_ci_sleep_target_matches_the_module(self):
-        # daily.yml sleeps to a hardcoded 'today HH:MM:SS'; it MUST equal the module's
-        # SAMPLE_TARGET_UTC_H, or the sleep parks the sample at one hour while the guard
-        # darks anything off a different one — a silent daily-dark divergence.
-        yml = open(os.path.join(ROOT, ".github", "workflows", "daily.yml")).read()
-        m = re.search(r"date -d 'today (\d\d):(\d\d):\d\d'", yml)
-        self.assertIsNotNone(m, "no 'today HH:MM:SS' sleep target found in daily.yml")
-        sleep_h = int(m.group(1)) + int(m.group(2)) / 60
-        self.assertEqual(sleep_h, flights.SAMPLE_TARGET_UTC_H)
-
 
 class TestScheduleArithmetic(unittest.TestCase):
     """cron hour, sleep target and wait cap are three numbers that must agree.
