@@ -48,13 +48,17 @@ def strip_verdict_notes(note):
     return _VERDICT_NOTES.sub("", note or "")
 
 
-def merge(history, live_rows, import_note):
+def merge(history, live_rows, import_note, row_date=None):
     """Plan a merged series: ``([(date, raw, note, obs)], dropped_reports)``.
 
     ``history``: [(obs_date, value)] oldest-first, from the source archive.
     ``live_rows``: previously published row dicts, in file order.
     ``import_note``: callable (obs_date, value) -> source_note for an import.
+    ``row_date``: callable obs_date -> row_date, for a source that publishes
+        an observation days after it happened (default: the row is dated on
+        its own observation). The observation itself is never altered.
     """
+    at = row_date or (lambda obs: obs)
     live_by_date = {}
     covered = set()          # observations some live row already records
     republish_dates = set()  # live rows that repeat an observation seen earlier
@@ -81,16 +85,16 @@ def merge(history, live_rows, import_note):
         # seed must be able to say so, or it would either fabricate a value the
         # live fetcher would never write, or drop a day it can explain.
         raw = None if value is None else float(value)
-        holder = live_by_date.get(obs)
+        holder = live_by_date.get(at(obs))
         if holder is None:
-            plan[obs] = (raw, import_note(obs, value), obs)
+            plan[at(obs)] = (raw, import_note(obs, value), obs)
         elif obs in republish_dates:
             # The stale republish's observation lives elsewhere in the file;
             # the archive observation does not. The observation wins the date.
             dropped.append(f"live republish row {obs} yields its date to the "
                            f"archive observation (its own observation is "
                            f"recorded on an earlier row)")
-            plan[obs] = (raw, import_note(obs, value), obs)
+            plan[at(obs)] = (raw, import_note(obs, value), obs)
         else:
             dropped.append(f"archive observation {obs} not imported: the date "
                            f"is held by a published "
@@ -133,7 +137,24 @@ def rerun_is_safe():
     return True
 
 
-def run_seed(mod, history, import_note, dry=False):
+class SeedWouldLoseRows(RuntimeError):
+    """Raised when a seed plan holds fewer rows than the published record.
+
+    A seeder rewrites a whole line file. The record is forward-only, so a plan
+    that is shorter than what is already published is not a re-seed, it is data
+    loss — and it has happened: a PortWatch re-run once truncated two lines and
+    overwrote their archives twelve minutes after they were created.
+    """
+
+
+def check_no_loss(line, live_rows, planned_rows):
+    if planned_rows < live_rows:
+        raise SeedWouldLoseRows(
+            f"{line}: the plan holds {planned_rows} rows but {live_rows} are already "
+            f"published; a seed may never drop a published row")
+
+
+def run_seed(mod, history, import_note, dry=False, row_date=None):
     """The whole seeder tail: merge, disclose, archive, re-score, write, report.
 
     Takes the fetcher MODULE, not a line name, so the re-score reads the same
@@ -147,7 +168,8 @@ def run_seed(mod, history, import_note, dry=False):
     Returns the written rows, or None on a dry run.
     """
     live = read_line(mod.LINE)
-    plan, dropped = merge(history, live, import_note)
+    plan, dropped = merge(history, live, import_note, row_date=row_date)
+    check_no_loss(mod.LINE, len(live), len(plan))
     print(f"  {mod.LINE}: {len(history)} archived observations "
           f"{history[0][0]}..{history[-1][0]}; {len(live)} live rows "
           f"-> {len(plan)} merged rows")

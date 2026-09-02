@@ -138,5 +138,34 @@ class TestLegDiscipline(unittest.TestCase):
             epoch("2026-07-29T10:00:00"), epoch("2026-07-29T16:00:00")))
 
 
+class TestRunSeedRefusesLoss(unittest.TestCase):
+    def test_a_plan_shorter_than_the_live_record_is_refused(self):
+        with self.assertRaises(seedlib.SeedWouldLoseRows) as caught:
+            seedlib.check_no_loss("port_throughput", live_rows=241, planned_rows=200)
+        self.assertIn("241", str(caught.exception))
+        self.assertIn("200", str(caught.exception))
+
+    def test_a_plan_that_keeps_every_row_is_allowed(self):
+        seedlib.check_no_loss("port_throughput", live_rows=241, planned_rows=241)
+        seedlib.check_no_loss("port_throughput", live_rows=241, planned_rows=300)
+
+
+class TestMergeDatesRowsThroughRowDate(unittest.TestCase):
+    """A lagged source publishes an observation days after it happened, so the
+    row it belongs on is not its obs_date. Without this hook a lagged seeder
+    cannot use merge at all, and re-dates every row it writes."""
+
+    def test_default_dates_a_row_on_its_observation(self):
+        plan, _ = seedlib.merge([("2026-07-10", 4039.0)], [], lambda o, v: "n")
+        self.assertEqual(plan[0][0], "2026-07-10")
+        self.assertEqual(plan[0][3], "2026-07-10")
+
+    def test_row_date_shifts_the_row_but_not_the_observation(self):
+        plan, _ = seedlib.merge([("2026-07-10", 4039.0)], [], lambda o, v: "n",
+                                row_date=lambda obs: "2026-07-20")
+        self.assertEqual(plan[0][0], "2026-07-20", "the row moves to its publication date")
+        self.assertEqual(plan[0][3], "2026-07-10", "the observation date is preserved")
+
+
 if __name__ == "__main__":
     unittest.main()
