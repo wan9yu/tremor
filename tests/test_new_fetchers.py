@@ -1,7 +1,6 @@
 """Parse locks for the round-8 fetchers (network fetch not exercised here)."""
 import os
 import sys
-import types
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -85,7 +84,6 @@ class TestAdsbProviderCorroboration(unittest.TestCase):
 
     def _region(self, counts):
         from core import adsb
-        real = adsb.requests
         by_host = dict(zip(["airplanes.live", "opendata.adsb.fi", "api.adsb.lol"], counts))
 
         class R:
@@ -96,12 +94,8 @@ class TestAdsbProviderCorroboration(unittest.TestCase):
             def json(self):
                 n = self._n
                 return {"ac": ([{"alt_baro": 30000}] * n) + [{"alt_baro": "ground"}]}
-        adsb.requests = types.SimpleNamespace(get=lambda u, **k: R(u),
-                                              RequestException=Exception)
-        try:
+        with stub_requests(adsb, get=lambda u, **k: R(u)):
             return adsb.region_airborne(39.0, -77.0)
-        finally:
-            adsb.requests = real
 
     def test_one_provider_with_a_coverage_gap_cannot_set_the_reading(self):
         # The defect this fixes: 300 from a degraded provider used to be accepted

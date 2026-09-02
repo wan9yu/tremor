@@ -1,5 +1,6 @@
 """Shared test helpers."""
 import contextlib
+import re
 import types
 
 
@@ -17,10 +18,6 @@ def stub_requests(module, get):
         yield
     finally:
         module.requests = real
-
-
-import os
-import re
 
 
 @contextlib.contextmanager
@@ -55,7 +52,7 @@ def cron_hours(path):
     hour, not the full list. That is enough for the single-hour daily cron
     this helper exists to bind; it does not parse comma-separated hour lists.
     """
-    return [int(m) for m in re.findall(r'cron:\s*"\s*\d+\s+(\d+)', _read(path))]
+    return [int(m) for m in re.findall(r'cron:\s*["\']?\s*\d+\s+(\d+)', _read(path))]
 
 
 def workflow_run_steps(path):
