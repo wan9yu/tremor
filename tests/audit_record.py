@@ -182,14 +182,12 @@ class TestControlLineRecord(unittest.TestCase):
                             f"{prev['date']} -> {cur['date']}: {jump:.3f}h in {days} day(s)")
 
 
-# One underlying observation scored on more than one row, each with the reason.
-# The two families reach that outcome from OPPOSITE directions, so neither is
-# the general case: the cnh_cny members repeat no obs_date at all — each
-# China-Monday minted a UNIQUE phantom weekend key, and that minting WAS the
-# defect — while the sofr_iorb members repeat one obs_date (2026-07-01) across
-# several row dates. These are published rows: forward-only keeps them, and the
-# audit acknowledges them by name so a NEW double-score fails loudly instead of
-# hiding in the count.
+# One underlying observation scored on more than one row — the two families
+# reach that from OPPOSITE directions (see each below: cnh_cny repeats no
+# obs_date, sofr_iorb repeats one), so neither is the general case. These are
+# published rows: forward-only keeps them, and the audit acknowledges them by
+# name so a NEW double-score fails loudly instead of hiding in the count.
+# See annotations 2026-09-02.
 ACKNOWLEDGED_DOUBLE_SCORED = {
     # cnh_cny: the vendor re-stamped Friday's frozen legs into the weekend, so
     # obs_date minted a fresh key on every China-Monday collection. Fixed by
@@ -203,6 +201,19 @@ ACKNOWLEDGED_DOUBLE_SCORED = {
     ("sofr_iorb_spread", "2026-07-04"), ("sofr_iorb_spread", "2026-07-05"),
     ("sofr_iorb_spread", "2026-07-06"),
 }
+
+
+# Pre-``_session_date`` Sunday rows that REPEATED the preceding Saturday row's
+# frozen legs verbatim, before obs_date existed to name them by observation —
+# the same weekend-repeat family as the five ACKNOWLEDGED_DOUBLE_SCORED cnh_cny
+# dates above. 07-05/07-12/07-19 published a z off that repeat; 06-28 was still
+# ``warming-up``. Held as a closed list, not a derived property: since the
+# leg-desync guard shipped, a weekend row carries no legs at all, so a fifth
+# member cannot arise unless that guard is removed — and a property would
+# silently absorb exactly that regression, where an enumerated list fails loudly.
+# Proven by ``test_leg_repeat_exemptions_are_pre_obs_date_sundays``.
+# See annotations 2026-09-02.
+LEG_REPEAT_EXEMPT = ("2026-06-28", "2026-07-05", "2026-07-12", "2026-07-19")
 
 
 class TestNoObservationScoredTwice(unittest.TestCase):
@@ -238,20 +249,32 @@ class TestCnhCnyLegIdentity(unittest.TestCase):
                 prev = None
                 continue
             pair = m.groups()
-            # Pre-``_session_date`` SUNDAY rows (before obs_date was populated)
-            # that scored the preceding Saturday row's frozen legs verbatim —
-            # the same weekend-repeat family as the five
-            # ACKNOWLEDGED_DOUBLE_SCORED cnh_cny dates above, but from before
-            # obs_date existed to name them by observation. Three of the four
-            # (07-05, 07-12, 07-19) repeat the legs under a different z; 06-28
-            # was still ``warming-up`` and carries no z at all. 06-28 surfaced
-            # only during verification and is recorded in the execution ledger,
-            # not the original brief.
             if pair == prev and ("cnh_cny", row["date"]) not in ACKNOWLEDGED_DOUBLE_SCORED \
-                    and row["date"] not in ("2026-06-28", "2026-07-05", "2026-07-12", "2026-07-19"):
+                    and row["date"] not in LEG_REPEAT_EXEMPT:
                 offenders.append(f"cnh_cny {row['date']} repeats the previous row's legs {pair}")
             prev = pair
         self.assertEqual(offenders, [], "\n".join(offenders))
+
+    def test_leg_repeat_exemptions_are_pre_obs_date_sundays(self):
+        """Every exempted date must really have the property that exempts it.
+
+        An exemption list with no prover is a place a REAL future defect can be
+        parked silently. The sibling check does this for ACKNOWLEDGED_DOUBLE_SCORED;
+        this does it for LEG_REPEAT_EXEMPT. It also makes a whole class of comment
+        error impossible: the justification beside the constant once said "Saturday
+        rows" for four Sunday dates, and prose cannot catch that — an assertion can.
+        """
+        import collect
+        rows = {r["date"]: r for r
+                in collect._read_rows(os.path.join(collect.DATA, "cnh_cny.csv"))}
+        for date in LEG_REPEAT_EXEMPT:
+            with self.subTest(date=date):
+                row = rows.get(date)
+                self.assertIsNotNone(row, f"{date} is exempted but not in the record")
+                self.assertEqual(datetime.date.fromisoformat(date).weekday(), 6,
+                                 f"{date} is exempted as a Sunday repeat but is not a Sunday")
+                self.assertEqual((row.get("obs_date") or "").strip(), "",
+                                 f"{date} is exempted as predating obs_date, but carries one")
 
     def test_no_unacknowledged_weekend_obs_date(self):
         """The direct signature of the pre-fix bug this class is named for.
