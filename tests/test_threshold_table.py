@@ -25,6 +25,19 @@ class TestThresholdTable(unittest.TestCase):
                          "the vendored table changed; re-run tools/calibrate_threshold.py "
                          "--check and update this digest deliberately")
 
+    def test_the_key_range_is_complete(self):
+        # The digest above pins the table exactly, but it is meant to be updated
+        # after a legitimate regeneration -- at that point these are the only
+        # checks left standing, and neither monotonicity nor the flat-threshold
+        # check below would notice a table that dropped or shifted keys while
+        # staying monotonic. Pin the shape independently of the digest.
+        keys = sorted(int(k) for k in normalize._C_N)
+        self.assertEqual(len(keys), 81)
+        self.assertEqual((min(keys), max(keys)), (10, 90))
+        self.assertEqual(keys, list(range(10, 91)),
+                         "the table must be 81 CONTIGUOUS windows 10..90; "
+                         "a gap would pass length and range checks alone")
+
     def test_the_bar_falls_as_evidence_grows(self):
         keys = sorted(int(k) for k in normalize._C_N)
         values = [normalize._C_N[k] for k in keys]
@@ -37,12 +50,15 @@ class TestThresholdTable(unittest.TestCase):
 
 class TestCollectionPathHasNoSimulationDependency(unittest.TestCase):
     def test_no_collection_module_imports_numpy_or_scipy(self):
+        # render.py runs after collection, not during it, but is scanned here too
+        # as defense-in-depth.
         roots = ["collect.py", "render.py"]
         for d in ("core", "fetchers"):
             roots += [os.path.join(d, f) for f in os.listdir(os.path.join(ROOT, d))
                       if f.endswith(".py")]
         for rel in roots:
-            src = open(os.path.join(ROOT, rel)).read()
+            with open(os.path.join(ROOT, rel)) as f:
+                src = f.read()
             with self.subTest(module=rel):
                 self.assertNotIn("import numpy", src)
                 self.assertNotIn("import scipy", src)
