@@ -281,8 +281,10 @@ class TestArchivesAreNotSeededOutput(unittest.TestCase):
             live = os.path.join(collect.DATA, line + ".csv")
             if not os.path.exists(live):
                 continue
-            archived = open(path).read().splitlines()
-            head = open(live).read().splitlines()[: len(archived)]
+            with open(path) as f:
+                archived = f.read().splitlines()
+            with open(live) as f:
+                head = f.read().splitlines()[: len(archived)]
             if archived == head:
                 offenders.append(f"{os.path.basename(path)} is a byte-prefix of {line}.csv")
         self.assertEqual(offenders, [], "\n".join(offenders))
