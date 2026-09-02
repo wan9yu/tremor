@@ -17,6 +17,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 import collect
+import support
 from fetchers import flights
 
 
@@ -107,6 +108,37 @@ class TestFlightsDeclaration(unittest.TestCase):
         self.assertIsNotNone(m, "no 'today HH:MM:SS' sleep target found in daily.yml")
         sleep_h = int(m.group(1)) + int(m.group(2)) / 60
         self.assertEqual(sleep_h, flights.SAMPLE_TARGET_UTC_H)
+
+
+class TestScheduleArithmetic(unittest.TestCase):
+    """cron hour, sleep target and wait cap are three numbers that must agree.
+
+    They are declared in two files and bound by nothing else: a cron edit alone
+    silently pushes every collection outside the guard's tolerance, which darks
+    the line daily while the whole suite stays green.
+    """
+
+    def setUp(self):
+        self.daily = os.path.join(ROOT, ".github/workflows/daily.yml")
+
+    def test_the_wait_cap_equals_the_gap_between_cron_and_target(self):
+        (cron_h,) = support.cron_hours(self.daily)
+        blob = "\n".join(support.workflow_run_steps(self.daily))
+        target_h, target_m = re.search(r"today (\d\d):(\d\d):\d\d", blob).groups()
+        cap = int(re.search(r"-le\s+(\d+)", blob).group(1))
+        target = int(target_h) + int(target_m) / 60
+        self.assertEqual(cap, int(round((target - cron_h) * 3600)),
+                         "the sleep cap must equal the cron-to-target gap")
+
+    def test_the_sleep_target_is_the_module_target(self):
+        blob = "\n".join(support.workflow_run_steps(self.daily))
+        target_h, target_m = re.search(r"today (\d\d):(\d\d):\d\d", blob).groups()
+        self.assertEqual(int(target_h) + int(target_m) / 60, flights.SAMPLE_TARGET_UTC_H)
+
+    def test_the_head_start_exceeds_the_tolerance(self):
+        (cron_h,) = support.cron_hours(self.daily)
+        self.assertGreater(flights.SAMPLE_TARGET_UTC_H - cron_h, flights.SAMPLE_TOL_H,
+                           "a head-start inside the tolerance cannot absorb any queue delay")
 
 
 if __name__ == "__main__":
