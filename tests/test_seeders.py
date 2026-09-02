@@ -19,13 +19,21 @@ class TestSeedersRouteThroughSeedlib(unittest.TestCase):
     def test_every_seeder_calls_run_seed(self):
         for path in SEEDERS:
             with self.subTest(seeder=os.path.basename(path)):
-                self.assertIn("run_seed", open(path).read())
+                with open(path) as fh:
+                    src = fh.read()
+                # The call itself, not a docstring mention: seed_polar.py,
+                # seed_fred.py and seed_ioda.py all name "seedlib.run_seed" in
+                # prose, which a bare substring check on "run_seed" cannot
+                # distinguish from the real call.
+                self.assertIn("seedlib.run_seed(", src)
 
     def test_no_seeder_writes_a_line_directly(self):
         for path in SEEDERS:
-            src = open(path).read()
+            with open(path) as fh:
+                src = fh.read()
             with self.subTest(seeder=os.path.basename(path)):
                 self.assertNotIn("collect.write_line", src)
+                self.assertNotIn("score_row", src)
                 self.assertNotIn("shutil.copy2", src)
 
 
