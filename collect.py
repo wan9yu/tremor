@@ -215,7 +215,7 @@ def _hours_from_target(sampled_utc, target_h):
 def apply_sample_guard(raw, note, obs_date, sampled_utc, target_h, tol_h):
     """Refuse a SNAPSHOT reading taken too far from its fixed sample hour.
 
-    A concurrent-snapshot line (only flights, which declares ``SAMPLE_TARGET_UTC_H``)
+    Any line declaring ``SAMPLE_TARGET_UTC_H`` (today flights and cnh_cny)
     is scored against a baseline built at one hour of day; a reading sampled far from
     it measures the diurnal cycle, not the world. ``daily.yml`` sleeps to the target
     so the sample lands there; this is the backstop for a run delayed PAST the sleep
@@ -237,8 +237,8 @@ def apply_sample_guard(raw, note, obs_date, sampled_utc, target_h, tol_h):
     th, tm = divmod(round(target_h * 60), 60)
     tgt = f"{th:02d}:{tm:02d}Z"
     note = (f"no reading: sampled {off:+.1f}h from the {tgt} target (CI delayed past "
-            f"the sleep window) — a snapshot this far into the diurnal cycle misreads "
-            f"the clock as a flight change; not scored :: {note}")
+            f"the sleep window) — a reading this far into the diurnal cycle measures "
+            f"the clock, not the world; not scored :: {note}")
     return None, note, ""
 
 
@@ -310,9 +310,10 @@ def collect():
         raw = result["raw_value"]
         note = f"{result['source_note']} [sampled {sampled}]"
         obs_date = result.get("obs_date") or ""
-        # Snapshot lines (flights) refuse a reading sampled too far from their fixed
-        # hour — read the target off the module here, never in scoring_attrs (a
-        # collection-time input, not a verdict rule; see apply_sample_guard).
+        # Any line declaring SAMPLE_TARGET_UTC_H (today flights and cnh_cny) refuses
+        # a reading sampled too far from its fixed hour — read the target off the
+        # module here, never in scoring_attrs (a collection-time input, not a
+        # verdict rule; see apply_sample_guard).
         raw, note, obs_date = apply_sample_guard(
             raw, note, obs_date, sampled_utc,
             getattr(mod, "SAMPLE_TARGET_UTC_H", None),

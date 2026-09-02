@@ -162,6 +162,11 @@ class TestCnhCnyDeclaresTheGuard(unittest.TestCase):
         self.assertIsNone(raw)
         self.assertEqual(obs, "")
         self.assertIn("not scored", note)
+        # The refusal note must stay line-agnostic: it is appended verbatim to
+        # cnh_cny's own source_note (an append-only, forward-only file), and a
+        # wording that names another line's business (flights, "flight change")
+        # would misattribute a yuan-spread guard trip to a flight-tracking event.
+        self.assertNotIn("flight", note)
 
 
 if __name__ == "__main__":

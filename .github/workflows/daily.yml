@@ -47,7 +47,8 @@ jobs:
       # late, never early). Sleep until today's 22:30:00Z — but only when it is 0-4.5h
       # ahead (the intended pre-target window), so a run whose queue delay wrapped it
       # past midnight never sleeps ~20h. A run delayed PAST the window collects
-      # immediately and collect.py's flights sample-hour guard darks the off-hour read.
+      # immediately and collect.py's sample-hour guard (any line declaring
+      # SAMPLE_TARGET_UTC_H — today flights and cnh_cny) darks the off-hour read.
       # 22:30Z is the historical effective sample hour, so the baseline is continuous.
       - name: Sleep until the 22:30Z sample target
         run: |
