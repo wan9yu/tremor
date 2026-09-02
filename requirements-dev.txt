@@ -2,6 +2,11 @@
 # to what collection actually needs, and nothing in the collection path imports
 # either of these. Used by tools/calibrate_threshold.py, which regenerates the
 # tremble-threshold table vendored in core/normalize.py; the table is vendored
-# so the daily run never simulates anything.
-numpy==1.24.4
+# so the daily run never simulates anything. The pin must stay installable on
+# whatever interpreter the calibration workflow runs — numpy==1.24.4 had no
+# wheel for Python >=3.12 and its sdist could not build there either, so it
+# is bumped to 2.1.3 (cp310-cp313 wheels; also satisfies scipy 1.13.1's own
+# numpy<2.3,>=1.22.4 constraint). Re-verified against the vendored table with
+# tools/calibrate_threshold.py --check before bumping.
+numpy==2.1.3
 scipy==1.13.1
