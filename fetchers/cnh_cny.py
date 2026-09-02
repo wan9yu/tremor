@@ -20,9 +20,12 @@ print. Subtracting prices captured hours apart injects whatever the yuan did in
 between, and this spread is only ~100 pips wide, so the error is the size of the
 signal. Two guards follow from that: the day is written EMPTY when the legs are
 further apart than ``_MAX_LEG_GAP_S``, and ``obs_date`` is taken from the older
-leg's own timestamp rather than the collection date — so a weekend run that
-re-reads Friday's closes is correctly recorded as a republished observation and
-the standard dedup rule gives it no new z and no flag.
+leg's SESSION rather than its raw timestamp. The onshore yuan has no weekend
+session, so a Saturday or Sunday stamp names no session at all — Yahoo re-stamps
+the frozen legs INTO the weekend, and a naive ``min(stamp)`` would mint a fresh
+key every China-Monday instead of dedupping against the Friday close it is a
+copy of. Snapping the weekend stamp back to its Friday is what makes the
+standard dedup rule give the repeat no new z and no flag.
 """
 import datetime
 
@@ -72,6 +75,22 @@ def _yahoo_quote(symbol):
 
 def _utc(epoch):
     return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
+
+
+def _session_date(epoch):
+    """The onshore trading session a quote stamp belongs to.
+
+    The onshore yuan has no weekend session, so a Saturday or Sunday stamp names
+    no session at all — it is a frozen Friday close that the vendor re-stamped
+    forward. Mapping it back to its Friday is what makes the Monday collection
+    dedup against Friday instead of minting a fresh observation key every week:
+    the daily run fires at 22:30Z, which is 06:30 Beijing, hours before the
+    onshore open, so a Monday row can only ever hold Friday's session.
+    """
+    d = _utc(epoch).date()
+    if d.weekday() >= 5:                       # Sat -> -1, Sun -> -2
+        return d - datetime.timedelta(days=d.weekday() - 4)
+    return d
 
 
 def _weekend_gap(older_t, newer_t):
@@ -128,13 +147,14 @@ def fetch_daily():
         }
 
     pips = (cnh - cny) * 10000.0
-    # The observation belongs to the OLDER leg: that is the moment both prices are
-    # known to describe. A weekend re-read of Friday's closes therefore repeats
-    # Friday's obs_date and dedups instead of scoring twice.
-    obs = _utc(min(cnh_t, cny_t)).strftime("%Y-%m-%d")
+    # The observation belongs to the SESSION of the older leg: that is the
+    # moment both prices describe. A weekend stamp is a re-stamped Friday close
+    # and snaps back to Friday, so a Monday collection repeats Friday's
+    # obs_date and dedups instead of scoring a session that never opened.
+    obs = _session_date(min(cnh_t, cny_t)).isoformat()
     return {
         "raw_value": round(pips, 1),
         "source_note": (f"Yahoo USDCNH {cnh:.4f} − USDCNY {cny:.4f} (pips) "
-                        f"[{stamps}, {gap / 60:.0f}min apart]"),
+                        f"[{stamps}, {gap / 60:.0f}min apart] [session {obs}]"),
         "obs_date": obs,
     }
