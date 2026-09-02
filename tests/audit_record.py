@@ -182,12 +182,14 @@ class TestControlLineRecord(unittest.TestCase):
                             f"{prev['date']} -> {cur['date']}: {jump:.3f}h in {days} day(s)")
 
 
-# The same underlying session scored twice under two different observation
-# keys, each with the reason. These are published rows: forward-only keeps
-# them, and the audit acknowledges them by name so a NEW double-score fails
-# loudly instead of hiding in the count. (None of the cnh_cny members below
-# repeats an obs_date — each Monday minted a UNIQUE phantom weekend key; that
-# minting was the defect. The sofr_iorb members do repeat one obs_date.)
+# One underlying observation scored on more than one row, each with the reason.
+# The two families reach that outcome from OPPOSITE directions, so neither is
+# the general case: the cnh_cny members repeat no obs_date at all — each
+# China-Monday minted a UNIQUE phantom weekend key, and that minting WAS the
+# defect — while the sofr_iorb members repeat one obs_date (2026-07-01) across
+# several row dates. These are published rows: forward-only keeps them, and the
+# audit acknowledges them by name so a NEW double-score fails loudly instead of
+# hiding in the count.
 ACKNOWLEDGED_DOUBLE_SCORED = {
     # cnh_cny: the vendor re-stamped Friday's frozen legs into the weekend, so
     # obs_date minted a fresh key on every China-Monday collection. Fixed by
@@ -236,13 +238,15 @@ class TestCnhCnyLegIdentity(unittest.TestCase):
                 prev = None
                 continue
             pair = m.groups()
-            # Pre-``_session_date`` Saturday rows (before obs_date was populated)
-            # that scored the prior Friday close's frozen legs verbatim under a
-            # different z — the same weekend-repeat family as the five
+            # Pre-``_session_date`` SUNDAY rows (before obs_date was populated)
+            # that scored the preceding Saturday row's frozen legs verbatim —
+            # the same weekend-repeat family as the five
             # ACKNOWLEDGED_DOUBLE_SCORED cnh_cny dates above, but from before
-            # obs_date existed to name them by observation. 06-28 in particular
-            # surfaced only during verification and is recorded in the execution
-            # ledger, not the original brief.
+            # obs_date existed to name them by observation. Three of the four
+            # (07-05, 07-12, 07-19) repeat the legs under a different z; 06-28
+            # was still ``warming-up`` and carries no z at all. 06-28 surfaced
+            # only during verification and is recorded in the execution ledger,
+            # not the original brief.
             if pair == prev and ("cnh_cny", row["date"]) not in ACKNOWLEDGED_DOUBLE_SCORED \
                     and row["date"] not in ("2026-06-28", "2026-07-05", "2026-07-12", "2026-07-19"):
                 offenders.append(f"cnh_cny {row['date']} repeats the previous row's legs {pair}")
