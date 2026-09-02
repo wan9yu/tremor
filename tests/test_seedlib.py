@@ -13,6 +13,7 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 import seedlib
+import support
 
 
 def _live(date, raw, obs, note="live"):
@@ -108,12 +109,8 @@ class TestLegDiscipline(unittest.TestCase):
         from core import fred
         calls = {"SOFR": [("2026-07-29", 3.65), ("2026-07-30", 3.40)],
                  "IORB": [("2026-07-29", 3.65)]}
-        orig = fred.series
-        fred.series = lambda sid: calls[sid]
-        try:
+        with support.stub_attr(fred, "series", lambda sid: calls[sid]):
             date, a, b = fred.latest_common("SOFR", "IORB")
-        finally:
-            fred.series = orig
         # 07-30 has no IORB leg; the honest pair is 07-29, spread zero — not
         # the post-step SOFR against the pre-step IORB.
         self.assertEqual((date, a, b), ("2026-07-29", 3.65, 3.65))

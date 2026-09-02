@@ -12,6 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 import collect
+import support
 from core import normalize
 from fetchers import net_outages as no
 
@@ -47,12 +48,8 @@ class _Resp:
 class TestFetchDaily(unittest.TestCase):
     def _run(self, payload, status=200):
         import requests
-        real = requests.get
-        requests.get = lambda *a, **k: _Resp(payload, status)
-        try:
+        with support.stub_attr(requests, "get", lambda *a, **k: _Resp(payload, status)):
             return no.fetch_daily()
-        finally:
-            requests.get = real
 
     def test_success_carries_obs_and_settled_note(self):
         out = self._run({"data": [{"entity": {"name": "Tunisia"},

@@ -10,6 +10,7 @@ import unittest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
+import support
 from fetchers import fed_srf_takeup as srf
 
 
@@ -50,51 +51,51 @@ class TestSettledTakeup(unittest.TestCase):
 
 class TestFetchDaily(unittest.TestCase):
     def setUp(self):
-        self._real = srf._recent
         # UTC, matching the fetcher's settle clock, so these assertions do not
         # depend on the timezone of the machine running the tests
         utc_today = datetime.datetime.now(datetime.timezone.utc).date()
         self.today = utc_today.isoformat()
         self.yesterday = (utc_today - datetime.timedelta(days=1)).isoformat()
 
-    def tearDown(self):
-        srf._recent = self._real
-
     def test_settles_to_latest_complete_day_and_sums(self):
-        srf._recent = lambda n: [
+        with support.stub_attr(srf, "_recent", lambda n: [
             _op(self.yesterday, "Repo", 20_000_000_000),   # AM
             _op(self.yesterday, "Repo", 500_000_000),      # PM
             _op(self.today, "Repo", 999_000_000_000),      # today's forming ops — skipped
-        ]
-        r = srf.fetch_daily()
+        ]):
+            r = srf.fetch_daily()
         self.assertEqual(r["raw_value"], 20500.0)          # $m, AM+PM of the settled day
         self.assertEqual(r["obs_date"], self.yesterday)    # today is not yet settled
 
     def test_zero_takeup_day_scores_not_dark(self):
-        srf._recent = lambda n: [_op(self.yesterday, "Repo", 0), _op(self.yesterday, "Repo", 0)]
-        r = srf.fetch_daily()
+        with support.stub_attr(
+                srf, "_recent",
+                lambda n: [_op(self.yesterday, "Repo", 0), _op(self.yesterday, "Repo", 0)]):
+            r = srf.fetch_daily()
         self.assertEqual(r["raw_value"], 0.0)              # a real reading, not None
         self.assertEqual(r["obs_date"], self.yesterday)
 
     def test_no_settled_day_is_empty(self):
-        srf._recent = lambda n: [_op(self.today, "Repo", 1_000_000_000)]  # only a forming day
-        r = srf.fetch_daily()
+        with support.stub_attr(
+                srf, "_recent",
+                lambda n: [_op(self.today, "Repo", 1_000_000_000)]):  # only a forming day
+            r = srf.fetch_daily()
         self.assertIsNone(r["raw_value"])
         self.assertIn("no settled operation day", r["source_note"])
 
     def test_source_failure_is_empty(self):
         def boom(n):
             raise srf.requests.RequestException("down")
-        srf._recent = boom
-        r = srf.fetch_daily()
+        with support.stub_attr(srf, "_recent", boom):
+            r = srf.fetch_daily()
         self.assertIsNone(r["raw_value"])
         self.assertIn("unavailable", r["source_note"])
 
     def test_malformed_200_shape_degrades_cleanly(self):
         # a 200 whose body lacks a well-formed operations list must yield the
         # module's own stated-empty, not crash out to collect's generic dark row
-        srf._recent = lambda n: None
-        r = srf.fetch_daily()
+        with support.stub_attr(srf, "_recent", lambda n: None):
+            r = srf.fetch_daily()
         self.assertIsNone(r["raw_value"])
         self.assertIn("unavailable", r["source_note"])
 

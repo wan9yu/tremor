@@ -12,6 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 import collect
+import support
 from core import normalize
 from fetchers import space_weather as sw
 
@@ -63,18 +64,12 @@ class TestFetchDaily(unittest.TestCase):
             def json(self_inner):
                 return payload
 
-        real_get, real_now = requests.get, datetime.datetime
-        requests.get = lambda *a, **k: _Resp()
-        try:
-            # pin the settle boundary without a network or a clock
-            orig = sw.settled
-            sw.settled = lambda daily, today=today: orig(daily, today)
-            try:
-                return sw.fetch_daily()
-            finally:
-                sw.settled = orig
-        finally:
-            requests.get = real_get
+        # pin the settle boundary without a network or a clock
+        orig_settled = sw.settled
+        with support.stub_attr(requests, "get", lambda *a, **k: _Resp()), \
+             support.stub_attr(sw, "settled",
+                               lambda daily, today=today: orig_settled(daily, today)):
+            return sw.fetch_daily()
 
     def test_reports_the_latest_settled_daily_max(self):
         out = self._run([
