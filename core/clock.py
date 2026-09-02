@@ -25,3 +25,13 @@ def china_today():
     if _today is None:
         _today = datetime.now(CHINA_TZ).strftime("%Y-%m-%d")
     return _today
+
+
+def session_date(day):
+    """The trading day a quote describes: a weekend stamp maps back to its Friday.
+
+    Markets that do not trade at the weekend still get quotes re-stamped forward by
+    vendors, so a Saturday or Sunday stamp names no session — it is a frozen Friday
+    close. A weekday holiday still slips through; that is detected downstream, not here.
+    """
+    return day - timedelta(days=max(day.weekday() - 4, 0))

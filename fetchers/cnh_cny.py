@@ -31,6 +31,8 @@ import datetime
 
 import requests
 
+from core import clock
+
 LINE = "cnh_cny"
 LABEL = "Offshore−onshore yuan spread (pips)"
 UNIT = "pips"
@@ -96,15 +98,13 @@ def _session_date(epoch):
 
     The onshore yuan has no weekend session, so a Saturday or Sunday stamp names
     no session at all — it is a frozen Friday close that the vendor re-stamped
-    forward. Mapping it back to its Friday is what makes the Monday collection
-    dedup against Friday instead of minting a fresh observation key every week:
-    the daily run fires at 22:30Z, which is 06:30 Beijing, hours before the
-    onshore open, so a Monday row can only ever hold Friday's session.
+    forward. Mapping it back to its Friday (``clock.session_date``) is what makes
+    the Monday collection dedup against Friday instead of minting a fresh
+    observation key every week: the daily run fires at 22:30Z, which is 06:30
+    Beijing, hours before the onshore open, so a Monday row can only ever hold
+    Friday's session.
     """
-    d = _utc(epoch).date()
-    if d.weekday() >= 5:                       # Sat -> -1, Sun -> -2
-        return d - datetime.timedelta(days=d.weekday() - 4)
-    return d
+    return clock.session_date(_utc(epoch).date())
 
 
 def _weekend_gap(older_t, newer_t):

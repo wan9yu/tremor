@@ -31,6 +31,8 @@ import datetime
 
 import requests
 
+from core import clock
+
 LINE = "fx_parallel_premium"
 LABEL = "Argentina blue-vs-official FX premium (%)"
 UNIT = "%"
@@ -56,8 +58,7 @@ def _observation_date(stamp):
         day = datetime.date.fromisoformat(stamp)
     except ValueError:
         return stamp
-    friday_shift = max(0, day.weekday() - 4)  # Sat -> 1, Sun -> 2
-    return (day - datetime.timedelta(days=friday_shift)).isoformat()
+    return clock.session_date(day).isoformat()
 
 
 def fetch_daily():
