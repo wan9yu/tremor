@@ -39,4 +39,9 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python -m unittest discover tests -p "lint_*.py"
+      # No lint_*.py file exists yet (they arrive in a later plan), and on
+      # Python 3.12 `unittest discover` with zero matches exits 5 ("NO TESTS
+      # RAN") instead of the 0 it exits on 3.11 — confirmed by running both
+      # interpreters locally. Treat exit 5 as a pass so an empty pattern
+      # never fails the job; any other exit code still fails it.
+      - run: python -m unittest discover tests -p "lint_*.py" || [ $? -eq 5 ]
