@@ -41,6 +41,15 @@ TIER = 1  # primary indicator
 # failure, and is scored ``closed`` rather than ``dark`` (round 18). Weekday
 # holidays have no keyless calendar and stay ``dark``, as before.
 WEEKEND_MARKET = True
+# A two-leg spread read once a day is only comparable to its own history if it
+# is read at the same point of the day. Measured on the intraday record, the
+# hour-means run -2 pips (21Z), 18 (22Z), 66 (23Z) — about 48 pips/hour at the
+# target — against a robust scale of Qn = 43.5 pips, so an hour of queue delay
+# buys roughly 1.1 Qn of pure clock artifact on a line whose alarm is ~3 Qn.
+# The tolerance is therefore a third of the flights line's: the daily job sleeps
+# to 22:30Z, so an on-time run is exact and only a delayed one is refused.
+SAMPLE_TARGET_UTC_H = 22.5
+SAMPLE_TOL_H = 0.5
 
 _CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}"
 _HEADERS = {"User-Agent": "Mozilla/5.0 (tremor; +https://github.com/wan9yu/tremor)"}

@@ -18,6 +18,7 @@ sys.path.insert(0, ROOT)
 
 import collect
 import support
+from fetchers import cnh_cny
 from fetchers import flights
 
 
@@ -129,6 +130,35 @@ class TestScheduleArithmetic(unittest.TestCase):
         (cron_h,) = support.cron_hours(self.daily)
         self.assertGreater(flights.SAMPLE_TARGET_UTC_H - cron_h, flights.SAMPLE_TOL_H,
                            "a head-start inside the tolerance cannot absorb any queue delay")
+
+
+class TestCnhCnyDeclaresTheGuard(unittest.TestCase):
+    """cnh_cny's diurnal slope at the target is ~48 pips/h against a Qn of
+    43.5, so a delayed run buys ~1.1 Qn per hour of pure clock artifact. Its
+    tolerance is therefore tighter than the flights line's."""
+
+    def test_it_declares_the_shared_target(self):
+        self.assertEqual(cnh_cny.SAMPLE_TARGET_UTC_H, flights.SAMPLE_TARGET_UTC_H)
+
+    def test_its_tolerance_is_tighter_than_flights(self):
+        self.assertEqual(cnh_cny.SAMPLE_TOL_H, 0.5)
+        self.assertLess(cnh_cny.SAMPLE_TOL_H, flights.SAMPLE_TOL_H)
+
+    def test_an_on_target_run_is_scored(self):
+        raw, note, obs = collect.apply_sample_guard(
+            80.0, "Yahoo ...", "2026-08-31", _dt(22, 30),
+            cnh_cny.SAMPLE_TARGET_UTC_H, cnh_cny.SAMPLE_TOL_H)
+        self.assertEqual(raw, 80.0)
+
+    def test_the_2026_08_31_pre_open_run_is_refused(self):
+        # sampled 00:09Z, +1.65h off target: Friday's onshore close paired
+        # against a Monday offshore quote.
+        raw, note, obs = collect.apply_sample_guard(
+            80.0, "Yahoo ...", "2026-08-31", _dt(0, 9),
+            cnh_cny.SAMPLE_TARGET_UTC_H, cnh_cny.SAMPLE_TOL_H)
+        self.assertIsNone(raw)
+        self.assertEqual(obs, "")
+        self.assertIn("not scored", note)
 
 
 if __name__ == "__main__":
