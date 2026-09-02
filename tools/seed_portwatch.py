@@ -13,8 +13,9 @@ Honest by construction:
   * Each seeded row is scored by the SAME ``normalize.judge`` the live collector
     uses, replayed strictly in order against only the rows already emitted, so
     no row is ever judged against readings from its own future.
-  * Row dates follow the live rule exactly (row date = observation + LAG_DAYS),
-    so a seeded row and a live row mean the same thing.
+  * Row dates follow the live rule (``clock.china_today()``) while PortWatch is
+    current on this line's lag, which is when row date = observation + LAG_DAYS;
+    a seeded row and a live row mean the same thing under that rule.
   * Every seeded row says so in ``source_note``. These were computed
     retroactively; they were never live detections.
 
@@ -47,7 +48,9 @@ LINES = [chokepoint, ports]  # each names its own SERVICE / FIELD / NOTE
 
 def _row_date(obs):
     """PortWatch publishes ~10 days late, so an observation lands on the row
-    dated when it first became knowable — the same rule the live collector uses."""
+    dated when it first became knowable — the same rule the live collector
+    uses while the source is current on the lag (the live rule itself is
+    ``clock.china_today()``, which this formula matches only then)."""
     return (datetime.date.fromisoformat(obs)
             + datetime.timedelta(days=portwatch.LAG_DAYS)).isoformat()
 

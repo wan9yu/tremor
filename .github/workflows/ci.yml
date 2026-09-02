@@ -8,10 +8,12 @@ permissions:
   contents: read
 
 jobs:
-  # Reproduces the daily pre-collect gate EXACTLY: same Python, and only the
-  # pinned runtime dependencies. A gate test that needs a dev-only package
-  # fails here, on a push, instead of at daily.yml where it would cost an
-  # irreplaceable collection day.
+  # Reproduces the daily pre-collect gate's ENVIRONMENT exactly: same Python,
+  # and only the pinned runtime dependencies. The step set is a deliberate
+  # superset of that gate — it also runs render_smoke.js, which daily.yml
+  # itself only runs POST-commit — so a gate test that needs a dev-only
+  # package, or a rendering break, fails here on a push instead of costing
+  # an irreplaceable collection day.
   gate:
     runs-on: ubuntu-latest
     steps:

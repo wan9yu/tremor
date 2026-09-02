@@ -96,8 +96,8 @@ def merge(history, live_rows, import_note, row_date=None):
                            f"observation is recorded on an earlier row)")
             plan[at(obs)] = (raw, import_note(obs, value), obs)
         else:
-            dropped.append(f"archive observation {obs} not imported: the date "
-                           f"is held by a published "
+            dropped.append(f"archive observation {obs} not imported: row "
+                           f"{at(obs)} is held by a published "
                            + ("dark" if holder.get("raw_value") in (None, "")
                              else "first-occurrence") + " row")
     ordered = [(d, *plan[d]) for d in sorted(plan)]
