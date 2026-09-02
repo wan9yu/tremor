@@ -85,19 +85,20 @@ def merge(history, live_rows, import_note, row_date=None):
         # seed must be able to say so, or it would either fabricate a value the
         # live fetcher would never write, or drop a day it can explain.
         raw = None if value is None else float(value)
-        holder = live_by_date.get(at(obs))
+        rd = at(obs)
+        holder = live_by_date.get(rd)
         if holder is None:
-            plan[at(obs)] = (raw, import_note(obs, value), obs)
-        elif at(obs) in republish_dates:
+            plan[rd] = (raw, import_note(obs, value), obs)
+        elif rd in republish_dates:
             # The stale republish's observation lives elsewhere in the file;
             # the archive observation does not. The observation wins the date.
-            dropped.append(f"live republish row {at(obs)} yields to archive "
+            dropped.append(f"live republish row {rd} yields to archive "
                            f"observation {obs} (the republish's own "
                            f"observation is recorded on an earlier row)")
-            plan[at(obs)] = (raw, import_note(obs, value), obs)
+            plan[rd] = (raw, import_note(obs, value), obs)
         else:
             dropped.append(f"archive observation {obs} not imported: row "
-                           f"{at(obs)} is held by a published "
+                           f"{rd} is held by a published "
                            + ("dark" if holder.get("raw_value") in (None, "")
                              else "first-occurrence") + " row")
     ordered = [(d, *plan[d]) for d in sorted(plan)]
