@@ -43,11 +43,16 @@ TIER = 1  # primary indicator
 WEEKEND_MARKET = True
 # A two-leg spread read once a day is only comparable to its own history if it
 # is read at the same point of the day. Measured on the intraday record, the
-# hour-means run -2 pips (21Z), 18 (22Z), 66 (23Z) — about 48 pips/hour at the
-# target — against a robust scale of Qn = 43.5 pips, so an hour of queue delay
-# buys roughly 1.1 Qn of pure clock artifact on a line whose alarm is ~3 Qn.
-# The tolerance is therefore a third of the flights line's: the daily job sleeps
-# to 22:30Z, so an on-time run is exact and only a delayed one is refused.
+# hour-means run -2 pips (21Z, n=6), 48 (22Z, n=3), 66 (23Z, n=3) — adjacent
+# slopes of 50 pips/hour (21Z->22Z) and 18 pips/hour (22Z->23Z) — against a
+# robust scale of Qn = 44.1 pips, so the alarm sits around 132 pips (~3 Qn).
+# The near-target sample is thin (n=3 either side), so the tolerance below is
+# set conservatively off the steeper adjacent slope rather than fitted to it:
+# worst-case clock artifact is ~25 pips (0.57 Qn) at +/-0.5h, against ~75 pips
+# (1.70 Qn) at flights' +/-1.5h. The daily job sleeps to 22:30Z exactly, so an
+# on-time run is exact and only a delayed one is refused. These are
+# COLLECTION-time attrs, read only by collect(), never scoring attrs
+# (replay/seeders have no sample time).
 SAMPLE_TARGET_UTC_H = 22.5
 SAMPLE_TOL_H = 0.5
 

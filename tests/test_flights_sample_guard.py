@@ -133,9 +133,12 @@ class TestScheduleArithmetic(unittest.TestCase):
 
 
 class TestCnhCnyDeclaresTheGuard(unittest.TestCase):
-    """cnh_cny's diurnal slope at the target is ~48 pips/h against a Qn of
-    43.5, so a delayed run buys ~1.1 Qn per hour of pure clock artifact. Its
-    tolerance is therefore tighter than the flights line's."""
+    """cnh_cny's hour-means run -2 (21Z, n=6), 48 (22Z, n=3), 66 (23Z, n=3) --
+    adjacent slopes of 50 pips/h (21Z->22Z) and 18 pips/h (22Z->23Z) against a
+    Qn of 44.1. The near-target sample is thin, so the +/-0.5h tolerance is set
+    conservatively off the steeper slope: ~25 pips (0.57 Qn) worst case, against
+    ~75 pips (1.70 Qn) at flights' +/-1.5h. Its tolerance is therefore tighter
+    than the flights line's."""
 
     def test_it_declares_the_shared_target(self):
         self.assertEqual(cnh_cny.SAMPLE_TARGET_UTC_H, flights.SAMPLE_TARGET_UTC_H)
