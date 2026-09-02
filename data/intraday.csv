@@ -398,3 +398,6 @@ sampled_utc,line,raw_value,source_note
 2026-09-01T22:18:50Z,flights,1576,"ADS-B regions [W/C Europe=227, US East=706, US West=549, E Asia/Japan=94] via adsb.fi, adsb.lol"
 2026-09-01T22:18:50Z,cnh_cny,108,"Yahoo USDCNH 6.7213 − USDCNY 6.7105 (pips) [CNH 2026-09-01 22:18Z, CNY 2026-09-01 21:32Z, 47min apart]"
 2026-09-01T22:18:50Z,capital_premium,1.3352,Upbit KRW-BTC vs Coinbase USD @ 1368.52 KRW/USD
+2026-09-02T06:43:19Z,flights,974,"ADS-B regions [W/C Europe=621, US East=45, US West=103, E Asia/Japan=205] via adsb.fi, adsb.lol"
+2026-09-02T06:43:19Z,cnh_cny,17,"Yahoo USDCNH 6.7242 − USDCNY 6.7225 (pips) [CNH 2026-09-02 06:43Z, CNY 2026-09-02 06:43Z, 0min apart]"
+2026-09-02T06:43:19Z,capital_premium,0.13,Upbit KRW-BTC vs Coinbase USD @ 1373.78 KRW/USD
