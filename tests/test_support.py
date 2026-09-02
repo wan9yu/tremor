@@ -1,7 +1,9 @@
-"""tests/support.py must stay stdlib-only: every gate test imports it, and a
-non-stdlib import at module scope would raise ImportError in daily.yml's gate
-step, before any row is collected."""
-import ast
+"""Dynamic behavior of tests/support.py: workflow-file parsing (cron_hours,
+workflow_run_steps) and the stub_attr context manager's restore guarantee.
+support.py's stdlib-only REQUIREMENT — the property that keeps it importable
+by every gate test before a single row is collected — is a source scan, not
+a property of running code, and is checked separately in
+tests/lint_support_stdlib.py."""
 import os
 import sys
 import unittest
@@ -37,28 +39,6 @@ class TestStubAttr(unittest.TestCase):
             with support.stub_attr(ns, "x", 2):
                 raise ValueError("boom")
         self.assertEqual(ns.x, 1)
-
-
-class TestStdlibOnly(unittest.TestCase):
-    def test_support_imports_nothing_outside_the_stdlib(self):
-        # A denylist of banned names (the previous form of this check) can
-        # only ever catch imports someone thought to list — `import pandas`
-        # or `from yaml import safe_load` both passed it silently. Parsing
-        # the actual imports and checking each root against the interpreter's
-        # own stdlib manifest catches any non-stdlib import, named or not.
-        with open(os.path.join(ROOT, "tests/support.py")) as fh:
-            src = fh.read()
-        tree = ast.parse(src)
-        roots = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    roots.add(alias.name.split(".")[0])
-            elif isinstance(node, ast.ImportFrom):
-                if node.level == 0 and node.module:
-                    roots.add(node.module.split(".")[0])
-        non_stdlib = sorted(roots - sys.stdlib_module_names)
-        self.assertEqual(non_stdlib, [], "support.py must stay stdlib-only")
 
 
 if __name__ == "__main__":

@@ -27,11 +27,14 @@ jobs:
       - run: python -m unittest discover tests
       - run: node tests/render_smoke.js
 
-  # Source-vs-source checks. No lint_*.py file imports numpy or scipy — the
-  # only file in the repo that does is tools/calibrate_threshold.py, which
-  # this job never runs — so requirements-dev.txt is deliberately NOT
-  # installed here. That keeps this job independent of whether the dev pin
-  # happens to install on this runner's Python.
+  # Source-vs-source checks: coding-convention scans moved out of the
+  # pre-collect gate, because a convention violation must never abort a
+  # collection day (see daily.yml's gate step). No lint_*.py file imports
+  # anything outside the stdlib — they all route their reads through
+  # tests/support.py, whose stdlib-only property is itself checked by
+  # lint_support_stdlib.py — so nothing is installed here at all, not even
+  # the pinned runtime deps. That keeps this job independent of whether any
+  # dependency happens to install on this runner's Python.
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -39,11 +42,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-          cache: pip
-      - run: pip install -r requirements.txt
-      # No lint_*.py file exists yet (they arrive in a later plan), and on
-      # Python 3.12 `unittest discover` with zero matches exits 5 ("NO TESTS
-      # RAN") instead of the 0 it exits on 3.11 — confirmed by running both
-      # interpreters locally. Treat exit 5 as a pass so an empty pattern
+      # On Python 3.12, `unittest discover` with zero matches exits 5 ("NO
+      # TESTS RAN") instead of the 0 it exits on 3.11 — confirmed by running
+      # both interpreters locally. Treat exit 5 as a pass so an empty pattern
       # never fails the job; any other exit code still fails it.
       - run: python -m unittest discover tests -p "lint_*.py" || [ $? -eq 5 ]

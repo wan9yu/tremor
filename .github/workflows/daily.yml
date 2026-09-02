@@ -37,8 +37,13 @@ jobs:
       # ONLY pure logic may run in this gate. Nothing here may assert a property
       # of already-committed data — an upstream surprise in yesterday's files
       # would then abort every subsequent run before it collected anything.
-      # Those checks live in audit_*.py and run AFTER the commit below. (Runs
-      # BEFORE the sleep below, so broken rules fail fast without a 4.5h wait.)
+      # Those checks live in audit_*.py and run AFTER the commit below. Nor may
+      # a pure coding-convention scan (no property of the running instrument,
+      # just a source-vs-source check) run here — those are lint_*.py files,
+      # excluded by discover's default `test*.py` pattern, and run on push
+      # instead (see ci.yml's lint job): a convention violation must never
+      # abort a collection day. (Runs BEFORE the sleep below, so broken rules
+      # fail fast without a 4.5h wait.)
       - name: Check the scoring rules
         run: python -m unittest discover tests
 

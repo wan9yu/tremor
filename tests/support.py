@@ -35,9 +35,12 @@ def stub_attr(obj, name, value):
         setattr(obj, name, real)
 
 
-def _read(path):
+def read_text(path):
     with open(path, encoding="utf-8") as fh:
         return fh.read()
+
+
+_read = read_text  # short alias used by this module's own helpers below
 
 
 def cron_hours(path):

@@ -1,7 +1,7 @@
 """Named test_zz_* so it runs last: it proves no earlier test leaked a stub.
 
 A swap that is not restored surfaces as a failure in whatever test runs next,
-far from its cause. Two dynamic checks below catch the two distinct ways a
+far from its cause. The two DYNAMIC checks below catch the two distinct ways a
 `requests` stub can leak, because neither sees the other's failure mode:
 
 - `test_requests_get_is_the_real_one` catches an in-place mutation of the
@@ -16,20 +16,12 @@ far from its cause. Two dynamic checks below catch the two distinct ways a
   types.SimpleNamespace(...)`), which never touches the real `requests`
   module and so is invisible to the first check.
 
-Neither dynamic check can see a leak in an attribute that is not `requests`
-(for example `srf._recent`); `test_no_test_file_swaps_an_attribute_by_hand`
-below guards that structurally instead. What it actually covers: a line of the
-form `<name>.<attr> = ...` where `<name>` is bound by a module-level `import`
-or `from ... import` in that same file — the shape a stubbed module or fetcher
-object always takes. It requires that swap to route through
-`support.stub_attr` instead, whose own `try`/`finally` is what actually
-guarantees the restore. A swap through a name that is only a local variable
-(bound inside a function, not by a module-level import) is outside what this
-scan can see.
+Both checks here observe actual leaked STATE after the suite has run, which
+is why they stay in the pre-collect gate. The complementary STATIC check —
+scanning test source for the hand-rolled swap that would cause such a leak —
+is a lint, not a gate check, and lives in tests/lint_stub_style.py instead.
 """
-import ast
 import os
-import re
 import sys
 import unittest
 
@@ -52,57 +44,6 @@ class TestNoStubLeaked(unittest.TestCase):
             with self.subTest(line=mod.LINE):
                 self.assertTrue(hasattr(real, "Session"),
                                 f"{mod.LINE} still holds a stubbed requests module")
-
-
-# A hand-rolled swap of `<name>.<attr>` — `requests.get = ...`, `sw.settled =
-# ...`, `srf._recent = ...`. Anchored to the start of the line so it does not
-# match inside a string or a mid-line expression.
-_ATTR_SWAP = re.compile(r'^\s*([A-Za-z_]\w*)\.\w+\s*=(?!=)')
-
-
-def _module_level_import_names(src):
-    """Names bound by a module-level ``import``/``from ... import`` in ``src``.
-
-    Only these can be the stubbed module or fetcher object a swap targets;
-    a same-named local (a function parameter, a loop variable, an ordinary
-    instance via ``self``) is never one of them, so restricting to these
-    names is what keeps the scan below from matching locals like
-    `m.fetch_daily = ...` or `ns.x = 1`.
-    """
-    try:
-        tree = ast.parse(src)
-    except SyntaxError:
-        return set()
-    names = set()
-    for node in tree.body:  # module level only, not inside a function/class
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                names.add((alias.asname or alias.name).split(".")[0])
-        elif isinstance(node, ast.ImportFrom):
-            for alias in node.names:
-                names.add(alias.asname or alias.name)
-    return names
-
-
-def _hand_rolls_a_swap(src):
-    imported = _module_level_import_names(src)
-    return any(m.group(1) in imported
-              for m in (_ATTR_SWAP.match(line) for line in src.splitlines())
-              if m)
-
-
-class TestOneStubbingStyle(unittest.TestCase):
-    def test_no_test_file_swaps_an_attribute_by_hand(self):
-        offenders = []
-        for name in sorted(os.listdir(os.path.join(ROOT, "tests"))):
-            if not name.startswith("test_") or name == "test_zz_stub_hygiene.py":
-                continue
-            with open(os.path.join(ROOT, "tests", name), encoding="utf-8") as fh:
-                src = fh.read()
-            if _hand_rolls_a_swap(src):
-                offenders.append(name)
-        self.assertEqual(offenders, [],
-                         "use support.stub_requests / support.stub_attr: " + ", ".join(offenders))
 
 
 if __name__ == "__main__":
