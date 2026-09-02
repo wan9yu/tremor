@@ -10,6 +10,7 @@ file reads no committed record and is safe in the pre-collect gate.
 """
 import contextlib
 import datetime
+import io
 import os
 import sys
 import tempfile
@@ -55,10 +56,15 @@ class _CollectRunMixin:
              support.stub_attr(collect, "LINES", mods), \
              support.stub_attr(collect, "DATA", scratch), \
              support.stub_attr(collect, "DOCS_DATA", scratch_docs), \
+             support.stub_attr(collect, "COMPONENTS", os.path.join(scratch, "components")), \
              contextlib.ExitStack() as stack:
             for attr, value in extra_stubs.items():
                 stack.enter_context(support.stub_attr(collect, attr, value))
-            collect.collect()
+            # collect() prints one line per module plus a summary line; the gate
+            # runs `unittest discover` without `-b`, so left un-silenced this is
+            # the only test in the suite that prints instead of dotting.
+            with contextlib.redirect_stdout(io.StringIO()):
+                collect.collect()
             lines = {mod.LINE: collect._read_rows(os.path.join(scratch, mod.LINE + ".csv"))
                      for mod in mods}
             summary = collect._read_rows(os.path.join(scratch, "summary.csv"))
@@ -100,20 +106,34 @@ class TestTierOneOnlyCountingAndTheDarkBlindSplit(unittest.TestCase, _CollectRun
     (unique) raw value, so the aggregation in ``collect()`` — not
     ``normalize.judge`` — is what is under test: only tier-1 lines count
     toward any of the three summary tallies, and trembling counts only when
-    the direction matches the line's declared alarm direction."""
+    the direction matches the line's declared alarm direction.
+
+    Each category (trembling, dark, blind) fields TWO tier-1 members against
+    only ONE tier-2 member, and the trembling category also fields two
+    direction-matching members against only one mismatching member — every
+    expected count is therefore asymmetric. A 1-vs-1 fixture cannot tell
+    ``tier == 1`` apart from its inverse ``tier == 2`` (every count would
+    still land on the same total with the roles swapped), nor
+    ``direction == alarm`` apart from ``!=``; the asymmetry here means either
+    inversion moves at least one of the three totals away from its expected
+    value."""
 
     def test_only_tier_one_and_direction_matched_trembles_count(self):
         # (status, trembling, VERDICT direction) keyed by each stub's raw value.
-        # Every module below declares the SAME alarm direction ("down"); only
-        # t1_tremble_mismatch's verdict direction disagrees with it.
         canned = {
-            1.0: (normalize.STATUS_SCORING, 1, "down"),  # tier1, matches -> counts
-            2.0: (normalize.STATUS_SCORING, 1, "up"),    # tier1, wrong direction
-            3.0: (normalize.STATUS_SCORING, 1, "down"),  # tier2, matches but demoted
-            4.0: (normalize.STATUS_DARK, 0, ""),          # tier1 dark
-            5.0: (normalize.STATUS_DARK, 0, ""),          # tier2 dark (must not count)
-            6.0: (normalize.STATUS_WARMING, 0, ""),       # tier1 blind
-            7.0: (normalize.STATUS_FLAT, 0, ""),          # tier2 blind (must not count)
+            # trembling: two tier-1 matches, one tier-1 mismatch, one tier-2 match
+            1.0: (normalize.STATUS_SCORING, 1, "down"),   # tier1, matches -> counts
+            2.0: (normalize.STATUS_SCORING, 1, "down"),   # tier1, matches -> counts
+            3.0: (normalize.STATUS_SCORING, 1, "up"),     # tier1, wrong direction
+            4.0: (normalize.STATUS_SCORING, 1, "down"),   # tier2, matches but demoted
+            # dark: two tier-1, one tier-2
+            5.0: (normalize.STATUS_DARK, 0, ""),
+            6.0: (normalize.STATUS_DARK, 0, ""),
+            7.0: (normalize.STATUS_DARK, 0, ""),          # tier2 dark (must not count)
+            # blind: two tier-1 (one WARMING, one FLAT), one tier-2
+            8.0: (normalize.STATUS_WARMING, 0, ""),
+            9.0: (normalize.STATUS_FLAT, 0, ""),
+            10.0: (normalize.STATUS_WARMING, 0, ""),      # tier2 blind (must not count)
         }
 
         def fake_score_row(date, raw, note, obs_date, prior_rows, **kwargs):
@@ -122,21 +142,26 @@ class TestTierOneOnlyCountingAndTheDarkBlindSplit(unittest.TestCase, _CollectRun
                     "trembling": str(trembling), "direction": direction,
                     "source_note": note, "obs_date": obs_date or "", "status": status}
 
+        # Every module here declares the SAME alarm direction ("down"); only
+        # t1_tremble_mismatch's canned verdict direction disagrees with it.
         mods = [
-            _mod("t1_tremble_match", tier=1, direction="down", raw=1.0),
-            _mod("t1_tremble_mismatch", tier=1, direction="down", raw=2.0),
-            _mod("t2_tremble_match", tier=2, direction="down", raw=3.0),
-            _mod("t1_dark", tier=1, raw=4.0),
-            _mod("t2_dark", tier=2, raw=5.0),
-            _mod("t1_blind", tier=1, raw=6.0),
-            _mod("t2_blind", tier=2, raw=7.0),
+            _mod("t1_tremble_match_a", tier=1, direction="down", raw=1.0),
+            _mod("t1_tremble_match_b", tier=1, direction="down", raw=2.0),
+            _mod("t1_tremble_mismatch", tier=1, direction="down", raw=3.0),
+            _mod("t2_tremble_match", tier=2, direction="down", raw=4.0),
+            _mod("t1_dark_a", tier=1, raw=5.0),
+            _mod("t1_dark_b", tier=1, raw=6.0),
+            _mod("t2_dark", tier=2, raw=7.0),
+            _mod("t1_blind_a", tier=1, raw=8.0),
+            _mod("t1_blind_b", tier=1, raw=9.0),
+            _mod("t2_blind", tier=2, raw=10.0),
         ]
         _, summary = self._run(mods, score_row=fake_score_row)
 
         (row,) = summary
-        self.assertEqual(row["trembling_count"], "1")
-        self.assertEqual(row["dark_count"], "1")
-        self.assertEqual(row["blind_count"], "1")
+        self.assertEqual(row["trembling_count"], "2")
+        self.assertEqual(row["dark_count"], "2")
+        self.assertEqual(row["blind_count"], "2")
 
 
 class TestSampleGuardIsCollectionTimeOnly(unittest.TestCase):
