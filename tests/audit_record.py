@@ -24,6 +24,7 @@ re-derivation. One owner, one O(n^2) replay per day.
 import csv
 import datetime
 import os
+import re
 import sys
 import unittest
 
@@ -178,6 +179,88 @@ class TestControlLineRecord(unittest.TestCase):
             # This latitude gains/loses at most ~4.5 min a day, even at equinox.
             self.assertLess(jump, 0.1 * max(days, 1) + 0.05,
                             f"{prev['date']} -> {cur['date']}: {jump:.3f}h in {days} day(s)")
+
+
+# Observations that were scored more than once, each with the reason. These are
+# published rows: forward-only keeps them, and the audit acknowledges them by
+# name so a NEW double-score fails loudly instead of hiding in the count.
+ACKNOWLEDGED_DOUBLE_SCORED = {
+    # cnh_cny: the vendor re-stamped Friday's frozen legs into the weekend, so
+    # obs_date minted a fresh key on every China-Monday collection. Fixed by
+    # _session_date (Round 26); these five rows predate the fix.
+    ("cnh_cny", "2026-07-27"), ("cnh_cny", "2026-08-03"), ("cnh_cny", "2026-08-10"),
+    ("cnh_cny", "2026-08-17"), ("cnh_cny", "2026-08-24"),
+    # sofr_iorb_spread: observation 2026-07-01 republished on three consecutive
+    # days (the Independence-Day weekend: Sat 07-04, Sun 07-05, and the
+    # holiday-lagged Mon 07-06) before obs-dedup shipped. The 07-04 row minted
+    # an alarm-direction tremble (z 5.396) from a republication.
+    ("sofr_iorb_spread", "2026-07-04"), ("sofr_iorb_spread", "2026-07-05"),
+    ("sofr_iorb_spread", "2026-07-06"),
+}
+
+
+class TestNoObservationScoredTwice(unittest.TestCase):
+    def test_every_line_scores_each_observation_once(self):
+        import collect
+        offenders = []
+        for mod in collect.LINES:
+            seen = {}
+            for row in collect._read_rows(os.path.join(collect.DATA, mod.LINE + ".csv")):
+                obs = row.get("obs_date") or ""
+                if not obs or row.get("status") != "scoring":
+                    continue
+                if obs in seen and (mod.LINE, row["date"]) not in ACKNOWLEDGED_DOUBLE_SCORED:
+                    offenders.append(f"{mod.LINE} {row['date']} re-scores obs {obs} "
+                                     f"(first scored {seen[obs]})")
+                seen.setdefault(obs, row["date"])
+        self.assertEqual(offenders, [], "\n".join(offenders))
+
+
+class TestCnhCnyLegIdentity(unittest.TestCase):
+    """A weekday onshore HOLIDAY re-stamp carries a weekday stamp and so slips
+    past the session snap. Identical consecutive leg pairs are the only
+    signature that catches it; on this line the check has no false positives."""
+
+    def test_no_unacknowledged_identical_leg_pair(self):
+        import collect
+        rows = collect._read_rows(os.path.join(collect.DATA, "cnh_cny.csv"))
+        legs = re.compile(r"USDCNH ([\d.]+) − USDCNY ([\d.]+)")
+        offenders, prev = [], None
+        for row in rows:
+            m = legs.search(row.get("source_note") or "")
+            if not m:
+                prev = None
+                continue
+            pair = m.groups()
+            if pair == prev and ("cnh_cny", row["date"]) not in ACKNOWLEDGED_DOUBLE_SCORED \
+                    and row["date"] not in ("2026-06-28", "2026-07-05", "2026-07-12", "2026-07-19"):
+                offenders.append(f"cnh_cny {row['date']} repeats the previous row's legs {pair}")
+            prev = pair
+        self.assertEqual(offenders, [], "\n".join(offenders))
+
+    def test_no_unacknowledged_weekend_obs_date(self):
+        """The direct signature of the pre-fix bug this class is named for.
+
+        ``_session_date`` (Round 26) always snaps a Saturday/Sunday leg stamp
+        back to its Friday session, so a SCORED row whose obs_date itself
+        falls on a weekend is impossible after the fix — it is exactly what
+        the un-snapped vendor re-stamp used to write. Checked directly against
+        the real record: this signature names the five acknowledged rows and
+        nothing else, so it is what actually makes the acknowledgement above
+        provable rather than a documentation-only list.
+        """
+        import collect
+        rows = collect._read_rows(os.path.join(collect.DATA, "cnh_cny.csv"))
+        offenders = []
+        for row in rows:
+            obs = row.get("obs_date") or ""
+            if not obs or row.get("status") != "scoring":
+                continue
+            if datetime.date.fromisoformat(obs).weekday() >= 5 \
+                    and ("cnh_cny", row["date"]) not in ACKNOWLEDGED_DOUBLE_SCORED:
+                offenders.append(f"cnh_cny {row['date']} scores obs {obs}, a weekend date "
+                                 f"— _session_date should have snapped this to Friday")
+        self.assertEqual(offenders, [], "\n".join(offenders))
 
 
 if __name__ == "__main__":
