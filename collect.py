@@ -212,6 +212,28 @@ def _hours_from_target(sampled_utc, target_h):
     return ((h - target_h + 12) % 24) - 12
 
 
+def _sample_guard_attrs(mod):
+    """``(target_h, tol_h)`` for ``mod``'s sample-hour guard, or ``(None, None)``
+    when the line declares no target.
+
+    ``SAMPLE_TOL_H`` has no universal default a new line could safely inherit:
+    it is a tolerance derived from THAT line's own diurnal curve (flights' 1.5h
+    comes from aircraft-aloft slopes; cnh_cny's tighter 0.5h from its own
+    hour-means). A module that declares ``SAMPLE_TARGET_UTC_H`` without its own
+    ``SAMPLE_TOL_H`` is refused here rather than silently defaulted, so a future
+    line can never inherit a tolerance measured for a different line's clock.
+    """
+    target_h = getattr(mod, "SAMPLE_TARGET_UTC_H", None)
+    if target_h is None:
+        return None, None
+    if not hasattr(mod, "SAMPLE_TOL_H"):
+        raise ValueError(
+            f"{mod.LINE}: declares SAMPLE_TARGET_UTC_H without SAMPLE_TOL_H — "
+            f"a sample-hour tolerance must be set explicitly for each line, "
+            f"never inherited from another line's diurnal curve")
+    return target_h, mod.SAMPLE_TOL_H
+
+
 def apply_sample_guard(raw, note, obs_date, sampled_utc, target_h, tol_h):
     """Refuse a SNAPSHOT reading taken too far from its fixed sample hour.
 
@@ -315,9 +337,7 @@ def collect():
         # module here, never in scoring_attrs (a collection-time input, not a
         # verdict rule; see apply_sample_guard).
         raw, note, obs_date = apply_sample_guard(
-            raw, note, obs_date, sampled_utc,
-            getattr(mod, "SAMPLE_TARGET_UTC_H", None),
-            getattr(mod, "SAMPLE_TOL_H", 1.5))
+            raw, note, obs_date, sampled_utc, *_sample_guard_attrs(mod))
         tier = getattr(mod, "TIER", 1)
         primary = tier == 1
 

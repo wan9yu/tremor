@@ -9,7 +9,6 @@ the collector's separate diagnostic-file writer is never reached either. This
 file reads no committed record and is safe in the pre-collect gate.
 """
 import contextlib
-import datetime
 import io
 import os
 import sys
@@ -44,11 +43,12 @@ def _mod(line, tier=1, direction="down", crash=False, bad=False, raw=1.0,
     return m
 
 
-class _CollectRunMixin:
-    """Runs the real ``collect()`` against ``mods`` inside a pair of scratch
-    directories that are discarded when the block ends, then hands back the
-    rows it wrote for inspection. Extra ``(attr, value)`` pairs are stubbed on
-    the module for the same block (used to spy on ``score_row``)."""
+class _CollectCase(unittest.TestCase):
+    """Base for any test that runs the real ``collect()`` against ``mods``
+    inside a pair of scratch directories, discarded when the block ends, then
+    hands back the rows it wrote for inspection. Extra ``(attr, value)``
+    pairs are stubbed on the module for the same block (used to spy on
+    ``score_row``)."""
 
     def _run(self, mods, **extra_stubs):
         with tempfile.TemporaryDirectory() as scratch, \
@@ -71,7 +71,7 @@ class _CollectRunMixin:
         return lines, summary
 
 
-class TestOneBadSourceCannotAbortTheRun(unittest.TestCase, _CollectRunMixin):
+class TestOneBadSourceCannotAbortTheRun(_CollectCase):
     """A fetcher that raises, or one that returns garbage instead of raising,
     must dark its own line and let every remaining line still be collected."""
 
@@ -101,7 +101,7 @@ class TestOneBadSourceCannotAbortTheRun(unittest.TestCase, _CollectRunMixin):
         self.assertEqual(healthy_row["raw_value"], "1")
 
 
-class TestTierOneOnlyCountingAndTheDarkBlindSplit(unittest.TestCase, _CollectRunMixin):
+class TestTierOneOnlyCountingAndTheDarkBlindSplit(_CollectCase):
     """``score_row`` is stubbed to return a canned verdict keyed by each stub's
     (unique) raw value, so the aggregation in ``collect()`` — not
     ``normalize.judge`` — is what is under test: only tier-1 lines count
@@ -164,27 +164,35 @@ class TestTierOneOnlyCountingAndTheDarkBlindSplit(unittest.TestCase, _CollectRun
         self.assertEqual(row["blind_count"], "2")
 
 
-class TestSampleGuardIsCollectionTimeOnly(unittest.TestCase):
-    """``apply_sample_guard`` is a pure helper read straight off the module's
-    own attributes; these exercise it directly (see also
-    ``tests/test_flights_sample_guard.py`` for the flights/cnh_cny-specific
-    tolerances and the schedule-arithmetic checks)."""
+class TestSampleGuardAttrsRequireBothTogether(unittest.TestCase):
+    """``_sample_guard_attrs`` is what ``collect()`` reads a line's sample-hour
+    guard settings through. ``SAMPLE_TOL_H`` has no line-agnostic default it
+    could safely fall back to — it is derived from THAT line's own diurnal
+    curve (flights' 1.5h from aircraft-aloft slopes, cnh_cny's tighter 0.5h
+    from its own hour-means) — so a module declaring only
+    ``SAMPLE_TARGET_UTC_H`` must be refused, not silently given another
+    line's tolerance. (``apply_sample_guard`` itself is exercised directly in
+    ``tests/test_flights_sample_guard.py``, along with the flights/cnh_cny
+    tolerances and the schedule-arithmetic checks.)"""
 
-    def test_a_module_without_a_target_is_never_guarded(self):
-        raw, note, obs = collect.apply_sample_guard(
-            1.0, "n", "2026-09-02",
-            datetime.datetime(2026, 9, 2, 5, 54, tzinfo=datetime.timezone.utc), None, 1.5)
-        self.assertEqual(raw, 1.0)
+    def test_no_target_needs_no_tolerance(self):
+        mod = types.SimpleNamespace(LINE="untargeted_line")
+        self.assertEqual(collect._sample_guard_attrs(mod), (None, None))
 
-    def test_an_off_target_reading_is_refused_and_drops_its_obs_date(self):
-        raw, note, obs = collect.apply_sample_guard(
-            1.0, "n", "2026-09-02",
-            datetime.datetime(2026, 9, 2, 5, 54, tzinfo=datetime.timezone.utc), 22.5, 1.5)
-        self.assertIsNone(raw)
-        self.assertEqual(obs, "")
+    def test_a_target_without_its_own_tolerance_is_refused(self):
+        mod = types.SimpleNamespace(LINE="new_line", SAMPLE_TARGET_UTC_H=22.5)
+        with self.assertRaises(ValueError) as cm:
+            collect._sample_guard_attrs(mod)
+        self.assertIn("new_line", str(cm.exception))
+        self.assertIn("SAMPLE_TOL_H", str(cm.exception))
+
+    def test_a_target_with_its_own_tolerance_is_returned_as_declared(self):
+        mod = types.SimpleNamespace(LINE="cnh_cny", SAMPLE_TARGET_UTC_H=22.5,
+                                    SAMPLE_TOL_H=0.5)
+        self.assertEqual(collect._sample_guard_attrs(mod), (22.5, 0.5))
 
 
-class TestScoringAttrsNeverReachesTheScorerThroughTheLoop(unittest.TestCase, _CollectRunMixin):
+class TestScoringAttrsNeverReachesTheScorerThroughTheLoop(_CollectCase):
     """``scoring_attrs`` already has a direct check for flights in
     ``tests/test_flights_sample_guard.py``; this covers the loop's own
     behavior instead of repeating it — a spy on ``score_row`` captures the
