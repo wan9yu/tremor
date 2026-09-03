@@ -34,6 +34,22 @@ UNIT = "HK$m"
 ANOMALY_DIRECTION = "down"
 TIER = 2
 
+# The wording of a reading, shared so a seeded row and a live row cannot drift
+# apart in the same column of the same file — the pattern ``ports``/``chokepoint``
+# already use with their own NOTE.
+NOTE = "HKMA aggregate balance"
+
+# The HKMA publishes a day's closing balance the following morning, roughly
+# 06:30-11:30 HKT, and the collector samples at 22:30Z = 06:30 HKT — so a row
+# dated D carries the observation of the previous business day. Verified against
+# the published record: obs + 1 reproduces the row date on all 18 rows carrying a
+# live reading, the only two exceptions being days the collector was dark. This
+# lives here, beside the source it describes, rather than in the one-off seeder
+# that needs it — the same shape ``core/portwatch.py`` gives its own LAG_DAYS.
+# It reaches no verdict: a live row is always dated ``clock.china_today()``, so
+# this is used only to reconstruct history, never to score.
+PUBLICATION_LAG_DAYS = 1
+
 _URL = ("https://api.hkma.gov.hk/public/market-data-and-statistics/"
         "daily-monetary-statistics/daily-figures-interbank-liquidity")
 _HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
@@ -53,14 +69,29 @@ _TIMEOUT = (10, 25)
 _DIAG_HEADERS = ("Via", "X-Kong-Upstream-Latency", "X-Kong-Proxy-Latency")
 
 
-def _tidy(text, limit=200):
+# 20x the longest note this module writes: far enough that the bound never bites
+# a real gateway error page, near enough that a hostile one cannot cost anything.
+_BODY_PREFIX = 4096
+
+
+def _tidy(raw, limit=200):
     """A response body flattened to one bounded line.
+
+    Takes the RAW BYTES, and a prefix of them. ``requests`` does not memoise
+    ``Response.text`` (verified on 2.32.3, where only ``content`` is cached), so
+    reading it re-decodes the whole body every time — and normalising before
+    truncating expands the entire page to keep 200 characters. Measured on a
+    1.6MB body: 123ms and +25.7MB peak, against 0.35ms and +0.07MB for
+    byte-identical output. The bound lives here rather than at the call sites so
+    no future caller can forget it.
 
     A note is a CSV field that the project reads with grep and tail, so an
     embedded newline would break a record open even though csv would quote it,
     and an unbounded error page would bury the row that carries it.
     """
-    return " ".join((text or "").split())[:limit]
+    if isinstance(raw, (bytes, bytearray)):
+        raw = raw[:_BODY_PREFIX].decode("utf-8", "replace")
+    return " ".join((raw or "")[:_BODY_PREFIX].split())[:limit]
 
 
 def fetch_daily():
@@ -74,17 +105,17 @@ def fetch_daily():
                                 f"{time.monotonic() - started:.1f}s")}
     elapsed = time.monotonic() - started
     if r.status_code != 200:
-        seen = [f"{h}={r.headers[h]}" for h in _DIAG_HEADERS if h in r.headers]
-        origin = "; ".join(seen) if seen else "no gateway headers"
+        origin = "; ".join(f"{h}={r.headers[h]}" for h in _DIAG_HEADERS
+                           if h in r.headers) or "no gateway headers"
         return {"raw_value": None,
                 "source_note": (f"HKMA HTTP {r.status_code} after {elapsed:.1f}s "
-                                f"[{origin}] body: {_tidy(r.text)}")}
+                                f"[{origin}] body: {_tidy(r.content)}")}
     try:
         records = (r.json().get("result") or {}).get("records") or []
     except ValueError:
         return {"raw_value": None,
                 "source_note": ("HKMA returned a non-JSON body after "
-                                f"{elapsed:.1f}s: {_tidy(r.text, 120)}")}
+                                f"{elapsed:.1f}s: {_tidy(r.content, 120)}")}
     if not records:
         return {"raw_value": None, "source_note": "HKMA returned no records"}
     rec = records[0]
@@ -95,6 +126,6 @@ def fetch_daily():
                 "source_note": "HKMA closing_balance missing or unparseable"}
     return {
         "raw_value": bal,
-        "source_note": f"HKMA aggregate balance {bal:.0f} HK$m ({rec.get('end_of_date')})",
+        "source_note": f"{NOTE} {bal:.0f} HK$m ({rec.get('end_of_date')})",
         "obs_date": rec.get("end_of_date") or "",
     }
