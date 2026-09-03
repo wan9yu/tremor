@@ -1,0 +1,44 @@
+date,raw_value,z_score,trembling,direction,source_note,obs_date,status
+2026-07-23,53934,,0,,HKMA aggregate balance 53934 HK$m (2026-07-22),2026-07-22,warming-up
+2026-07-24,53934,,0,,HKMA aggregate balance 53934 HK$m (2026-07-23),2026-07-23,warming-up
+2026-07-25,53934,,0,,HKMA aggregate balance 53934 HK$m (2026-07-24),2026-07-24,warming-up
+2026-07-26,53934,,0,,HKMA aggregate balance 53934 HK$m (2026-07-24) [stale: observation already recorded],2026-07-24,stale
+2026-07-27,53934,,0,,HKMA aggregate balance 53934 HK$m (2026-07-24) [stale: observation already recorded],2026-07-24,stale
+2026-07-28,53934,,0,,HKMA aggregate balance 53934 HK$m (2026-07-27),2026-07-27,warming-up
+2026-07-29,54213,,0,,HKMA aggregate balance 54213 HK$m (2026-07-28),2026-07-28,warming-up
+2026-07-30,54108,,0,,HKMA aggregate balance 54108 HK$m (2026-07-29) [sampled 23:01:59Z],2026-07-29,warming-up
+2026-07-31,,,0,,HKMA HTTP 502 [sampled 23:12:22Z],,dark
+2026-08-01,54108,,0,,HKMA aggregate balance 54108 HK$m (2026-07-31) [sampled 23:06:50Z],2026-07-31,warming-up
+2026-08-02,54108,,0,,HKMA aggregate balance 54108 HK$m (2026-07-31) [sampled 22:58:39Z] [stale: observation already recorded],2026-07-31,stale
+2026-08-03,54108,,0,,HKMA aggregate balance 54108 HK$m (2026-07-31) [sampled 22:59:46Z] [stale: observation already recorded],2026-07-31,stale
+2026-08-04,54108,,0,,HKMA aggregate balance 54108 HK$m (2026-08-03) [sampled 00:53:37Z],2026-08-03,warming-up
+2026-08-05,54128,,0,,HKMA aggregate balance 54128 HK$m (2026-08-04) [sampled 23:07:24Z],2026-08-04,warming-up
+2026-08-06,53946,,0,,HKMA aggregate balance 53946 HK$m (2026-08-05) [sampled 23:05:40Z],2026-08-05,warming-up
+2026-08-07,,,0,,HKMA request failed: ReadTimeout [sampled 01:31:12Z],,dark
+2026-08-08,,,0,,HKMA request failed: ReadTimeout [sampled 22:42:02Z],,dark
+2026-08-09,54646,19.223,1,up,HKMA aggregate balance 54646 HK$m (2026-08-07) [sampled 22:34:42Z],2026-08-07,scoring
+2026-08-10,54646,,0,,HKMA aggregate balance 54646 HK$m (2026-08-07) [sampled 22:36:09Z] [stale: observation already recorded],2026-08-07,stale
+2026-08-11,,,0,,HKMA request failed: ReadTimeout [sampled 22:42:46Z],,dark
+2026-08-12,53946,-4.110,0,down,HKMA aggregate balance 53946 HK$m (2026-08-11) [sampled 22:49:46Z],2026-08-11,scoring
+2026-08-13,54069,1.244,0,up,HKMA aggregate balance 54069 HK$m (2026-08-12) [sampled 22:47:34Z],2026-08-12,scoring
+2026-08-14,54069,0.000,0,flat,HKMA aggregate balance 54069 HK$m (2026-08-13) [sampled 22:49:41Z],2026-08-13,scoring
+2026-08-15,54069,0.000,0,flat,HKMA aggregate balance 54069 HK$m (2026-08-14) [sampled 22:28:29Z],2026-08-14,scoring
+2026-08-16,54069,,0,,HKMA aggregate balance 54069 HK$m (2026-08-14) [sampled 22:27:00Z] [stale: observation already recorded],2026-08-14,stale
+2026-08-17,54069,,0,,HKMA aggregate balance 54069 HK$m (2026-08-14) [sampled 22:26:51Z] [stale: observation already recorded],2026-08-14,stale
+2026-08-18,,,0,,HKMA request failed: ReadTimeout [sampled 22:29:19Z],,dark
+2026-08-19,54069,0.000,0,flat,HKMA aggregate balance 54069 HK$m (2026-08-18) [sampled 22:28:49Z],2026-08-18,scoring
+2026-08-20,,,0,,HKMA request failed: ReadTimeout [sampled 22:29:08Z],,dark
+2026-08-21,53968,-1.442,0,down,HKMA aggregate balance 53968 HK$m (2026-08-20) [sampled 22:32:39Z],2026-08-20,scoring
+2026-08-22,,,0,,HKMA request failed: ReadTimeout [sampled 22:30:02Z],,dark
+2026-08-23,53968,-1.262,0,down,HKMA aggregate balance 53968 HK$m (2026-08-21) [sampled 22:26:54Z],2026-08-21,scoring
+2026-08-24,53968,,0,,HKMA aggregate balance 53968 HK$m (2026-08-21) [sampled 22:26:56Z] [stale: observation already recorded],2026-08-21,stale
+2026-08-25,,,0,,HKMA request failed: ReadTimeout [sampled 22:31:39Z],,dark
+2026-08-26,54049,-0.280,0,down,HKMA aggregate balance 54049 HK$m (2026-08-25) [sampled 22:32:27Z],2026-08-25,scoring
+2026-08-27,,,0,,HKMA request failed: ReadTimeout [sampled 02:48:28Z],,dark
+2026-08-28,,,0,,HKMA HTTP 502 [sampled 05:54:48Z],,dark
+2026-08-29,54190,1.499,0,up,HKMA aggregate balance 54190 HK$m (2026-08-28) [sampled 03:27:19Z],2026-08-28,scoring
+2026-08-30,,,0,,HKMA request failed: ReadTimeout [sampled 23:50:54Z],,dark
+2026-08-31,,,0,,HKMA HTTP 502 [sampled 00:09:28Z],,dark
+2026-09-01,,,0,,HKMA HTTP 502 [sampled 00:57:09Z],,dark
+2026-09-02,,,0,,HKMA request failed: ReadTimeout [sampled 22:30:34Z],,dark
+2026-09-03,,,0,,HKMA HTTP 502 [sampled 22:30:31Z],,dark
