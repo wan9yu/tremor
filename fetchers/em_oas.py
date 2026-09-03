@@ -18,8 +18,8 @@ UNIT = "pp"
 ANOMALY_DIRECTION = "up"
 TIER = 2
 
-_SERIES = "BAMLEMCBPIOAS"
+SERIES = "BAMLEMCBPIOAS"
 
 
 def fetch_daily():
-    return fred.reading(_SERIES)
+    return fred.reading(SERIES)

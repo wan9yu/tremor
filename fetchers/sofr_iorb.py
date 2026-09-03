@@ -31,9 +31,12 @@ QUANTUM = 1  # basis points: both legs are published to 0.01%, so 1bp is the
 # scale is on course to collapse within weeks; after that a 25bp repo squeeze,
 # the entire event this line exists to catch, would score nothing at all.
 
+SERIES = ("SOFR", "IORB")  # two legs, not one — see the docstring on why both
+# must describe the same date.
+
 
 def fetch_daily():
-    date, sofr, iorb = fred.latest_common("SOFR", "IORB")
+    date, sofr, iorb = fred.latest_common(*SERIES)
     if date is None:
         return {"raw_value": None,
                 "source_note": "FRED SOFR/IORB share no reported date"}

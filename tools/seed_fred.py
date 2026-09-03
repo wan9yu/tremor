@@ -43,20 +43,20 @@ from fetchers import credit_spread, em_oas, euro_hy_spread
 _PAUSE_S = 30
 
 SEEDS = [
-    (euro_hy_spread, "BAMLHE00EHYIOAS", "OAS"),
-    (em_oas, "BAMLEMCBPIOAS", "OAS"),
-    (credit_spread, "BAMLH0A0HYM2", "OAS"),
+    (euro_hy_spread, "OAS"),
+    (em_oas, "OAS"),
+    (credit_spread, "OAS"),
 ]
 
 
-def seed(mod, series_id, label, dry):
-    history = fred.series(series_id, timeout=60)
+def seed(mod, label, dry):
+    history = fred.series(mod.SERIES, timeout=60)
     if not history:
         print(f"  {mod.LINE}: no history returned — SKIPPED, nothing written")
         return False
 
     def import_note(obs, value):
-        return f"FRED {series_id} {label} {obs}{seedlib.IMPORT_MARK}"
+        return f"FRED {mod.SERIES} {label} {obs}{seedlib.IMPORT_MARK}"
 
     seedlib.run_seed(mod, history, import_note, dry=dry)
     return True
@@ -68,10 +68,10 @@ def main(argv):
           + (" (dry run)" if dry else "")
           + f"\n  one request per series, {_PAUSE_S}s apart — fredgraph is bot-managed\n")
     ok = True
-    for i, (mod, series_id, label) in enumerate(SEEDS):
+    for i, (mod, label) in enumerate(SEEDS):
         if i:
             time.sleep(_PAUSE_S)
-        ok = seed(mod, series_id, label, dry) and ok
+        ok = seed(mod, label, dry) and ok
     print("\ndone" if ok else "\nFAILED for at least one line — check before committing")
     return 0 if ok else 1
 

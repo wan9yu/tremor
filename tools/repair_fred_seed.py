@@ -34,9 +34,9 @@ import seedlib
 from fetchers import credit_spread, em_oas, euro_hy_spread
 
 LINES = [
-    (credit_spread, "BAMLH0A0HYM2", "OAS"),
-    (em_oas, "BAMLEMCBPIOAS", "OAS"),
-    (euro_hy_spread, "BAMLHE00EHYIOAS", "OAS"),
+    (credit_spread, "OAS"),
+    (em_oas, "OAS"),
+    (euro_hy_spread, "OAS"),
 ]
 
 
@@ -47,7 +47,7 @@ def _read(path):
         return list(csv.DictReader(f))
 
 
-def repair(mod, series_id, label, dry):
+def repair(mod, label, dry):
     line = mod.LINE
     current = _read(os.path.join(collect.DATA, line + ".csv"))
     preseed = _read(os.path.join(collect.DATA, "archive", f"{line}_preseed.csv"))
@@ -72,7 +72,7 @@ def repair(mod, series_id, label, dry):
                       and seedlib.IMPORT_MARK not in r.get("source_note", "")]
 
     def import_note(obs, value):
-        return f"FRED {series_id} {label} {obs}{seedlib.IMPORT_MARK}"
+        return f"FRED {mod.SERIES} {label} {obs}{seedlib.IMPORT_MARK}"
 
     plan, dropped = seedlib.merge(history, live, import_note)
     print(f"  {line}: {len(history)} observations, {len(live)} published live "
@@ -100,7 +100,7 @@ def repair(mod, series_id, label, dry):
 def main(argv):
     dry = "--dry-run" in argv
     print("repairing the FRED seed collateral" + (" (dry run)" if dry else "") + "\n")
-    ok = all([repair(mod, sid, label, dry) for mod, sid, label in LINES])
+    ok = all([repair(mod, label, dry) for mod, label in LINES])
     print("\ndone" if ok else "\nFAILED for at least one line")
     return 0 if ok else 1
 

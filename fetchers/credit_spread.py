@@ -45,13 +45,13 @@ LABEL = "US HY credit spread OAS (pp)"
 UNIT = "pp"
 ANOMALY_DIRECTION = "up"  # a spike in the spread is the alarming move
 
-_SERIES = "BAMLH0A0HYM2"
+SERIES = "BAMLH0A0HYM2"
 _URL = "https://api.stlouisfed.org/fred/series/observations"
 
 
 def _keyless(reason):
     """Public fredgraph.csv path — no key. Used when the keyed API cannot answer."""
-    result = fred.reading(_SERIES)
+    result = fred.reading(SERIES)
     if result["raw_value"] is None:
         return {"raw_value": None,
                 "source_note": f"{reason}; keyless fallback also failed"}
@@ -69,7 +69,7 @@ def fetch_daily():
             _URL,
             timeout=15,
             params={
-                "series_id": _SERIES,
+                "series_id": SERIES,
                 "api_key": key,
                 "file_type": "json",
                 "sort_order": "desc",
@@ -91,7 +91,7 @@ def fetch_daily():
             try:
                 return {
                     "raw_value": float(value),
-                    "source_note": f"FRED {_SERIES} OAS {obs.get('date')}",
+                    "source_note": f"FRED {SERIES} OAS {obs.get('date')}",
                     "obs_date": obs.get("date"),
                 }
             except ValueError:
