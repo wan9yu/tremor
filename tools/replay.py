@@ -115,7 +115,7 @@ def main(argv):
             if getattr(mod, "TIER", 1) != 1:
                 continue
             tier1_status.setdefault(date, []).append(replayed["status"])
-            if replayed["trembling"] == "1" and replayed["direction"] == mod.ANOMALY_DIRECTION:
+            if collect.counts_as_tremble(replayed, mod):
                 counts_now.setdefault(date, []).append(mod.LINE)
         if verbose:
             for date, p, r in bad:

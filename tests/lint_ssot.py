@@ -243,11 +243,14 @@ def _imports_core_useragent(tree):
     return False
 
 
-def _references_useragent_attr(tree, attr):
-    """True if ``tree`` reads ``useragent.<attr>`` anywhere — a direct use,
-    or unpacked via ``**useragent.HEADERS`` as core/adsb.py does."""
+def _references_attr(tree, module, attr):
+    """True if ``tree`` reads ``<module>.<attr>`` anywhere — a direct use,
+    a call (``collect.counts_as_tremble(...)``), or unpacked via
+    ``**useragent.HEADERS`` as core/adsb.py does. ``ast.walk`` already
+    descends into a ``Call`` node's ``func``, so this one attribute-access
+    scan covers both shapes without a separate ``ast.Call`` case."""
     return any(isinstance(node, ast.Attribute) and node.attr == attr
-               and isinstance(node.value, ast.Name) and node.value.id == "useragent"
+               and isinstance(node.value, ast.Name) and node.value.id == module
                for node in ast.walk(tree))
 
 
@@ -290,8 +293,8 @@ class TestUserAgentIsOneHome(unittest.TestCase):
         importers = _files_importing_useragent()
         self.assertTrue(importers, "no files importing core.useragent were discovered")
         dead = [rel for rel in importers
-                if not (_references_useragent_attr(_parse(rel), "HEADERS")
-                        or _references_useragent_attr(_parse(rel), "COMPAT_HEADERS"))]
+                if not (_references_attr(_parse(rel), "useragent", "HEADERS")
+                        or _references_attr(_parse(rel), "useragent", "COMPAT_HEADERS"))]
         self.assertEqual(dead, [],
                           f"{dead} import core.useragent but never read HEADERS "
                           "or COMPAT_HEADERS from it — drop the unused import")
@@ -303,10 +306,56 @@ class TestUserAgentIsOneHome(unittest.TestCase):
         # for it would be caught rather than quietly normalizing the
         # exception into a habit.
         hits = [rel for rel in _all_py_files()
-                if rel != _UA_HOME and _references_useragent_attr(_parse(rel), "COMPAT_HEADERS")]
+                if rel != _UA_HOME and _references_attr(_parse(rel), "useragent", "COMPAT_HEADERS")]
         self.assertEqual(hits, [_COMPAT_OWNER],
                           "core.useragent.COMPAT_HEADERS is cnh_cny's Yahoo-only "
                           f"exception, not a general header — found it read in: {hits}")
+
+
+# --- tremble-count predicate (T4): one owner, replay/episodes consume it --
+
+_TREMBLE_OWNER = "collect.py"
+
+
+def _has_direction_compare(tree):
+    """True if ``tree`` has a ``Compare`` node equating something with a
+    module's ``ANOMALY_DIRECTION`` attribute — the shape of the
+    tremble-count predicate, ``row["direction"] == mod.ANOMALY_DIRECTION``.
+    Structural, not textual: render.py's chart-title f-string
+    (``{mod.ANOMALY_DIRECTION}``) is an attribute access with no comparison
+    around it, and collect.py's own module-docstring mention of the attr
+    name is prose — neither builds a Compare node, so neither can
+    false-flag this."""
+    return any(isinstance(node, ast.Compare)
+               and any(isinstance(n, ast.Attribute) and n.attr == "ANOMALY_DIRECTION"
+                       for n in [node.left] + node.comparators)
+               for node in ast.walk(tree))
+
+
+def _files_with_direction_compare():
+    return [rel for rel in _all_py_files() if _has_direction_compare(_parse(rel))]
+
+
+class TestTrembleCountPredicateIsOneHome(unittest.TestCase):
+    def test_the_owner_is_found(self):
+        # A canary against an over-narrow walk silently finding nothing.
+        self.assertIn(_TREMBLE_OWNER, _all_py_files())
+
+    def test_direction_equality_compare_appears_only_in_collect(self):
+        hits = _files_with_direction_compare()
+        self.assertEqual(hits, [_TREMBLE_OWNER],
+                          "the tremble-count predicate (comparing a row's "
+                          "direction against mod.ANOMALY_DIRECTION) must "
+                          f"live only in {_TREMBLE_OWNER}'s counts_as_tremble "
+                          f"— found it re-typed in: {hits}")
+
+    def test_replay_and_episodes_call_the_shared_helper(self):
+        offenders = [rel for rel in (os.path.join(TOOLS_DIR, "replay.py"),
+                                      os.path.join(TOOLS_DIR, "episodes.py"))
+                     if not _references_attr(_parse(rel), "collect", "counts_as_tremble")]
+        self.assertEqual(offenders, [],
+                          f"{offenders} must call collect.counts_as_tremble(...) "
+                          "rather than re-deriving the tremble-count predicate")
 
 
 if __name__ == "__main__":

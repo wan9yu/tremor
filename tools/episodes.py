@@ -81,7 +81,7 @@ def report_line(mod):
     scored = [r for r in rows if r["z_score"]]
     observed = [r["obs_date"] or r["date"] for r in scored]
     alarm = [r["obs_date"] or r["date"] for r in rows
-             if r["trembling"] == "1" and r["direction"] == mod.ANOMALY_DIRECTION]
+             if collect.counts_as_tremble(r, mod)]
     eps = episodes(observed, sorted(alarm))
     values = [float(r["raw_value"]) for r in rows if r["raw_value"]]
     rho = _lag1(values)

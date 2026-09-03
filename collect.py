@@ -182,6 +182,23 @@ def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False,
     }
 
 
+def counts_as_tremble(row, mod):
+    """Whether an already-scored ``row`` counts as an alarm.
+
+    THE ONE PLACE the count predicate lives: trembling AND in the line's
+    declared ``ANOMALY_DIRECTION``. The daily summary here, the headline
+    ``tools/replay.py`` reconstructs, and the alarm-day list
+    ``tools/episodes.py`` builds all call this instead of re-typing the
+    two-clause check, so the count cannot silently drift between the three.
+    A pure function of a row dict shaped like ``score_row``'s return (a
+    string ``"1"``/``"0"`` ``trembling`` field) and the row's owning
+    fetcher module — replay still computes ``trembling``/``direction``/``z``
+    itself and only hands the resulting row to this, so sharing the
+    predicate does not compromise replay's independent re-scoring.
+    """
+    return row["trembling"] == "1" and row["direction"] == mod.ANOMALY_DIRECTION
+
+
 def scoring_attrs(mod):
     """The per-line options ``score_row`` needs, read off the fetcher module.
 
@@ -351,7 +368,7 @@ def collect():
         # actually able to answer. A stale row is neither, because the
         # observation was judged when it first arrived and that verdict stands.
         if primary:
-            if trembling and row["direction"] == mod.ANOMALY_DIRECTION:
+            if counts_as_tremble(row, mod):
                 trembling_count += 1
             if status == normalize.STATUS_DARK:
                 dark_count += 1
