@@ -457,4 +457,18 @@ decision. A new round is appended to `radar-log.md` and gets one line added here
   STABLE_SINCE untouched. Chosen over a discard-guard (loses coverage) and a settle-from-intraday design (rejected:
   ±1h→68% dark, components freeze, ~1-day lag, load-bearing sampler) after two external-model review rounds. 15 new
   tests; simulated over 34 days (31/34 land exactly at 22:30Z, 08-28 darks, 0 clean days newly dark)
-
+- **Round 26** — 2026-09-04 · the P2–P6 zero-debt remainder (executed 09-03/09-04): instrument
+  hygiene, no reading, no tier move, replay 0-divergence throughout, ~two dozen reviewed commits. Single sources of
+  truth (one alarm predicate in
+  `collect.py` consumed by replay/episodes; scoring constants read from `normalize`; net_outages `window_for`; FRED
+  series ids; one User-Agent; STABLE_SINCE ledger completed). A stdlib-only lint layer (`lint_ssot`/`_registry`/
+  `_workflows`/`_pending`/`_public_surface`) plus post-commit audits (`audit_registry` retracted-phrase + QUANTUM-floor
+  + no-overdue; `audit_charts` byte cap; `audit_public_surface` mirror byte-equality + gap-status-no-reading).
+  Retracted claims fixed at source (gnss "never moved"→z=+2.87 on dashboard+fetcher; net_outages settle claim), with
+  three annotation retraction rows the scan now guards. Generators: `episodes.py --markdown`→`radar-metrics.md` (retired episodes.json), `pending.py` grammar + overdue lint,
+  `roll_radar_log` (byte-identity, not yet fired ~R27), `calibration.yml`. Customer surface: tier-2 gap chips (dark
+  hkma_aggr_balance, 5 straight days, stops rendering calm); credit-independence copy corrected to R22's measurement
+  (em_corp_oas +0.80, euro_hy_spread +0.74 vs credit_spread, +0.86 vs em_corp_oas — one global credit factor, both stay
+  tier-2, neither a tier-1 candidate); cnh_cny weekend-cadence note (~5 not 7 pts/wk); render_smoke real cookie so the
+  zh path executes. render.py 64-colour quantize (largest chart 61.6→24.9 KB), pillow pinned to the CI-resolved 12.3.0,
+  audit_charts cap 70000→40000. Suite: 260 gate / 49 lint (bare-venv) / 17 audit; replay 412/0/0 since 2026-08-17.

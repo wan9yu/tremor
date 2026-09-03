@@ -1833,3 +1833,87 @@ re-review after an observation window, since the 18Z cron's OWN delay distributi
 ET may differ) — the failure mode is benign (delays ≤4.5h still land on target, >6h dark). The R25
 anti-loophole clause stands: a repeat of this adjudicated artifact class after the fix is itself
 demotion-disqualifying. No tier moves.
+
+### Round 26 — 2026-09-04 (the P2–P6 zero-debt remainder: guards, generators, and the customer surface)
+
+The zero-debt plan's safety phases (P0/P1) shipped earlier; this round is the mechanical
+remainder — P2 through P6 — executed across 2026-09-03 and 2026-09-04 as some two dozen
+reviewed commits, each task landed and reviewed on its own. Nothing here is a reading. No line trembled,
+no tier moved, no scoring rule changed: this is instrument hygiene — single sources of truth,
+mechanical guards for every hand-maintained fact, and two corrections to what the dashboard
+told a reader. Replay stays 0-divergence and STABLE_SINCE is untouched throughout, because
+none of it touches how a row is scored.
+
+**Single sources of truth.** The alarm predicate (trembling in the line's own alarming
+direction) now has ONE home in `collect.py`, consumed by both `episodes.py` and — as its
+deliberately independent re-derivation — `replay.py`; the third hand-copy is gone. Scoring
+constants are read from `core/normalize.py` rather than re-typed. `net_outages` gained one
+settled-window definition (`window_for`), proven against an exhaustive hourly sweep. The FRED
+series ids are declared once and read by the seeders; the collector speaks with one
+User-Agent (cnh_cny's browser variant preserved as `COMPAT_HEADERS`). The `STABLE_SINCE`
+ledger comment, which had stopped at the 2026-08-04 mark while the value moved to 2026-08-17,
+now records the Round 18 closed/dark split and its two grandfathered weekend rows.
+
+**A lint layer that never costs a collection day.** Five source-vs-source checks, all
+stdlib-only so they run on push CI (which installs nothing) and never in the pre-collect gate:
+`lint_ssot` keeps the alarm predicate and the scoring constants in their owning module only;
+`lint_registry` binds `radar.md`'s registry table to `collect.LINES` and the round index;
+`lint_workflows` parses and shell-checks every workflow file; `lint_pending` (kept stdlib-only
+by deferring the collect/seedlib imports) enforces the pending-item grammar; `lint_public_surface`
+binds the dashboard's status vocabulary to `normalize`.
+
+**Generators and tools.** `episodes.py --markdown` now emits `radar-metrics.md` and the
+unread `data/episodes.json` is retired. `pending.py` gives every pre-committed review a
+machine-parseable tag (`[opened R<n> · owner R<n> · fires: <predicate>]`) with an overdue
+lint, so a lapsed review fails loudly instead of sitting in prose. `roll_radar_log.py` is
+built with a byte-identity guarantee against the held original — not yet fired (this log is
+1835 lines, under its 2000-line threshold, expected ~R27). A `calibration.yml` workflow now
+schedules the check that regenerates the vendored tremble-threshold table, the one place the
+dev-only numpy/scipy deps are exercised.
+
+**Audits (post-commit, an alarm not a gate).** `audit_registry` adds a retracted-phrase scan
+(a phrase the record has retracted must not reappear live), the QUANTUM-floor invariant, and a
+no-overdue-pending check. `audit_charts` caps each committed chart PNG at a fixed per-file byte
+budget. `audit_public_surface` asserts the dashboard's mirrored files are byte-identical to
+their `data/` sources and that every `GAP_STATUSES` status carries no reading in the record.
+
+**Retracted claims, corrected at the source.** The retracted-phrase scan landed beside the
+corrections it exists to enforce: two live surfaces still carried claims the record had
+already retracted. The `gnss_interference` line's "never moved" copy — on the dashboard and
+in the fetcher's own docstring — is corrected to the z=+2.87 its July window reaches on the
+four-year baseline (a global ratio diluted by regional jamming, not a line that stayed flat),
+and `radar.md`'s stale `net_outages` settle claim is fixed. Each retraction is recorded as an
+annotation row carrying the exact phrase, which the scan now guards against silently
+reappearing anywhere live.
+
+**The customer surface — two things the dashboard was getting wrong.** First, a tier-2
+watchlist line that goes dark now says so. A line dark for two or more consecutive collections
+renders a "NO DATA" gap chip instead of the same calm as a scoring line — the live
+`hkma_aggr_balance` line, dark five straight days (2026-08-30 to 09-03 on HTTP 502 and read
+timeouts), had been rendering calm, indistinguishable from a quiet reading. Second, the
+credit-independence copy is corrected to what Round 22 measured. The old text called
+`em_corp_oas` "a distinct guard, a distinct signal" and said `euro_hy_spread` fires "while the
+US line sleeps"; the record measures the opposite — |max corr| **+0.80** for EM corp vs
+`credit_spread` (n=789), **+0.74** for Euro HY vs `credit_spread` (n=783) and **+0.86** Euro
+HY vs EM corp: US high-yield, EM corp and Euro HY are ONE global credit factor at daily z, so
+both stay tier-2 for breadth and confirmation and neither is a tier-1 promotion candidate
+(promoting a redundant credit line would break the headline count's independence assumption).
+A cadence note now warns that `cnh_cny` posts no weekend session, so a reader expecting ~7
+points a week from that line typically sees closer to 5. The render-smoke harness gained a real
+cookie slot so the Chinese-language render path actually executes under test, plus the modal
+exports it was missing.
+
+**Smaller charts.** `render.py` now quantizes each chart to a 64-colour palette (MEDIANCUT)
+after writing it, dropping the largest from 61,594 to 24,886 bytes (the overview from 19,930 to
+6,776); `audit_charts`'s per-file cap tightens from 70,000 to 40,000. `pillow` is pinned to
+`12.3.0` — the version `matplotlib==3.9.0` already resolves transitively on the CI runner, so
+the pin freezes what is installed without changing it.
+
+Validated: the full suite is green — 260 gate tests, 49 lint tests (stdlib-only, confirmed in a
+bare virtualenv), 17 audit tests; `replay.py --check` reports 412 rows, 0 diverged, 0 diverged
+since STABLE_SINCE=2026-08-17; `render_smoke.js` passes in both languages with the zh path now
+genuinely exercised. This entry itself writes no annotation row; the round's three annotation
+rows — the retraction markers above — landed earlier, in the commit that made the live
+corrections they describe. Still open: `roll_radar_log` awaits the
+2000-line threshold (~R27); the flights cron-delay re-review carried from R25.1 stands; the
+cnh_cny maturity review fires at n≥60. No tier moves.

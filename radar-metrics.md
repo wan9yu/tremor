@@ -49,4 +49,4 @@ fails on it.
 - **net_outages settle — reconciliation tripwire** — opened R23.1 · owner R26 · fires: manual · manual — never auto-fires
 - **level-layer → flights** — opened R23.1 · owner R26 · fires: date >= 2026-11-01 · date = 2026-09-04 / 2026-11-01
 - **cnh_cny reachability reference-regime re-check** — opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 54 / 60
-- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 25.1 / 30
+- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 26 / 30
