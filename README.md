@@ -15,7 +15,8 @@ The primary set is chosen and re-chosen by a scored radar process — see `radar
 current tiers, the metrics, and every calibration decision. A larger watchlist rides
 alongside — shown on the dashboard, collected daily while each line earns (or loses) a
 place — including contrast lines (VIX, news tone) that measure how disordered the world
-FEELS, a planetary context line, and one control line with no world in it at all.
+FEELS, two context lines (a planetary slow-level read and a space-weather
+confounder-subtractor), and one control line with no world in it at all.
 
 Each line is normalized on its own (most against their own recent history with a robust z-score; a few pegged or near-constant lines are scored against a declared anchor and materiality instead, because "normal" for a $1 peg is the peg, not a rolling window; lines with a known weekly rhythm are de-cycled by weekday so a routine weekend dip doesn't false-trigger); they are never combined into a single doom score. What matters is **resonance** — how many lines are trembling at once. Several independent instruments screaming together is what "actually more disordered" looks like; one moving alone is just a local event.
 
@@ -44,3 +45,4 @@ A few numbers in this document are checked against the code by `tests/lint_publi
 |---|---|
 | primary (tier-1) lines | 4 |
 | status values `core/normalize.py` can emit | 6 |
+| primary lines that run keyless | 4 |

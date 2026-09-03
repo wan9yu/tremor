@@ -44,6 +44,30 @@ Two things are checked:
      (it never imports collect/fetchers/requests), so this stays within the
      stdlib-only property below.
 
+     T17 adds a second bound claim: how many tier-1 lines run KEYLESS. Unlike
+     the tier-1 count, this needs each tier-1 fetcher module's own FILE, not
+     just its LINE id or a docs/index.html `const LINES` entry — neither says
+     anything about API keys — so this module gets the tier-1 LINE-id SET
+     from lint_registry.py's own ``_collect_registry()`` (memoized; already
+     applies the TIER-defaults-to-1 rule once, reused here rather than
+     re-derived a second time), resolves each collect.LINES alias to its
+     fetcher FILE via that same module's ``_parse``, ``_fetcher_alias_map``
+     and ``_collect_lines_aliases`` helpers (fetcher modules are never
+     imported — see that module's own docstring for why), and ast-walks each
+     tier-1 fetcher's own source text for an ``os.environ.get(...)`` /
+     ``os.getenv(...)`` call whose argument looks like an API-key env var
+     (contains "KEY"). A fetcher with no such call is keyless by
+     construction. One that has a call counts as keyless only if the code
+     PROVES the key is optional: an ``if not key:`` guard whose body
+     delegates to another function (``fetchers/credit_spread.py``'s coded
+     ``_keyless()`` fallback) rather than hard-failing in place
+     (``fetchers/grid_frequency.py``'s ``return None, "missing
+     FINGRID_API_KEY"`` — a tier-2 fetcher today, so it does not count either
+     way, but is exactly the hard-fail shape this rule would catch on a
+     tier-1 line). See ``_fetcher_is_keyless``'s own docstring for the exact
+     rule and its known scope limit (it reads only the fetcher module's own
+     source, not transitively through the ``core/`` helpers it imports).
+
 core/normalize.py imports only ``statistics``, ``datetime`` and
 ``itertools`` (see tests/lint_support_stdlib.py's sibling guarantee for
 support.py — normalize.py carries the same property, just unenforced by a
@@ -59,6 +83,7 @@ instrument, so it runs on push via ``unittest discover tests -p "lint_*.py"``
 gate — a page/README drift must never abort a collection day. ``data/`` is
 never read.
 """
+import ast
 import functools
 import os
 import re
@@ -220,6 +245,157 @@ def _docs_tier1_line_count():
     return sum(1 for meta in registry.values() if meta.get("tier") == 1)
 
 
+# --- README.md's "primary lines that run keyless" claim ----------------------
+#
+# docs/index.html's `const LINES` and lint_registry.py's parses of it say
+# nothing about API keys, so this claim cannot reuse those the way the
+# tier-1 COUNT claim above does. Instead it gets the tier-1 LINE-id SET off
+# lint_registry.py's own memoized `_collect_registry()` (which already
+# applies the TIER-defaults-to-1 rule — reused here, not re-derived a second
+# time), resolves each collect.LINES alias to its fetcher FILE via that same
+# module's `_parse`/`_fetcher_alias_map`/`_collect_lines_aliases` helpers,
+# and ast-walks each tier-1 fetcher's own source text. No fetcher module is
+# ever imported (see the module docstring): every fetcher imports `requests`
+# at module scope, which ci.yml's lint job never installs.
+
+@functools.lru_cache(maxsize=None)
+def _tier1_fetcher_trees():
+    """[(modname, ast.Module)] for every collect.LINES alias whose fetcher
+    module's own LINE id lint_registry._collect_registry() marks tier 1.
+    Memoized — pure and no-arg, same pattern as this file's other
+    source-parsing helpers (`_readme_claims`, `_docs_blind_values`, etc.)."""
+    registry, _ = lint_registry._collect_registry()
+    tier1_ids = {line_id for line_id, meta in registry.items() if meta["tier"] == 1}
+    collect_tree = lint_registry._parse(lint_registry.COLLECT_PATH)
+    alias_map = lint_registry._fetcher_alias_map(collect_tree)
+    aliases = lint_registry._collect_lines_aliases(collect_tree)
+    assert aliases, "collect.py: no module-level `LINES = [...]` assignment found"
+    out = []
+    for alias in aliases:
+        modname = alias_map.get(alias)
+        assert modname, (f"collect.LINES references {alias!r}, which does not resolve "
+                          "to a `from fetchers import ...` (or `import fetchers.mod as "
+                          "...`) binding in collect.py")
+        tree = lint_registry._parse(
+            os.path.join(lint_registry.FETCHERS_DIR, f"{modname}.py"))
+        line_id = lint_registry._module_level_const(tree, "LINE")
+        if line_id in tier1_ids:
+            out.append((modname, tree))
+    return out
+
+
+_KEY_ENV_VAR = re.compile(r'KEY', re.I)
+
+
+def _is_key_lookup_call(node):
+    """True if ``node`` is ``os.environ.get("...")`` / ``os.getenv("...")``
+    whose string-constant argument looks like an API-key env var (contains
+    "KEY", case-insensitively — matches both ``FRED_API_KEY`` and
+    ``FINGRID_API_KEY``, the only two such lookups under fetchers/ today;
+    see fetchers/credit_spread.py and fetchers/grid_frequency.py)."""
+    if not isinstance(node, ast.Call) or not node.args:
+        return False
+    func = node.func
+    is_environ_get = (
+        isinstance(func, ast.Attribute) and func.attr == "get"
+        and isinstance(func.value, ast.Attribute) and func.value.attr == "environ"
+        and isinstance(func.value.value, ast.Name) and func.value.value.id == "os")
+    is_getenv = (
+        isinstance(func, ast.Attribute) and func.attr == "getenv"
+        and isinstance(func.value, ast.Name) and func.value.id == "os")
+    if not (is_environ_get or is_getenv):
+        return False
+    arg = node.args[0]
+    return (isinstance(arg, ast.Constant) and isinstance(arg.value, str)
+            and _KEY_ENV_VAR.search(arg.value) is not None)
+
+
+def _key_lookups(tree):
+    """[(call, varname_or_None)] — one entry per key-lookup call anywhere in
+    ``tree`` (see ``_is_key_lookup_call``), paired with the bare variable
+    name it is assigned to (``key`` in ``key = os.environ.get(
+    "FRED_API_KEY")``), or None when it is not a simple single-name
+    assignment — which ``_fetcher_is_keyless`` then treats as a required
+    (not provably optional) key. A SINGLE ``ast.walk`` answers both "is this
+    a key lookup" and "what name does it bind to": an ``Assign`` node's own
+    Call value is visited by the same walk that visits the Call directly, so
+    recording ``{id(call): varname}`` for every Call-valued Assign while
+    walking, then pairing each matching Call against that map afterward,
+    needs no second traversal (unlike looking up each call's assignment with
+    its own separate ``ast.walk`` call)."""
+    assigned = {}
+    calls = []
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Assign) and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name)
+                and isinstance(node.value, ast.Call)):
+            assigned[id(node.value)] = node.targets[0].id
+        elif isinstance(node, ast.Call):
+            calls.append(node)
+    return [(c, assigned.get(id(c))) for c in calls if _is_key_lookup_call(c)]
+
+
+def _guard_delegates_on_missing_key(tree, varname):
+    """True if the module contains ``if not <varname>: ...`` (or ``if
+    <varname> is None: ...``) whose body RETURNS THE RESULT OF CALLING
+    another function — a coded fallback path, exactly
+    fetchers/credit_spread.py's own ``if not key: return
+    _keyless(reason)`` — rather than a value built in place right there (a
+    literal dict/tuple/None), which means the fetch hard-fails without the
+    key: fetchers/grid_frequency.py's own ``if not key: return None,
+    "missing FINGRID_API_KEY"`` is exactly that hard-fail shape (a tier-2
+    fetcher today; this is what would make it count as NOT keyless if it
+    were ever promoted to tier 1)."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.If):
+            continue
+        test = node.test
+        is_not_var = (isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not)
+                      and isinstance(test.operand, ast.Name)
+                      and test.operand.id == varname)
+        is_none_check = (isinstance(test, ast.Compare) and isinstance(test.left, ast.Name)
+                          and test.left.id == varname and len(test.ops) == 1
+                          and isinstance(test.ops[0], ast.Is) and len(test.comparators) == 1
+                          and isinstance(test.comparators[0], ast.Constant)
+                          and test.comparators[0].value is None)
+        if not (is_not_var or is_none_check):
+            continue
+        if any(isinstance(stmt, ast.Return) and isinstance(stmt.value, ast.Call)
+               for stmt in node.body):
+            return True
+    return False
+
+
+def _fetcher_is_keyless(tree):
+    """A tier-1 fetcher module counts as keyless if it either never looks up
+    an API-key-shaped env var at all (fetchers/flights.py,
+    fetchers/cnh_cny.py and fetchers/net_outages.py today — no
+    ``os.environ``/``os.getenv`` call anywhere in the module), or it does and
+    every such lookup is provably OPTIONAL — guarded by an ``if not key:``
+    check that DELEGATES to another function rather than hard-failing in
+    place (fetchers/credit_spread.py's coded ``_keyless()`` fallback: the
+    public fredgraph.csv path FRED_API_KEY's absence falls back to, per that
+    module's own docstring). Scoped to the fetcher module's own source only,
+    not transitively through ``core/`` helpers it imports — true of every
+    tier-1 fetcher today (checked by hand: none of core/adsb.py,
+    core/fred.py, core/useragent.py or core/clock.py reference any env var),
+    but a future fetcher that hid a required key inside a core/ helper would
+    not be caught by this check."""
+    lookups = _key_lookups(tree)
+    if not lookups:
+        return True
+    for _, varname in lookups:
+        if varname is None or not _guard_delegates_on_missing_key(tree, varname):
+            return False
+    return True
+
+
+def _tier1_keyless_line_count():
+    """How many of collect.LINES's tier-1 fetcher modules are keyless per
+    ``_fetcher_is_keyless`` above."""
+    return sum(1 for _, tree in _tier1_fetcher_trees() if _fetcher_is_keyless(tree))
+
+
 class TestReadmeClaimsBindToSource(unittest.TestCase):
     def test_readme_claims_match_source(self):
         claims = _readme_claims()
@@ -230,6 +406,10 @@ class TestReadmeClaimsBindToSource(unittest.TestCase):
             ("status values `core/normalize.py` can emit", len(ALL_STATUSES),
              "README.md claims a status count that does not match "
              "core/normalize.py's STATUS_* constants"),
+            ("primary lines that run keyless", _tier1_keyless_line_count(),
+             "README.md claims a keyless tier-1 line count that does not "
+             "match what fetchers/*.py's tier-1 modules actually require "
+             "(see _fetcher_is_keyless's docstring for the exact rule)"),
         ]
         for label, expected, msg in checks:
             with self.subTest(label=label):
