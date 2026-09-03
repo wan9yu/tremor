@@ -35,3 +35,12 @@ python collect.py && python render.py
 ```
 
 All four primary lines run keyless (flights, yuan spread, internet outages, and the credit spread via a public FRED fallback). Adding a free `FRED_API_KEY` as a repo Secret just gives the credit line its primary, keyed source.
+
+## Machine-checked claims
+
+A few numbers in this document are checked against the code by `tests/lint_public_surface.py`, which runs on every push — if the code moves and this table doesn't, the lint goes red rather than the claim quietly going stale.
+
+| claim | value |
+|---|---|
+| primary (tier-1) lines | 4 |
+| status values `core/normalize.py` can emit | 6 |
