@@ -93,6 +93,7 @@
   .modal-card ul.cov li{margin:0 0 5px}
   .wl-item:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
   .wl-blind{color:var(--amber);opacity:.85}
+  .wl-gap{color:#ff6b6b}
   .modal-card .mchart{margin:12px 0 4px}
   .modal-card .mnow{font-size:15px;margin:10px 0 2px;color:#c7ccd6}
   footer{color:var(--muted);font-size:13px;margin-top:34px;border-top:1px solid var(--line);padding-top:18px}
@@ -290,8 +291,8 @@ const LINES = [
     label:{en:"EM corporate credit spread",zh:"新兴市场企业债利差"},
     source:{en:"FRED — ICE BofA EM corp OAS",zh:"FRED — ICE BofA 新兴市场企业债 OAS"},
     explain:{
-      en:"Emerging-market sovereigns defend access to dollar funding — reserves, IMF lines, rate hikes to keep capital home. A spike in the EM corporate option-adjusted spread leaks a systemic loss of dollar access across the developing world: capital flight and dollar shortage the local guards cannot offset. It watches a different population of borrowers than the US high-yield line — a distinct guard, a distinct signal.",
-      zh:"新兴市场主权国家死守美元融资的通道——外汇储备、IMF 额度、加息留住资本。新兴市场企业债 OAS 飙升，就泄露整个发展中世界系统性地失去美元通道：本地守护力抵不住的资本外逃与美元荒。它盯的是与美国高收益线完全不同的一批借款人——不同的守护力，不同的信号。"} },
+      en:"Emerging-market sovereigns defend access to dollar funding — reserves, IMF lines, rate hikes to keep capital home. A spike in the EM corporate option-adjusted spread leaks a systemic loss of dollar access across the developing world: capital flight and dollar shortage the local guards cannot offset. It watches a different population of borrowers than the US high-yield line, but measured co-movement says the two do not move independently: |max corr| = +0.80 against the US high-yield spread (credit_spread, n=789) — em_corp_oas rides the same global credit factor, not an orthogonal domain. It stays tier-2 for breadth and confirmation, never a candidate for tier-1 promotion: a second line from that factor there would break the headline count's independence assumption.",
+      zh:"新兴市场主权国家死守美元融资的通道——外汇储备、IMF 额度、加息留住资本。新兴市场企业债 OAS 飙升，就泄露整个发展中世界系统性地失去美元通道：本地守护力抵不住的资本外逃与美元荒。它盯的是与美国高收益线不同的一批借款人，但实测的联动说明二者并非独立异动：与美国高收益利差（credit_spread，n=789）的 |最大相关系数| 达 +0.80——em_corp_oas 随的是同一个全球信用因子，而不是一个正交的领域。它留在二级：用于广度与确认，绝不是晋升一级的候选——同一信用因子的第二条线晋升一级，会破坏头条计数的独立性假设。"} },
   { id:"port_throughput", color:"#cd853f", alarm:"down", tier:2,
     unit:{en:"port calls",zh:"靠港次数"},
     domain:{en:"Trade (global)",zh:"贸易（全球）"},
@@ -315,8 +316,8 @@ const LINES = [
     label:{en:"Euro HY credit spread (OAS)",zh:"欧元高收益债信用利差 (OAS)"},
     source:{en:"FRED — ICE BofA Euro HY OAS",zh:"FRED — ICE BofA 欧元高收益债 OAS"},
     explain:{
-      en:"The euro area's banks, the ECB, and the yield-hungry keep European high-yield spreads compressed, exactly as their US counterparts do — but the borrowers, the currency, and the guard are all different. When this spread blows out while the US line sleeps, the stress is European: an energy shock, a sovereign scare, a bank wobble. When both fire together with the EM line, that three-way resonance has marked every real credit episode in the seeded record — 2023-10, 2024-08, 2025-04, 2026-03.",
-      zh:"欧元区的银行、欧央行和追逐收益的资金把欧洲高收益利差压得很低，机制和美国同行一样——但借款人、货币和守护力都不同。当它独自飙升而美国线沉睡，压力就在欧洲：能源冲击、主权惊吓、银行动摇。当它与美国线、新兴市场线同时开火，这种三线共振在播种的历史里标出了每一次真实的信用事件——2023-10、2024-08、2025-04、2026-03。"} },
+      en:"The euro area's banks, the ECB, and the yield-hungry keep European high-yield spreads compressed, exactly as their US counterparts do — and measured co-movement says that resemblance is not coincidence: |max corr| = +0.74 against the US high-yield spread (credit_spread, n=783) and +0.86 against the EM corporate line (em_corp_oas). US HY, EM corp, and Euro HY move as one global credit factor at daily z, not three independent guards. It stays tier-2 for breadth, never a tier-1 candidate — a second line from the same credit factor would be redundant with the slot credit_spread already holds. The three firing together is still a real signal: that three-way resonance has marked every real credit episode in the seeded record — 2023-10, 2024-08, 2025-04, 2026-03.",
+      zh:"欧元区的银行、欧央行和追逐收益的资金把欧洲高收益利差压得很低，机制和美国同行一样——实测的联动说明这种相似并非巧合：与美国高收益利差（credit_spread，n=783）的 |最大相关系数| 为 +0.74，与新兴市场企业债线（em_corp_oas）为 +0.86。美国高收益、新兴市场企业债、欧元高收益三者在日频 z 上同属一个全球信用因子，而不是三个独立的守护力。它留在二级：用于广度，绝不是一级候选——同一信用因子的第二条线，会与 credit_spread 已占据的席位重复。三线同时开火依然是真实信号：这种三线共振在播种的历史里标出了每一次真实的信用事件——2023-10、2024-08、2025-04、2026-03。"} },
   { id:"fx_parallel_premium", color:"#d08770", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Capital controls (Argentina)",zh:"资本管制（阿根廷）"},
@@ -429,7 +430,7 @@ const T = {
     covMore:"what tremor cannot see ›",
     covTitle:"Field of view — what tremor can and cannot see",
     covLead:"\"0 of 4\" holds only inside the four instruments' own field of view:",
-    covBlind:"tremor has no instrument in the Middle East, South Asia or Africa, and none of the scored lines watches a single strait, border or war front — the broken-states probe above is the one exception: it pins named straits, from port data that runs ~10 days behind. A war there can be entirely real while every line here reads calm. That is a limit of the instrument, not a reading about the world. The watchlist below is where new coverage is built, before it is ever counted.",
+    covBlind:"tremor has no instrument in the Middle East, South Asia or Africa, and none of the scored lines watches a single strait, border or war front — the broken-states probe above is the one exception: it pins named straits, from port data that runs ~10 days behind. A war there can be entirely real while every line here reads calm. That is a limit of the instrument, not a reading about the world. A cadence gap sits inside the field of view too: cnh_cny has no weekend trading session, so Saturday and Sunday post no fresh reading, and a collection can still repeat an already-recorded quote and read stale rather than fresh — a reader expecting ~7 points a week from that line typically sees closer to 5. The watchlist below is where new coverage is built, before it is ever counted.",
     feelBars:"trembling count (real)",
     alarmingWhen:dir=>"alarming when "+dir, dirUp:"up", dirDown:"down",
     last:(v,u,d)=>" · last: "+v+" "+u+" on "+d, noCollect:"no collection this day",
@@ -483,7 +484,7 @@ const T = {
     covMore:"tremor 看不见什么 ›",
     covTitle:"视野范围 —— tremor 看得见与看不见什么",
     covLead:"「4 根线中有 0 根颤抖」这句话，只在这四台仪器自己的视野之内成立：",
-    covBlind:"tremor 在中东、南亚、非洲没有任何仪器，计分的线里也没有任何一台盯着某一条海峡、某一段边境或某一条战线——上方的卡死破锚探针是唯一的例外：它钉着具名的海峡，用的是滞后约 10 天的港口数据。那里的战争可以完全真实，而这里每根线仍然读作平静。这是仪器的局限，不是关于世界的读数。下方的观察名单，就是新覆盖在被计数之前生长的地方。",
+    covBlind:"tremor 在中东、南亚、非洲没有任何仪器，计分的线里也没有任何一台盯着某一条海峡、某一段边境或某一条战线——上方的卡死破锚探针是唯一的例外：它钉着具名的海峡，用的是滞后约 10 天的港口数据。那里的战争可以完全真实，而这里每根线仍然读作平静。这是仪器的局限，不是关于世界的读数。视野之内也有一处节奏缺口：cnh_cny 没有周末交易时段，周六、周日不产生新读数；有时某次采集仍会重复一个已记录过的报价，读作「重复发布」而非新读数——本以为这条线一周能看到约 7 个点的读者，实际常只看到约 5 个。下方的观察名单，就是新覆盖在被计数之前生长的地方。",
     feelBars:"颤抖根数（真实）",
     alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下跌",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
@@ -573,10 +574,39 @@ const CALIBRATING_OBS=30;
 // reads calm. This is a DESCRIPTION, not a diagnosis: the cause may be excess
 // feeling or missing coverage, and the instrument cannot distinguish them.
 const FEEL_IDS=["vix","gdelt_tone","gdelt"];
+// The full status vocabulary core/normalize.py can write to a row's `status`
+// column (see that module's docstring). Bound to normalize.ALL_STATUSES by
+// tests/lint_public_surface.py, so a status added or removed there is caught
+// here instead of drifting silently.
+const STATUS=["scoring","warming-up","stale","dark","closed","no-spread"];
 // Mirrors normalize.BLIND_STATUSES: a line HOLDING a reading it cannot judge.
 const BLIND=["warming-up","no-spread"];
+// A tier-2 line whose latest reading is one of these — for GAP_RUN_LOUD or
+// more CONSECUTIVE collections — has no reading at all, not merely a reading
+// it cannot judge (BLIND, above) or a republished one (stale). Left off the
+// watchlist item, this looked exactly like calm: the "dark":"NO DATA" label
+// (statusLabel, above) already existed but nothing ever read it for a tier-2
+// line. Only `dark` qualifies today — `closed` is a genuine market closure,
+// not a failure, and already carries its own distinct label. Bound to
+// normalize.ALL_STATUSES (as a subset) by tests/lint_public_surface.py.
+const GAP_STATUSES=["dark"];
+// One missed collection is noise (a timeout, a transient 502); two or more in
+// a row is a real gap worth breaking the calm look for.
+const GAP_RUN_LOUD=2;
 const lastRow=(lines,id)=>(lines[id]||[]).slice(-1)[0]||{};
 const isBlind=r=>BLIND.includes(r.status);
+// How many of `rows`' most recent entries, counting back from the last one,
+// carry a GAP_STATUSES status without interruption — e.g. dark, dark, dark,
+// scoring, dark returns 3, not 4: only the RUN ending at today counts, a
+// single dark day nine readings ago is not today's gap.
+function gapRunLength(rows){
+  let n=0;
+  for(let i=rows.length-1;i>=0;i--){
+    if(!GAP_STATUSES.includes(rows[i].status)) break;
+    n++;
+  }
+  return n;
+}
 const FEEL_HOT=2;
 const isDivergent=(count,feelMax)=>count===0&&feelMax!==null&&feelMax>=FEEL_HOT;
 async function load(){
@@ -843,15 +873,22 @@ function render(){
   if(TIER2.length){
     const b=document.createElement("b"); b.textContent=T[lang].watchTitle; b.style.display="block"; b.style.marginBottom="4px"; wl.appendChild(b);
     for(const L of TIER2){
-      const days=(lines[L.id]||[]).filter(r=>r.raw_value!=="").length;
+      const rows=lines[L.id]||[];
+      const days=rows.filter(r=>r.raw_value!=="").length;
       // Say when a line cannot score. A watchlist entry that is silently unable
       // to judge its own reading is indistinguishable from one that is calm.
       const r=lastRow(lines,L.id);
       const stTxt=(T[lang].statusLabel||{})[r.status];
       const blind=isBlind(r);
-      const item=document.createElement("span"); item.className="wl-item";
+      // A tier-2 line stuck GAP_RUN_LOUD+ collections deep in a GAP_STATUSES
+      // status (today: dark) has no reading at all, and used to render exactly
+      // like a calm one — nothing in the item marked it. This is the one place
+      // that unreachable "dark":"NO DATA" statusLabel entry gets read.
+      const gap=GAP_STATUSES.includes(r.status)&&gapRunLength(rows)>=GAP_RUN_LOUD;
+      const item=document.createElement("span"); item.className="wl-item"+(gap?" wl-gap":"");
       item.innerHTML=`<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)})`
-        + (blind&&stTxt?` <span class="wl-blind">${stTxt}</span>`:"")+` ›</span>`;
+        + (gap?` <span class="wl-gap">${stTxt||T[lang].nodata}</span>`
+           : (blind&&stTxt?` <span class="wl-blind">${stTxt}</span>`:""))+` ›</span>`;
       item.onclick=()=>openTier2Modal(L,lang);
       wl.appendChild(item);
     }

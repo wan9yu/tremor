@@ -24,11 +24,29 @@ Two things are checked:
      ``core.normalize.BLIND_STATUSES`` exactly, so mutating either side alone
      goes red instead of silently drifting.
 
-     Deliberately NOT asserted here: a JS ``STATUS``/``GAP_STATUSES`` const.
-     Neither exists in docs/index.html yet (T20/T21 add them) — binding them
-     now would keep this lint red from this task through T20 for no code
-     that exists yet. ``BLIND`` is the one such const that already exists at
-     HEAD, so it is bound above.
+     T20 adds two more consts, bound the same source-vs-source way, no data
+     read either:
+
+       - ``const STATUS=[...]`` names the full status vocabulary (all six).
+         ``TestStatusConstBindsToNormalize`` asserts its VALUES, as a set,
+         equal ``ALL_STATUSES`` exactly (the six ``STATUS_*`` constants
+         ``core/normalize.py`` declares) — same equality relationship as
+         ``BLIND``/``BLIND_STATUSES`` above, just against the full vocabulary
+         rather than the non-scoring subset.
+       - ``const GAP_STATUSES=[...]`` names which statuses make a tier-2
+         line's watchlist item render a "NO DATA" gap chip once a line has
+         held one of them for ``GAP_RUN_LOUD`` consecutive collections (see
+         that const's own comment in docs/index.html). Unlike ``STATUS`` and
+         ``BLIND``, this is NOT asserted equal to anything — it is a chosen
+         subset (today just ``dark``), not a restatement of a fixed set
+         ``core/normalize.py`` itself defines. ``TestGapStatusesConstIsBound``
+         asserts it is non-empty and a SUBSET of ``ALL_STATUSES`` — every name
+         it carries must be a status the code can actually emit — which is
+         the full binding relationship a chosen subset admits; whether a row
+         with a ``GAP_STATUSES`` status actually carries no reading is a
+         property of the committed record, not of these two sources against
+         each other, and belongs to (and is checked by)
+         tests/audit_public_surface.py instead.
 
   2. README claims. README.md carries a small "Machine-checked claims" table
      (added by this same change) stating a couple of numbers that are true
@@ -206,6 +224,62 @@ class TestBlindConstBindsToNormalize(unittest.TestCase):
         self.assertEqual(extra, [],
                           "docs/index.html's `const BLIND` carries status(es) "
                           f"not in core.normalize.BLIND_STATUSES: {extra}")
+
+
+# --- docs/index.html's `const STATUS=[...]` / `const GAP_STATUSES=[...]` ----
+
+_STATUS_CONST = re.compile(r'const STATUS\s*=\s*\[(?P<items>[^\]]*)\];')
+_GAP_STATUSES_CONST = re.compile(r'const GAP_STATUSES\s*=\s*\[(?P<items>[^\]]*)\];')
+
+
+@functools.lru_cache(maxsize=None)
+def _docs_status_values():
+    """The set of status strings inside docs/index.html's `const STATUS=[...]`
+    array — the full vocabulary, named explicitly (T20). Memoized (see
+    `_status_label_key_sets` above)."""
+    html = support.read_text(DOCS_INDEX)
+    m = _STATUS_CONST.search(html)
+    assert m, "docs/index.html: could not locate `const STATUS=[...]`"
+    values = _QUOTED_STRING.findall(m.group("items"))
+    assert values, "docs/index.html: `const STATUS` parsed with no values"
+    return set(values)
+
+
+@functools.lru_cache(maxsize=None)
+def _docs_gap_statuses_values():
+    """The set of status strings inside docs/index.html's
+    `const GAP_STATUSES=[...]` array — which statuses make a tier-2 line's
+    watchlist item render a gap chip (T20). Memoized (see
+    `_status_label_key_sets` above)."""
+    html = support.read_text(DOCS_INDEX)
+    m = _GAP_STATUSES_CONST.search(html)
+    assert m, "docs/index.html: could not locate `const GAP_STATUSES=[...]`"
+    values = _QUOTED_STRING.findall(m.group("items"))
+    assert values, "docs/index.html: `const GAP_STATUSES` parsed with no values"
+    return set(values)
+
+
+class TestStatusConstBindsToNormalize(unittest.TestCase):
+    def test_status_const_equals_normalizes_all_statuses(self):
+        docs_status = _docs_status_values()
+        missing = sorted(ALL_STATUSES - docs_status)
+        self.assertEqual(missing, [],
+                          "core/normalize.py status(es) missing from "
+                          f"docs/index.html's `const STATUS`: {missing}")
+        extra = sorted(docs_status - ALL_STATUSES)
+        self.assertEqual(extra, [],
+                          "docs/index.html's `const STATUS` carries status(es) "
+                          f"core/normalize.py never emits: {extra}")
+
+
+class TestGapStatusesConstIsBound(unittest.TestCase):
+    def test_gap_statuses_const_is_a_nonempty_subset_of_all_statuses(self):
+        gap = _docs_gap_statuses_values()
+        self.assertTrue(gap, "docs/index.html's `const GAP_STATUSES` is empty")
+        extra = sorted(gap - ALL_STATUSES)
+        self.assertEqual(extra, [],
+                          "docs/index.html's `const GAP_STATUSES` carries "
+                          f"status(es) core/normalize.py never emits: {extra}")
 
 
 # --- README.md's "Machine-checked claims" table ------------------------------
