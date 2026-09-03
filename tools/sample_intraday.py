@@ -34,6 +34,7 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from core import normalize
 from fetchers import capital_premium, cnh_cny, flights
 
 # Only the truly instantaneous lines. Lines whose reading is already an
@@ -89,7 +90,6 @@ def report():
     by_day = defaultdict(lambda: defaultdict(list))
     for r in rows:
         by_day[r["line"]][r["sampled_utc"][:10]].append(float(r["raw_value"]))
-    from core.normalize import _qn
     print(f"{'line':18} {'days':>5} {'samples':>8} {'median day range':>18} {'in Qn':>8}")
     for line, days in sorted(by_day.items()):
         spans = [max(v) - min(v) for v in days.values() if len(v) > 1]
@@ -102,13 +102,15 @@ def report():
         if os.path.exists(path):
             with open(path, newline="") as f:
                 hist = [float(x["raw_value"]) for x in csv.DictReader(f) if x["raw_value"]]
-            qn = _qn(hist[-90:]) if len(hist) >= 10 else None
+            qn = (normalize._qn(hist[-normalize.WINDOW:])
+                  if len(hist) >= normalize.MIN_POINTS else None)
         span = statistics.median(spans)
         ratio = f"{span / qn:.2f}" if qn else "—"
         print(f"{line:18} {len(days):>5} {sum(len(v) for v in days.values()):>8} "
               f"{span:>18.4g} {ratio:>8}")
     print("\n'in Qn' is the day's spread measured in the line's own robust scale.")
-    print("Above 3.0 means the clock alone can move it further than its alarm requires.")
+    print(f"Above {normalize.THRESHOLD:.1f} means the clock alone can move it further "
+          "than its alarm requires.")
 
 
 if __name__ == "__main__":

@@ -358,5 +358,43 @@ class TestTrembleCountPredicateIsOneHome(unittest.TestCase):
                           "rather than re-deriving the tremble-count predicate")
 
 
+# --- scoring constants (T5): WINDOW/MIN_POINTS/THRESHOLD read from normalize -
+
+# calibrate_threshold.py and sample_intraday.py are hardcoded here, not
+# scan-discovered, because normalize.py owns these constants rather than
+# reading them.
+_SCORING_CONST_READERS = (
+    os.path.join(TOOLS_DIR, "calibrate_threshold.py"),
+    os.path.join(TOOLS_DIR, "sample_intraday.py"),
+)
+_SCORING_CONSTANTS = ("WINDOW", "MIN_POINTS", "THRESHOLD")
+
+
+class TestScoringConstantsReadFromNormalize(unittest.TestCase):
+    def test_the_readers_are_found(self):
+        # A canary against a typo'd path silently no-oping this check.
+        found = _all_py_files()
+        for rel in _SCORING_CONST_READERS:
+            self.assertIn(rel, found)
+
+    def test_readers_reference_every_constant_from_normalize(self):
+        # Reference-based, not a literal scan: WINDOW=90, MIN_POINTS=10 and
+        # THRESHOLD=3.0 legitimately appear as bare numbers in these files'
+        # own comments/docstrings/prose (e.g. calibrate_threshold.py's method
+        # writeup, sample_intraday.py's module docstring) — a blanket "no
+        # literal 90/10/3.0" scan would false-flag those. This asserts the
+        # constants are DERIVED (``normalize.<NAME>`` attribute reads), the
+        # same ``_references_attr`` shape T3/T4 use above.
+        offenders = []
+        for rel in _SCORING_CONST_READERS:
+            tree = _parse(rel)
+            for const in _SCORING_CONSTANTS:
+                if not _references_attr(tree, "normalize", const):
+                    offenders.append((rel, const))
+        self.assertEqual(offenders, [],
+                          "scoring constant not derived from normalize (read "
+                          f"normalize.<NAME> instead of re-typing it): {offenders}")
+
+
 if __name__ == "__main__":
     unittest.main()

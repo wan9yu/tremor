@@ -49,7 +49,7 @@ SEED = 20260803          # fixed: the table must be re-derivable exactly
 WINDOWS = 120_000        # simulated windows per n
 N_MIN, N_MAX = normalize.MIN_POINTS, normalize.WINDOW
 TARGET_N = normalize.WINDOW      # the window size whose rate everything matches
-TARGET_C = 3.0                   # ...at the threshold the instrument always had
+TARGET_C = normalize.THRESHOLD   # ...at the threshold the instrument always had
 
 
 def qn_batch(samples):
