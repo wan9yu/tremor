@@ -29,6 +29,8 @@ import datetime
 
 import requests
 
+from core import useragent
+
 LINE = "stablecoin_peg"
 LABEL = "Stablecoin depeg — worst of USDC/USDT (bp from $1)"
 UNIT = "bp"
@@ -51,7 +53,7 @@ MATERIALITY = 25  # bp; alarm at 3*25 = 75bp. Calm venue discount ~10bp -> z=0.4
 
 PAIRS = {"USDC": "usdcusd", "USDT": "usdtusd"}
 _OHLC = "https://www.bitstamp.net/api/v2/ohlc/{pair}/"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 
 def candles(pair, limit, start=None, end=None):

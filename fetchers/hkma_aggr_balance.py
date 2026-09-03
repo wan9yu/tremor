@@ -28,6 +28,8 @@ import time
 
 import requests
 
+from core import useragent
+
 LINE = "hkma_aggr_balance"
 LABEL = "HK aggregate balance (HK$m)"
 UNIT = "HK$m"
@@ -52,7 +54,7 @@ PUBLICATION_LAG_DAYS = 1
 
 _URL = ("https://api.hkma.gov.hk/public/market-data-and-statistics/"
         "daily-monetary-statistics/daily-figures-interbank-liquidity")
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 # Split so a timeout names WHICH leg ran out. The measured bad-phase signature is
 # a completed connect and handshake followed by silence, which raises ReadTimeout;

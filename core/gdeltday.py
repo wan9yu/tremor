@@ -16,8 +16,10 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
+from core import useragent
+
 _URL = "http://data.gdeltproject.org/gdeltv2/{stamp}.export.CSV.zip"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 _QUADCLASS_COL = 29  # 0-based; "4" == material conflict
 _TONE_COL = 34       # AvgTone
 _MIN_FILES = 48      # under half a day would bias the aggregates

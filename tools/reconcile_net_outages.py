@@ -24,6 +24,7 @@ import urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
+from core import useragent
 from fetchers import net_outages
 
 _URL = "https://api.ioda.inetintel.cc.gatech.edu/v2/outages/summary"
@@ -43,7 +44,7 @@ def requery(end_date):
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE  # IODA's chain trips some sandboxes; read-only GET
-    req = urllib.request.Request(q, headers={"User-Agent": "tremor/1.0"})
+    req = urllib.request.Request(q, headers=useragent.HEADERS)
     data = json.loads(urllib.request.urlopen(req, timeout=45, context=ctx).read())["data"]
     return sum(1 for e in data
                if any(str(k).startswith(_DS) for k in (e.get("scores") or {})))

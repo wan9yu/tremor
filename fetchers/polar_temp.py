@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 
 import requests
 
-from core import arctic_clim
+from core import arctic_clim, useragent
 
 LINE = "polar_temp"
 LABEL = "Arctic 80N temp anomaly (vs 1958-2002)"
@@ -34,7 +34,7 @@ ANOMALY_DIRECTION = "up"  # warmer than the historical normal is the noteworthy 
 TIER = 2  # context line — fails the guard gate, never counted, never promotable
 
 _URL = "https://download.dmi.dk/pub/plus80N_temperatureindex/meanT{year}_running.txt"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 
 def parse_rows(text):

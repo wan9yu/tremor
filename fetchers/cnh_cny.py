@@ -31,7 +31,7 @@ import datetime
 
 import requests
 
-from core import clock
+from core import clock, useragent
 
 LINE = "cnh_cny"
 LABEL = "Offshore−onshore yuan spread (pips)"
@@ -59,7 +59,10 @@ SAMPLE_TARGET_UTC_H = 22.5
 SAMPLE_TOL_H = 0.5
 
 _CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}"
-_HEADERS = {"User-Agent": "Mozilla/5.0 (tremor; +https://github.com/wan9yu/tremor)"}
+# Yahoo's chart endpoint commonly rejects non-browser User-Agents, so this
+# stays the browser-shaped COMPAT_HEADERS rather than core.useragent.HEADERS
+# — see core/useragent.py's docstring.
+_HEADERS = useragent.COMPAT_HEADERS
 # Both symbols quote nearly around the clock on weekdays, so a simultaneous read
 # should differ by minutes. Three hours is generous enough not to blank a normal
 # weekday and tight enough to catch the multi-hour desync that motivated it.

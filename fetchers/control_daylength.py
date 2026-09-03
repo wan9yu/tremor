@@ -51,6 +51,8 @@ import datetime
 
 import requests
 
+from core import useragent
+
 LINE = "control_daylength"
 LABEL = "Control: day length at Greenwich (s)"
 UNIT = "s"
@@ -63,7 +65,7 @@ LAT = 51.4779
 LON = 0.0
 
 _URL = "https://api.sunrise-sunset.org/json"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 
 def fetch_daily():

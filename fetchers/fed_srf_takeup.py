@@ -38,6 +38,8 @@ import datetime
 
 import requests
 
+from core import useragent
+
 LINE = "fed_srf_takeup"
 LABEL = "Fed SRF take-up — daily Standing Repo Facility borrowing ($m)"
 UNIT = "$m"
@@ -63,7 +65,7 @@ MATERIALITY = 10000   # $m; alarm at 3*10,000 = $30bn. Dust (<$100m PM ops) -> z
 
 _SEARCH = "https://markets.newyorkfed.org/api/rp/results/search.json"
 _LAST = "https://markets.newyorkfed.org/api/rp/all/all/results/last/{n}.json"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 
 def _get(url, params=None):

@@ -35,6 +35,8 @@ import statistics
 
 import requests
 
+from core import useragent
+
 LINE = "tga_days_cash"
 LABEL = "US Treasury cash buffer (days of outflows)"
 UNIT = "days"
@@ -43,7 +45,7 @@ TIER = 2
 
 _URL = ("https://api.fiscaldata.treasury.gov/services/api/fiscal_service"
         "/v1/accounting/dts/operating_cash_balance")
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 _CLOSING = "Treasury General Account (TGA) Closing Balance"
 _WITHDRAWALS = "Total TGA Withdrawals (Table II) (-)"

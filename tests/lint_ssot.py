@@ -1,7 +1,7 @@
 """One-home guards for arithmetic and ids that must have exactly one
 definition (SSOT = single source of truth). Shared across tasks; net_outages'
 settled-window boundary (T1) is the first tenant, FRED series ids (T2) the
-second.
+second, the User-Agent header (T3) the third.
 
 The net_outages settle boundary (R23.1) is the one place a drift silently
 writes a WRONG tier-1 raw that forward-only then freezes forever: the live
@@ -20,6 +20,15 @@ tools/repair_fred_seed.py must read ``mod.SERIES`` rather than re-typing the
 id, so a rotated or renamed series id cannot drift between the fetcher and
 the seed tool that rebuilds its history.
 
+The User-Agent header (T3) is the same shape again: every network fetcher
+used to carry its own copy of the literal ``tremor/1.0
+(+https://github.com/wan9yu/tremor)`` (plus cnh_cny's browser-shaped Yahoo
+variant and a truncated third in tools/reconcile_net_outages.py); a wrong UA
+only gets a source blocked (a recoverable dark row, never a frozen wrong
+raw), so the risk here is drift, not corruption — but cnh_cny's variant is
+load-bearing for Yahoo and stays a deliberate second exception
+(``core.useragent.COMPAT_HEADERS``), not a violation.
+
 LINT, not gate: a source scan, not a property of the running instrument, so
 it runs on push via ``unittest discover tests -p "lint_*.py"`` (ci.yml's
 lint job) and is deliberately NOT part of daily.yml's pre-collect gate — a
@@ -35,6 +44,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 import support
+from core import useragent
 
 # ``datetime.time(22, 0)`` or a bare ``time(22, 0)`` (net_outages.py imports
 # ``time`` directly), and the ``.replace(hour=22, ...)`` form _settled_window
@@ -202,6 +212,101 @@ class TestFredSeriesDeclaredOnceReadBySeeders(unittest.TestCase):
         self.assertEqual(offenders, [],
                           "FRED series id re-hard-coded outside its owning "
                           f"fetcher (read mod.SERIES instead): {offenders}")
+
+
+# --- User-Agent header (T3): one literal, read by every network fetcher ---
+
+_UA_HOME = os.path.join("core", "useragent.py")
+# Read from core.useragent itself rather than re-typed here — two homes for
+# the same literal would let this lint go stale the moment either string is
+# ever revised (round 26's own /simplify finding on this file).
+_UA_LITERAL = useragent.HEADERS["User-Agent"]
+_COMPAT_LITERAL = useragent.COMPAT_HEADERS["User-Agent"]
+_COMPAT_OWNER = os.path.join(FETCHERS_DIR, "cnh_cny.py")
+
+
+def _imports_core_useragent(tree):
+    """True if ``tree`` has a module-level import binding the name
+    ``useragent`` for core.useragent — ``from core import useragent`` (alone
+    or alongside other core imports, e.g. ``from core import clock,
+    useragent``) or ``import core.useragent``. Module-level only (not
+    indented inside a function), the same restriction
+    ``_module_level_import_names`` in lint_stub_style.py applies to its own
+    stub-target scan."""
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module == "core":
+            if any(alias.name == "useragent" for alias in node.names):
+                return True
+        elif isinstance(node, ast.Import):
+            if any(alias.name == "core.useragent" for alias in node.names):
+                return True
+    return False
+
+
+def _references_useragent_attr(tree, attr):
+    """True if ``tree`` reads ``useragent.<attr>`` anywhere — a direct use,
+    or unpacked via ``**useragent.HEADERS`` as core/adsb.py does."""
+    return any(isinstance(node, ast.Attribute) and node.attr == attr
+               and isinstance(node.value, ast.Name) and node.value.id == "useragent"
+               for node in ast.walk(tree))
+
+
+def _files_importing_useragent():
+    """Every tracked .py file (outside core/useragent.py itself) with a
+    module-level import of core.useragent — discovered structurally, the
+    same shape ``_fetchers_importing_fred`` uses for T2's fred import above,
+    generalized to the whole tree since UA callers span core/, fetchers/,
+    and tools/ rather than one directory. Deliberately NOT a hand-maintained
+    list: that went stale the moment a file was migrated without also
+    updating it (round 26's own /simplify finding on this file)."""
+    return [rel for rel in _all_py_files()
+            if rel != _UA_HOME and _imports_core_useragent(_parse(rel))]
+
+
+class TestUserAgentIsOneHome(unittest.TestCase):
+    def test_useragent_importers_are_found(self):
+        # A canary against an over-narrow walk silently finding nothing.
+        self.assertIn(os.path.join(FETCHERS_DIR, "net_outages.py"),
+                      _files_importing_useragent())
+
+    def test_ua_literal_appears_only_in_core_useragent(self):
+        # ast, not a substring grep: several of these fetcher docstrings
+        # quote their own source URLs and headers in prose, and ast.walk
+        # tokenizes the same way the interpreter does (T2's rationale above),
+        # catching a re-typed literal even folded into a longer f-string.
+        hits = []
+        for rel in _all_py_files():
+            if rel == _UA_HOME:
+                continue
+            literals = _all_string_literals(_parse(rel))
+            if any(_UA_LITERAL in s or _COMPAT_LITERAL in s for s in literals):
+                hits.append(rel)
+        self.assertEqual(hits, [],
+                          "the tremor User-Agent literal (standard or the "
+                          "cnh_cny Mozilla COMPAT_HEADERS variant) must live "
+                          f"only in {_UA_HOME} — found it re-typed in: {hits}")
+
+    def test_every_useragent_importer_reads_headers_or_compat_headers(self):
+        importers = _files_importing_useragent()
+        self.assertTrue(importers, "no files importing core.useragent were discovered")
+        dead = [rel for rel in importers
+                if not (_references_useragent_attr(_parse(rel), "HEADERS")
+                        or _references_useragent_attr(_parse(rel), "COMPAT_HEADERS"))]
+        self.assertEqual(dead, [],
+                          f"{dead} import core.useragent but never read HEADERS "
+                          "or COMPAT_HEADERS from it — drop the unused import")
+
+    def test_compat_headers_referenced_only_in_cnh_cny(self):
+        # COMPAT_HEADERS exists solely because Yahoo's chart endpoint is
+        # load-bearing on cnh_cny's browser-shaped UA — an ownership check
+        # (T2's SERIES-ownership shape above) so a second caller reaching
+        # for it would be caught rather than quietly normalizing the
+        # exception into a habit.
+        hits = [rel for rel in _all_py_files()
+                if rel != _UA_HOME and _references_useragent_attr(_parse(rel), "COMPAT_HEADERS")]
+        self.assertEqual(hits, [_COMPAT_OWNER],
+                          "core.useragent.COMPAT_HEADERS is cnh_cny's Yahoo-only "
+                          f"exception, not a general header — found it read in: {hits}")
 
 
 if __name__ == "__main__":

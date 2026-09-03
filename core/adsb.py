@@ -12,6 +12,8 @@ in one place for whichever airspace lines use them.
 """
 import requests
 
+from core import useragent
+
 RADIUS_NM = 250
 # A busy region reading below this is remarkable enough to say so in the note.
 # It is a DISCLOSURE, not a veto: every provider is consulted anyway, so if they
@@ -27,10 +29,7 @@ PROVIDERS = [
     ("adsb.fi", "https://opendata.adsb.fi/api/v2/lat/{lat}/lon/{lon}/dist/{r}"),
     ("adsb.lol", "https://api.adsb.lol/v2/lat/{lat}/lon/{lon}/dist/{r}"),
 ]
-HEADERS = {
-    "User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)",
-    "Accept": "application/json",
-}
+HEADERS = {**useragent.HEADERS, "Accept": "application/json"}
 
 
 def _provider_count(template, lat, lon):

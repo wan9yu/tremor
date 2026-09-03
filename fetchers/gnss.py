@@ -27,6 +27,8 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
+from core import useragent
+
 LINE = "gnss_interference"
 LABEL = "GPS interference (% aircraft)"
 UNIT = "%"
@@ -34,7 +36,7 @@ ANOMALY_DIRECTION = "up"
 TIER = 2  # demoted round 7: one worldwide ratio cannot see a regional campaign
 
 _URL = "https://gpsjam.org/data/{date}-h3_4.csv"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 
 def counts_from_csv(text):

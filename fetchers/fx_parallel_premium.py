@@ -31,7 +31,7 @@ import datetime
 
 import requests
 
-from core import clock
+from core import clock, useragent
 
 LINE = "fx_parallel_premium"
 LABEL = "Argentina blue-vs-official FX premium (%)"
@@ -41,7 +41,7 @@ TIER = 2
 
 _BLUE = "https://dolarapi.com/v1/dolares/blue"
 _OFICIAL = "https://dolarapi.com/v1/dolares/oficial"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 
 def _leg(url):

@@ -16,8 +16,10 @@ import time
 
 import requests
 
+from core import useragent
+
 _URL = "https://fred.stlouisfed.org/graph/fredgraph.csv"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 _MIN_GAP_S = 5.0
 _last_request = 0.0

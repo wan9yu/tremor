@@ -42,6 +42,8 @@ from datetime import datetime, time, timedelta, timezone
 
 import requests
 
+from core import useragent
+
 LINE = "net_outages"
 LABEL = "Countries with internet outages (IODA ping)"
 UNIT = "countries"
@@ -63,7 +65,7 @@ QUANTUM = 1  # countries: a count, and the resolution of the reading is one of t
 # spread. It has never bound on the real record (smallest Qn used: 1.610).
 
 _URL = "https://api.ioda.inetintel.cc.gatech.edu/v2/outages/summary"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 _DATASOURCE = "ping-slash24"  # the one stable detector; see module docstring
 
 # WHEN THE MONITOR FAILS, IT REPORTS THE WORLD AS FAILING. Twelve days in the

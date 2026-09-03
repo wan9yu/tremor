@@ -28,11 +28,11 @@ sys.path.insert(0, _HERE)                    # tools/, for seedlib
 import requests
 
 import seedlib
+from core import useragent
 from fetchers import space_weather as sw
 
 _START = "2022-07-27"  # align with gnss_interference's in-repo history start
 _ARCHIVE = "https://www-app3.gfz-potsdam.de/kp_index/Kp_ap_Ap_SN_F107_since_1932.txt"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
 
 
 def parse_archive(text):
@@ -70,7 +70,7 @@ def history():
     the live fetcher applies — so the seed never records a still-forming day and
     the live tail picks up where the seed stops, one series.
     """
-    text = requests.get(_ARCHIVE, headers=_HEADERS, timeout=60).text
+    text = requests.get(_ARCHIVE, headers=useragent.HEADERS, timeout=60).text
     days = sw.settled(sw.daily_max(parse_archive(text)))
     return [(day, round(kp, 3)) for day, kp in sorted(days.items())]
 

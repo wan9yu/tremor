@@ -38,6 +38,8 @@ import datetime
 
 import requests
 
+from core import useragent
+
 LINE = "space_weather"
 LABEL = "Geomagnetic storm — daily max planetary Kp"
 UNIT = "Kp"
@@ -49,7 +51,7 @@ QUANTUM = 1.0 / 3.0  # Kp is reported in thirds (the 0, 0+, 1-, 1 ... scale); th
                      # the storm that follows — the net_outages lesson.
 
 _LIVE = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json"
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 
 def parse_live(payload):

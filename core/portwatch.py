@@ -34,9 +34,11 @@ import json
 
 import requests
 
+from core import useragent
+
 _BASE = ("https://services9.arcgis.com/weJ1QsnbMYJlCHdG/ArcGIS/rest/services/"
          "{svc}/FeatureServer/0/query")
-_HEADERS = {"User-Agent": "tremor/1.0 (+https://github.com/wan9yu/tremor)"}
+_HEADERS = useragent.HEADERS
 
 LAG_DAYS = 10
 _FETCH_DAYS = 40  # one request comfortably covers a publication cycle
