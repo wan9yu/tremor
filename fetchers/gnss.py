@@ -14,11 +14,23 @@ day's aggregate is honest at daily cadence.
 KNOWN LIMIT — this is one WORLDWIDE ratio and has no regional sensitivity. A
 jamming campaign confined to one theatre is diluted by global traffic: through
 the July 2026 Gulf escalation the bad-GPS share inside the Iran/Hormuz airspace
-ran near 16% while this line read 0.47% and never moved. Regionalizing it was
-investigated in radar round 7 and deferred — every candidate box that detected
-the episode lost the detection when its edge moved one degree, and the 90-day
-baseline spanned a tenfold growth in the sampling frame. Treat the reading as a
-global floor, not as a conflict detector.
+ran near 16% while this line read only 0.47%. Regionalizing it was investigated
+in radar round 7 and deferred on two grounds: every candidate box that detected
+the episode lost the detection when its edge moved one degree, and the 39-
+observation baseline then in hand made the sampling frame look like it had
+grown by an order of magnitude.
+
+CORRECTED round 9 (2026-08-03), once the line was seeded to four years of real
+history (radar-log.md:499-511): the July 2026 window re-scores to z = +2.87
+(49 alarm-direction trembles record-wide across 1,452 scored days) — the line
+DID register the escalation, it just fell short of the |z|>3 bar; the flat
+0.47% reading above was an artifact of the thin baseline it was first judged
+against, not evidence the line never moves. The sampling-frame growth was
+overstated too: measured by yearly median across the seeded record it is
+about 1.23x, not the order-of-magnitude the round-7 estimate implied (9
+broken partial files out of 1,423). What survives: +2.87 is still under the
+alarm bar, so a worldwide ratio still cannot be trusted to catch a regional
+campaign — treat the reading as a global floor, not as a conflict detector.
 
 Source: GPSJam daily CSV (built on ADS-B Exchange). Keyless; the per-day file is
 dated, so we take the most recent available day.

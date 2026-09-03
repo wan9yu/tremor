@@ -183,9 +183,11 @@ re-reading the log. Close an item by editing it out with a round reference.
   Follow-up: confirm obs-dedup isn't double-counting Friday's close, and decide whether the guard
   should also cover Saturday (a fetcher change → needs approval).
 - **net_outages settle — reconciliation tripwire** (R23.1, CLOSES the R23 sub-sweep-filter item):
-  the 08-24 artifact class is fixed by settling the live fetcher to a completed D-1 22:00Z window — the
-  GENERAL fix (it removes the whole latency-injection class) rather than a filter fitted to the 08-24
-  signature; the queued onset-synchrony/BGP/transience filter is NOT built. `monitor_swept` untouched.
+  the 08-24 artifact class was addressed by settling the live fetcher to a completed D-1 22:00Z
+  window — not a filter fitted to the 08-24 signature; the
+  queued onset-synchrony/BGP/transience filter is NOT built. **[claim corrected R23.2: settle
+  stabilizes and relocates the count to its true date — it does not eliminate a synchronized-onset
+  cluster, which stays DETECT-AND-ADJUDICATE.]** `monitor_swept` untouched.
   Standing check: each round (a `tools/` step, live network — never a gate/test) re-query the last ~7
   settled windows vs their stored raws; any mismatch that would flip a verdict reopens the D-2 question
   with data. One-time on the FIRST post-switch round: re-query every seam-era row (2026-07-10→2026-08-25)
