@@ -194,27 +194,24 @@ class TestStatusLabelsBindToNormalize(unittest.TestCase):
                           f"normalize={sorted(discovered)}")
 
 
-# --- docs/index.html's `const BLIND=[...]` array ----------------------------
-
-_BLIND_CONST = re.compile(r'const BLIND\s*=\s*\[(?P<items>[^\]]*)\];')
-_QUOTED_STRING = re.compile(r'"([^"]+)"')
+# --- docs/index.html's `const NAME=[...]` status arrays ---------------------
+# BLIND, STATUS and GAP_STATUSES are all `const NAME=["a","b"];` arrays read
+# the same way; support.docs_const_array does the regex extraction.
 
 
 @functools.lru_cache(maxsize=None)
-def _docs_blind_values():
-    """The set of status strings inside docs/index.html's `const BLIND=[...]`
+def _docs_const(name):
+    """The set of status strings inside docs/index.html's `const <name>=[...]`
     array. Memoized (see `_status_label_key_sets` above)."""
-    html = support.read_text(DOCS_INDEX)
-    m = _BLIND_CONST.search(html)
-    assert m, "docs/index.html: could not locate `const BLIND=[...]`"
-    values = _QUOTED_STRING.findall(m.group("items"))
-    assert values, "docs/index.html: `const BLIND` parsed with no values"
-    return set(values)
+    values = support.docs_const_array(DOCS_INDEX, name)
+    assert values is not None, f"docs/index.html: could not locate `const {name}=[...]`"
+    assert values, f"docs/index.html: `const {name}` parsed with no values"
+    return values
 
 
 class TestBlindConstBindsToNormalize(unittest.TestCase):
     def test_blind_const_equals_normalize_blind_statuses(self):
-        docs_blind = _docs_blind_values()
+        docs_blind = _docs_const("BLIND")
         want = set(normalize.BLIND_STATUSES)
         missing = sorted(want - docs_blind)
         self.assertEqual(missing, [],
@@ -226,42 +223,9 @@ class TestBlindConstBindsToNormalize(unittest.TestCase):
                           f"not in core.normalize.BLIND_STATUSES: {extra}")
 
 
-# --- docs/index.html's `const STATUS=[...]` / `const GAP_STATUSES=[...]` ----
-
-_STATUS_CONST = re.compile(r'const STATUS\s*=\s*\[(?P<items>[^\]]*)\];')
-_GAP_STATUSES_CONST = re.compile(r'const GAP_STATUSES\s*=\s*\[(?P<items>[^\]]*)\];')
-
-
-@functools.lru_cache(maxsize=None)
-def _docs_status_values():
-    """The set of status strings inside docs/index.html's `const STATUS=[...]`
-    array — the full vocabulary, named explicitly (T20). Memoized (see
-    `_status_label_key_sets` above)."""
-    html = support.read_text(DOCS_INDEX)
-    m = _STATUS_CONST.search(html)
-    assert m, "docs/index.html: could not locate `const STATUS=[...]`"
-    values = _QUOTED_STRING.findall(m.group("items"))
-    assert values, "docs/index.html: `const STATUS` parsed with no values"
-    return set(values)
-
-
-@functools.lru_cache(maxsize=None)
-def _docs_gap_statuses_values():
-    """The set of status strings inside docs/index.html's
-    `const GAP_STATUSES=[...]` array — which statuses make a tier-2 line's
-    watchlist item render a gap chip (T20). Memoized (see
-    `_status_label_key_sets` above)."""
-    html = support.read_text(DOCS_INDEX)
-    m = _GAP_STATUSES_CONST.search(html)
-    assert m, "docs/index.html: could not locate `const GAP_STATUSES=[...]`"
-    values = _QUOTED_STRING.findall(m.group("items"))
-    assert values, "docs/index.html: `const GAP_STATUSES` parsed with no values"
-    return set(values)
-
-
 class TestStatusConstBindsToNormalize(unittest.TestCase):
     def test_status_const_equals_normalizes_all_statuses(self):
-        docs_status = _docs_status_values()
+        docs_status = _docs_const("STATUS")
         missing = sorted(ALL_STATUSES - docs_status)
         self.assertEqual(missing, [],
                           "core/normalize.py status(es) missing from "
@@ -274,7 +238,7 @@ class TestStatusConstBindsToNormalize(unittest.TestCase):
 
 class TestGapStatusesConstIsBound(unittest.TestCase):
     def test_gap_statuses_const_is_a_nonempty_subset_of_all_statuses(self):
-        gap = _docs_gap_statuses_values()
+        gap = _docs_const("GAP_STATUSES")
         self.assertTrue(gap, "docs/index.html's `const GAP_STATUSES` is empty")
         extra = sorted(gap - ALL_STATUSES)
         self.assertEqual(extra, [],
@@ -337,7 +301,7 @@ def _tier1_fetcher_trees():
     """[(modname, ast.Module)] for every collect.LINES alias whose fetcher
     module's own LINE id lint_registry._collect_registry() marks tier 1.
     Memoized — pure and no-arg, same pattern as this file's other
-    source-parsing helpers (`_readme_claims`, `_docs_blind_values`, etc.)."""
+    source-parsing helpers (`_readme_claims`, `_docs_const`, etc.)."""
     registry, _ = lint_registry._collect_registry()
     tier1_ids = {line_id for line_id, meta in registry.items() if meta["tier"] == 1}
     collect_tree = lint_registry._parse(lint_registry.COLLECT_PATH)

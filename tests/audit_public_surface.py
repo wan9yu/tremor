@@ -52,7 +52,6 @@ cannot do either. Runs post-commit via ``python -m unittest discover tests
 -p "audit_*.py"``: a failure here is an alarm issue, never a lost day.
 """
 import os
-import re
 import sys
 import unittest
 
@@ -103,9 +102,6 @@ class TestMirroredFilesAreByteIdentical(unittest.TestCase):
 
 # --- 2. the tier-2 gap chip's claim, bound to docs/index.html's own consts --
 
-_GAP_STATUSES_CONST = re.compile(r'const GAP_STATUSES\s*=\s*\[(?P<items>[^\]]*)\];')
-_QUOTED_STRING = re.compile(r'"([^"]+)"')
-
 
 def _docs_gap_statuses():
     """The status strings inside docs/index.html's `const GAP_STATUSES=[...]`,
@@ -113,11 +109,8 @@ def _docs_gap_statuses():
     bound to whatever the page actually declares (tests/lint_public_surface.py
     separately asserts this const is a subset of core.normalize's statuses;
     this module only reuses its VALUES, it does not re-check that binding)."""
-    html = support.read_text(DOCS_INDEX)
-    m = _GAP_STATUSES_CONST.search(html)
-    assert m, "docs/index.html: could not locate `const GAP_STATUSES=[...]`"
-    values = set(_QUOTED_STRING.findall(m.group("items")))
-    assert values, "docs/index.html: `const GAP_STATUSES` parsed with no values"
+    values = support.docs_const_array(DOCS_INDEX, "GAP_STATUSES")
+    assert values, "docs/index.html: `const GAP_STATUSES=[...]` absent or empty"
     return values
 
 

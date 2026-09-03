@@ -877,14 +877,14 @@ function render(){
       const days=rows.filter(r=>r.raw_value!=="").length;
       // Say when a line cannot score. A watchlist entry that is silently unable
       // to judge its own reading is indistinguishable from one that is calm.
-      const r=lastRow(lines,L.id);
+      const r=rows.slice(-1)[0]||{};
       const stTxt=(T[lang].statusLabel||{})[r.status];
       const blind=isBlind(r);
       // A tier-2 line stuck GAP_RUN_LOUD+ collections deep in a GAP_STATUSES
       // status (today: dark) has no reading at all, and used to render exactly
       // like a calm one — nothing in the item marked it. This is the one place
       // that unreachable "dark":"NO DATA" statusLabel entry gets read.
-      const gap=GAP_STATUSES.includes(r.status)&&gapRunLength(rows)>=GAP_RUN_LOUD;
+      const gap=gapRunLength(rows)>=GAP_RUN_LOUD;
       const item=document.createElement("span"); item.className="wl-item"+(gap?" wl-gap":"");
       item.innerHTML=`<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)})`
         + (gap?` <span class="wl-gap">${stTxt||T[lang].nodata}</span>`

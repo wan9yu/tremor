@@ -43,6 +43,19 @@ def read_text(path):
 _read = read_text  # short alias used by this module's own helpers below
 
 
+def docs_const_array(path, name):
+    """The set of quoted strings in a ``const NAME=[...]`` array in an HTML/JS
+    file — e.g. ``const BLIND=["warming-up","no-spread"];`` yields
+    ``{"warming-up", "no-spread"}``.
+
+    A regex, not a JS parse, for the same reason as ``cron_hours`` below:
+    imported by stdlib-only lints that install nothing. Returns ``None`` when
+    the const is absent, so a caller can tell "not declared" from "declared
+    empty" and fail loudly rather than pass vacuously."""
+    m = re.search(r'const ' + re.escape(name) + r'\s*=\s*\[([^\]]*)\]', _read(path))
+    return None if m is None else set(re.findall(r'"([^"]+)"', m.group(1)))
+
+
 def cron_hours(path):
     """Every ``cron:`` hour declared in a workflow file, in order.
 
