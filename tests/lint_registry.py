@@ -38,11 +38,13 @@ instrument, so it runs on push via ``unittest discover tests -p
 pre-collect gate — a registry drift must never abort a collection day.
 """
 import ast
+import functools
 import glob
 import os
 import re
 import sys
 import unittest
+from collections import Counter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -104,10 +106,13 @@ def _module_level_const(tree, name):
     return None
 
 
+@functools.lru_cache(maxsize=None)
 def _collect_registry():
     """{LINE id: {"alarm": ANOMALY_DIRECTION, "tier": TIER}}, built without
     ever importing collect.py or a fetcher module (see the module
-    docstring)."""
+    docstring). Memoized — ast-parsing collect.py plus every fetcher module
+    it references is pure and no-arg, and every test method below calls
+    this afresh."""
     collect_tree = _parse(COLLECT_PATH)
     alias_map = _fetcher_alias_map(collect_tree)
     aliases = _collect_lines_aliases(collect_tree)
@@ -139,10 +144,12 @@ _JS_LINE_ENTRY = re.compile(
     r'(?:\s*tier:(?P<tier>\d+),)?\s*$', re.M)
 
 
+@functools.lru_cache(maxsize=None)
 def _docs_registry():
     """{id: {"alarm":..., "tier":...}} parsed out of docs/index.html's
     `const LINES = [...]` block, plus the ordered list of raw regex matches
-    (so a caller can also check for duplicate ids)."""
+    (so a caller can also check for duplicate ids). Memoized — pure, no-arg,
+    and re-invoked by several test methods below."""
     html = support.read_text(DOCS_INDEX)
     m = re.search(r'const LINES = \[(.*?)\n\];', html, re.S)
     assert m, "docs/index.html: could not locate `const LINES = [ ... ];`"
@@ -154,6 +161,22 @@ def _docs_registry():
             "tier": int(e.group("tier")) if e.group("tier") else 1,
         }
     return registry, entries
+
+
+def _assert_id_sets_equal(self, want, got, want_label, got_label):
+    """Assert two id collections carry the same set of ids, failing on
+    sorted missing/extra lists rather than an opaque set diff: an id in
+    `want` but absent from `got` is reported as missing from `got_label`;
+    an id in `got` but absent from `want` is reported as not declared by
+    `want_label`. Shared by both the docs-vs-collect and the
+    radar.md-tier-table id-set checks below."""
+    want, got = set(want), set(got)
+    missing = sorted(want - got)
+    self.assertEqual(missing, [],
+                      f"{want_label} id(s) missing from {got_label}: {missing}")
+    extra = sorted(got - want)
+    self.assertEqual(extra, [],
+                      f"{got_label} id(s) not declared by {want_label}: {extra}")
 
 
 class TestDashboardLinesMatchCollectLines(unittest.TestCase):
@@ -172,11 +195,16 @@ class TestDashboardLinesMatchCollectLines(unittest.TestCase):
     def test_docs_and_collect_agree_on_the_set_of_ids(self):
         docs_registry, _ = _docs_registry()
         collect_registry, _ = _collect_registry()
-        docs_ids, collect_ids = set(docs_registry), set(collect_registry)
-        self.assertEqual(docs_ids, collect_ids,
-                          "docs/index.html's `const LINES` and collect.LINES disagree on "
-                          f"the SET of ids — only in docs: {sorted(docs_ids - collect_ids)}; "
-                          f"only in collect.LINES: {sorted(collect_ids - docs_ids)}")
+        # Caught here, as a count mismatch, rather than downstream as a
+        # fabricated id/tier set-mismatch: if a future docs/index.html
+        # reformat makes _JS_LINE_ENTRY partially miss, the two registries
+        # would otherwise just look like they disagree on which ids exist.
+        self.assertEqual(len(docs_registry), len(collect_registry),
+                          f"docs/index.html's `const LINES` parsed to {len(docs_registry)} "
+                          f"entries but collect.LINES resolves to {len(collect_registry)} "
+                          "— the single-line `const LINES` entry regex likely missed one")
+        _assert_id_sets_equal(self, collect_registry, docs_registry,
+                               "collect.LINES", "docs/index.html's `const LINES`")
 
     def test_docs_and_collect_agree_on_alarm_direction_and_tier(self):
         docs_registry, _ = _docs_registry()
@@ -233,22 +261,13 @@ class TestRadarMdNamesEveryLineOnceInItsTierSection(unittest.TestCase):
         all_ids = tier1_ids + tier2_ids
         self.assertTrue(all_ids, "no tier-table rows parsed out of radar.md")
 
-        counts = {}
-        for i in all_ids:
-            counts[i] = counts.get(i, 0) + 1
-        duplicated = sorted(i for i, n in counts.items() if n > 1)
+        duplicated = sorted(i for i, n in Counter(all_ids).items() if n > 1)
         self.assertEqual(duplicated, [],
                           "line(s) named more than once across radar.md's "
                           f"Tier 1/Tier 2 tables: {duplicated}")
 
-        missing = sorted(set(registry) - set(all_ids))
-        self.assertEqual(missing, [],
-                          f"collect.LINES line(s) missing from radar.md's tier tables: {missing}")
-
-        extra = sorted(set(all_ids) - set(registry))
-        self.assertEqual(extra, [],
-                          "radar.md tier table row(s) naming a line collect.LINES does "
-                          f"not declare: {extra}")
+        _assert_id_sets_equal(self, registry, all_ids,
+                               "collect.LINES", "radar.md's tier tables")
 
 
 # --- round-index parity across radar-log*.md ---------------------------------
