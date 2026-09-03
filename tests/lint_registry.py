@@ -10,7 +10,11 @@ silently drift from what the code (or the append-only log) actually says:
      match.
   2. radar.md's two tier tables (``## Tier 1 — primary`` / ``## Tier 2 —
      collected``) must each name every ``collect.LINES`` line exactly once —
-     a line missing from both tables, or named twice, is caught.
+     a line missing from both tables, or named twice, is caught. Neither
+     table's header row may carry a generated ``Reliab``/``Respons`` column
+     (D6, ``internal/2026-09-02-round26-zero-debt-plan.md``): those cells
+     were hand-copied, went stale, and were replaced by generated
+     ``radar-metrics.md`` — deferred here by T10, added by T15.
   3. radar.md's ``## Calibration log — round index`` must list exactly the
      rounds ``radar-log*.md`` documents in full, in the same order. Globbed
      rather than hardcoded to ``radar-log.md`` so a future log-roll (see
@@ -268,6 +272,29 @@ class TestRadarMdNamesEveryLineOnceInItsTierSection(unittest.TestCase):
 
         _assert_id_sets_equal(self, registry, all_ids,
                                "collect.LINES", "radar.md's tier tables")
+
+    def test_neither_tier_table_header_carries_a_generated_column(self):
+        """D6 (``internal/2026-09-02-round26-zero-debt-plan.md``): radar.md's
+        ``Reliab``/``Respons`` columns were hand-copied metrics that went
+        stale and were retired in favour of generated ``radar-metrics.md``
+        (``tools/episodes.py --markdown``). Deferred by T10 (its own module
+        docstring named this test as the one thing NOT to add yet); T15
+        deleted the columns from radar.md and adds the guard here so they
+        cannot silently return. Checks the header ROW only — the first
+        ``|``-led line of each tier section — since that is where a column
+        name lives; row cells are free to use either word in prose."""
+        radar = support.read_text(RADAR_MD)
+        for heading in (_TIER1_HEADING, _TIER2_HEADING):
+            section = _section(radar, heading)
+            header = next((line for line in section.splitlines()
+                            if line.strip().startswith("|")), None)
+            self.assertIsNotNone(
+                header, f"radar.md: no table header row found under {heading!r}")
+            for banned in ("Reliab", "Respons"):
+                self.assertNotIn(
+                    banned, header,
+                    f"radar.md's {heading!r} table header still carries a generated "
+                    f"{banned!r} column — that data now lives in radar-metrics.md")
 
 
 # --- round-index parity across radar-log*.md ---------------------------------
