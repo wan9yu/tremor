@@ -593,7 +593,6 @@ const GAP_STATUSES=["dark"];
 // One missed collection is noise (a timeout, a transient 502); two or more in
 // a row is a real gap worth breaking the calm look for.
 const GAP_RUN_LOUD=2;
-const lastRow=(lines,id)=>(lines[id]||[]).slice(-1)[0]||{};
 const isBlind=r=>BLIND.includes(r.status);
 // How many of `rows`' most recent entries, counting back from the last one,
 // carry a GAP_STATUSES status without interruption — e.g. dark, dark, dark,
