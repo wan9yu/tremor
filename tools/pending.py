@@ -33,16 +33,23 @@ convention is to close an item by deleting it, per its header note).
                                          # or any item currently OVERDUE
 
 Reuses ``seedlib.read_line`` (the same reader ``episodes.py`` and the seeders
-use), ``collect.is_scored`` (the same "does this row carry a verdict" filter
-``episodes.py`` uses) and ``collect.LINES`` to validate a predicate's line
-name — this module never re-implements scoring; it only counts rows
-``collect.score_row`` already scored.
+use) and ``collect.is_scored`` (the same "does this row carry a verdict" filter
+``episodes.py`` uses) — this module never re-implements scoring; it only
+counts rows ``collect.score_row`` already scored. Both are imported lazily,
+only inside ``evaluate()``'s data-dependent branch, so parsing a tag's
+grammar (``parse_predicate``/``collect_items``, what tests/lint_pending.py
+exercises) never needs them. A predicate's line name is validated against
+``collect.LINES`` too, but read back ast-side (see ``_valid_lines`` below,
+the same technique tests/lint_registry.py uses) rather than by importing
+``collect`` — so that check stays in the pure-parsing path without pulling
+in ``requests``.
 
 An item is a plain dict (label/opened/owner/predicate_text/kind/args, then
 current/threshold/fired once evaluated) — every other tools/ module
 (episodes.py, drift_layer.py, stuck_panel.py) passes rows as plain dicts
 rather than a data class, so this follows suit.
 """
+import ast
 import json
 import os
 import re
@@ -51,12 +58,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import collect
-import seedlib
 from core import clock
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RADAR_MD = os.path.join(ROOT, "radar.md")
+COLLECT_PATH = os.path.join(ROOT, "collect.py")
+FETCHERS_DIR = os.path.join(ROOT, "fetchers")
 
 # The block this reads from, and the next top-level heading that ends it —
 # a text-scan boundary (not a markdown parse), the same pragmatic approach
@@ -94,7 +101,65 @@ _PREDICATE_FORMS = (
 
 DATA_DEPENDENT_KINDS = frozenset({"scored", "distinct_scored", "rows_since"})
 
-VALID_LINES = frozenset(mod.LINE for mod in collect.LINES)
+_valid_lines_cache = None
+
+
+def _fetcher_module_names():
+    """Every fetcher module FILE (no ``.py``) collect.py's ``LINES`` list
+    references, resolved by reading collect.py back ast-side — never
+    importing ``collect``, ``fetchers``, or (through them) ``requests``. The
+    same technique tests/lint_registry.py already uses to bind the line
+    registry without importing it (its own module docstring names
+    ``tools/pending`` as a module it steers clear of for exactly this
+    reason — this mirrors it inside pending.py itself so parsing a tag never
+    needs a fetcher import either).
+    """
+    tree = ast.parse(_read(COLLECT_PATH), filename=COLLECT_PATH)
+    alias_to_module = {}
+    lines_aliases = None
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module == "fetchers":
+            for alias in node.names:
+                alias_to_module[alias.asname or alias.name] = alias.name
+        elif (isinstance(node, ast.Assign) and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name)
+                and node.targets[0].id == "LINES"):
+            lines_aliases = [elt.id for elt in node.value.elts
+                              if isinstance(elt, ast.Name)]
+    if not lines_aliases:
+        raise PendingParseError(
+            "collect.py: no module-level `LINES = [...]` assignment found")
+    modules = []
+    for alias in lines_aliases:
+        modname = alias_to_module.get(alias)
+        if not modname:
+            raise PendingParseError(
+                f"collect.py: LINES references {alias!r}, which does not resolve "
+                f"to a `from fetchers import ...` binding")
+        modules.append(modname)
+    return modules
+
+
+def _valid_lines():
+    """``collect.LINES``' line ids, as a frozenset — resolved ast-side (see
+    ``_fetcher_module_names``) rather than by importing ``collect``, so pure
+    grammar parsing (as tests/lint_pending.py exercises) never needs
+    ``collect``/``requests``. Resolved once per process."""
+    global _valid_lines_cache
+    if _valid_lines_cache is None:
+        lines = set()
+        for modname in _fetcher_module_names():
+            path = os.path.join(FETCHERS_DIR, f"{modname}.py")
+            tree = ast.parse(_read(path), filename=path)
+            for node in tree.body:
+                if (isinstance(node, ast.Assign) and len(node.targets) == 1
+                        and isinstance(node.targets[0], ast.Name)
+                        and node.targets[0].id == "LINE"
+                        and isinstance(node.value, ast.Constant)):
+                    lines.add(node.value.value)
+                    break
+        _valid_lines_cache = frozenset(lines)
+    return _valid_lines_cache
 
 
 class PendingParseError(ValueError):
@@ -140,7 +205,7 @@ def parse_predicate(predicate_text):
         args = m.groupdict()
         if "n" in args:
             args["n"] = int(args["n"])
-        if kind in DATA_DEPENDENT_KINDS and args["line"] not in VALID_LINES:
+        if kind in DATA_DEPENDENT_KINDS and args["line"] not in _valid_lines():
             raise PendingParseError(
                 f"predicate {text!r} names an unknown line {args['line']!r} "
                 f"(not in collect.LINES)")
@@ -198,6 +263,8 @@ def evaluate(item, data_cache=None, round_now=None, today=None):
     kind, args = item["kind"], item["args"]
 
     if kind in DATA_DEPENDENT_KINDS:
+        import collect
+        import seedlib
         line = args["line"]
         if line not in data_cache:
             data_cache[line] = seedlib.read_line(line)
