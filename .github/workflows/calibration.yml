@@ -1,0 +1,38 @@
+name: calibration
+
+on:
+  # Weekly, at a low-traffic hour: the calibration tier re-derives the
+  # tremble-threshold table from scratch and checks it against what is
+  # vendored in core/normalize.py. It takes minutes (a full simulation run),
+  # which is exactly why it never runs on every push and never gates
+  # collection — see ci.yml's gate job for that per-push contract.
+  schedule:
+    - cron: "0 6 * * 1"
+  push:
+    paths:
+      - core/normalize.py
+      - tools/calibrate_threshold.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: calibration
+  cancel-in-progress: false
+
+jobs:
+  # The only CI job that installs requirements-dev.txt (numpy/scipy) — those
+  # are dev-only precisely so the daily collection path never depends on
+  # them. core/normalize.py itself stays stdlib-only, so nothing here needs
+  # requirements.txt.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: python tools/calibrate_threshold.py --check
