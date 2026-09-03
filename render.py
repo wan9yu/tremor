@@ -36,12 +36,15 @@ def _dates(rows):
     return [datetime.strptime(r["date"], "%Y-%m-%d") for r in rows]
 
 
-def _quantize(path):
-    """Reopen a just-written PNG and rewrite it to a 64-colour palette.
+def _save(fig, path):
+    """Write a chart PNG at the standard dpi, then rewrite it to a 64-colour
+    palette. One place owns how a chart lands on disk.
 
     matplotlib writes RGBA; MEDIANCUT wants RGB, and these charts have an
     opaque white background, so dropping alpha here is lossless-in-practice.
     """
+    fig.savefig(path, dpi=120)
+    plt.close(fig)
     with Image.open(path) as im:
         im.convert("RGB").quantize(colors=64, method=Image.Quantize.MEDIANCUT).save(path)
 
@@ -68,10 +71,7 @@ def render_line(mod):
     ax.xaxis.set_major_formatter(DateFormatter("%b %d"))
     fig.autofmt_xdate()
     fig.tight_layout()
-    path = os.path.join(CHARTS, mod.LINE + ".png")
-    fig.savefig(path, dpi=120)
-    plt.close(fig)
-    _quantize(path)
+    _save(fig, os.path.join(CHARTS, mod.LINE + ".png"))
 
 
 def render_overview():
@@ -92,10 +92,7 @@ def render_overview():
     ax.xaxis.set_major_formatter(DateFormatter("%b %d"))
     fig.autofmt_xdate()
     fig.tight_layout()
-    path = os.path.join(CHARTS, "overview.png")
-    fig.savefig(path, dpi=120)
-    plt.close(fig)
-    _quantize(path)
+    _save(fig, os.path.join(CHARTS, "overview.png"))
 
 
 def render():
