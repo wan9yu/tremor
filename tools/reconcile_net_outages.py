@@ -21,10 +21,14 @@ import ssl
 import sys
 import urllib.request
 
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+
+from fetchers import net_outages
+
 _URL = "https://api.ioda.inetintel.cc.gatech.edu/v2/outages/summary"
 _DS = "ping-slash24"
-_ROWS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                     "data", "net_outages.csv")
+_ROWS = os.path.join(ROOT, "data", "net_outages.csv")
 # interior day of each of the 6 multi-day runs (a settle phase-shift cannot erase a
 # sustained episode, only move its onset row — these must reproduce)
 _RUN_DAYS = ("2022-11-14", "2022-11-19", "2022-11-24", "2022-11-29", "2023-06-22", "2024-03-15")
@@ -32,17 +36,9 @@ _FLIP = 3  # a count delta this large would meaningfully move the z; the operato
            # confirms whether it actually flips the tremble verdict for that row
 
 
-def _window(end_date):
-    """The settled 24h window ending 22:00Z on ``end_date`` -> (from, until) unix."""
-    end = datetime.datetime.combine(datetime.date.fromisoformat(end_date),
-                                    datetime.time(22, 0), tzinfo=datetime.timezone.utc)
-    ts = int(end.timestamp())
-    return ts - 86400, ts
-
-
 def requery(end_date):
     """Count ping-slash24 countries in ``end_date``'s settled window, live from IODA."""
-    frm, until = _window(end_date)
+    frm, until = net_outages.window_for_day(datetime.date.fromisoformat(end_date))
     q = f"{_URL}?from={frm}&until={until}&entityType=country&limit=400"
     ctx = ssl.create_default_context()
     ctx.check_hostname = False

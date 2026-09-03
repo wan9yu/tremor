@@ -38,7 +38,7 @@ inside the tier-1 freshness bar. See annotations.csv for the method + correction
 
 Source: IODA (Georgia Tech) outages summary API. Keyless.
 """
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 
 import requests
 
@@ -95,7 +95,7 @@ def monitor_swept(hits, entities):
             and hits / entities >= _SWEEP_MIN_SHARE)
 
 
-def _settled_window(now_ts):
+def window_for(now_ts):
     """``(from, until, obs_date)`` for the latest COMPLETE 24h window ending at the
     most recent 22:00:00Z that is at least a full day before ``now_ts``.
 
@@ -104,25 +104,46 @@ def _settled_window(now_ts):
     detection latency, which retimes and inflates the count — on 2026-08-24 it
     read 12 countries (z=4.69, a tier-1 false alarm) where the completed window
     settles to 4. Counting a COMPLETED window makes the count STABLE (reproducible,
-    not query-time-dependent) and aligns the live tail with the seed, which already
-    fetched each day's window at ``_WINDOW_HOUR=22`` (97% of the record). It does NOT
-    filter the artifact itself (a synchronized-onset cluster lives, stably, in its
-    own settled window and would tremble there — see the module docstring's 2026-08-26
-    correction and the reconciliation tripwire). A run firing before 22:00Z
-    self-corrects one day earlier rather than reading a still-forming edge. The cost is
-    a ~1-day lag, inside the tier-1 freshness bar.
+    not query-time-dependent) and aligns the live tail with the seed and the
+    reconciliation tool, which both resolve to the same 22:00:00Z boundary through
+    ``window_for_day`` below. It does NOT filter the artifact itself (a
+    synchronized-onset cluster lives, stably, in its own settled window and would
+    tremble there — see the module docstring's 2026-08-26 correction and the
+    reconciliation tripwire). A run firing before 22:00Z self-corrects one day
+    earlier rather than reading a still-forming edge. The cost is a ~1-day lag,
+    inside the tier-1 freshness bar.
+
+    THE ONE SETTLED-WINDOW DEFINITION (T1). This function and ``window_for_day``
+    are the only home for the settle boundary arithmetic; ``tools/reconcile_net_outages.py``
+    and ``tools/seed_ioda.py`` call ``window_for_day`` instead of re-deriving it, and
+    ``tests/lint_ssot.py`` scans the source tree to keep it that way.
     """
     cutoff = now_ts - 86400
     end = datetime.fromtimestamp(cutoff, timezone.utc).replace(
         hour=22, minute=0, second=0, microsecond=0)
     if end.timestamp() > cutoff:
         end -= timedelta(days=1)
-    start = end - timedelta(days=1)
-    return int(start.timestamp()), int(end.timestamp()), end.date().isoformat()
+    frm, until = window_for_day(end.date())
+    return frm, until, end.date().isoformat()
+
+
+def window_for_day(day):
+    """``(from, until)`` unix timestamps for the settled 24h window ending at
+    22:00:00Z on ``day`` (a ``datetime.date``).
+
+    The day-anchored form of the one settled-window definition (see
+    ``window_for`` above for the "latest such window before now" form the live
+    collection path uses) — the form ``tools/reconcile_net_outages.py`` and
+    ``tools/seed_ioda.py`` need, since both already know the target day rather
+    than "now".
+    """
+    end = datetime.combine(day, time(22, 0), tzinfo=timezone.utc)
+    ts = int(end.timestamp())
+    return ts - 86400, ts
 
 
 def fetch_daily():
-    frm, until, obs = _settled_window(int(datetime.now(timezone.utc).timestamp()))
+    frm, until, obs = window_for(int(datetime.now(timezone.utc).timestamp()))
     try:
         r = requests.get(
             _URL,

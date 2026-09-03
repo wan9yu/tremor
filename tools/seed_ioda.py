@@ -72,7 +72,9 @@ _PAUSE_S = 1.5
 # uses the measurement rather than the pause, because a progress line that lies
 # by an order of magnitude is worse than no progress line.
 _SECONDS_PER_DAY = 15.0
-_WINDOW_HOUR = 22  # the daily run's own collection hour, so windows are comparable
+_WINDOW_HOUR = 22  # display only: the window BOUNDARY math lives in
+# net_outages.window_for_day (T1's one settled-window definition); this
+# constant only formats the "24h to <obs> {_WINDOW_HOUR}:00Z" source note.
 _CACHE = os.path.join(collect.DATA, "archive", "ioda_seed_fetch.csv")
 
 
@@ -138,14 +140,12 @@ def day_summary(day, backoff=_BACKOFF_S):
     off across several minutes — a served-but-empty day is a legitimate
     ``(0, 0, "")`` and the caller decides what that means.
     """
-    end = datetime.datetime.combine(day, datetime.time(_WINDOW_HOUR, 0),
-                                    datetime.timezone.utc)
-    stamp = int(end.timestamp())
+    frm, until = net_outages.window_for_day(day)
     last = None
     for attempt in range(len(backoff) + 1):
         try:
             r = requests.get(net_outages._URL,
-                             params={"from": stamp - 86400, "until": stamp,
+                             params={"from": frm, "until": until,
                                      "entityType": "country", "limit": 400},
                              headers=net_outages._HEADERS, timeout=40)
         except requests.RequestException as e:
