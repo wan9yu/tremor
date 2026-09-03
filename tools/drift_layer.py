@@ -30,8 +30,9 @@ WHAT IT CANNOT DO, stated because a detector's blind spots are part of its
 reading: it is a RATIO, so it is undefined on a line that crosses zero
 (polar_temp's anomaly is meaningless divided by a median near zero), and it
 cannot see a ratchet slow enough for the trailing reference to absorb — gnss's
-own post-2023 creep from 0.294 to 0.418 never trips it. The yearly-median table
-in radar.md is what covers those; this covers the step.
+own post-2023 creep from 0.294 to 0.419 never trips it. The yearly-median table
+in radar-log.md (Round 10) is what covers those, moved there in the round-19
+registry/log split; this covers the step.
 
 Diagnostic only, under the same rule as the level layer and the intraday
 sampler: no scoring code reads it, it is not mirrored to the dashboard, it

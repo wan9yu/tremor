@@ -51,6 +51,15 @@ from core import normalize
 # first collection the new rules govern; everything before it is the older
 # instrument's voice and diverges by design.
 # (2026-07-23 was the previous mark: Qn + the no-RMS-fallback rule.)
+#
+# 2026-08-17 — round 18: `dark` splits, and `closed` arrives as its first
+# piece. A line that declares WEEKEND_MARKET now scores a Saturday/Sunday
+# with no reading as `closed`, not `dark` — decided deterministically from
+# the calendar, so replay reproduces it with no signal from the long-gone
+# fetch — and it counts toward neither the dark nor the blind tally.
+# Grandfathers the two existing weekend dark rows (2026-08-09, 2026-08-16);
+# every non-opting line scores byte-identical. Dated to the first collection
+# the new status governs.
 STABLE_SINCE = "2026-08-17"
 
 

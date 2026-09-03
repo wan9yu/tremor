@@ -191,10 +191,16 @@ def _scale_z(values, today, quantum=None):
     all. A window of identical integers does not have zero spread — it has
     spread finer than the instrument can see, which is a different statement,
     and one quantum is the honest floor for it. This invents no data: it
-    declines to claim a precision the source never had. (Measured on the real
-    record: the floor has never once bound — the smallest Qn ever used on the
-    quantized lines is 1.610 — so it changes no verdict that has been written,
-    only the ones that would otherwise have gone silent.)
+    declines to claim a precision the source never had. (Re-measured on the
+    real record, across every line that declares QUANTUM — net_outages,
+    sofr_iorb_spread, space_weather: the floor DOES bind, 34 times, all in
+    net_outages' own earliest stretch (2022-02-05 to 2022-03-10), where the
+    window's Qn computes to exactly 0.0 — repeated small integers tying even
+    with a 45-country day already inside the window. Every one of those rows
+    already reads a real z (0, against the floored scale) instead of going
+    silent, which is the floor doing its one job. Where it does not bind, the
+    smallest Qn actually used to score any row on any quantized line is 0.538
+    — space_weather, 2022-08-06.)
     """
     scale = _qn(values)
     if quantum:

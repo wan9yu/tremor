@@ -62,7 +62,11 @@ QUANTUM = 1  # countries: a count, and the resolution of the reading is one of t
 # 160-country mass outage scores z=None: no verdict, no flag, on a tier-1 line.
 # Flooring the scale at one country says the honest thing — a window of
 # identical counts has spread finer than the instrument can see, not zero
-# spread. It has never bound on the real record (smallest Qn used: 1.610).
+# spread. It DOES bind on the real record — 34 times, in this line's own
+# earliest stretch (2022-02-05 to 2022-03-10), where the window's Qn computes
+# to exactly 0.0; those rows already read a real z instead of going silent.
+# Across every line that declares QUANTUM, the smallest Qn actually used to
+# score a row is 0.538 (space_weather).
 
 _URL = "https://api.ioda.inetintel.cc.gatech.edu/v2/outages/summary"
 _HEADERS = useragent.HEADERS

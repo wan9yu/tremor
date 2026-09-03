@@ -396,5 +396,59 @@ class TestScoringConstantsReadFromNormalize(unittest.TestCase):
                           f"normalize.<NAME> instead of re-typing it): {offenders}")
 
 
+# --- STABLE_SINCE ledger (T6): the newest dated entry must equal the constant
+
+_REPLAY_PATH = os.path.join(TOOLS_DIR, "replay.py")
+
+# One dated ledger entry: "# YYYY-MM-DD — ..." at the start of a comment
+# line, the em dash (not a hyphen) every entry in the block is written with —
+# deliberately anchored so the parenthetical aside inside the same block
+# ("(2026-07-23 was the previous mark...)") cannot match: a date wrapped in
+# parens has no whitespace-only gap between "#" and the digits.
+_LEDGER_ENTRY = re.compile(r'^#\s*(\d{4}-\d{2}-\d{2})\s*—', re.M)
+_STABLE_SINCE_LITERAL = re.compile(r'^STABLE_SINCE\s*=\s*"(\d{4}-\d{2}-\d{2})"', re.M)
+
+
+def _ledger_comment_block(src):
+    """The contiguous run of ``#``-prefixed lines directly above the
+    ``STABLE_SINCE`` assignment in ``tools/replay.py`` — the dated ledger
+    itself, not the whole file (the module docstring shows date-shaped usage
+    examples too, and this must not go hunting through those)."""
+    lines = src.splitlines()
+    for i, line in enumerate(lines):
+        if line.startswith("STABLE_SINCE"):
+            block, j = [], i - 1
+            while j >= 0 and lines[j].lstrip().startswith("#"):
+                block.append(lines[j])
+                j -= 1
+            return "\n".join(reversed(block))
+    return ""
+
+
+class TestStableSinceLedgerIsCurrent(unittest.TestCase):
+    """Source-vs-source (this reads only ``tools/replay.py``'s own text, never
+    ``data/``): the ledger comment above ``STABLE_SINCE`` must document the
+    date the constant currently names, so the two can never again drift apart
+    the way the ledger fell one entry behind after round 18."""
+
+    def test_the_ledger_owner_is_found(self):
+        # A canary against a typo'd path silently no-oping this check.
+        self.assertIn(_REPLAY_PATH, _all_py_files())
+
+    def test_newest_ledger_date_matches_the_constant(self):
+        src = support.read_text(os.path.join(ROOT, _REPLAY_PATH))
+        block = _ledger_comment_block(src)
+        dates = _LEDGER_ENTRY.findall(block)
+        self.assertTrue(dates, "no dated ledger entries found directly above "
+                         "STABLE_SINCE in tools/replay.py")
+        stable_since = _STABLE_SINCE_LITERAL.search(src)
+        self.assertIsNotNone(stable_since, "STABLE_SINCE literal not found "
+                              "in tools/replay.py")
+        self.assertEqual(max(dates), stable_since.group(1),
+                          "the newest dated entry in replay.py's ledger "
+                          "comment has fallen behind STABLE_SINCE — add an "
+                          "entry describing what changed on that date")
+
+
 if __name__ == "__main__":
     unittest.main()
