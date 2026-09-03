@@ -32,17 +32,14 @@ missing history or silently see only the single fetched commit, making it
 vacuous here. A per-PNG byte cap needs none of that history; ``os.path
 .getsize`` on the file as committed is enough.
 
-PROVISIONAL cap. Measured pre-quantization sizes (2026-09-04): overview
-19,930 B, cnh_cny 57,872 B, net_outages 58,408 B, credit_spread 59,435 B,
-flights 61,594 B (the largest). ``PER_CHART_BYTE_CAP`` below is set a little
-above that largest measured file, with headroom for ordinary day-to-day
-variation (more data points, a wider legend on a bad day) without chasing
-every render. It is meant to be TIGHTENED in T22, once ``render.py``
-quantizes each chart to a 64-colour palette (measured there to drop each
-chart to roughly 20 KB) — at that point the cap should come from the
-per-file quantized sizes, not this pre-quantization number, and NOT from any
-summed total across all charts (a sum bounds nothing about a single
-oversized file).
+Measured post-quantization sizes (2026-09-04, render.py's 64-colour
+MEDIANCUT quantize): overview 6,776 B, credit_spread 22,259 B, cnh_cny
+23,381 B, net_outages 24,325 B, flights 24,886 B (the largest).
+``PER_CHART_BYTE_CAP`` below comes from that largest quantized file plus
+generous headroom — the daily render happens on an ubuntu CI runner (these
+were measured on macOS) and ordinary day-to-day variation (more data
+points, a wider legend on a bad day) can shift a file's size, so the cap
+absorbs cross-platform and cross-day variance without chasing every render.
 """
 import glob
 import os
@@ -51,11 +48,11 @@ import unittest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHARTS = os.path.join(ROOT, "charts")
 
-# PROVISIONAL, from the pre-quantization sizes above (largest measured:
-# flights at 61,594 B) — TIGHTEN in T22 once render.py's 64-colour quantize
-# lands, using each chart's own quantized size, not this number and not a
-# cross-chart sum.
-PER_CHART_BYTE_CAP = 70000
+# From the quantized sizes above (largest measured: flights at 24,886 B),
+# times roughly 1.6 for cross-platform (ubuntu daily vs. macOS measurement)
+# and day-to-day headroom, rounded to a clean number. Still a single-file
+# bound, never a cross-chart sum.
+PER_CHART_BYTE_CAP = 40000
 
 
 class TestChartByteBudget(unittest.TestCase):

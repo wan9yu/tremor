@@ -3,3 +3,7 @@
 # Tuesday. Bump deliberately, and only when the tests still pass.
 requests==2.32.3
 matplotlib==3.9.0
+# pillow is a transitive dep of matplotlib==3.9.0 already; pinned here only to
+# freeze it explicitly. 12.3.0 is what matplotlib 3.9.0 resolves to on the CI
+# runner (py3.12 ubuntu), so this pin changes nothing installed.
+pillow==12.3.0
