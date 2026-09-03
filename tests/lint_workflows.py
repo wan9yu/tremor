@@ -126,6 +126,20 @@ class TestWorkflowsPassAStructuralSanityScan(unittest.TestCase):
                 self.assertEqual(errors, [], f"{name}: {errors}")
 
 
+class TestNoStaleTwentyTwoZeroDailyRunPhrasing(unittest.TestCase):
+    """Guard against the stale "22:00 daily run" comment class: daily.yml
+    fires at 18:00Z and sleeps to the 22:30Z collection target (see
+    daily.yml's own "Sleep until the 22:30Z sample target" step) — there has
+    never been a 22:00 daily run. A comment naming one names a schedule that
+    does not exist."""
+
+    def test_no_workflow_names_a_22_00_daily_run(self):
+        for name in _workflow_files():
+            with self.subTest(workflow=name):
+                text = support.read_text(_path(name))
+                self.assertNotIn("22:00 daily run", text)
+
+
 class TestRunBlocksAreShellClean(unittest.TestCase):
     """``sh -n`` every ``run:`` block ``support.workflow_run_steps``
     extracts — a syntax-only check; nothing in any block actually runs."""

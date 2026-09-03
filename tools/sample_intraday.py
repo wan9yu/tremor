@@ -10,7 +10,7 @@ line's robust scale, larger than the 3.0 its own alarm requires. A tier-1 alarm
 reachable by the clock alone is not measuring the world.
 
 The question that cannot be answered from the daily record is simple: **how wide
-is a day, and where in it does the 22:00 reading fall?** This tool answers it by
+is a day, and where in it does the 22:30Z reading fall?** This tool answers it by
 sampling the same quantities at several hours and writing them somewhere the
 scorer never looks.
 

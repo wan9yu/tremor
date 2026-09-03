@@ -13,8 +13,11 @@ name: tremor intraday side-sampling
 
 on:
   schedule:
-    # Every six hours, deliberately offset from the 22:00 daily run so the two
-    # never contend for the same push.
+    # Every six hours, offset from the daily's 22:30Z collection (daily.yml
+    # fires at 18:00Z and sleeps to 22:30Z). The 20Z sample actually fires
+    # INSIDE that sleep window; push contention is handled by
+    # tools/ci_push.sh's rebase-and-retry and this workflow's own
+    # concurrency group below, not by avoiding overlap.
     - cron: "0 2,8,14,20 * * *"
   workflow_dispatch: {}
 
