@@ -100,6 +100,7 @@ jobs:
           python tools/drift_layer.py
           python tools/stuck_panel.py
           python tools/episodes.py --markdown > radar-metrics.md
+          python tools/pending.py --markdown >> radar-metrics.md
           python render.py
           tools/ci_push.sh "derived: $(TZ=Asia/Shanghai date +%F)" \
             charts/ data/levels.csv data/drifts.csv radar-metrics.md docs/data/stuck.csv

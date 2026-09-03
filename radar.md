@@ -170,7 +170,7 @@ re-reading the log. Close an item by editing it out with a round reference.
   (standing): a repeat of this adjudicated artifact class AFTER the fix is itself demotion-disqualifying.
 - **cnh_cny maturity refresh** — at n≥60 scored: re-measure the reach cell + benign-tremble
   recount (queued R13). R23: now n=48 (record range −45..143; 4 trembles, all benign DOWN),
-  still <60 — keep waiting.
+  still <60 — keep waiting. [opened R13 · owner R26 · fires: distinct_scored(cnh_cny) >= 60]
 - **anchored-scale promotion gates** (R15, standing): before ANY anchored line promotes,
   its MATERIALITY must be replay-validated to the R11 bar and an episode/serial-dependence
   overlay run. Applies to stablecoin_peg, fed_srf_takeup.
@@ -191,10 +191,11 @@ re-reading the log. Close an item by editing it out with a round reference.
   with data. One-time on the FIRST post-switch round: re-query every seam-era row (2026-07-10→2026-08-25)
   + one interior day of each of the 6 multi-day runs. Carry forward: a synchronized-onset artifact that
   still ALARMS after settle means the mechanism diagnosis was wrong → reopens net_outages' tier-1 status
-  (its 37 real episodes stand).
+  (its 37 real episodes stand). [opened R23.1 · owner R26 · fires: manual]
 - **level-layer → flights** (opened R23.1) — decide ~Nov 2026 (once flights per-region components banked
   since 08-02 can populate an honest reference window) whether to extend the level layer to flights
   regions; the second headline currently rides one lagging, panel-churning source (PortWatch, ~10d).
+  [opened R23.1 · owner R26 · fires: date >= 2026-11-01]
 - **cnh_cny reachability reference-regime re-check** (R23.1) — the reachability gate passed cnh_cny on a
   cited reference regime (real capital-flight episodes past +227 pips). Re-confirm at n≥60 that the
   reference-regime evidence still holds, alongside the maturity refresh.

@@ -84,7 +84,7 @@ def report_line(mod):
     rows = seedlib.read_line(mod.LINE)
     if not rows:
         return None
-    scored = [r for r in rows if r["z_score"]]
+    scored = [r for r in rows if collect.is_scored(r)]
     observed = [r["obs_date"] or r["date"] for r in scored]
     # One pass, one counts_as_tremble call per row: alarm and benign are
     # mutually exclusive (a row is one or the other, never both), so a

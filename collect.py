@@ -199,6 +199,19 @@ def counts_as_tremble(row, mod):
     return row["trembling"] == "1" and row["direction"] == mod.ANOMALY_DIRECTION
 
 
+def is_scored(row):
+    """Whether ``row`` carries a verdict at all — the one ``scored`` filter.
+
+    ``score_row`` leaves ``z_score`` empty for a row it could not judge (dark,
+    warming-up, stale, closed); a non-empty ``z_score`` is what "scored" means
+    everywhere in this repo. ``tools/episodes.py``'s per-line report and
+    ``tools/pending.py``'s data-dependent predicates (``scored``,
+    ``distinct_scored``, ``rows_since``) both filter on exactly this, so it
+    lives once here rather than as two identical list comprehensions.
+    """
+    return bool(row["z_score"])
+
+
 def scoring_attrs(mod):
     """The per-line options ``score_row`` needs, read off the fetcher module.
 

@@ -3,11 +3,17 @@
 D6 (see internal/2026-09-02-round26-zero-debt-plan.md) retired the hand-copied
 ``Reliab``/``Respons`` cells radar.md used to carry — four of those cells were
 caught measured stale, and a hand-copied metric drifts the day after it is
-fixed. The replacement, ``radar-metrics.md``, is GENERATED
-(``python tools/episodes.py --markdown``), which only keeps its promise if the
-committed file is never allowed to fall behind the record it describes. This
-is the freshness check: regenerate the table in memory from the committed
-CSVs and byte-compare it against the committed ``radar-metrics.md``.
+fixed. The replacement, ``radar-metrics.md``, is GENERATED — its ``# radar
+metrics`` table from ``python tools/episodes.py --markdown``, then its
+``## Pending reviews`` section APPENDED from ``python tools/pending.py
+--markdown`` (T9) — which only keeps its promise if the committed file is
+never allowed to fall behind the record it describes. This is the freshness
+check: regenerate BOTH sections, in that same order, in memory from the
+committed CSVs and radar.md's Pending-block tags, and byte-compare the whole
+thing against the committed ``radar-metrics.md``. Regenerating only the
+episodes half here would fail this audit EVERY SINGLE DAY on an
+un-regenerated pending section — a permanent alarm trains alarm-blindness —
+so both generators run, in daily.yml's derive-step order.
 
 AUDIT, not gate: this reads ``data/`` (the committed record), which the
 pre-collect gate (``test_*.py``, ``python -m unittest discover tests``) may
@@ -30,6 +36,7 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 import collect
 import episodes
+import pending
 import support
 
 
@@ -42,10 +49,12 @@ class TestRadarMetricsIsFresh(unittest.TestCase):
         committed = support.read_text(self.PATH)
         out = [r for r in (episodes.report_line(mod) for mod in collect.LINES) if r]
         fresh = episodes.render_markdown(out)
+        fresh += pending.render_markdown(pending.report())
         self.assertEqual(
             committed, fresh,
             "radar-metrics.md is stale — regenerate with `python tools/episodes.py "
-            "--markdown > radar-metrics.md` and commit the result")
+            "--markdown > radar-metrics.md && python tools/pending.py --markdown "
+            ">> radar-metrics.md` and commit the result")
 
 
 if __name__ == "__main__":
