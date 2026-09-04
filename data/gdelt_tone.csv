@@ -56,3 +56,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-02,-1.782,,0,,"GDELT full-day average tone, 98204 events (2026-08-31) [sampled 22:31:03Z] [stale: observation already recorded]",2026-08-31,stale
 2026-09-03,-1.797,1.257,0,up,"GDELT full-day average tone, 116766 events (2026-09-01) [sampled 22:30:59Z]",2026-09-01,scoring
 2026-09-04,-1.893,0.548,0,up,"GDELT full-day average tone, 120105 events (2026-09-02) [sampled 22:30:35Z]",2026-09-02,scoring
+2026-09-05,-1.911,0.398,0,up,"GDELT full-day average tone, 117020 events (2026-09-03) [sampled 22:30:55Z]",2026-09-03,scoring
