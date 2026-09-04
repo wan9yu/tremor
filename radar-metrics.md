@@ -12,29 +12,29 @@ days into runs (module docstring). `mature` marks scored >= 60 — the tier-1 pr
 
 | line | tier | rows | read | dark | scored | span (yrs) | alarm days | benign | episodes | longest run | lag-1 | mature | last obs |
 |---|:--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|:--:|---|
-| flights | 1 | 75 | 75 | 0 | 65 | 0.18 | 2 | 0 | 2 | 1 | 0.312 | yes | 2026-09-04 |
-| credit_spread | 1 | 832 | 831 | 1 | 799 | 3.06 | 66 | 0 | 8 | 36 | 0.986 | yes | 2026-09-02 |
-| cnh_cny | 1 | 75 | 71 | 4 | 55 | 0.18 | 0 | 5 | 0 | 0 | 0.320 | no | 2026-09-03 |
-| net_outages | 1 | 1678 | 1666 | 12 | 1656 | 4.58 | 59 | 0 | 39 | 7 | 0.360 | yes | 2026-09-02 |
-| gnss_interference | 2 | 1498 | 1498 | 0 | 1480 | 4.08 | 49 | 1 | 28 | 10 | 0.894 | yes | 2026-09-02 |
-| capital_premium | 2 | 75 | 75 | 0 | 65 | 0.18 | 0 | 1 | 0 | 0 | 0.626 | yes | 2026-09-04 |
-| grid_frequency | 2 | 75 | 75 | 0 | 65 | 0.18 | 2 | 0 | 2 | 1 | -0.125 | yes | 2026-09-04 |
-| chokepoint_breadth | 2 | 244 | 244 | 0 | 234 | 0.64 | 3 | 2 | 3 | 1 | 0.313 | yes | 2026-08-25 |
-| sofr_iorb_spread | 2 | 75 | 74 | 1 | 48 | 0.18 | 2 | 3 | 2 | 1 | 0.809 | no | 2026-09-02 |
-| em_corp_oas | 2 | 832 | 831 | 1 | 799 | 3.06 | 48 | 4 | 7 | 26 | 0.993 | yes | 2026-09-02 |
-| port_throughput | 2 | 244 | 244 | 0 | 228 | 0.64 | 10 | 1 | 3 | 8 | 0.307 | yes | 2026-08-25 |
-| euro_hy_spread | 2 | 823 | 823 | 0 | 800 | 3.06 | 39 | 4 | 6 | 18 | 0.993 | yes | 2026-09-02 |
-| fx_parallel_premium | 2 | 44 | 44 | 0 | 26 | 0.09 | 0 | 1 | 0 | 0 | 0.813 | no | 2026-09-03 |
-| hkma_aggr_balance | 2 | 139 | 124 | 15 | 106 | 0.47 | 0 | 10 | 0 | 0 | 0.165 | yes | 2026-09-03 |
-| tga_days_cash | 2 | 31 | 31 | 0 | 13 | 0.04 | 0 | 0 | 0 | 0 | 0.612 | no | 2026-09-02 |
-| stablecoin_peg | 2 | 2147 | 2147 | 0 | 2143 | 5.88 | 3 | 0 | 2 | 2 | 0.417 | yes | 2026-09-02 |
-| fed_srf_takeup | 2 | 1278 | 1278 | 0 | 1272 | 5.1 | 3 | 0 | 3 | 1 | 0.406 | yes | 2026-09-02 |
-| gdelt | 2 | 57 | 57 | 0 | 42 | 0.12 | 0 | 0 | 0 | 0 | 0.662 | no | 2026-09-02 |
-| gdelt_tone | 2 | 57 | 57 | 0 | 42 | 0.12 | 1 | 0 | 1 | 1 | 0.513 | no | 2026-09-02 |
-| vix | 2 | 237 | 237 | 0 | 210 | 0.82 | 13 | 0 | 5 | 6 | 0.902 | yes | 2026-09-02 |
-| polar_temp | 2 | 2772 | 2772 | 0 | 2760 | 7.65 | 390 | 4 | 35 | 58 | 0.964 | yes | 2026-09-02 |
-| space_weather | 2 | 1500 | 1500 | 0 | 1487 | 4.08 | 35 | 4 | 24 | 4 | 0.447 | yes | 2026-09-02 |
-| control_daylength | 2 | 38 | 38 | 0 | 24 | 0.07 | 0 | 0 | 0 | 0 | 0.926 | no | 2026-09-03 |
+| flights | 1 | 76 | 76 | 0 | 66 | 0.18 | 2 | 0 | 2 | 1 | 0.318 | yes | 2026-09-05 |
+| credit_spread | 1 | 833 | 832 | 1 | 800 | 3.06 | 66 | 0 | 8 | 36 | 0.986 | yes | 2026-09-03 |
+| cnh_cny | 1 | 76 | 72 | 4 | 56 | 0.18 | 0 | 5 | 0 | 0 | 0.325 | no | 2026-09-04 |
+| net_outages | 1 | 1679 | 1667 | 12 | 1657 | 4.58 | 60 | 0 | 39 | 7 | 0.363 | yes | 2026-09-03 |
+| gnss_interference | 2 | 1499 | 1499 | 0 | 1481 | 4.08 | 49 | 1 | 28 | 10 | 0.895 | yes | 2026-09-03 |
+| capital_premium | 2 | 76 | 76 | 0 | 66 | 0.18 | 0 | 1 | 0 | 0 | 0.624 | yes | 2026-09-05 |
+| grid_frequency | 2 | 76 | 76 | 0 | 66 | 0.18 | 2 | 0 | 2 | 1 | -0.136 | yes | 2026-09-05 |
+| chokepoint_breadth | 2 | 245 | 245 | 0 | 235 | 0.64 | 3 | 2 | 3 | 1 | 0.315 | yes | 2026-08-26 |
+| sofr_iorb_spread | 2 | 76 | 75 | 1 | 49 | 0.18 | 2 | 3 | 2 | 1 | 0.807 | no | 2026-09-03 |
+| em_corp_oas | 2 | 833 | 832 | 1 | 800 | 3.06 | 48 | 4 | 7 | 26 | 0.993 | yes | 2026-09-03 |
+| port_throughput | 2 | 245 | 245 | 0 | 229 | 0.64 | 10 | 1 | 3 | 8 | 0.307 | yes | 2026-08-26 |
+| euro_hy_spread | 2 | 824 | 824 | 0 | 801 | 3.06 | 39 | 4 | 6 | 18 | 0.993 | yes | 2026-09-03 |
+| fx_parallel_premium | 2 | 45 | 45 | 0 | 27 | 0.09 | 0 | 1 | 0 | 0 | 0.810 | no | 2026-09-04 |
+| hkma_aggr_balance | 2 | 140 | 125 | 15 | 107 | 0.47 | 0 | 10 | 0 | 0 | 0.165 | yes | 2026-09-04 |
+| tga_days_cash | 2 | 32 | 32 | 0 | 14 | 0.05 | 0 | 0 | 0 | 0 | 0.599 | no | 2026-09-03 |
+| stablecoin_peg | 2 | 2148 | 2148 | 0 | 2144 | 5.88 | 3 | 0 | 2 | 2 | 0.417 | yes | 2026-09-03 |
+| fed_srf_takeup | 2 | 1279 | 1279 | 0 | 1273 | 5.11 | 3 | 0 | 3 | 1 | 0.406 | yes | 2026-09-03 |
+| gdelt | 2 | 58 | 58 | 0 | 43 | 0.13 | 0 | 0 | 0 | 0 | 0.669 | no | 2026-09-03 |
+| gdelt_tone | 2 | 58 | 58 | 0 | 43 | 0.13 | 1 | 0 | 1 | 1 | 0.517 | no | 2026-09-03 |
+| vix | 2 | 238 | 238 | 0 | 211 | 0.82 | 13 | 0 | 5 | 6 | 0.902 | yes | 2026-09-03 |
+| polar_temp | 2 | 2773 | 2773 | 0 | 2761 | 7.65 | 390 | 4 | 35 | 58 | 0.964 | yes | 2026-09-03 |
+| space_weather | 2 | 1501 | 1501 | 0 | 1488 | 4.08 | 35 | 4 | 24 | 4 | 0.448 | yes | 2026-09-03 |
+| control_daylength | 2 | 39 | 39 | 0 | 25 | 0.07 | 0 | 0 | 0 | 0 | 0.927 | no | 2026-09-04 |
 
 ## Pending reviews
 
@@ -44,9 +44,9 @@ item in radar.md's Pending block that carries a `[opened R.. · owner R.. · fir
 predicate that is now true while the item is still open — `pending.py --check`
 fails on it.
 
-- **flights sample-hour fix — SHIPPED R25.1** — opened R25 · owner R26 · fires: rows_since(flights, 2026-09-02) >= 60 · rows_since(flights, 2026-09-02) = 3 / 60
-- **cnh_cny maturity refresh** — opened R13 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 55 / 60
+- **flights sample-hour fix — SHIPPED R25.1** — opened R25 · owner R26 · fires: rows_since(flights, 2026-09-02) >= 60 · rows_since(flights, 2026-09-02) = 4 / 60
+- **cnh_cny maturity refresh** — opened R13 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 56 / 60
 - **net_outages settle — reconciliation tripwire** — opened R23.1 · owner R26 · fires: manual · manual — never auto-fires
-- **level-layer → flights** — opened R23.1 · owner R26 · fires: date >= 2026-11-01 · date = 2026-09-04 / 2026-11-01
-- **cnh_cny reachability reference-regime re-check** — opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 55 / 60
+- **level-layer → flights** — opened R23.1 · owner R26 · fires: date >= 2026-11-01 · date = 2026-09-05 / 2026-11-01
+- **cnh_cny reachability reference-regime re-check** — opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 56 / 60
 - **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 26 / 30
