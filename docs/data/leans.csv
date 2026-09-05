@@ -1,0 +1,6 @@
+date,line,lean,evidence
+2026-07-05,flights,unavailable,no machine classifier for this line
+2026-08-24,net_outages,ok,"batch 1, 0/4 corroborated"
+2026-08-28,flights,unavailable,no machine classifier for this line
+2026-09-04,net_outages,common-mode,"7/7 synchronized ping-slash24-only, 1/15 corroborated"
+2026-09-05,net_outages,common-mode,"6/6 synchronized ping-slash24-only, 1/13 corroborated"

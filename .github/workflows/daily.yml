@@ -99,11 +99,12 @@ jobs:
           python tools/level_layer.py
           python tools/drift_layer.py
           python tools/stuck_panel.py
+          python tools/lean_panel.py
           python tools/episodes.py --markdown > radar-metrics.md
           python tools/pending.py --markdown >> radar-metrics.md
           python render.py
           tools/ci_push.sh "derived: $(TZ=Asia/Shanghai date +%F)" \
-            charts/ data/levels.csv data/drifts.csv radar-metrics.md docs/data/stuck.csv
+            charts/ data/levels.csv data/drifts.csv radar-metrics.md docs/data/stuck.csv docs/data/leans.csv
 
       # VERIFY AFTER COMMITTING, NEVER BEFORE. Several lines are live snapshots
       # with no archive to re-fetch from, so a gate that fails before the commit

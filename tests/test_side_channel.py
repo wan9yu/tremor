@@ -48,7 +48,7 @@ class TestSideChannelIsInert(unittest.TestCase):
         served = {f for f in os.listdir(os.path.join(ROOT, "docs", "data"))
                   if not f.startswith(".")
                   and os.path.isfile(os.path.join(ROOT, "docs", "data", f))}
-        leaked = served - (set(collect.MIRRORED) | {"stuck.csv"})
+        leaked = served - (set(collect.MIRRORED) | {"stuck.csv", "leans.csv"})
         self.assertFalse(leaked, f"unallow-listed files served on the dashboard: {leaked}")
 
     def test_the_sampler_writes_only_its_own_file(self):
