@@ -48,6 +48,17 @@ Two things are checked:
          each other, and belongs to (and is checked by)
          tests/audit_public_surface.py instead.
 
+     T2 (adjudication reaches the headline) adds one more bound pair, of a
+     different shape: docs/index.html's EN and ZH ``verdictLabel:{...}`` maps
+     (the annotations.csv ``verdict`` -> headline-qualifier text a firing
+     tier-1 line's adjudication renders as). Unlike statusLabel/BLIND/STATUS,
+     there is no core/normalize.py enum to bind this to -- ``verdict`` is
+     free text an annotator writes by hand, and the vocabulary is expected to
+     keep growing -- so ``TestVerdictLabelsMatchAcrossLanguages`` only
+     asserts what statusLabel's own EN/ZH parity test asserts: the two
+     languages declare the exact same key set, so one language can never
+     silently gain (or lose) a recognized verdict the other does not.
+
   2. README claims. README.md carries a small "Machine-checked claims" table
      (added by this same change) stating a couple of numbers that are true
      of the code today. This lint re-derives each number from source and
@@ -244,6 +255,53 @@ class TestGapStatusesConstIsBound(unittest.TestCase):
         self.assertEqual(extra, [],
                           "docs/index.html's `const GAP_STATUSES` carries "
                           f"status(es) core/normalize.py never emits: {extra}")
+
+
+# --- docs/index.html's `verdictLabel:{...}` map (T2: adjudication reaches
+# the headline) --------------------------------------------------------------
+# Unlike statusLabel/BLIND/STATUS above, there is no core/normalize.py enum
+# to bind this to: an annotations.csv `verdict` is free text an annotator
+# writes by hand -- `artifact`, `real`, `mixed`, `benign`, `method`,
+# `correction` and `retraction` all appear in data/annotations.csv today, and
+# the set is expected to keep growing, so it can never be a closed,
+# code-derived vocabulary. What CAN be enforced the same way -- and the same
+# way statusLabel's own EN/ZH check does it, with no data/ read either -- is
+# that the two languages never drift apart on which verdicts they recognize.
+
+_VERDICT_LABEL_BLOCK = re.compile(r'verdictLabel:\{(.*?)\},', re.S)
+# Unlike statusLabel's keys (quoted, because "warming-up" needs quoting), a
+# verdict key here is always a bare identifier (artifact, real, ...), matching
+# this file's other T-dict keys (darkNote, blindNote, ...). The label VALUES
+# are plain quoted strings that themselves contain a colon ("adjudicated:
+# attributed to a real-world event"), so the match requires the colon be
+# immediately followed by the opening quote of that value -- a bare `:` scan
+# would also catch the colon inside a label's own text.
+_VERDICT_LABEL_KEY = re.compile(r'(\w+)\s*:\s*"')
+
+
+@functools.lru_cache(maxsize=None)
+def _verdict_label_key_sets():
+    """The key set of each `verdictLabel:{...}` map in docs/index.html, in
+    source order (today: [EN, ZH]). Memoized (see `_status_label_key_sets`)."""
+    html = support.read_text(DOCS_INDEX)
+    blocks = _VERDICT_LABEL_BLOCK.findall(html)
+    assert len(blocks) == 2, (
+        "docs/index.html: expected exactly 2 `verdictLabel:{...}` maps (EN + "
+        f"ZH), found {len(blocks)}")
+    return [set(_VERDICT_LABEL_KEY.findall(block)) for block in blocks]
+
+
+class TestVerdictLabelsMatchAcrossLanguages(unittest.TestCase):
+    def test_verdictLabel_map_is_not_empty(self):
+        en_keys, _ = _verdict_label_key_sets()
+        self.assertTrue(en_keys, "docs/index.html: `verdictLabel` map parsed with no keys")
+
+    def test_en_and_zh_verdictLabel_maps_declare_the_same_keys(self):
+        en_keys, zh_keys = _verdict_label_key_sets()
+        self.assertEqual(en_keys, zh_keys,
+                          "docs/index.html: the EN and ZH `verdictLabel` maps "
+                          f"declare different keys: EN={sorted(en_keys)} "
+                          f"ZH={sorted(zh_keys)}")
 
 
 # --- README.md's "Machine-checked claims" table ------------------------------

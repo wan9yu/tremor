@@ -69,6 +69,10 @@
   .pill{display:inline-block;font-size:10px;padding:1px 7px;border-radius:999px;
     border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:middle}
   .pill.trembling{color:#fff;background:var(--alarm);border-color:var(--alarm)}
+  /* disclosure, not suppression: still reads "trembling", just visibly muted/hatched
+     to say an instrument artifact or a common-mode machine lean sits under it */
+  .pill.trembling.adjudicated{color:#ff6b6b;border-color:rgba(214,69,69,.55);
+    background:repeating-linear-gradient(45deg,rgba(214,69,69,.16) 0 4px,rgba(214,69,69,.32) 4px 8px)}
   .pill.benign{color:#0e0f12;background:var(--calm);border-color:var(--calm)}
   .pill.calib{color:var(--muted);border-color:var(--line);background:transparent}
   .modal-card .annoh{font-size:13px;margin:16px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
@@ -414,6 +418,22 @@ const T = {
     calibNote:(n,m)=>" · "+n+" of "+m+" lines still calibrating",
     whichNote:(names)=>" · "+names.join(" + "),
     blindNote:n=>" · "+n+(n===1?" line cannot score":" lines cannot score")+" (not the same as calm)",
+    // What the RECORD concluded about a firing line, not an editorial gloss.
+    // `real` only ever claims what every real-verdict row on file actually
+    // supports -- NOT an instrument artifact -- never "attributed to a
+    // specific event", since some real rows carry no event at all (e.g. a
+    // character note on a line that never trembled). `benign` is an
+    // adjudication (it suppresses the machine lean, see ADJUDICATING_VERDICTS
+    // above) but still renders no qualifier of its own here -- it, like
+    // method/correction/retraction, is recorded in the modal, not the headline.
+    verdictLabel:{
+      artifact:"adjudicated an instrument artifact, not a world event",
+      real:"adjudicated real — not an instrument artifact",
+      attributed:"adjudicated real — not an instrument artifact",
+      mixed:"adjudicated: partly attributed",
+    },
+    leanNote:(tag,ev)=>" · "+tag+"machine lean: common-mode ("+ev+") — awaiting adjudication",
+    runNote:(tag,n)=>" · "+tag+"day "+n+" of a run",
     statusLabel:{"warming-up":"cannot score yet","no-spread":"no spread to judge against",
                  "stale":"republished — already recorded","dark":"NO DATA","closed":"market closed (weekend)"},
     range_30:"30d", range_90:"90d", range_365:"1y", range_all:"all",
@@ -468,6 +488,14 @@ const T = {
     calibNote:(n,m)=>"（"+n+"/"+m+" 根线校准中）",
     whichNote:(names)=>" · "+names.join(" ＋ "),
     blindNote:n=>" · "+n+" 根线无法计分（这不等于平静）",
+    verdictLabel:{
+      artifact:"已裁定为仪器伪迹，并非真实世界事件",
+      real:"已裁定为真实信号，并非仪器伪迹",
+      attributed:"已裁定为真实信号，并非仪器伪迹",
+      mixed:"已裁定：部分归因",
+    },
+    leanNote:(tag,ev)=>" · "+tag+"机器判读：共模（"+ev+"）——等待裁定",
+    runNote:(tag,n)=>" · "+tag+"连续颤抖第"+n+"天",
     statusLabel:{"warming-up":"尚无法计分","no-spread":"无离散度可判",
                  "stale":"重复发布 — 已记录","dark":"无数据","closed":"周末休市"},
     range_30:"30天", range_90:"90天", range_365:"1年", range_all:"全部",
@@ -606,18 +634,60 @@ function gapRunLength(rows){
   }
   return n;
 }
+// How many of `rows`' most recent entries, counting back from the last one,
+// are alarm-direction trembles without interruption -- the run-ending-at-today
+// walk, same shape as gapRunLength above but over trembling+direction instead
+// of a GAP_STATUSES status. Pure client compute, no new data: it never touches
+// the trembling integer itself, only whether a firing line reads as a fresh
+// alarm or day N of one already disclosed.
+function tremblingRunLength(rows,alarmDir){
+  let n=0;
+  for(let i=rows.length-1;i>=0;i--){
+    if(rows[i].trembling!=="1"||rows[i].direction!==alarmDir) break;
+    n++;
+  }
+  return n;
+}
 const FEEL_HOT=2;
 const isDivergent=(count,feelMax)=>count===0&&feelMax!==null&&feelMax>=FEEL_HOT;
 async function load(){
-  const [summary, annotations, stuck, ...lineArr]=await Promise.all([
+  const [summary, annotations, stuck, leans, ...lineArr]=await Promise.all([
     getCSV("data/summary.csv"), getCSV("data/annotations.csv"), getCSV("data/stuck.csv"),
+    getCSV("data/leans.csv"),
     ...LINES.map(L=>getCSV("data/"+L.id+".csv"))]);
   const lines={}; LINES.forEach((L,i)=>lines[L.id]=lineArr[i]);
   const annoMap=new Map(annotations.map(a=>[a.line+"|"+a.date,a]));
-  DATA={summary, dates:summary.map(r=>r.date), lines, annotations, annoMap, stuck};
+  // Same-day machine lean per firing tier-1 line, served by tools/lean_panel.py
+  // (date,line,lean,evidence). Consulted by the headline only when nothing has
+  // been annotated yet -- a human verdict in annotations.csv always wins.
+  const leanMap=new Map(leans.map(r=>[r.line+"|"+r.date,r]));
+  DATA={summary, dates:summary.map(r=>r.date), lines, annotations, annoMap, stuck, leanMap};
 }
 // annotation lookup: notes live in data/annotations.csv (date,line,verdict,note)
 function annoOn(lineId,date){ return DATA.annoMap&&DATA.annoMap.get(lineId+"|"+date); }
+// machine-lean lookup: same-day classifier verdicts live in data/leans.csv
+// (date,line,lean,evidence). Guarded the same way annoOn is, so a DATA shape
+// with no leanMap (an older fixture, say) reads as "no lean" rather than throwing.
+function leanOn(lineId,date){ return DATA.leanMap&&DATA.leanMap.get(lineId+"|"+date); }
+// Which annotations.csv verdicts actually adjudicate a tremble -- i.e. someone
+// looked at THIS reading and judged it. method/correction/retraction rows are
+// keyed to a (line,date) routinely (66/18/3 of them on file) but say nothing
+// about whether the day's tremble is real; a firing line under one of those
+// must still be treated as unannotated, so its same-day machine lean gets
+// disclosed rather than silently reverting to a bare, unlabelled integer.
+const ADJUDICATING_VERDICTS=new Set(["artifact","real","attributed","mixed","benign"]);
+// The adjudicating annotation for (lineId,date), or undefined if none exists.
+// Scans ALL of DATA.annotations for that key -- never the last-wins annoMap,
+// which a same-day method/correction/retraction row can shadow (2026-09-04
+// net_outages carries both a retraction and an artifact row for the same
+// day) -- and returns the LAST adjudicating row among any duplicates,
+// mirroring annoMap's own last-write-wins rule but restricted to rows that
+// are actually adjudications. Shared by the headline qualifier and the strip
+// pill hatch so the two can never disagree.
+function adjudication(lineId,date){
+  const rows=(DATA.annotations||[]).filter(a=>a.line===lineId&&a.date===date&&ADJUDICATING_VERDICTS.has(a.verdict));
+  return rows.length?rows[rows.length-1]:undefined;
+}
 function annosFor(lineId){ return (DATA.annotations||[]).filter(a=>a.line===lineId&&a.verdict!=="method"); }
 // count unique observations (dedup by obs_date; rows without obs_date all count)
 function uniqueObs(rows){
@@ -672,12 +742,39 @@ function render(){
     // credit + airspace pair is near-certainly two independent events while a
     // pair sharing a domain may be one event counted twice. Naming them lets a
     // reader judge that instead of trusting the integer.
-    const firing=TIER1.filter(L=>{
+    const firingLines=TIER1.filter(L=>{
       const rows=lines[L.id]||[]; const r=rows[rows.length-1];
       return r&&r.date===last.date&&r.trembling==="1"&&r.direction===L.alarm;
-    }).map(L=>L.label[lang]);
+    });
+    const firing=firingLines.map(L=>L.label[lang]);
+    // Disclosure, not suppression: the integer above never changes. For each
+    // firing line, say what the RECORD already knows about it. A human
+    // ADJUDICATION (annotations.csv, via adjudication() above) always wins
+    // over a same-day machine lean (leans.csv) -- the lean is consulted only
+    // when nothing has actually adjudicated the tremble yet, even when the
+    // adjudication itself carries no qualifier (verdict=benign) -- plus how
+    // many days running it has been trembling, computed client-side from
+    // that line's own history. Tagged with the line's own label only when
+    // more than one line fires at once; a single firing line is otherwise
+    // unambiguous.
+    const adjBits=[];
+    for(const L of firingLines){
+      const rows=lines[L.id]||[];
+      const anno=adjudication(L.id,last.date);
+      const tag=firingLines.length>1?(L.label[lang]+": "):"";
+      const vlabel=anno&&T[lang].verdictLabel[anno.verdict];
+      if(vlabel){
+        adjBits.push(" · "+tag+vlabel);
+      } else if(!anno){
+        const lean=leanOn(L.id,last.date);
+        if(lean&&lean.lean==="common-mode") adjBits.push(T[lang].leanNote(tag,lean.evidence));
+      }
+      const run=tremblingRunLength(rows,L.alarm);
+      if(run>=2) adjBits.push(T[lang].runNote(tag,run));
+    }
     document.getElementById("count-label").innerHTML =
       base + (firing.length>1?`<span class="pairnote">${T[lang].whichNote(firing)}</span>`:"")
+           + adjBits.map(b=>`<span class="calibnote">${b}</span>`).join("")
            + (darkCount?`<span class="darknote">${T[lang].darkNote(darkCount)}</span>`:"")
            + (blindCount?`<span class="darknote">${T[lang].blindNote(blindCount)}</span>`:"")
            + (closedCount?`<span class="calibnote">${T[lang].closedNote(closedNames.join(", "))}</span>`:"")
@@ -754,11 +851,19 @@ function render(){
     if(hasToday){
       let pill="";
       const t=trembleState(todayRow);
-      if(t)
+      if(t){
+        // Chip-level disclosure, same precedence as the headline (shares the
+        // same adjudication() lookup so the two can never disagree): an
+        // adjudicated artifact, or (only absent that) a same-day common-mode
+        // machine lean, hatches the "trembling" pill -- muted, still legibly
+        // trembling, never hidden.
+        const todayAnno=adjudication(L.id,todayRow.date);
+        const todayLean=!todayAnno&&leanOn(L.id,todayRow.date);
+        const adjudicated=(todayAnno&&todayAnno.verdict==="artifact")||(todayLean&&todayLean.lean==="common-mode");
         pill = t==="alarm"
-          ? `<span class="pill trembling">${lang==="zh"?"颤抖":"trembling"}</span>`
+          ? `<span class="pill trembling${adjudicated?" adjudicated":""}">${lang==="zh"?"颤抖":"trembling"}</span>`
           : `<span class="pill benign">${T[lang].benignShift}</span>`;
-      else if(calibrating) pill=`<span class="pill calib">${T[lang].calibrating}</span>`;
+      } else if(calibrating) pill=`<span class="pill calib">${T[lang].calibrating}</span>`;
       nowHtml=`${fmt(todayRow.raw_value)} <span class="u">${L.unit[lang]}</span>`+pill;
       subHtml=`${L.label[lang]} · ${T[lang].alarmingWhen(L.alarm==="down"?T[lang].dirDown:T[lang].dirUp)}`;
     } else {

@@ -44,6 +44,17 @@ Two things, neither owned by any existing check:
      duplicate replay either). Duplicating it a third time here would only
      multiply the same O(n^2) pass for a check tools/replay.py already makes.
 
+  3. ``docs/data/leans.csv`` (T2: the dashboard headline reads this as a
+     same-day machine lean). Like ``docs/data/stuck.csv``, it is DERIVED and
+     served straight to ``docs/data/`` by its own reporter
+     (``tools/lean_panel.py``) — never through ``collect.MIRRORED`` — so
+     nothing else checks it. If the file is present: every ``line`` value
+     must be a tier-1 line id (read off ``lean_panel.TIER1``, the reporter's
+     own list, rather than re-derived here — the reporter is what actually
+     decides which lines it serves), and every ``lean`` value must be one of
+     the three the reporter's classifier can emit. This audit reads
+     ``data/`` (the tier-1 line set) so it lives here, not in a lint.
+
 AUDIT, not gate/lint: reads ``data/`` (the committed record) and imports
 ``collect`` (which imports every fetcher), which the pre-collect gate
 (``test_*.py``) may never do (tests/test_side_channel.py's
@@ -58,14 +69,17 @@ import unittest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 import collect
+import lean_panel
 import support
 from core import normalize
 
 DATA_DIR = os.path.join(ROOT, "data")
 DOCS_DATA_DIR = os.path.join(ROOT, "docs", "data")
 DOCS_INDEX = os.path.join(ROOT, "docs", "index.html")
+DOCS_LEANS = os.path.join(DOCS_DATA_DIR, "leans.csv")
 
 
 # --- 1. MIRRORED byte-equality ------------------------------------------
@@ -132,6 +146,41 @@ class TestGapChipStatusesHaveNoReading(unittest.TestCase):
                     offenders.append(
                         f"{mod.LINE} {row['date']}: status={row['status']!r} "
                         f"(a GAP_STATUSES status) but raw_value={row['raw_value']!r}")
+        self.assertEqual(offenders, [], "\n".join(offenders))
+
+
+# --- 3. leans.csv: well-formed, and scoped to tier-1 -------------------------
+
+# The three lean values tools/lean_panel.py's own `_classify` can emit (see
+# its docstring) -- not a code-level enum (there is none to bind to; the
+# function just returns one of these three literals), so named here by hand
+# and revisited if that function ever grows a fourth.
+LEAN_VALUES = {"common-mode", "ok", "unavailable"}
+
+
+class TestLeansCsvIsWellFormedAndTier1Only(unittest.TestCase):
+    """docs/data/leans.csv is optional (a fresh checkout before the derive
+    step has ever run holds none), so this skips rather than fails when it is
+    absent. When present, every row must name a tier-1 line — lean_panel.py
+    is built to serve firing TIER-1 lines only, so any other line id here
+    means the reporter and the dashboard have drifted on what "tier-1" means
+    — and every `lean` must be a value the reporter's classifier can actually
+    produce.
+    """
+
+    def test_leans_csv_is_well_formed_and_scoped_to_tier1(self):
+        if not os.path.exists(DOCS_LEANS):
+            self.skipTest("docs/data/leans.csv not present")
+        rows = collect._read_rows(DOCS_LEANS)
+        tier1_ids = {mod.LINE for mod in lean_panel.TIER1}
+        offenders = []
+        for row in rows:
+            line = row.get("line")
+            if line not in tier1_ids:
+                offenders.append(f"{row.get('date')}: line {line!r} is not a tier-1 line")
+            lean = row.get("lean")
+            if lean not in LEAN_VALUES:
+                offenders.append(f"{row.get('date')} {line}: unrecognized lean {lean!r}")
         self.assertEqual(offenders, [], "\n".join(offenders))
 
 
