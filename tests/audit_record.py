@@ -151,6 +151,15 @@ class TestControlLineRecord(unittest.TestCase):
         Rows carrying obs_date are checked to within a minute; rows written
         before obs_date was recorded fall back to the row date at a loose
         tolerance, and are honestly weaker.
+
+        For obs_date rows this also adds a closest-day MARGIN check (see
+        ``test_control.closest_day_margin``, the shared helper): the claimed
+        day must not be beaten by a neighbouring day's model by more than 5 s,
+        UNLESS the neighbours are themselves too close together to resolve
+        (guaranteed near a solstice — 2026-12-21/22 differ by ~0.89 s — where
+        the coarser absolute-tolerance check above still carries the row).
+        This is a margin, not strict argmin equality, on purpose: do not
+        tighten it.
         """
         for r in self._rows():
             if r.get("obs_date"):
@@ -163,6 +172,15 @@ class TestControlLineRecord(unittest.TestCase):
                 abs(actual - expected), tol,
                 f"{r['date']}: recorded {actual:.4f}h but its {which} {day} implies "
                 f"{expected:.4f}h — the pipeline mishandled a date")
+            if r.get("obs_date"):
+                skip, resid0, best = test_control.closest_day_margin(control.LAT, day, actual)
+                if not skip:
+                    self.assertLessEqual(
+                        resid0, best + test_control.MARGIN_H,
+                        f"{r['date']}: obs_date {day} is beaten by a neighbouring "
+                        f"day's model by more than the 5 s margin (resid0="
+                        f"{resid0 * 3600:.2f}s, best={best * 3600:.2f}s) — "
+                        f"investigate a possible date/label slip")
 
     def test_the_row_describes_a_day_close_to_when_it_was_collected(self):
         """obs_date must track the collection date; a drift means a stuck fetch."""
