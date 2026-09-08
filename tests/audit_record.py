@@ -38,6 +38,7 @@ import support
 import test_control  # the astronomy lives with the control line's logic tests
 from core import normalize
 from fetchers import control_daylength as control
+from fetchers import flights
 
 # ONE-OFF short days: {date: {missing components}}. An entry here is a human
 # acknowledgement that the shortfall was investigated and found to be the
@@ -346,13 +347,11 @@ class TestAdsbProviderHealth(unittest.TestCase):
     PATH = os.path.join(ROOT, "data", "components", "flights.csv")
 
     def test_every_configured_provider_answered_within_the_lookback(self):
+        import collect
         from core import adsb
-        if not os.path.exists(self.PATH):
-            self.skipTest("no components recovered yet")
-        with open(self.PATH, newline="") as f:
-            rows = list(csv.DictReader(f))
+        rows = collect._read_rows(self.PATH)
         if not rows:
-            self.skipTest("flights components file is empty")
+            self.skipTest("no components recovered yet")
         dates = sorted(set(r["date"] for r in rows))
         recent = set(dates[-self.LOOKBACK_DAYS:])
 
@@ -382,7 +381,10 @@ class TestAdsbProviderHealth(unittest.TestCase):
 # not about the source code, so it is bound here (AUDIT, post-commit,
 # data-dependent) rather than in tests/lint_public_surface.py, which is
 # source-only and never reads data/ (see that module's own docstring).
-_FLIGHTS_REGIONS = ("W/C Europe", "US East", "US West", "E Asia/Japan")
+# Derived from the fetcher's own region list rather than retyped, so a fifth
+# region added there can't silently make the "fraction of counted total"
+# below a subset of what flights actually counts.
+_FLIGHTS_REGIONS = tuple(name for name, *_ in flights._REGIONS)
 _FLIGHTS_LINE = os.path.join(ROOT, "data", "flights.csv")
 _FLIGHTS_COMPONENTS = os.path.join(ROOT, "data", "components", "flights.csv")
 
@@ -424,10 +426,9 @@ def _flights_reach():
     median = statistics.median(residuals)
 
     by_date = {}
-    with open(_FLIGHTS_COMPONENTS, newline="") as f:
-        for r in csv.DictReader(f):
-            if r["component"] in _FLIGHTS_REGIONS:
-                by_date.setdefault(r["date"], {})[r["component"]] = float(r["value"])
+    for r in collect._read_rows(_FLIGHTS_COMPONENTS):
+        if r["component"] in _FLIGHTS_REGIONS:
+            by_date.setdefault(r["date"], {})[r["component"]] = float(r["value"])
     matched = [d for d in window_dates
                if d in by_date and all(x in by_date[d] for x in _FLIGHTS_REGIONS)]
     if not matched:

@@ -139,6 +139,16 @@ def _scored_rows():
     return [r for r in csv.DictReader(open(_ROWS)) if r["raw_value"] not in ("", "None")]
 
 
+def window_end(row):
+    """Settled-window end date for a record row -- ``obs_date`` when the row
+    carries one, else the row's own date. Every settled row carries an
+    obs_date; the one exception in the live alarm history is 2026-08-24 (the
+    adjudicated common-mode artifact, kept forward-only in the unsettled seam
+    with no obs_date of its own). Single home for this fallback -- both
+    ``main`` below and tools/probe_ioda_corroboration.py use it."""
+    return row.get("obs_date") or row["date"]
+
+
 def main(argv):
     rows = _scored_rows()
     if "--seam" in argv:
@@ -154,7 +164,7 @@ def main(argv):
     flips = 0
     cm_hits = 0
     for r in targets:
-        end = r.get("obs_date") or r["date"]  # settled rows carry the window-end date
+        end = window_end(r)  # settled rows carry the window-end date
         try:
             got = requery(end)
         except Exception as e:

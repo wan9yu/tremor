@@ -101,14 +101,37 @@ def _all_rows():
     return list(csv.DictReader(open(_ROWS)))
 
 
-def _window_end(row):
-    """Settled-window end date for a record row -- ``obs_date`` when the row
-    carries one, else the row's own date. Every settled row carries an
-    obs_date; the one exception in the live alarm history is 2026-08-24 (the
-    adjudicated common-mode artifact, kept forward-only in the unsettled seam
-    with no obs_date of its own), and the fallback here is the same one
-    reconcile_net_outages.main() already uses for that row."""
-    return row.get("obs_date") or row["date"]
+def _label_window(row, want_era=False):
+    """Fetch, retry, and classify one settled window -- the per-row body
+    step1_label_all and step3_bands's calm-day loop each ran inline before
+    this was factored out. Degrades to ``status: "unavailable"`` on exhausted
+    retries rather than raising (``_with_retry``'s contract); each caller
+    still does its own printing from the returned dict, since step1's table
+    carries two more columns (lean, era) than step3's calm-day table.
+
+    ``want_era`` additionally records whether ANY bgp/merit-nt event appeared
+    anywhere in the window (``era_covered``) -- step1's own extra field, which
+    step2_era_profile derives the era table from. The calm-day loop has no
+    use for it, so the key is simply absent from its dicts.
+    """
+    d = row["date"]
+    end = R.window_end(row)
+    try:
+        events = _with_retry(R._fetch_events, end)
+    except Exception as e:
+        label = {"date": d, "window_end": end, "raw": None, "corrob": None,
+                 "lean": None, "status": "unavailable", "error": type(e).__name__}
+        if want_era:
+            label["era_covered"] = None
+        return label
+    cm = R.classify_common_mode(events)
+    label = {"date": d, "window_end": end, "raw": cm["ping_countries"],
+             "corrob": cm["corroborated"], "lean": cm["verdict"], "status": "ok"}
+    if want_era:
+        label["era_covered"] = any(
+            str(e.get("datasource") or "").startswith(("bgp", "merit-nt"))
+            for e in events)
+    return label
 
 
 def step0_reproduce(rows_by_date, sample=_REPRO_SAMPLE):
@@ -124,7 +147,7 @@ def step0_reproduce(rows_by_date, sample=_REPRO_SAMPLE):
         if row is None:
             print(f"{d:12s}  -- not in the record, skipped")
             continue
-        end = _window_end(row)
+        end = R.window_end(row)
         stored = int(float(row["raw_value"]))
         try:
             got = _with_retry(R.requery, end)
@@ -162,29 +185,19 @@ def step1_label_all(alarm_rows):
     print(f"{'date':12s} {'win-end':12s} {'raw':>4} {'corrob':>6} {'lean':11} "
           f"{'bgp/mnt':7} {'avail'}")
     out = []
-    for i, row in enumerate(alarm_rows):
-        d = row["date"]
-        end = _window_end(row)
-        try:
-            events = _with_retry(R._fetch_events, end)
-        except Exception as e:
-            print(f"{d:12s} {end:12s} {'':>4} {'':>6} {'':11} {'':7} "
-                  f"unavailable ({type(e).__name__})")
-            out.append({"date": d, "window_end": end, "raw": None, "corrob": None,
-                        "lean": None, "era_covered": None, "status": "unavailable"})
-            time.sleep(_PAUSE_S)
-            continue
-        cm = R.classify_common_mode(events)
-        era_covered = any(str(e.get("datasource") or "").startswith(("bgp", "merit-nt"))
-                          for e in events)
-        print(f"{d:12s} {end:12s} {cm['ping_countries']:>4} {cm['corroborated']:>6} "
-              f"{cm['verdict']:11} {'yes' if era_covered else 'no':7} yes")
-        out.append({"date": d, "window_end": end, "raw": cm["ping_countries"],
-                    "corrob": cm["corroborated"], "lean": cm["verdict"],
-                    "era_covered": era_covered, "status": "ok"})
+    for row in alarm_rows:
+        label = _label_window(row, want_era=True)
+        if label["status"] == "ok":
+            print(f"{label['date']:12s} {label['window_end']:12s} {label['raw']:>4} "
+                  f"{label['corrob']:>6} {label['lean']:11} "
+                  f"{'yes' if label['era_covered'] else 'no':7} yes")
+        else:
+            print(f"{label['date']:12s} {label['window_end']:12s} {'':>4} {'':>6} "
+                  f"{'':11} {'':7} unavailable ({label['error']})")
+        out.append(label)
         time.sleep(_PAUSE_S)
-    ok = [r for r in out if r["status"] == "ok"]
-    print(f"{len(out)} alarm window(s) labeled, {len(out) - len(ok)} unavailable")
+    unavailable = sum(1 for r in out if r["status"] != "ok")
+    print(f"{len(out)} alarm window(s) labeled, {unavailable} unavailable")
     return out
 
 
@@ -269,22 +282,14 @@ def step3_bands(labels, calm_rows):
     print(f"{'date':12s} {'win-end':12s} {'raw':>4} {'corrob':>6} {'lean'}")
     calm_labels = []
     for row in calm_rows:
-        d = row["date"]
-        end = _window_end(row)
-        try:
-            events = _with_retry(R._fetch_events, end)
-        except Exception as e:
-            print(f"{d:12s} {end:12s} {'':>4} {'':>6} unavailable ({type(e).__name__})")
-            calm_labels.append({"date": d, "window_end": end, "raw": None,
-                                "corrob": None, "lean": None, "status": "unavailable"})
-            time.sleep(_PAUSE_S)
-            continue
-        cm = R.classify_common_mode(events)
-        print(f"{d:12s} {end:12s} {cm['ping_countries']:>4} {cm['corroborated']:>6} "
-              f"{cm['verdict']}")
-        calm_labels.append({"date": d, "window_end": end, "raw": cm["ping_countries"],
-                            "corrob": cm["corroborated"], "lean": cm["verdict"],
-                            "status": "ok"})
+        label = _label_window(row)
+        if label["status"] == "ok":
+            print(f"{label['date']:12s} {label['window_end']:12s} {label['raw']:>4} "
+                  f"{label['corrob']:>6} {label['lean']}")
+        else:
+            print(f"{label['date']:12s} {label['window_end']:12s} {'':>4} {'':>6} "
+                  f"unavailable ({label['error']})")
+        calm_labels.append(label)
         time.sleep(_PAUSE_S)
     ok_calm = [r for r in calm_labels if r["status"] == "ok"]
     with_outage = [r for r in ok_calm if r["raw"]]
