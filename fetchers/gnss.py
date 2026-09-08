@@ -21,7 +21,7 @@ observation baseline then in hand made the sampling frame look like it had
 grown by an order of magnitude.
 
 CORRECTED round 9 (2026-08-03), once the line was seeded to four years of real
-history (radar-log.md:499-511): the July 2026 window re-scores to z = +2.87
+history (radar-log-1.md:499-511): the July 2026 window re-scores to z = +2.87
 (49 alarm-direction trembles record-wide across 1,452 scored days) — the line
 DID register the escalation, it just fell short of the |z|>3 bar; the flat
 0.47% reading above was an artifact of the thin baseline it was first judged

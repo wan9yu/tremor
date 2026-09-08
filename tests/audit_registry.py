@@ -224,10 +224,10 @@ _LEADING_QUOTES_RE = re.compile(r"^RETRACTED:\s*('[^']+'(?:\s*,\s*'[^']+')*)")
 _QUOTED_RE = re.compile(r"'([^']+)'")
 
 # The live served surfaces a retracted claim must never be re-asserted on.
-# radar-log.md is deliberately EXCLUDED — it is the round-by-round history,
-# and quoting a retracted phrase IN ORDER TO retract it (as every citation in
-# TestNoRetractedClaimIsLive's docstring does) is the log doing its job, not
-# re-asserting the claim.
+# radar-log*.md (radar-log.md + the R29 radar-log-1.md archive) is deliberately
+# EXCLUDED — it is the round-by-round history, and quoting a retracted phrase
+# IN ORDER TO retract it (as every citation in TestNoRetractedClaimIsLive's
+# docstring does) is the log doing its job, not re-asserting the claim.
 _LIVE_SURFACES = ("radar.md", "docs/index.html", "README.md", "radar-metrics.md")
 
 
@@ -236,8 +236,8 @@ class TestNoRetractedClaimIsLive(unittest.TestCase):
 
     CONVENTION (established by this test — annotations.csv carried no
     machine-readable retraction marker before it; every prior one was free
-    text, e.g. radar-log.md:561's "> **RETRACTED IN ROUND 10.**" and
-    radar-log.md:1656-1671's Round 23.2 write-up). A retraction is now a
+    text, e.g. radar-log-1.md:561's "> **RETRACTED IN ROUND 10.**" and
+    radar-log.md:433-448's Round 23.2 write-up). A retraction is now a
     ``data/annotations.csv`` row whose ``verdict`` column reads
     ``retraction`` and whose ``note`` column STARTS with
     ``RETRACTED: '<phrase>'[, '<phrase>'...]`` — one or more comma-separated,
@@ -267,22 +267,24 @@ class TestNoRetractedClaimIsLive(unittest.TestCase):
     stayed live and unchecked).
 
     Seeded with the claims this record is known to have retracted, verified
-    against radar-log.md:
+    against the calibration log (the R29 roll split it: rounds 1-19 are in
+    radar-log-1.md at their SAME line numbers — a 6-line archive pad preserved
+    them — and rounds 20+ stay in radar-log.md shifted line N → N−1223):
 
       1. 'cannot structurally exceed ~2 of 4' — Round 9's resonance-ceiling
-         headline, marked "> **RETRACTED IN ROUND 10.**" at radar-log.md:561
+         headline, marked "> **RETRACTED IN ROUND 10.**" at radar-log-1.md:561
          ("The ceiling claim above is false...") and reaffirmed at
-         radar-log.md:641 ("The resonance ceiling claim of round 9 is
+         radar-log-1.md:641 ("The resonance ceiling claim of round 9 is
          retracted"); Round 10's own retraction was itself corrected at
-         radar-log.md:1100-1108 (Round 16, the co-scoring share — ~778/796
+         radar-log-1.md:1100-1108 (Round 16, the co-scoring share — ~778/796
          days, not "33").
       2. 'read 0.47% and never moved', 'sat at 0.47% and did not move',
          'tenfold growth in the sampling frame', and (ZH, the fuller sentence
          rather than its bare four-character idiom below) '这根线停在 0.47%
-         纹丝不动' — Round 7.1's claim (radar-log.md:290) that
+         纹丝不动' — Round 7.1's claim (radar-log-1.md:290) that
          gnss_interference's global ratio never registered the July Gulf
          escalation, and round 7's estimate that its sampling frame had grown
-         roughly tenfold, both retracted at radar-log.md:502-511 (**Round 9**,
+         roughly tenfold, both retracted at radar-log-1.md:502-511 (**Round 9**,
          2026-08-03 — not Round 8, which is 2026-07-23 and unrelated; the gnss
          seed). Re-scored against four years of real history the July 2026
          window peaks at z=+2.87 (a separate fact from, not the same as, its
@@ -300,9 +302,9 @@ class TestNoRetractedClaimIsLive(unittest.TestCase):
          style as fetchers/net_outages.py's own correction note), citing this
          round.
       3. 'removes the whole latency-injection class' — Round 23.1's
-         description of the net_outages settle fix (radar-log.md:1615;
+         description of the net_outages settle fix (radar-log.md:392;
          fetchers/net_outages.py's own "CORRECTED 2026-08-26" note),
-         corrected at radar-log.md:1656-1671 (Round 23.2) once the
+         corrected at radar-log.md:433-448 (Round 23.2) once the
          reconciliation tripwire's first run found a synchronized-onset
          cluster relocates to its settled window and would still alarm
          there — settle stabilizes and relocates the count, it does not

@@ -1,12 +1,14 @@
 """Rolls radar-log.md's early rounds out into an archive file, once the live
-log approaches its self-set roll threshold (2,000 lines, radar.md:201 —
-1,835 lines at T16, ~107 lines/round measured, crossing at ~R27).
+log crosses its self-set roll threshold (2,000 lines, radar.md:387 — the log
+crossed at R28 at 2,036 lines, ~107 lines/round measured, and was rolled at
+R29).
 
-WHAT GETS SPLIT. radar-log.md is a short preamble (~6 lines) followed by one
+WHAT GETS SPLIT. radar-log.md is a short preamble (6 lines) followed by one
 ``### Round N — date (title)`` section per round, append-only, in file
-order. The split boundary is the ``### Round SPLIT_ROUND`` header
-(``SPLIT_ROUND`` below, 20 today): every round before it (1-19 today) moves
-into the archive file; every round from it onward stays in radar-log.md.
+order. The split boundary is the ``### Round N`` header named by the required
+``--split-round N`` argument (the R29 roll used ``--split-round 20``): every
+round before it moves into the archive file; every round from it onward stays
+in radar-log.md. Rounds 1-19 were archived to radar-log-1.md at R29.
 The boundary is found by PARSING the ``### Round`` headers — the same
 pattern tests/lint_registry.py's round-index-parity lint uses to bind
 radar.md's round index to radar-log*.md — never by a hardcoded line number,
@@ -60,9 +62,10 @@ gets a one-paragraph preamble of its own (title + a link back to radar.md
 and radar-log.md), and radar-log.md's EXISTING preamble is kept byte-for-byte
 and gets one added sentence pointing at the archive.
 
-    python tools/roll_radar_log.py --check   # compute + verify the split; write nothing
-    python tools/roll_radar_log.py           # write radar-log-1.md, rewrite radar-log.md
+    python tools/roll_radar_log.py --check --split-round N   # verify the split; write nothing
+    python tools/roll_radar_log.py --split-round N           # write the archive, rewrite radar-log.md
 """
+import argparse
 import os
 import re
 import sys
@@ -75,8 +78,6 @@ ARCHIVE_PATH = os.path.join(ROOT, "radar-log-1.md")
 # tool's idea of "a round" never drifts from what that lint's
 # round-index-parity check counts against radar.md.
 ROUND_HEADER = re.compile(r'^###\s+Round\s+([0-9]+(?:\.[0-9]+)?)\b', re.M)
-
-SPLIT_ROUND = 20  # rounds with an integer part < this archive; >= this stay
 
 
 def _read(path):
@@ -105,7 +106,7 @@ class SplitResult:
         self.remaining_body = remaining_body
 
 
-def compute_split(text, split_round=SPLIT_ROUND):
+def compute_split(text, split_round):
     """Parse ``text`` (radar-log.md's content) and group its rounds into an
     archive side and a remaining side. A pure function — no I/O, no
     assertion about reproducing ``text`` (that would only re-check Python's
@@ -145,9 +146,16 @@ def compute_split(text, split_round=SPLIT_ROUND):
 
 
 def build_archive_file(result):
-    """The exact text that would be WRITTEN to radar-log-1.md: a new
-    one-paragraph pointer preamble (never preserved bytes — new prose)
-    followed by ``result.archive_body``.
+    """The exact text that would be WRITTEN to radar-log-1.md: a new pointer
+    preamble (never preserved bytes — new prose) followed by
+    ``result.archive_body``.
+
+    The preamble is EXACTLY 6 lines — the same length as radar-log.md's own
+    preamble — so the first archived round lands on the same line number it
+    occupied in radar-log.md, and every line-number citation into an archived
+    round (e.g. radar-log.md:499-511) holds VERBATIM in radar-log-1.md with
+    only the file name changed. A shorter preamble would shift every archived
+    citation.
 
     Returns ``(full_text, added_prefix)`` — ``added_prefix`` is exactly the
     preamble this function itself prepended, handed back so
@@ -159,10 +167,10 @@ def build_archive_file(result):
     added_prefix = (
         f"# tremor radar — calibration log (archive: rounds {first}–{last})\n\n"
         f"Rounds {first}–{last} of the append-only round-by-round record behind "
-        "the registry in **[radar.md](radar.md)**. Split out by "
-        "`tools/roll_radar_log.py` once the live log crossed its self-set roll "
-        f"threshold. Current rounds ({next_first}+) are in "
-        "**[radar-log.md](radar-log.md)**.\n\n"
+        "the registry in **[radar.md](radar.md)**.\n"
+        "Split out by `tools/roll_radar_log.py` once the live log crossed its "
+        "self-set roll threshold (2,000 lines).\n"
+        f"Current rounds ({next_first}+) are in **[radar-log.md](radar-log.md)**.\n\n"
     )
     return added_prefix + result.archive_body, added_prefix
 
@@ -233,7 +241,7 @@ def verify_write_plan(original, archive_full, archive_added,
             "original byte for byte — refusing to write")
 
 
-def verify_round_coverage(original, archive_full, live_full, split_round=SPLIT_ROUND):
+def verify_round_coverage(original, archive_full, live_full, split_round):
     """The round-coverage guarantee, checked the same independent way as
     ``verify_write_plan``: re-parses ``### Round`` headers straight out of
     the ACTUAL write-plan strings (never out of an already-partitioned list
@@ -285,7 +293,7 @@ def verify_round_coverage(original, archive_full, live_full, split_round=SPLIT_R
             "refusing to write")
 
 
-def plan_split(original, split_round=SPLIT_ROUND):
+def plan_split(original, split_round):
     """The full pipeline: group rounds, build both would-be-written file
     texts, and verify them against ``original`` (read once, held separately
     throughout — never mutated, never re-sliced to produce the thing it is
@@ -320,30 +328,68 @@ def format_report(result, split_round):
     ])
 
 
-def main(argv):
+def _build_parser(require_split):
+    """The argv parser. ``--split-round`` is a REQUIRED CLI argument — the
+    split boundary is never a hardcoded default (there is no ``SPLIT_ROUND``
+    global to fall back on), so a run must state the round it cuts at. It is
+    made optional only when a caller has already passed ``split_round`` as a
+    keyword (tests do), in which case argv need not repeat it."""
+    parser = argparse.ArgumentParser(
+        description="Roll radar-log.md's early rounds out into an archive file.")
+    parser.add_argument("--split-round", type=int, required=require_split,
+                        help="cut before '### Round N'; rounds with floor < N "
+                             "archive, floor >= N stay in radar-log.md")
+    parser.add_argument("--check", action="store_true",
+                        help="compute + verify the split; write nothing")
+    return parser
+
+
+def main(argv, log_path=None, archive_path=None, split_round=None):
     """Computes the report (and, unless ``--check`` is given, performs the
     write) and RETURNS ``(message, exit_code)`` rather than printing —
     callable from tests (or any other caller) with no stdout side effect.
     The CLI entry point below is the only thing that actually prints.
+
+    ``log_path``/``archive_path``/``split_round`` are injectable so a test can
+    drive the whole path against a ``TemporaryDirectory`` instead of the
+    repo's live files. Each defaults to the module-level constant / the
+    required ``--split-round`` argv value when not passed.
     """
-    original = _read(LOG_PATH)
+    log_path = log_path if log_path is not None else LOG_PATH
+    archive_path = archive_path if archive_path is not None else ARCHIVE_PATH
+
+    args = _build_parser(require_split=(split_round is None)).parse_args(argv)
+    if split_round is None:
+        split_round = args.split_round
+
+    original = _read(log_path)
     try:
-        result, archive_full, live_full = plan_split(original)
+        result, archive_full, live_full = plan_split(original, split_round)
     except (ValueError, AssertionError) as e:
         return f"FAIL: {e}", 1
 
-    lines = [format_report(result, SPLIT_ROUND)]
+    lines = [format_report(result, split_round)]
 
-    if "--check" in argv:
+    if args.check:
         lines.append("--check: no file written")
         return "\n".join(lines), 0
 
-    with open(ARCHIVE_PATH, "w", encoding="utf-8") as fh:
+    # Overwrite guard: a previous roll's archive must never be silently
+    # clobbered by a later one. If the archive file already exists it holds a
+    # prior roll's rounds, so this refuses to write — a future roll belongs in
+    # a fresh archive file (radar-log-2.md, ...), which is a deliberate code
+    # change, not an accidental overwrite of the record radar-log-1.md holds.
+    if os.path.exists(archive_path):
+        return (f"FAIL: archive {archive_path} already exists — refusing to "
+                "overwrite the rounds a previous roll wrote there; a further "
+                "roll must target a fresh radar-log-N.md", 1)
+
+    with open(archive_path, "w", encoding="utf-8") as fh:
         fh.write(archive_full)
-    with open(LOG_PATH, "w", encoding="utf-8") as fh:
+    with open(log_path, "w", encoding="utf-8") as fh:
         fh.write(live_full)
-    lines.append(f"wrote {ARCHIVE_PATH} ({len(archive_full)} bytes) and rewrote "
-                 f"{LOG_PATH} ({len(live_full)} bytes)")
+    lines.append(f"wrote {archive_path} ({len(archive_full)} bytes) and rewrote "
+                 f"{log_path} ({len(live_full)} bytes)")
     return "\n".join(lines), 0
 
 

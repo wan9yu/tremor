@@ -306,10 +306,26 @@ class TestRadarMdNamesEveryLineOnceInItsTierSection(unittest.TestCase):
 _ROUND_INDEX_ENTRY = re.compile(r'^-\s+\*\*Round\s+([0-9]+(?:\.[0-9]+)?)\*\*', re.M)
 _ROUND_LOG_HEADER = re.compile(r'^###\s+Round\s+([0-9]+(?:\.[0-9]+)?)\b', re.M)
 
+_ARCHIVE_SUFFIX = re.compile(r'radar-log-(\d+)\.md$')
+
+
+def _log_sort_key(path):
+    """Order radar-log*.md so the round headers concatenate oldest-first:
+    the numbered archives (radar-log-1.md, radar-log-2.md, ...) in NUMERIC
+    order of their suffix, then the live radar-log.md (no numeric suffix) LAST
+    — it holds the most recent rounds. Plain ``sorted()`` would place
+    radar-log-10.md before radar-log-2.md (lexicographic) and so break parity
+    once a second archive exists."""
+    m = _ARCHIVE_SUFFIX.search(path)
+    return (0, int(m.group(1))) if m else (1, 0)
+
 
 class TestRoundIndexParityAcrossRadarLog(unittest.TestCase):
-    """Globbed against ``radar-log*.md`` (today only radar-log.md exists) so
-    a future log-roll adds a file this lint sweeps in automatically."""
+    """Globbed against ``radar-log*.md`` (since the R29 roll: radar-log-1.md
+    holds rounds 1-19 and radar-log.md holds 20+), so the split file was swept
+    in automatically and a further roll's archive will be too — ordered
+    oldest-first by ``_log_sort_key`` so the concatenated headers stay in round
+    order across all the files."""
 
     def test_round_index_matches_the_round_log_headers_in_order(self):
         radar = support.read_text(RADAR_MD)
@@ -317,7 +333,8 @@ class TestRoundIndexParityAcrossRadarLog(unittest.TestCase):
         self.assertTrue(index_rounds,
                          "no round-index entries found in radar.md's Calibration log")
 
-        log_paths = sorted(glob.glob(os.path.join(ROOT, "radar-log*.md")))
+        log_paths = sorted(glob.glob(os.path.join(ROOT, "radar-log*.md")),
+                            key=_log_sort_key)
         self.assertTrue(log_paths, "no radar-log*.md file(s) found")
         log_rounds = []
         for path in log_paths:

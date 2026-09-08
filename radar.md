@@ -384,14 +384,20 @@ re-reading the log. Close an item by editing it out with a round reference.
   cnh_cny on a cited reference regime (real capital-flight episodes past +227 pips). Re-confirm at
   n≥60 that the reference-regime evidence still holds, alongside the maturity refresh.
   [opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60]
-- **radar-log.md roll tripwire** — split the log into an archive file when it crosses **2,000
-  lines**. CROSSED at R28: the Round 28 entry takes radar-log.md past 2,000 lines (it was 1,963
-  before it). The roll tool shipped R26 (`tools/roll_radar_log.py` — byte-identity + round-coverage
-  verified, `--check` a proven dry run); the roll itself is DEFERRED to R29 rather than run in the
-  same commit as the entry that trips it (one action per round). R29 runs `roll_radar_log.py` to
-  archive rounds 1-19 into radar-log-1.md — `lint_registry`'s round-index parity globs
-  `radar-log*.md`, so the split file is swept in with no lint change. (Earlier estimate: R21 put the
-  crossing at R31-R33; the measured growth rate reached it at R28.)
+- **radar-log.md roll tripwire — DONE R29** — the log split into an archive once it crossed its
+  self-set **2,000-line** threshold (crossed at R28, which took radar-log.md to 2,036 lines). R29 ran
+  `tools/roll_radar_log.py --split-round 20` (byte-identity + round-coverage verified): rounds 1-19
+  are now in **[radar-log-1.md](radar-log-1.md)**, rounds 20+ stay in radar-log.md, and
+  `lint_registry`'s round-index parity globs `radar-log*.md`, so both files are swept in and the 1-28
+  index still matches with no lint change. Two citation mappings hold going forward. (a) Every
+  archived round KEEPS its line number: the archive preamble is padded to the same 6 lines
+  radar-log.md's own preamble had, so a rounds-<20 citation moves by file name only — e.g. the gnss
+  seed at radar-log.md:499-511 is radar-log-1.md:499-511, and Round 10's yearly-median table stays a
+  rounds-<20 reference. (b) A rounds-≥20 citation into radar-log.md shifts line N → N−1223 (rounds
+  1-19, 1,225 lines, left the file, replaced by a 2-line archive pointer): annotation 130's frozen
+  radar-log.md:1615 is now radar-log.md:392, and its radar-log.md:1656-1671 is now
+  radar-log.md:433-448. A further roll must target a fresh radar-log-N.md — the tool now refuses to
+  overwrite an existing archive.
 - **usd_xccy_basis parking review** (opened R20) — re-probe sourcing every ~10 rounds (last: R20);
   downgrade to Rejected if still keyless-blocked at R30.
   [opened R20 · owner R26 · fires: round >= 30]
@@ -406,9 +412,11 @@ re-reading the log. Close an item by editing it out with a round reference.
 
 ## Calibration log — round index
 
-The full round-by-round reasoning lives in **[radar-log.md](radar-log.md)** (append-only).
-One line per round below; open the log for the measured detail and the numbers behind any
-decision. A new round is appended to `radar-log.md` and gets one line added here.
+The full round-by-round reasoning lives in the append-only calibration log, split across
+**[radar-log-1.md](radar-log-1.md)** (rounds 1-19, archived at R29) and
+**[radar-log.md](radar-log.md)** (rounds 20 onward). One line per round below; open the log for the
+measured detail and the numbers behind any decision. A new round is appended to `radar-log.md` and
+gets one line added here.
 
 - **Round 1** — 2026-06-22 · seed
 - **Round 1.1** — 2026-06-22 · cadence gate added
