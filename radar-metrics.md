@@ -46,7 +46,8 @@ fails on it.
 
 - **flights sample-hour fix — SHIPPED R25.1** — opened R25 · owner R26 · fires: rows_since(flights, 2026-09-02) >= 60 · rows_since(flights, 2026-09-02) = 7 / 60
 - **cnh_cny maturity refresh** — opened R13 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 57 / 60
-- **net_outages settle — reconciliation tripwire** — opened R23.1 · owner R26 · fires: manual · manual — never auto-fires
+- **net_outages — retained under a named weaker standard; demotion conditions** — opened R23.1 · owner R28 · fires: manual · manual — never auto-fires
+- **net_outages — retained under a named weaker standard; demotion conditions** — opened R23.1 · owner R28 · fires: date >= 2026-10-15 · date = 2026-09-08 / 2026-10-15
 - **level-layer → flights** — opened R23.1 · owner R26 · fires: date >= 2026-11-01 · date = 2026-09-08 / 2026-11-01
 - **cnh_cny reachability reference-regime re-check** — opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 57 / 60
-- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 26 / 30
+- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 27 / 30

@@ -1917,3 +1917,47 @@ rows — the retraction markers above — landed earlier, in the commit that mad
 corrections they describe. Still open: `roll_radar_log` awaits the
 2000-line threshold (~R27); the flights cron-delay re-review carried from R25.1 stands; the
 cnh_cny maturity review fires at n≥60. No tier moves.
+
+### Round 27 — 2026-09-08 (the corroboration probe: net_outages kept under a tightened, named-weaker standard)
+
+The 2026-09-04 net_outages spike (15 countries, z=6.098) and its 2026-09-05 recurrence (13, z=5.160)
+were IODA active-probing common-mode artifacts — synchronized ping-slash24-only batches, no BGP or
+network-telescope corroboration — and cleared on 2026-09-06, a two-day transient. Round 26's served
+synchrony lean flagged both the day they fired.
+
+The open question: could a CORROBORATED sibling line — counting only countries where ping-slash24 AND
+bgp/merit-nt agree — tell a real event from this artifact class, and so serve as an exit path from
+net_outages' repeated adjudications? tools/probe_ioda_corroboration.py re-queried every one of the ~60
+historical alarm windows live and labeled each with its raw ping count, corroborated count, and
+common-mode lean. The answer is NO. Corroboration is sparse on every band and its count cannot be told
+from calm: calm days corroborate a median of 0 (max 4), alarm days a median of 2 (common-mode-lean) to
+4 (ok-lean); requiring corroboration deflates both bands into the background and zeroes artifact-shaped
+days whether or not they are real. So the corroborated line is CUT — measured dead, not deferred.
+Banking per-country datasource components on the tier-1 line remains worthwhile as ADJUDICATION
+EVIDENCE, not as a filter. No exit path is named.
+
+With no fix (R23.2 established that settle cannot close the class) and no exit (this probe),
+net_outages is RETAINED under a named weaker standard — it is the only global-communications
+candidate, and its evidence is rate-confirmed but unattributed — with the demotion clause tightened to
+three disqualifying conditions, each alone sending it to tier-2 with the slot left empty and disclosed:
+(a) an UNADJUDICABLE instance the R23 playbook cannot attribute after a genuine attempt; (b) any alarm
+day left UNADJUDICATED 14 days after it is served; (c) REACH — by 2026-10-15 adjudicate the 8 largest
+readings, and if none survives as a real world event the line demotes on the reachability standard
+cnh_cny was held to at R13/R23.1 (a cited reference regime counts; a rate does not). Per recurrence the
+round now reports the class's adjudicated-artifact rate on the live settled series (2 episodes in 58
+days), not the seed-diluted whole record.
+
+Three annotations landed. 2026-09-05 net_outages `artifact` adjudicates the recurrence, so clause (b)
+opens with no standing debt. 2026-09-06 `method` records that corroboration was measured and is not a
+filter, with the evidence base: 24 of 60 alarm days, and 7 of the 8 largest readings, lean
+common-mode. 2026-09-06 `correction` withdraws Round 11's "2025 Iberian blackout" attribution — that
+alarm (2025-04-30, z=18.3) re-queries 0/41 corroborated and 32/32 synchronized ping-only, an artifact;
+the real blackout day (2025-04-28) read 7 countries, sub-alarm. It is the same calendar-adjacency error
+as the withdrawn 2022-03-02 Ukraine attribution.
+
+Validated: the probe was a concurrent re-fetch replayed through the unmodified reconcile classifier,
+not one sequential invocation, and its read was independently confirmed. Full suite green (gate, lint
+stdlib-only in a bare venv, replay 0-divergence, annotations mirror byte-identical). No tier moves.
+Still open and SEPARATE: the control_daylength canary is raising a false positive as the autumn equinox
+approaches — the audit's CBM day-length approximation disagrees with the source by more than its
+one-minute tolerance (issue #3), a check flaw, not a pipeline date bug; a fix is designed, not applied.
