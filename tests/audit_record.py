@@ -26,6 +26,7 @@ import datetime
 import glob
 import os
 import re
+import statistics
 import sys
 import unittest
 
@@ -33,7 +34,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import support
 import test_control  # the astronomy lives with the control line's logic tests
+from core import normalize
 from fetchers import control_daylength as control
 
 # ONE-OFF short days: {date: {missing components}}. An entry here is a human
@@ -325,6 +328,159 @@ class TestArchivesAreNotSeededOutput(unittest.TestCase):
             if archived == head:
                 offenders.append(f"{os.path.basename(path)} is a byte-prefix of {line}.csv")
         self.assertEqual(offenders, [], "\n".join(offenders))
+
+
+# --- flights reach: bind the docs field-of-view copy to the record ----------
+
+# docs/index.html's covBlind prose (EN+ZH) states that, at the 22:30Z sample
+# hour, only US East and US West carry enough share of the counted total to
+# clear the |z|>3 alarm bar on their own — a complete loss of W/C Europe or
+# E Asia/Japan alone reaches nowhere near it. That is a claim about the DATA
+# (region shares, and the de-cycled Qn scale flights actually scores with),
+# not about the source code, so it is bound here (AUDIT, post-commit,
+# data-dependent) rather than in tests/lint_public_surface.py, which is
+# source-only and never reads data/ (see that module's own docstring).
+_FLIGHTS_REGIONS = ("W/C Europe", "US East", "US West", "E Asia/Japan")
+_FLIGHTS_LINE = os.path.join(ROOT, "data", "flights.csv")
+_FLIGHTS_COMPONENTS = os.path.join(ROOT, "data", "components", "flights.csv")
+
+
+def _flights_reach():
+    """``(shares, reach_z, combo_z)`` for the flights line's own scoring path.
+
+    ``shares`` is each region's fraction of the counted total, over the same
+    trailing window flights actually scores against. ``reach_z`` is the z a
+    COMPLETE loss of that region alone would register — share * the window's
+    de-cycled median, divided by the window's de-cycled Qn — i.e. the same
+    residual+Qn arithmetic ``core.normalize.robust_z`` uses for this line
+    (``weekday_cycle=True``), not a plain standard deviation. ``combo_z`` is
+    the same measure for W/C Europe and E Asia/Japan lost together. Returns
+    ``None`` if the window is not yet de-cycled deep enough to mean anything
+    (mirrors ``normalize.DECYCLE_MIN``, the same gate ``robust_z`` itself
+    applies before trusting the de-cycled residuals over the plain window).
+    """
+    import collect
+    rows = collect._read_rows(_FLIGHTS_LINE)
+    history = [float(r["raw_value"]) if r["raw_value"] else None for r in rows]
+    dates = [r["date"] for r in rows]
+    if not history or history[-1] is None:
+        return None
+    today_val, today_date = history[-1], dates[-1]
+    prior_history, prior_dates = history[:-1], dates[:-1]
+    paired = [(v, d) for v, d in zip(prior_history, prior_dates) if v is not None
+              ][-normalize.WINDOW:]
+    values = [v for v, _ in paired]
+    window_dates = [d for _, d in paired]
+    if len(values) < normalize.DECYCLE_MIN:
+        return None
+    residuals, _ = normalize._decycled(values, window_dates, today_val, today_date)
+    if residuals is None or len(residuals) < normalize.DECYCLE_MIN:
+        return None
+    qn = normalize._qn(residuals)
+    if qn <= 0:
+        return None
+    median = statistics.median(residuals)
+
+    by_date = {}
+    with open(_FLIGHTS_COMPONENTS, newline="") as f:
+        for r in csv.DictReader(f):
+            if r["component"] in _FLIGHTS_REGIONS:
+                by_date.setdefault(r["date"], {})[r["component"]] = float(r["value"])
+    matched = [d for d in window_dates
+               if d in by_date and all(x in by_date[d] for x in _FLIGHTS_REGIONS)]
+    if not matched:
+        return None
+    sums = {r: sum(by_date[d][r] for d in matched) for r in _FLIGHTS_REGIONS}
+    grand = sum(sums.values())
+    if not grand:
+        return None
+    shares = {r: sums[r] / grand for r in _FLIGHTS_REGIONS}
+    reach_z = {r: shares[r] * median / qn for r in _FLIGHTS_REGIONS}
+    combo_z = (shares["W/C Europe"] + shares["E Asia/Japan"]) * median / qn
+    return shares, reach_z, combo_z, len(residuals)
+
+
+class TestFlightsReachClaimBindsToTheRecord(unittest.TestCase):
+    """docs/index.html's covBlind copy (EN+ZH) claims specific region shares
+    and full-loss reach-z figures for flights at the 22:30Z sample hour, and
+    that only the two US regions clear the alarm bar. Both are numbers
+    about the record, so they can silently go stale as the window rolls
+    forward; this recomputes them the way flights actually scores and holds
+    the copy to a tolerance loose enough to absorb ordinary window-roll
+    noise but tight enough to catch a real reshuffle of the region mix.
+    """
+    SHARE_TOL = 6.0  # percentage points
+    Z_TOL = 0.8
+
+    CLAIMED_SHARE_PCT = {"US East": 44.0, "US West": 34.0,
+                         "W/C Europe": 13.0, "E Asia/Japan": 9.0}
+    CLAIMED_REACH_Z = {"W/C Europe": 1.2, "E Asia/Japan": 0.8}
+    CLAIMED_COMBO_Z = 2.0
+
+    def test_docs_reach_numbers_match_the_scoring_path(self):
+        computed = _flights_reach()
+        if computed is None:
+            self.skipTest("flights window not de-cycled deep enough yet to bind")
+        shares, reach_z, combo_z, n = computed
+        # n < WINDOW still routes through the sliding threshold table (see
+        # normalize.threshold_for's own docstring) -- the flat 3.0 THRESHOLD
+        # only applies once the window is full, so the real bar is a touch
+        # ABOVE 3.0 here (n=76 -> 3.020); using the flat constant would be a
+        # hair too lenient on the "clears the bar" side of these assertions.
+        bar = normalize.threshold_for(n)
+
+        for region, claim in self.CLAIMED_SHARE_PCT.items():
+            actual = shares[region] * 100
+            self.assertLess(
+                abs(actual - claim), self.SHARE_TOL,
+                f"{region}: docs/index.html's covBlind claims ~{claim:g}% of "
+                f"the flights total but the record now computes {actual:.1f}% "
+                f"— revisit the field-of-view copy (EN+ZH) and this claim")
+
+        for region, claim in self.CLAIMED_REACH_Z.items():
+            actual = reach_z[region]
+            self.assertLess(
+                abs(actual - claim), self.Z_TOL,
+                f"{region}: docs/index.html's covBlind claims a full-loss "
+                f"reach of ~{claim:g}z but the record now computes "
+                f"{actual:.2f}z — revisit the field-of-view copy (EN+ZH)")
+
+        self.assertLess(
+            abs(combo_z - self.CLAIMED_COMBO_Z), self.Z_TOL,
+            f"W/C Europe + E Asia/Japan combined: docs/index.html's covBlind "
+            f"claims ~{self.CLAIMED_COMBO_Z:g}z but the record now computes "
+            f"{combo_z:.2f}z")
+
+        # The copy's whole claim is that Europe/Japan stay BELOW the alarm
+        # bar while the two US regions clear it ALONE -- if the record ever
+        # crosses either way, "cannot alarm on Europe/Japan, only US alarms"
+        # is simply false, regardless of tolerance.
+        self.assertLess(reach_z["W/C Europe"], bar,
+                        "W/C Europe's full-loss reach now clears the alarm "
+                        "bar -- the 'cannot alarm on Europe' claim is false")
+        self.assertLess(reach_z["E Asia/Japan"], bar,
+                        "E Asia/Japan's full-loss reach now clears the alarm "
+                        "bar -- the 'cannot alarm on Japan' claim is false")
+        self.assertLess(combo_z, bar,
+                        "Europe+Japan combined full-loss reach now clears "
+                        "the alarm bar -- the 'cannot alarm on either' claim is false")
+        self.assertGreater(reach_z["US East"], bar,
+                        "US East's full-loss reach no longer clears the "
+                        "alarm bar -- the 'only US regions alarm' claim is false")
+        self.assertGreater(reach_z["US West"], bar,
+                        "US West's full-loss reach no longer clears the "
+                        "alarm bar -- the 'only US regions alarm' claim is false")
+
+    def test_docs_still_states_the_claimed_numbers_en_and_zh(self):
+        """A copy edit that drops or silently changes the stated figures must
+        fail here, not just drift unnoticed until the tolerance check above
+        happens to still pass some other number."""
+        text = support.read_text(os.path.join(ROOT, "docs", "index.html"))
+        for phrase in ("about 44% and 34%", "about 13%", "about 9%",
+                      "~1.2z", "~0.8z", "~2.0z",
+                      "44% 与 34%", "13%", "9%", "1.2z", "0.8z", "2.0z"):
+            self.assertIn(phrase, text,
+                          f"docs/index.html: field-of-view copy no longer states {phrase!r}")
 
 
 if __name__ == "__main__":
