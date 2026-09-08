@@ -1,7 +1,7 @@
 """Shared community-ADS-B helper for the airspace lines.
 
 Counts airborne aircraft over a set of regions using keyless aggregators
-(airplanes.live / adsb.fi / adsb.lol). EVERY provider is asked for EVERY region
+(adsb.fi / adsb.lol). EVERY provider is asked for EVERY region
 and the maximum is taken — see ``region_airborne`` for why that is the right
 rule and what it costs. The region set is fixed and ALL regions are required: a
 partial sum would look like a flight drop, so a missing region yields an empty
@@ -25,7 +25,6 @@ REGION_FLOOR = 30
 # itself, and it should be visible in the record rather than silently absorbed.
 PROVIDER_SPREAD_NOTE = 0.10
 PROVIDERS = [
-    ("airplanes.live", "https://api.airplanes.live/v2/point/{lat}/{lon}/{r}"),
     ("adsb.fi", "https://opendata.adsb.fi/api/v2/lat/{lat}/lon/{lon}/dist/{r}"),
     ("adsb.lol", "https://api.adsb.lol/v2/lat/{lat}/lon/{lon}/dist/{r}"),
 ]
@@ -55,8 +54,8 @@ def region_airborne(lat, lon, per_provider=None):
     """Airborne aircraft in one region as (count, note), or (None, reason).
 
     ``per_provider``, if given a dict, is filled with every provider's own
-    count. All three are already fetched to take the maximum; discarding the
-    other two throws away the only evidence that would show a provider
+    count. Both are already fetched to take the maximum; discarding the
+    other one throws away the only evidence that would show a provider
     degrading, and it cannot be recovered afterwards.
 
     EVERY provider is asked, every day, and the MAXIMUM is taken. The asymmetry

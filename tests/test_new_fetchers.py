@@ -83,8 +83,15 @@ class TestAdsbProviderCorroboration(unittest.TestCase):
     """A coverage failure can only lose aircraft, so the max is the fullest view."""
 
     def _region(self, counts):
+        import urllib.parse
         from core import adsb
-        by_host = dict(zip(["airplanes.live", "opendata.adsb.fi", "api.adsb.lol"], counts))
+        # Hosts come from adsb.PROVIDERS itself rather than a hardcoded list, so
+        # this test tracks whichever providers are actually configured instead
+        # of silently assuming a fixed roster size.
+        self.assertEqual(len(counts), len(adsb.PROVIDERS),
+                          "one count per currently configured provider")
+        by_host = {urllib.parse.urlparse(template).netloc: count
+                   for (_, template), count in zip(adsb.PROVIDERS, counts)}
 
         class R:
             def __init__(self, u):
@@ -100,18 +107,18 @@ class TestAdsbProviderCorroboration(unittest.TestCase):
     def test_one_provider_with_a_coverage_gap_cannot_set_the_reading(self):
         # The defect this fixes: 300 from a degraded provider used to be accepted
         # outright, because it sits far above the absolute floor of 30.
-        count, note = self._region([300, 800, 790])
+        count, note = self._region([300, 800])
         self.assertEqual(count, 800)
         self.assertIn("disagreed", note)
 
     def test_agreeing_providers_report_the_agreed_level(self):
-        count, note = self._region([297, 288, 291])
+        count, note = self._region([297, 288])
         self.assertEqual(count, 297)
         self.assertNotIn("disagreed", note)
 
     def test_a_real_collapse_is_reported_not_suppressed(self):
         # All providers see an empty sky: that is a measurement, not a fault.
-        count, note = self._region([4, 5, 3])
+        count, note = self._region([4, 5])
         self.assertEqual(count, 5)
         self.assertIn("under floor", note)
 

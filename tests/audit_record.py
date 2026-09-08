@@ -330,6 +330,48 @@ class TestArchivesAreNotSeededOutput(unittest.TestCase):
         self.assertEqual(offenders, [], "\n".join(offenders))
 
 
+class TestAdsbProviderHealth(unittest.TestCase):
+    """Every configured ADS-B provider must still be answering SOMEONE.
+
+    This is the check `airplanes.live` would have failed early: it returned
+    HTTP 403 (an access-policy block) from some point before 2026-08-12
+    onward, unnoticed until it was retired from `core/adsb.py` PROVIDERS on
+    2026-09-08 (see annotations 2026-09-08). A provider going silently dark
+    does not fail collection — `region_airborne` just stops counting it in
+    `seen` — so nothing else in the suite would have caught it. Reading
+    data/, this is an AUDIT (post-commit), not a pre-collect gate: a real
+    provider outage must not block tomorrow's collection.
+    """
+    LOOKBACK_DAYS = 14
+    PATH = os.path.join(ROOT, "data", "components", "flights.csv")
+
+    def test_every_configured_provider_answered_within_the_lookback(self):
+        from core import adsb
+        if not os.path.exists(self.PATH):
+            self.skipTest("no components recovered yet")
+        with open(self.PATH, newline="") as f:
+            rows = list(csv.DictReader(f))
+        if not rows:
+            self.skipTest("flights components file is empty")
+        dates = sorted(set(r["date"] for r in rows))
+        recent = set(dates[-self.LOOKBACK_DAYS:])
+
+        missing = []
+        for name, _ in adsb.PROVIDERS:
+            suffix = "/" + name
+            answered = any(r["date"] in recent and r["component"].endswith(suffix)
+                           for r in rows)
+            if not answered:
+                missing.append(name)
+        self.assertEqual(
+            missing, [],
+            f"provider(s) {missing} are configured in core/adsb.py PROVIDERS "
+            f"but appear in no flights component over the last "
+            f"{len(recent)} component-days ({min(recent)}..{max(recent)}) — "
+            f"the silent-death failure mode airplanes.live suffered; "
+            f"investigate before it goes unnoticed the way that one did")
+
+
 # --- flights reach: bind the docs field-of-view copy to the record ----------
 
 # docs/index.html's covBlind prose (EN+ZH) states that, at the 22:30Z sample

@@ -10,7 +10,7 @@ for the otherwise invisible.
 Reading: number of aircraft airborne across a FIXED set of busy, densely-fed
 airspaces, sampled at the same time each day. A sudden DROP is the alarming move.
 
-Source: keyless community ADS-B aggregators (airplanes.live / adsb.fi / adsb.lol),
+Source: keyless community ADS-B aggregators (adsb.fi / adsb.lol),
 which — unlike OpenSky's anonymous endpoint — respond reliably from shared cloud
 IPs and need no key or registration. Each region is tried against the providers
 in order, so counts normally come from one provider and stay comparable. Coverage
