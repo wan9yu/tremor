@@ -2025,7 +2025,9 @@ Nine annotations landed: one `artifact` per reading (dated to the reading, inser
 2026-09-08 `method` row recording the demotion. The demotion clause's two pending tags are closed — the reach
 deadline fired, and the per-recurrence tripwire is no longer a tier-1 duty. Code: TIER=2 in
 fetchers/net_outages.py, the line moved to the tier-2 grouping in collect.py, tier:2 in docs/index.html, the
-Tier 2 table and Known limit 7 in radar.md, and docs/data/leans.csv regenerated to the new tier-1 set.
+Tier 2 table and Known limit 7 in radar.md, and docs/data/leans.csv regenerated to the new tier-1 set. The
+dashboard's resonance note now enumerates the three counted domains (airspace, finance, capital) rather than
+four — communications drops out to match the emptied slot the coverage note already discloses.
 
 STABLE_SINCE bumped to 2026-09-08: a TIER change alters the summary re-derivation, which counts tier-1 lines
 only. net_outages did not tremble on 2026-09-08, so the 2026-09-08 summary row re-derives byte-exact and
