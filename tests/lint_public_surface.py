@@ -341,6 +341,121 @@ def _docs_tier1_line_count():
     return sum(1 for meta in registry.values() if meta.get("tier") == 1)
 
 
+# --- tier-1 line-count PARITY in the customer-facing copy --------------------
+#
+# The claims table binding above (TestReadmeClaimsBindToSource) already
+# covers README's ONE tier-1-count TABLE row. It says nothing about the
+# tier-1 count written out in PROSE elsewhere — docs/index.html's `const T`
+# customer copy ("three primary lines", "三条主线") and README's own prose
+# above the claims table ("Three lines", "three primary lines" x2) — which is
+# exactly what R28 had to hunt down by hand when the tier count last changed.
+# This is a PARITY check, not a prohibition: it asserts every such claim
+# EQUALS the real tier-1 count, not that no claim exists — "three primary
+# lines" is correct today and stays correct after this lint lands.
+#
+# Scope is deliberately NOT the whole file in either case:
+#   - docs/index.html: only the `const T = {...};` block (EN + ZH customer
+#     copy). The non-greedy DOTALL slice below stops at the first `\n};` it
+#     meets, which lands on that block's own close despite the `${}`-style
+#     template interpolations appearing inside earlier string values in the
+#     file (verified against the file as committed).
+#   - README.md: only the PROSE before "## Machine-checked claims" — the
+#     table below that heading is already bound by TestReadmeClaimsBindToSource
+#     above; scanning it too would just re-count the same claim twice.
+#
+# The EN regex is compiled case-INsensitively (re.I) — MANDATORY: README's
+# own "Three lines" (capital T, the section's opening sentence) is missed
+# without it, silently dropping one of the five claims below to a false
+# green. 1/one/一 are deliberately excluded from both regexes — "One line
+# moving alone" (docs, resonance prose) and "单独一根线动"/"一条海峡" (ZH) are
+# not tier-1-COUNT claims and would be false positives if two/three/four/five
+# admitted their singular "one" alongside them. ZH also deliberately excludes
+# the bare measure words 根/条 without 主线 following — "根线"/"条线" appear
+# in non-tier-1 copy (e.g. "N 根线"/"N 条线" counts of TREMBLING lines, a
+# different number entirely) — the measure word is only meaningful here
+# immediately before 主线 itself.
+_DOCS_CONST_T_BLOCK = re.compile(r'const T = \{(.*?)\n\s*\};', re.S)
+_TIER1_COUNT_EN = re.compile(
+    r'(?i)(?<![\w-])(?:two|three|four|five|[2-9])\s+(?:primary\s+)?(?:lines|instruments)(?![\w-])',
+    re.I)
+_TIER1_COUNT_ZH = re.compile(r'[二两三四五][条根台]?主线')
+
+# Explicit numeral -> int map, not a positional int() cast: a ZH match's own
+# text carries a measure word right after the numeral character (e.g. "三条
+# 主线"), so the match text itself is never a bare number to int()-cast.
+_NUMERAL_TO_INT = {
+    "two": 2, "three": 3, "four": 4, "five": 5,
+    "二": 2, "两": 2, "三": 3, "四": 4, "五": 5,
+}
+
+
+def _numeral_value(token):
+    """Map one matched numeral token to its int value: an EN word (any
+    case — callers lowercase first) or bare digit string via
+    `_NUMERAL_TO_INT` / `int()`, or a single ZH numeral character via the
+    same map. Never receives more than the numeral itself — see the two
+    call sites in `_tier1_line_count_claims` below, which each slice just
+    that substring out of the full regex match before calling this."""
+    key = token.lower()
+    if key in _NUMERAL_TO_INT:
+        return _NUMERAL_TO_INT[key]
+    return int(key)
+
+
+@functools.lru_cache(maxsize=None)
+def _docs_const_T_block():
+    """The text inside docs/index.html's `const T = {...};` block (English +
+    Chinese customer copy) — see the module-level scope note above for why
+    this non-greedy DOTALL slice lands on the block's own close. Memoized
+    (see `_status_label_key_sets` above)."""
+    html = support.read_text(DOCS_INDEX)
+    m = _DOCS_CONST_T_BLOCK.search(html)
+    assert m, "docs/index.html: could not locate a `const T = {...};` block"
+    return m.group(1)
+
+
+@functools.lru_cache(maxsize=None)
+def _readme_prose_before_claims_table():
+    """README.md's text up to (not including) the "## Machine-checked
+    claims" heading — the claims TABLE past that heading is already scanned
+    by `_readme_claims` above; this is the unbound PROSE before it."""
+    readme = support.read_text(README)
+    return readme.split("## Machine-checked claims")[0]
+
+
+def _tier1_line_count_claims():
+    """Every tier-1-line-count numeral claimed in the customer-facing copy —
+    docs/index.html's `const T` block and README's prose before the claims
+    table — as a flat list of ints, one per regex match, in source order
+    (docs EN, docs ZH, then README EN; README carries no ZH prose). Not a
+    set: a correct claim appearing twice is two matches, both expected to
+    equal the real count downstream, same as a single wrong one appearing
+    once is one mismatch."""
+    values = []
+    for text in (_docs_const_T_block(), _readme_prose_before_claims_table()):
+        for m in _TIER1_COUNT_EN.finditer(text):
+            values.append(_numeral_value(m.group(0).split()[0]))
+        for m in _TIER1_COUNT_ZH.finditer(text):
+            values.append(_numeral_value(m.group(0)[0]))
+    return values
+
+
+class TestTier1LineCountClaimsBindToSource(unittest.TestCase):
+    def test_every_tier1_count_claim_in_the_public_copy_matches_the_real_count(self):
+        matches = _tier1_line_count_claims()
+        self.assertTrue(matches, "no tier-1-count claim found in docs/index.html's "
+                         "`const T` block or README.md's prose — this check would "
+                         "pass vacuously")
+        want = _docs_tier1_line_count()
+        wrong = sorted(set(v for v in matches if v != want))
+        self.assertEqual(wrong, [],
+                          f"public copy claims a tier-1 line count of {wrong} "
+                          f"somewhere, but the real tier-1 count is {want} — grep "
+                          "docs/index.html's `const T` block and README.md's prose "
+                          "above '## Machine-checked claims' for a stale "
+                          "\"N lines\"/\"N primary lines\"/\"N条主线\" claim")
+
+
 # --- README.md's "primary lines that run keyless" claim ----------------------
 #
 # docs/index.html's `const LINES` and lint_registry.py's parses of it say
