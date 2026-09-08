@@ -1,4 +1,4 @@
-"""IODA — internet outages (communications infrastructure, tier 1).
+"""IODA — internet outages (communications infrastructure, tier 2 — demoted R28, was tier 1 R7–R28).
 
 Guarded equilibrium: ISPs and states defend a country's internet connectivity
 (routing, peering, transit) as critical infrastructure. The leaking hand: when a
@@ -48,12 +48,17 @@ LINE = "net_outages"
 LABEL = "Countries with internet outages (IODA ping)"
 UNIT = "countries"
 ANOMALY_DIRECTION = "up"
-TIER = 1  # promoted round 7 into the slot gnss_interference vacated. PROVISIONAL:
-# it is the only candidate that is global and a domain no other line covers
-# (settled to a completed D-1 22:00Z window since R23.1 — ~1-day lagged, was
-# zero-lag before then), but v2 has only a handful of scored readings and does NOT meet the
-# 60-reading promotion bar. Reviewed at 60; the status column reports its
-# blindness on the page meanwhile.
+TIER = 2  # DEMOTED R28 (2026-09-08): condition (c) of the R27 reach standard
+# tripped. The 8 largest readings were adjudicated under the R23 playbook (a live
+# IODA re-query plus a multi-source attribution search); none survives as a cited
+# real world event — seven are common-mode active-probing artifacts and 2024-10-03
+# is corroborated but unattributable — so the line has never been shown to reach its
+# own alarm bar on the world (the reachability standard cnh_cny was held to at
+# R13/R23.1: a cited reference regime counts, a rate does not). It keeps collecting
+# as a tier-2 watchlist candidate (history and z-score accumulate); the tier-1
+# global-communications slot is left empty and disclosed. See the 2026-09-08
+# net_outages DEMOTED row in data/annotations.csv. Was tier-1 from round 7 (into the
+# slot gnss_interference vacated), held under a named weaker standard from R11.
 QUANTUM = 1  # countries: a count, and the resolution of the reading is one of them.
 # Without this floor the line goes SILENT exactly when it matters. Its readings
 # are small integers (the record holds 0..6, median 3), and the robust scale

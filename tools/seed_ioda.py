@@ -1,6 +1,7 @@
 """One-off: seed net_outages from IODA's own historical outage summaries.
 
-net_outages is a TIER-1 line with twenty-five rows. Its promotion review is
+net_outages is a TIER-1 line with twenty-five rows (tier-1 at seed time; demoted to
+tier-2 R28). Its promotion review is
 pre-committed at sixty readings, and with a handful of scored days it cannot be
 adjudicated — the confidence interval on its tremble rate is wider than any
 question anyone would ask of it. IODA answers its summary endpoint for arbitrary

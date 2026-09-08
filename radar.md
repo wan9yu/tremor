@@ -31,10 +31,12 @@ scored readings, gated on orthogonality and the freshness rule.
 
 ---
 
-## Tier 1 — primary  (4 / 4 · reviewed R11)
+## Tier 1 — primary  (3 / 4 · communications slot empty since R28 · reviewed R11)
 
-The four displayed, counted instruments — four distinct domains. Decided round 3,
-applied round 4. Per-line reliability/reach metrics are generated — see
+The displayed, counted instruments — distinct domains, three filled of four slots.
+Decided round 3, applied round 4; the communications slot ran net_outages until R28
+demoted it to tier-2 (condition (c) tripped — see Known limit 7), and that slot is
+now left empty and disclosed. Per-line reliability/reach metrics are generated — see
 [radar-metrics.md](radar-metrics.md).
 
 | indicator | domain | Lev | Guard | Reach | Orthog | status |
@@ -42,9 +44,8 @@ applied round 4. Per-line reliability/reach metrics are generated — see
 | flights | airspace (4 regions; only US alarm-reachable) | 3 | 3 | 2 | ≤0.08 (n≈50, R21) | ⚠️ **RETAINED at the pre-committed review, R25** — the 2026-08-31 review ran (de-cycling engaged on schedule at window-row 71): replayed episode-rate Wilson 95% LB = 0.89% < 2% bar, and the 08-28 alarm is ADJUDICATED (not just adjudicable) by the R11-named intraday sampler — 08-28T23:22Z read 1660 at baseline hour while the daily 05:54Z snapshot read 1035; the drop is a CI-queue sample-hour artifact, not airspace. Neither demotion condition met → retained. Both of flights' alarms are now artifacts; the sample-hour confound is STRUCTURAL (snapshot line, GH-Actions queue-drifted sample hour, weekday de-cycling is orthogonal to it). Fix SHIPPED R25.1 (re-review pending) |
 | credit_spread | financial (US→global) | 3 | 3 | 3 | ≤0.08 (n=788, R21) | ✅ global bellwether; alarm at the 45th pctile of its 788-day record |
 | cnh_cny | capital controls (China) | 2 | 3 | — | ≤0.12 (n≈44, R21) | ✅ slot 4 (user-decided); reach cell MEASURED R13 — the alarming (up) side needs +227 pips vs a 52-obs record high of 143 (a decoration WITHIN this young calm record; baseline-relative — real capital-flight episodes blow far past it), while all five |z|>3 events are benign DOWN trembles (offshore yuan stronger). Still <60, insufficient to adjudicate; refresh at the maturity review (*4 darks are weekend/leg-timing rejections, not failures; the 08-16 dark ran hours before R18's closed status landed — weekends read `closed` from the first post-R18 weekend, 08-22/23, on) |
-| net_outages | communications (global) | 2 | 3 | 3 | ≤0.12 (R23) | ⚠️ **CONFIRMED R11 BY RATE — RETAINED UNDER A NAMED WEAKER STANDARD (Known limit 7)**. The pre-committed review passed every gate on the seeded record; none of its 39 episodes (37 seeded + 2 live) was individually adjudicated. All three of its live tier-1 alarms are adjudicated IODA active-probing artifacts (08-24 latency-relocated, R23; 09-04/09-05 common-mode) — a class settle stabilizes but does not filter (R23.2), caught only by the served machine lean plus the R23 playbook, and not new: the 2026-09-06 corroboration probe re-labels 24 of 60 alarm days and 16 of 39 episodes, including 7 of the 8 largest readings, as leaning common-mode. No corroborated exit exists (probe: a ping∧(bgp∨merit-nt) count cannot be told from calm). Demotion conditions (a)-(c) and the reach re-review: pending list |
 
-## Tier 2 — collected  (13 candidates + 5 context + 1 control · no cap)
+## Tier 2 — collected  (14 candidates + 5 context + 1 control · no cap)
 
 Collected daily by CI, building history; shown only as a muted watchlist, never counted. The global 3/3/3 lines
 are tier-1 challengers banking evidence. There is no slot cap (round 8): any candidate
@@ -85,6 +86,7 @@ Per-line reliability/reach metrics are generated — see [radar-metrics.md](rada
 | chokepoint_breadth | trade (global) | 3 | 3 | 3 | 28 straits, ~1810/day (Hormuz blockaded) — strong, but PortWatch lags ~10 days: too stale to display live. R12: the SUM is structurally blind to 1–2 small straits going silent (a full Hormuz+Kerch closure = 84 transits = 1.04z, 35% to alarm) — the level layer, not this line, carries that signal |
 | sofr_iorb_spread | financial plumbing | 3 | 3 | 3 | SOFR−IORB ~−2bps (calm) — keyless FRED |
 | em_corp_oas | EM financial (global) | 3 | 2 | 3 | EM corp OAS ~1.38pp. R22 MEASURES the standing "orthogonal to US HY" claim FALSE: |max corr| vs the live tier-1 set = **+0.80 vs credit_spread** (n=789) — the same global credit factor, not an orthogonal domain. Stays tier-2 for breadth/confirmation; NOT a tier-1 promotion candidate (would fail the orthogonality gate and break the headline's iid null — see Known limits #3) |
+| net_outages | communications (global) | 2 | 3 | 3 | **DEMOTED R28** from tier-1 (was CONFIRMED R11 BY RATE, held under a named weaker standard from R11; see Known limit 7). Condition (c) of the R27 reach standard tripped: the 8 largest readings (45, 44, 41, 40, 30, 30, 29, 28) were adjudicated under the R23 playbook — a live IODA re-query plus a multi-source attribution search (data/archive/ioda_8largest_requery_2026-09-08.csv) — and none survives as a cited world event. Seven are common-mode active-probing artifacts (large synchronized ping-slash24-only batches, sparse corroboration); 2024-10-03 (44 countries, a 38-country synchronized batch 29 of it ping-only at 76% — a near-miss just under the 80% common-mode share bar — 13/44 corroborated) is the one reading the classifier does not lean common-mode, corroborated but unattributable (no cited event, geographically incoherent, chronic-contaminated, single-day — corroboration is a measurement, not a reference regime). The line never reached its own alarm bar on the world from a cited reference, the reachability standard cnh_cny was held to at R13/R23.1. Keeps collecting as a watchlist candidate (history + z-score accumulate); the tier-1 global-communications slot is left empty and disclosed. See the 2026-09-08 DEMOTED annotation |
 | gnss_interference | navigation/EW (global) | 3 | 3 | 1* | demoted R7 — *effective* reach is 1, not 3: one worldwide ratio has no regional sensitivity. Seeded R9 to 2022-07 (1,466 rows): it fires 49 alarm-direction trembles in 1,452 scored days, and the Gulf window peaks at z=2.87 — under-powered, not motionless (see the R9 corrections). Its global floor rose 1.64x in four years with no single day ever unusual |
 | capital_premium | capital controls (Korea) | 2 | 3 | 1 | demoted R4 (redundant with China); kept on watch |
 | grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | demoted R4 (regional); kept on watch — may re-challenge on orthogonality |
@@ -146,6 +148,15 @@ that adds orthogonal value**, and only as the confounder line above — not as a
 | onrrp_takeup | R20: fails the **guard gate**. Source is live/keyless/daily/fresh (FRED `RRPONTSYD`, $0.155B on 2026-08-18, drained from a $2.55T peak), but the Fed defends the RRP offering RATE (the floor), not the take-up QUANTITY — take-up is a market-determined residual cash-parking LEVEL with no guardian, so nothing leaks when it moves. The genuinely-guarded number in this plumbing is already collected as `sofr_iorb_spread`. |
 | ais_dark_activity | R20 non-find + guard-questionable: vessels going dark (disabling AIS) would leak sanctions evasion / pre-conflict staging, but every source is key-gated (Global Fishing Watch Events = HTTP 401 without a free-registration token; SkyTruth/Datalastic/MarineTraffic/UN Global Platform all keyed or commercial), and a dark-ship count is an INFERRED detection, not a number a guardian defends. Same lineage as marine_war_risk. |
 | tropical_cyclone (context) | R22: fails the **context-line admission bar on PAYOFF** — not on source, not on design (both are solved). SOURCES ARE EXCELLENT and verified keyless + all-basin, banked so the search is not repeated: **GDACS** `EVENTS4APP` GeoJSON (live, ~hourly, every active global TC with intensity, CORS-open) + **IBTrACS** v04r01 `since1980.list` CSV at NCEI (seed, dense 6-hourly best-track 1980→present, `last3years` as the 90-day window) — both close the NHC/CPHC West-Pacific gap. A non-diluting AGGREGATION also exists (port/hub-**gated worst-of**: the strongest storm within ~500 km of a fixed top-20 port/airspace-hub list — MAX-form kills dilution and frame-churn). It is REJECTED anyway because the two lines it would disambiguate are BOTH too diluted for a cyclone to move: **measured**, a full Shanghai+Ningbo closure moves port_throughput only **z=0.49**, and the ENTIRE E-Asia/Japan airspace going dark moves flights only **z=0.63** — both far under the \|z\|>3 alarm, because the storm's footprint (<1% of 2065 global ports; ~8% of a 4-region flight sample) is smaller than each line's own daily noise (Qn 245 calls; 199 aircraft). So a cyclone essentially never creates a weather-tremble to SUBTRACT — the "named ambiguity" the admission bar demands is empirically empty. This is the exact OPPOSITE of `space_weather`/gnss, where a geomagnetic storm degrades the WHOLE global GNSS at once, undiluted — which is why Kp cleared the bar and cyclones do not. (A workflow scouted this R22 and returned BUILD-READY on qualitative reasoning; the load-bearing "typhoon dips flights" claim was then MEASURED and failed. Sources are build-ready the day a globally-cyclone-sensitive line, or a per-hub sub-line — a Shanghai-only port line, a Japan-only flights line — exists to carry the signal undiluted; until then, do not build.) |
+
+**Deferred instrument-hygiene follow-ups (opened R28, not yet built)** — three items the
+net_outages demotion surfaced, none blocking, recorded here so the search is not repeated:
+(1) a render_smoke / lint check that no `docs/index.html` `T[lang]` string carries a literal
+tier-1 line count (the covLead / covBlind counts are derived off `TIER1` now, but nothing yet
+guards a future hard-coded one); (2) re-evaluate the dark-count banner threshold — `darkCount
+>= 3` now means all three primary lines dark at once, a different bar than it was at four
+lines; (3) a per-line STABLE_SINCE map, so one line's tier or scoring change no longer bumps a
+single global mark that governs every line's replay.
 
 ---
 
@@ -292,18 +303,33 @@ Written down because they are structural, not bugs, and a reader deserves them u
    `obs_date` entirely), so it currently equals raw `scored` and must not be read as
    already implementing this rule; a maturity gate keyed to it now reads `scored`, not
    `distinct_scored`, until the predicate implements the rule in full.
-7. **net_outages holds a tier-1 slot under a weaker standard than the registry's own
-   demotion clauses, and the registry says so.** Its R11 confirmation was by episode
-   rate on a 4.5-year seed whose episodes were never individually attributed; the
-   2026-09-06 corroboration probe re-labels 16 of its 39 episodes — 7 of its 8 largest
-   readings — as leaning IODA active-probing common-mode, the class behind all three of
-   its live tier-1 alarms; and the one named world event in its seed (the 2025-04-28
-   Iberian blackout) read sub-alarm. It is kept because it is the only global
-   communications-domain candidate and an empty disclosed slot was judged worse
-   (2026-07-22). The other tier-1 clauses are rate-and-fix clauses; this one is an
-   adjudication clause with deadlines (pending list), because the line has no fix and
-   no exit path, and a rate bar diluted by a 1,600-day seed cannot fire on a class that
-   recurs monthly. A weakness, disclosed — not a standard to copy.
+7. **net_outages held a tier-1 slot under a weaker standard than the registry's own
+   demotion clauses — until R28 demoted it on that standard's own reach condition.**
+   Its R11 confirmation was by episode rate on a 4.5-year seed whose episodes were
+   never individually attributed; the 2026-09-06 corroboration probe re-labeled 16 of
+   its 39 episodes — 7 of its 8 largest readings — as leaning IODA active-probing
+   common-mode, the class behind all three of its live tier-1 alarms, and measured
+   that no corroborated exit exists; the one named world event in its seed (the
+   2025-04-28 Iberian blackout) read sub-alarm. It was kept, at first, because it was
+   the only global communications-domain candidate and an empty disclosed slot was
+   judged worse (2026-07-22) — under an adjudication clause with deadlines rather than
+   the other tier-1 lines' rate-and-fix clauses, because the line had no fix and no
+   exit path and a rate bar diluted by a 1,600-day seed cannot fire on a class that
+   recurs monthly. R28 discharged the reach deadline (condition (c)): the 8 largest
+   readings were adjudicated under the R23 playbook (a live IODA re-query plus a
+   multi-source attribution search, data/archive/ioda_8largest_requery_2026-09-08.csv)
+   and none survives as a cited world event — seven are common-mode artifacts, and
+   2024-10-03 (44 countries, a 38-country synchronized batch 29 of it ping-only at 76%,
+   a near-miss just under the 80% common-mode share bar; 13/44 corroborated) is
+   corroborated but unattributable. The 2023-09-06 reading is the one with a real same-day
+   event — a Cogent Communications backbone outage — yet its 22-country synchronized batch
+   is predominantly Caribbean/Pacific/South-Asian island and small-state probes with no coherent Cogent
+   footprint, and the GOVERNING reading holds regardless: a single shared-transit-provider
+   fan-out is not the world reaching the alarm bar, so 2023-09-06 fails condition (c) on the
+   standard's meaning even if a paywalled source names 17 Cogent-downstream countries. So
+   net_outages is now tier-2, the communications slot left empty and disclosed. The weakness
+   is resolved by demotion, the empty-slot cost the registry pre-committed to at promotion,
+   not by copying the standard.
 
 ### Pending reviews & tripwires (added R21 — promises live here, not in prose)
 
@@ -346,52 +372,10 @@ re-reading the log. Close an item by editing it out with a round reference.
   the NEWER leg being Sat/Sun and Saturday-morning still sees two Friday timestamps. Follow-up:
   confirm obs-dedup isn't double-counting Friday's close, and decide whether the guard should also
   cover Saturday (a fetcher change → needs approval).
-- **net_outages — retained under a named weaker standard; demotion conditions** (opened R23.1
-  as the settle tripwire; REWRITTEN R27 on the 2026-09-06 corroboration probe). Governing
-  principle, the one the flights clause already states (R25): *an adjudicable-but-recurring
-  artifact must not shield the line forever.* flights' clause is strict because a fix claimed to
-  close its artifact class, so a recurrence falsifies the fix. net_outages has no fix for its
-  class — settle stabilizes and relocates a synchronized-onset common-mode cluster, it does not
-  filter it (R23.2) — and no corroborated exit: `tools/probe_ioda_corroboration.py` re-queried
-  all 60 alarm windows and 30 calm days live (every window corroboration-knowable; the "only from
-  2026-07-05" premise was false) and found a ping∧(bgp∨merit-nt) count that cannot be told from
-  calm — calm days 0-4 corroborated (median 0), ok-lean alarm days 0-13 (median 4), common-mode-lean
-  alarm days 0-5 (median 2); at any bar clear of the calm band it keeps a third of the ok-lean
-  alarm days and an eighth of the common-mode-lean ones. The class is caught only by the served
-  machine lean (`docs/data/leans.csv`) plus human adjudication, and it is inside the line's
-  confirming evidence: R11 confirmed the line by RATE (episode-rate Wilson LB < 2%) and never
-  attributed its episodes individually; re-labeled with the R23 classifier, 24 of 60 alarm days
-  and 16 of 39 episodes lean common-mode on every day (3 more mixed), including 7 of the record's
-  8 largest readings (45, 41, 40, 30, 30, 29, 28); only 2024-10-03 (44, 13 corroborated) does not.
-  The line is retained because it is the only global communications-domain candidate and an empty
-  disclosed slot was judged worse (2026-07-22 promotion annotation) — not because its evidence has
-  been shown real. DISQUALIFYING, each on its own, from this round; the consequence is the one
-  pre-committed at promotion — tier-2, the slot runs empty and disclosed:
-  (a) **UNADJUDICABLE** — a synchronized-onset-shaped alarm the R23 playbook cannot attribute
-  after a genuine attempt (R23.2, unchanged).
-  (b) **UNADJUDICATED** — any net_outages alarm day still without an adjudicating annotation
-  (`artifact`/`real`/`mixed`/`benign` in `data/annotations.csv`) 14 days after it is served. A
-  machine lean is disclosure, not adjudication. Mechanically: an alarm day served and not
-  adjudicated in the round that first sees it gets its own dated pending tag on this item — opened
-  that round, owner the next, firing 14 days after the day was served; the adjudicating annotation
-  removes it, and a tag that fires is condition (b). The 2026-09-05 row was the first such day and
-  was adjudicated 2026-09-08 (its `artifact` row), inside the window — no (b) tag is open.
-  (c) **REACH ON ADJUDICATED EVIDENCE** — by 2026-10-15, adjudicate under the R23 playbook the 8
-  largest alarm readings (2022-03-02, 2024-10-03, 2025-04-30, 2023-06-18, 2025-11-29, 2023-09-06,
-  2022-03-11, 2025-03-27). If none survives as a world event, the line has never been shown to
-  reach its own alarm bar on the world — the only named world event in its seed, the 2025-04-28
-  Iberian blackout, read 7 countries, sub-alarm — and it demotes on the reachability standard
-  applied to the alarming side, the standard cnh_cny was held to at R13/R23.1 (a cited reference
-  regime counts; a rate does not).
-  Standing, per recurrence: the round reports the class's adjudicated-artifact episode count and
-  rate on the LIVE settled series from 2026-08-25 (2 artifact episodes in 58 live scored days,
-  Wilson LB 0.95% — the seed-diluted whole-record LB of 1.73% could not cross 2% for ~16 months at
-  one artifact a month and is not the denominator for a class that recurs monthly); and the settle
-  reconciliation check (last ~7 settled windows vs stored raws, live, never a gate) continues. No
-  exit path is named: the corroborated one is closed by measurement, and banking per-datasource
-  components on the line (B1) is evidence for adjudication, not a filter.
-  [opened R23.1 · owner R28 · fires: manual]
-  [opened R23.1 · owner R28 · fires: date >= 2026-10-15]
+- **net_outages — DEMOTED TO TIER-2, R28 (condition (c) fired) — CLOSED** (opened R23.1 as the settle
+  tripwire; rewritten R27; closed R28). Both tags removed — the reach-deadline (`date >= 2026-10-15`)
+  fired, and the per-recurrence `manual` tripwire is no longer a tier-1 duty. Full reasoning and evidence:
+  Known limit 7 and the 2026-09-08 net_outages DEMOTED annotation.
 - **level-layer → flights** (opened R23.1) — decide ~Nov 2026 (once flights per-region components
   banked since 08-02 can populate an honest reference window) whether to extend the level layer to
   flights regions; the second headline currently rides one lagging, panel-churning source
@@ -401,8 +385,13 @@ re-reading the log. Close an item by editing it out with a round reference.
   n≥60 that the reference-regime evidence still holds, alongside the maturity refresh.
   [opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60]
 - **radar-log.md roll tripwire** — split the log into an archive file when it crosses **2,000
-  lines** (1,835 lines after R25.1; the measured growth rate crosses 2,000 at ~R27, not the R31-R33
-  estimate made at R21 — a roll tool is queued for the next round).
+  lines**. CROSSED at R28: the Round 28 entry takes radar-log.md past 2,000 lines (it was 1,963
+  before it). The roll tool shipped R26 (`tools/roll_radar_log.py` — byte-identity + round-coverage
+  verified, `--check` a proven dry run); the roll itself is DEFERRED to R29 rather than run in the
+  same commit as the entry that trips it (one action per round). R29 runs `roll_radar_log.py` to
+  archive rounds 1-19 into radar-log-1.md — `lint_registry`'s round-index parity globs
+  `radar-log*.md`, so the split file is swept in with no lint change. (Earlier estimate: R21 put the
+  crossing at R31-R33; the measured growth rate reached it at R28.)
 - **usd_xccy_basis parking review** (opened R20) — re-probe sourcing every ~10 rounds (last: R20);
   downgrade to Rejected if still keyless-blocked at R30.
   [opened R20 · owner R26 · fires: round >= 30]
@@ -522,3 +511,16 @@ decision. A new round is appended to `radar-log.md` and gets one line added here
   alarm was 0/41 corroborated synced ping-only; the real blackout day read 7 countries, sub-alarm). The 09-04/09-05
   common-mode was a 2-day transient, cleared 09-06. Suite green, replay 0-divergence, no tier moves. (Separate/open:
   control_daylength canary false positive near the equinox, issue #3.)
+- **Round 28** — 2026-09-08 · the reach adjudication + demotion, folded with two spine fixes: (1)
+  control_daylength's canary now reproduces the SOURCE's day-length model (Schlyter sunriset, ≈1.10°
+  effective depression), not astronomical truth, and a margin closest-day check replaces strict argmin
+  (solstice-safe) — the equinox false positive (issue #3) is CLOSED; (2) A1 spine hardening — a
+  non-numeric or non-finite fetcher value is darkened at the collect() boundary instead of aborting the
+  run or being stored as 'nan'/'inf' into the forward-only record; (3) net_outages' 8 largest readings
+  adjudicated under the R23 playbook (a live IODA re-query + a multi-source attribution search, evidence
+  data/archive/ioda_8largest_requery_2026-09-08.csv) — condition (c) tripped, NONE survives as a cited
+  world event (2024-10-03 corroborated but unattributable; 2023-09-06's coincident Cogent backbone outage
+  does not correspond to the ping-only IODA reading) — so net_outages is DEMOTED to tier-2, the tier-1
+  global-communications slot left empty and disclosed. 9 annotations (8 artifact + 1 DEMOTED method);
+  STABLE_SINCE bumped to 2026-09-08 (a tier change alters the summary re-derivation); replay
+  0-divergence. Roll tripwire CROSSED (radar-log.md past 2,000 lines); the roll is deferred to R29.

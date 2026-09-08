@@ -1961,3 +1961,74 @@ stdlib-only in a bare venv, replay 0-divergence, annotations mirror byte-identic
 Still open and SEPARATE: the control_daylength canary is raising a false positive as the autumn equinox
 approaches — the audit's CBM day-length approximation disagrees with the source by more than its
 one-minute tolerance (issue #3), a check flaw, not a pipeline date bug; a fix is designed, not applied.
+
+### Round 28 — 2026-09-08 (the reach adjudication: net_outages demoted to tier-2, plus two spine fixes)
+
+Three items, recorded here in one entry, the demotion last and longest.
+
+① The control_daylength canary (issue #3, closed). The daily audit that guards the pipeline canary was
+raising a false positive as the autumn equinox approached: its day-length check disagreed with the source
+(sunrise-sunset.org) by more than its one-minute tolerance. The cause was a check flaw, not a pipeline date
+bug. The audit reconstructed day length from astronomical truth (geometric sunrise/sunset at the horizon),
+while the SOURCE computes it from Schlyter's sunriset model with an ≈1.10° effective depression (refraction
+plus the sun's radius); near an equinox, where day length changes fastest, that definitional gap exceeds a
+minute. The check now reproduces the source's own model, so it measures the pipeline rather than the gap
+between two day-length definitions. A second flaw rode with it: the closest-day lookup used a strict argmin,
+which near a solstice — where day length is flat — can jump to the wrong day; a margin closest-day check
+replaces it (solstice-safe). No reading changes; the control line's forward-only record stands.
+
+② A1 spine hardening. A fetcher that returned a non-numeric or non-finite value (a None coerced to a
+string, a NaN, an inf) could either abort the whole collection run or be stored verbatim as 'nan'/'inf'
+into the forward-only record — a value no later reader could score and no re-derivation could reproduce.
+The collect() boundary now coerces a non-finite fetcher value to a darkened reading (no raw_value, a stated
+reason): one bad line darks itself for the day, the run completes, and the record never ingests a
+non-finite number. Guarded by finiteness tests on the collect path and an audit over every stored
+raw_value and z_score.
+
+③ The reach adjudication, and the demotion it forced. R27 put net_outages under a named weaker standard
+with a reach deadline (condition (c)): by 2026-10-15, adjudicate the 8 largest readings under the R23
+playbook, and if none survives as a cited real world event, demote to tier-2. R28 discharged that deadline
+early. The evidence is a live IODA re-query through the reconcile classifier (per-country datasource, onset,
+corroboration) plus a multi-source attribution search (NetBlocks, Cloudflare Radar quarterly disruption
+summaries, ThousandEyes/Network World, Kentik, ISOC Pulse, Access Now, Wikipedia), both completed
+2026-09-08 and archived at data/archive/ioda_8largest_requery_2026-09-08.csv.
+
+None of the eight is a cited world event. Seven (2022-03-02, 2022-03-11, 2023-06-18, 2023-09-06, 2025-03-27,
+2025-04-30, 2025-11-29) are common-mode active-probing artifacts — large synchronized ping-slash24-only
+batches with sparse corroboration, the signature the R23 playbook names. The 2025-04-30 (41) and 2022-03-02
+(45) readings were the withdrawn Iberian and Ukraine calendar-adjacency attributions; the search re-confirmed
+the real events fall on other days. The 2023-09-06 reading is the sharpest test: a real Cogent Communications
+backbone outage (~57 min, ~17 countries, ThousandEyes via Network World) did fall on that date, but the IODA
+reading does not correspond to it — 2 of 30 corroborated, a 22-country synchronized ping-only batch bracketed
+by baseline; a backbone/transit withdrawal would corroborate on BGP, and this did not. Citing Cogent would
+repeat the calendar-adjacency error. The Cogent linchpin is on the record, not just asserted by mechanism:
+the 22-country synchronized batch (archived in batch_countries) is predominantly Caribbean/Pacific/South-Asian island and
+small-state probes — Dominica, Fiji, Grenada, Jamaica, Saint Lucia, Vanuatu, US Virgin Islands, Sri Lanka,
+Nepal, Yemen among them — with no coherent Cogent transit footprint (medium confidence: the ThousandEyes
+primary is paywalled, so the citation rests on the Network World syndication). And the governing reading holds
+regardless — a single shared-transit-provider fan-out is not the world reaching the alarm bar, so 2023-09-06
+fails condition (c) on the standard's meaning even if a paywalled source names 17 Cogent-downstream countries.
+The one reading the classifier does not lean common-mode, 2024-10-03 (44 countries, a 38-country synchronized
+batch 29 of it ping-only — 76%, just under the classifier's 80% share bar, a near-miss of the common-mode
+class rather than a different shape — 13/44 corroborated), is the closest the line ever came to a real event
+and still does not survive: the search found no cited world event, the 13 corroborated countries are
+geographically incoherent (West/East/Southern Africa plus Myanmar) with three chronic (present 10-02/03/04),
+and the day is an isolated single-day spike (10-02: 7, 10-04: 5). Corroboration is a measurement, not a cited
+reference regime.
+
+None reaches its own alarm bar on the world from a cited reference — the reachability standard cnh_cny was
+held to at R13/R23.1, where a cited reference regime counts and a rate does not. Condition (c) fired, and
+net_outages is DEMOTED to tier-2: the consequence pre-committed at its R7 promotion and R11 retention. The
+line keeps collecting — history and z-score accumulate as a watchlist candidate — but is no longer counted in
+the trembling/dark/blind headline, and the tier-1 global-communications slot is left empty and disclosed.
+Nine annotations landed: one `artifact` per reading (dated to the reading, inserted in date order), and a
+2026-09-08 `method` row recording the demotion. The demotion clause's two pending tags are closed — the reach
+deadline fired, and the per-recurrence tripwire is no longer a tier-1 duty. Code: TIER=2 in
+fetchers/net_outages.py, the line moved to the tier-2 grouping in collect.py, tier:2 in docs/index.html, the
+Tier 2 table and Known limit 7 in radar.md, and docs/data/leans.csv regenerated to the new tier-1 set.
+
+STABLE_SINCE bumped to 2026-09-08: a TIER change alters the summary re-derivation, which counts tier-1 lines
+only. net_outages did not tremble on 2026-09-08, so the 2026-09-08 summary row re-derives byte-exact and
+replay --check stays 0-divergence. Full suite green (gate, lint stdlib-only in a bare venv, replay
+0-divergence, annotations mirror byte-identical). radar-log.md crosses 2,000 lines with this entry; the roll
+(tool shipped R26) is deferred to R29.

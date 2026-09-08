@@ -15,7 +15,7 @@ days into runs (module docstring). `mature` marks scored >= 60 — the tier-1 pr
 | flights | 1 | 79 | 79 | 0 | 69 | 0.19 | 2 | 0 | 2 | 1 | 0.298 | yes | 2026-09-08 |
 | credit_spread | 1 | 836 | 835 | 1 | 800 | 3.06 | 66 | 0 | 8 | 36 | 0.986 | yes | 2026-09-03 |
 | cnh_cny | 1 | 79 | 75 | 4 | 57 | 0.19 | 0 | 5 | 0 | 0 | 0.300 | no | 2026-09-07 |
-| net_outages | 1 | 1682 | 1670 | 12 | 1660 | 4.59 | 60 | 0 | 39 | 7 | 0.362 | yes | 2026-09-06 |
+| net_outages | 2 | 1682 | 1670 | 12 | 1660 | 4.59 | 60 | 0 | 39 | 7 | 0.362 | yes | 2026-09-06 |
 | gnss_interference | 2 | 1502 | 1502 | 0 | 1484 | 4.09 | 49 | 1 | 28 | 10 | 0.895 | yes | 2026-09-06 |
 | capital_premium | 2 | 79 | 79 | 0 | 69 | 0.19 | 0 | 1 | 0 | 0 | 0.668 | yes | 2026-09-08 |
 | grid_frequency | 2 | 79 | 79 | 0 | 69 | 0.19 | 2 | 0 | 2 | 1 | -0.088 | yes | 2026-09-08 |
@@ -46,8 +46,6 @@ fails on it.
 
 - **flights sample-hour fix — SHIPPED R25.1** — opened R25 · owner R26 · fires: rows_since(flights, 2026-09-02) >= 60 · rows_since(flights, 2026-09-02) = 7 / 60
 - **cnh_cny maturity refresh** — opened R13 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 57 / 60
-- **net_outages — retained under a named weaker standard; demotion conditions** — opened R23.1 · owner R28 · fires: manual · manual — never auto-fires
-- **net_outages — retained under a named weaker standard; demotion conditions** — opened R23.1 · owner R28 · fires: date >= 2026-10-15 · date = 2026-09-08 / 2026-10-15
 - **level-layer → flights** — opened R23.1 · owner R26 · fires: date >= 2026-11-01 · date = 2026-09-08 / 2026-11-01
 - **cnh_cny reachability reference-regime re-check** — opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 57 / 60
-- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 27 / 30
+- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 28 / 30

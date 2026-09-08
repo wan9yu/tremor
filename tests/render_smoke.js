@@ -117,9 +117,9 @@ function fixtureRow(overrides) {
 const FIXTURE_DATE = "2026-09-03";
 function buildFixtureData() {
   const lines = {};
-  // --- tier-1 (all four): one of each of scoring+trembling, scoring+calm,
-  // closed, dark -- the tier-1 strip only branches on hasToday/isClosed, so
-  // this is what exercises that branch, not the full statusLabel map (that
+  // --- tier-1 (all three since R28 demoted net_outages): scoring+trembling,
+  // scoring+calm, closed -- the tier-1 strip only branches on hasToday/isClosed,
+  // so this is what exercises that branch, not the full statusLabel map (that
   // map is read only by the tier-2 watchlist below).
   lines.flights = [fixtureRow({ date: FIXTURE_DATE, raw_value: "1000", z_score: "-3.5",
     trembling: "1", direction: "down", status: "scoring" })];               // alarm=down: fires
@@ -127,9 +127,11 @@ function buildFixtureData() {
     trembling: "0", direction: "up", status: "scoring" })];                 // calm
   lines.cnh_cny = [fixtureRow({ date: FIXTURE_DATE, status: "closed",
     source_note: "no new observation: FX weekend, both legs frozen" })];
+  // --- tier-2: the remaining statuses, plus the gap-chip run boundary ---
+  // net_outages is tier-2 since R28; its single dark day exercises a tier-2
+  // dark reading below the gap-chip run boundary (like space_weather below).
   lines.net_outages = [fixtureRow({ date: FIXTURE_DATE, status: "dark",
     source_note: "IODA request failed: timeout" })];
-  // --- tier-2: the remaining statuses, plus the gap-chip run boundary ---
   lines.capital_premium = [fixtureRow({ date: FIXTURE_DATE, raw_value: "2.1", status: "warming-up" })];
   lines.grid_frequency = [fixtureRow({ date: FIXTURE_DATE, raw_value: "12", status: "no-spread" })];
   lines.gdelt = [fixtureRow({ date: FIXTURE_DATE, raw_value: "0.18", status: "stale",
@@ -157,7 +159,10 @@ function buildFixtureData() {
 // Three firing tier-1 lines, each exercising one new state, PLUS the
 // precedence rule (a human annotation wins over a same-day machine lean) --
 // flights carries BOTH an `artifact` annotation and a common-mode lean on the
-// same day, and only the annotation's qualifier may surface.
+// same day, and only the annotation's qualifier may surface. (net_outages was
+// the common-mode-lean line here until R28 demoted it to tier-2; the lean
+// disclosure is generic over any firing tier-1 line, so cnh_cny now stands in
+// as the synthetic lean-carrier -- the render path under test is unchanged.)
 const ADJ_DATE = "2026-09-10";
 const ADJ_PREV_DATE = "2026-09-09";
 function buildAdjFixtureData() {
@@ -167,9 +172,6 @@ function buildAdjFixtureData() {
     // canary: it must never appear in the rendered output).
     flights: [fixtureRow({ date: ADJ_DATE, raw_value: "500", z_score: "-4.1",
       trembling: "1", direction: "down", status: "scoring" })],
-    // (b) common-mode lean, no annotation at all -- the lean qualifier fires.
-    net_outages: [fixtureRow({ date: ADJ_DATE, raw_value: "10", z_score: "5.0",
-      trembling: "1", direction: "up", status: "scoring" })],
     // (c) a 2-day trembling run, no annotation, and an "ok" lean (must render
     // nothing -- only common-mode does).
     credit_spread: [
@@ -178,16 +180,16 @@ function buildAdjFixtureData() {
       fixtureRow({ date: ADJ_DATE, raw_value: "4.1", z_score: "3.4",
         trembling: "1", direction: "up", status: "scoring" }),
     ],
-    // bystander: calm, present so all four tier-1 lines have a today row.
-    cnh_cny: [fixtureRow({ date: ADJ_DATE, raw_value: "10", z_score: "0.1",
-      trembling: "0", direction: "up", status: "scoring" })],
+    // (b) common-mode lean, no annotation at all -- the lean qualifier fires.
+    cnh_cny: [fixtureRow({ date: ADJ_DATE, raw_value: "10", z_score: "5.0",
+      trembling: "1", direction: "up", status: "scoring" })],
   };
   const annotations = [
     { date: ADJ_DATE, line: "flights", verdict: "artifact", note: "fixture: instrument artifact" },
   ];
   const leans = [
     { date: ADJ_DATE, line: "flights", lean: "common-mode", evidence: "MUST NOT RENDER: annotation wins" },
-    { date: ADJ_DATE, line: "net_outages", lean: "common-mode", evidence: "7/7 synchronized" },
+    { date: ADJ_DATE, line: "cnh_cny", lean: "common-mode", evidence: "7/7 synchronized" },
     { date: ADJ_DATE, line: "credit_spread", lean: "ok", evidence: "0/4 corroborated" },
   ];
   const summary = [{ date: ADJ_DATE, trembling_count: "3", dark_count: "0", blind_count: "0" }];
@@ -219,22 +221,21 @@ function buildAdjPrecedenceFixtureData() {
     // (e): the artifact row is written BEFORE the correction row below.
     flights: [fixtureRow({ date: ADJ2_DATE, raw_value: "480", z_score: "-4.3",
       trembling: "1", direction: "down", status: "scoring" })],
-    // (d): method only -- no adjudication.
-    net_outages: [fixtureRow({ date: ADJ2_DATE, raw_value: "12", z_score: "5.5",
+    // (d): method only -- no adjudication. (cnh_cny stands in for net_outages,
+    // demoted to tier-2 R28; the disclosure path is line-agnostic.)
+    cnh_cny: [fixtureRow({ date: ADJ2_DATE, raw_value: "12", z_score: "5.5",
       trembling: "1", direction: "up", status: "scoring" })],
-    // bystanders: calm, present so all four tier-1 lines have a today row.
+    // bystander: calm, present so all three tier-1 lines have a today row.
     credit_spread: [fixtureRow({ date: ADJ2_DATE, raw_value: "3.0", z_score: "0.2",
-      trembling: "0", direction: "up", status: "scoring" })],
-    cnh_cny: [fixtureRow({ date: ADJ2_DATE, raw_value: "10", z_score: "0.1",
       trembling: "0", direction: "up", status: "scoring" })],
   };
   const annotations = [
     { date: ADJ2_DATE, line: "flights", verdict: "artifact", note: "fixture: artifact, written FIRST" },
-    { date: ADJ2_DATE, line: "net_outages", verdict: "method", note: "fixture: methodology note -- not a verdict on today's tremble" },
+    { date: ADJ2_DATE, line: "cnh_cny", verdict: "method", note: "fixture: methodology note -- not a verdict on today's tremble" },
     { date: ADJ2_DATE, line: "flights", verdict: "correction", note: "fixture: a later, non-adjudicating row -- must NOT shadow the artifact row above" },
   ];
   const leans = [
-    { date: ADJ2_DATE, line: "net_outages", lean: "common-mode", evidence: "12/12 synchronized" },
+    { date: ADJ2_DATE, line: "cnh_cny", lean: "common-mode", evidence: "12/12 synchronized" },
   ];
   const summary = [{ date: ADJ2_DATE, trembling_count: "2", dark_count: "0", blind_count: "0" }];
   return {
@@ -343,7 +344,7 @@ function buildAdjPrecedenceFixtureData() {
       }
       const leanCore = Tl.leanNote("", "7/7 synchronized").replace(" · ", "");
       if (!labelHtml.includes(leanCore)) {
-        errors.push(`adj(${lang}): missing the common-mode machine-lean qualifier for net_outages`);
+        errors.push(`adj(${lang}): missing the common-mode machine-lean qualifier for cnh_cny`);
       }
       const suppressedLeanCore = Tl.leanNote("", "MUST NOT RENDER: annotation wins").replace(" · ", "");
       if (labelHtml.includes(suppressedLeanCore)) {
@@ -354,20 +355,20 @@ function buildAdjPrecedenceFixtureData() {
       if (!labelHtml.includes(runCore)) {
         errors.push(`adj(${lang}): missing the 2-day trembling-run qualifier for credit_spread`);
       }
-      // strip pill hatch: TIER1 order is [flights, credit_spread, cnh_cny,
-      // net_outages] -- flights (artifact) and net_outages (common-mode lean)
-      // must carry the "adjudicated" hatch class; credit_spread (run only,
-      // "ok" lean) must not.
+      // strip pill hatch: TIER1 order is [flights, credit_spread, cnh_cny]
+      // (net_outages demoted R28) -- flights (artifact) and cnh_cny
+      // (common-mode lean) must carry the "adjudicated" hatch class;
+      // credit_spread (run only, "ok" lean) must not.
       const instNodes = appendedNodes.filter(n => n.className === "inst");
-      if (instNodes.length !== 4) {
-        errors.push(`adj(${lang}): expected 4 tier-1 strip chips, found ${instNodes.length}`);
+      if (instNodes.length !== 3) {
+        errors.push(`adj(${lang}): expected 3 tier-1 strip chips, found ${instNodes.length}`);
       } else {
         if (!/class="pill trembling adjudicated"/.test(instNodes[0]._html))
           errors.push(`adj(${lang}): flights' pill missing the adjudicated hatch class`);
         if (/adjudicated/.test(instNodes[1]._html))
           errors.push(`adj(${lang}): credit_spread's pill wrongly carries the adjudicated hatch class`);
-        if (!/class="pill trembling adjudicated"/.test(instNodes[3]._html))
-          errors.push(`adj(${lang}): net_outages' pill missing the adjudicated hatch class`);
+        if (!/class="pill trembling adjudicated"/.test(instNodes[2]._html))
+          errors.push(`adj(${lang}): cnh_cny's pill missing the adjudicated hatch class`);
       }
     } catch (e) { errors.push(`adj render(${lang}): ${e.stack || e}`); }
   }
@@ -390,12 +391,12 @@ function buildAdjPrecedenceFixtureData() {
           + `the integer must never move for a disclosure qualifier`);
       }
       const labelHtml = el("count-label").innerHTML;
-      // (d) net_outages carries only a `method` annotation -- not an
+      // (d) cnh_cny carries only a `method` annotation -- not an
       // adjudication -- so its common-mode lean must still surface.
       const leanCore = Tl.leanNote("", "12/12 synchronized").replace(" · ", "");
       if (!labelHtml.includes(leanCore)) {
         errors.push(`adj2(${lang}): a same-day METHOD annotation wrongly suppressed `
-          + `net_outages' common-mode lean qualifier (method must not act as an adjudication)`);
+          + `cnh_cny's common-mode lean qualifier (method must not act as an adjudication)`);
       }
       // (e) flights carries an `artifact` row written FIRST and a `correction`
       // row written LAST for the same (line,date) -- the artifact qualifier
@@ -405,18 +406,18 @@ function buildAdjPrecedenceFixtureData() {
           + `non-adjudicating (correction) row for the same (line,date) -- `
           + `the adjudicating row must win regardless of order`);
       }
-      // strip pill hatch: TIER1 order is [flights, credit_spread, cnh_cny,
-      // net_outages] -- flights (artifact, order-independent) and
-      // net_outages (method-only + common-mode lean) must both hatch.
+      // strip pill hatch: TIER1 order is [flights, credit_spread, cnh_cny]
+      // (net_outages demoted R28) -- flights (artifact, order-independent) and
+      // cnh_cny (method-only + common-mode lean) must both hatch.
       const instNodes = appendedNodes.filter(n => n.className === "inst");
-      if (instNodes.length !== 4) {
-        errors.push(`adj2(${lang}): expected 4 tier-1 strip chips, found ${instNodes.length}`);
+      if (instNodes.length !== 3) {
+        errors.push(`adj2(${lang}): expected 3 tier-1 strip chips, found ${instNodes.length}`);
       } else {
         if (!/class="pill trembling adjudicated"/.test(instNodes[0]._html))
           errors.push(`adj2(${lang}): flights' pill missing the adjudicated hatch class `
             + `(shadowed by the later correction row?)`);
-        if (!/class="pill trembling adjudicated"/.test(instNodes[3]._html))
-          errors.push(`adj2(${lang}): net_outages' pill missing the adjudicated hatch class `
+        if (!/class="pill trembling adjudicated"/.test(instNodes[2]._html))
+          errors.push(`adj2(${lang}): cnh_cny's pill missing the adjudicated hatch class `
             + `(a method annotation must not block the common-mode lean's hatch)`);
       }
     } catch (e) { errors.push(`adj2 render(${lang}): ${e.stack || e}`); }

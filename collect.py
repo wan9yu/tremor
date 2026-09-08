@@ -67,11 +67,14 @@ from fetchers import (capital_premium, chokepoint, cnh_cny, control_daylength,
                       space_weather, stablecoin_peg, tga_days_cash, vix)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
-# (airspace / financial system / capital controls / communications), so several
-# trembling at once means more than any one moving alone. Tier-2 lines ride along
-# to build history until they earn promotion. The grouping below is a reading
+# (airspace / financial system / capital controls), so several trembling at once
+# means more than any one moving alone. The communications slot ran net_outages
+# until R28 demoted it to tier-2 (its 8 largest readings adjudicated, none a cited
+# world event); that tier-1 slot is now left empty and disclosed. Tier-2 lines ride
+# along to build history until they earn promotion. The grouping below is a reading
 # aid; ``TIER`` on each module is what actually decides.
-LINES = [flights, credit_spread, cnh_cny, net_outages,  # tier 1 (primary, displayed)
+LINES = [flights, credit_spread, cnh_cny,               # tier 1 (primary, displayed)
+         net_outages,                                   # tier 2 (demoted R28)
          gnss, capital_premium, grid_frequency,         # tier 2 (demoted)
          chokepoint, sofr_iorb, em_oas, ports,          # tier 2 (candidates)
          euro_hy_spread, fx_parallel_premium, hkma_aggr_balance,  # tier 2 (built round 8)

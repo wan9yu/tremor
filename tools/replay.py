@@ -60,7 +60,17 @@ from core import normalize
 # Grandfathers the two existing weekend dark rows (2026-08-09, 2026-08-16);
 # every non-opting line scores byte-identical. Dated to the first collection
 # the new status governs.
-STABLE_SINCE = "2026-08-17"
+#
+# 2026-09-08 — round 28: net_outages is DEMOTED tier-1 -> tier-2 (condition (c) of
+# the R27 reach standard tripped — the 8 largest readings adjudicated under the R23
+# playbook, none a cited real world event). A TIER change alters the summary
+# re-derivation, which counts tier-1 lines only (see main() below), so the headline
+# reconstruction must be pinned from this date. net_outages did not tremble on
+# 2026-09-08 (raw 4, z=0.938) and scored neither dark nor blind that day, so the
+# 2026-09-08 summary row (0/0/0) re-derives byte-exact with net_outages dropped from
+# the tier-1 set — --check stays 0-divergence. Dated to the first collection the new
+# tiering governs.
+STABLE_SINCE = "2026-09-08"
 
 
 def replay_line(mod, since=None):
