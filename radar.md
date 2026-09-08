@@ -43,7 +43,7 @@ now left empty and disclosed. Per-line reliability/reach metrics are generated �
 |---|---|:--:|:--:|:--:|:--:|---|
 | flights | airspace (4 regions; only US alarm-reachable) | 3 | 3 | 2 | ≤0.08 (n≈50, R21) | ⚠️ **RETAINED at the pre-committed review, R25** — the 2026-08-31 review ran (de-cycling engaged on schedule at window-row 71): replayed episode-rate Wilson 95% LB = 0.89% < 2% bar, and the 08-28 alarm is ADJUDICATED (not just adjudicable) by the R11-named intraday sampler — 08-28T23:22Z read 1660 at baseline hour while the daily 05:54Z snapshot read 1035; the drop is a CI-queue sample-hour artifact, not airspace. Neither demotion condition met → retained. Both of flights' alarms are now artifacts; the sample-hour confound is STRUCTURAL (snapshot line, GH-Actions queue-drifted sample hour, weekday de-cycling is orthogonal to it). Fix SHIPPED R25.1 (re-review pending) |
 | credit_spread | financial (US→global) | 3 | 3 | 3 | ≤0.08 (n=788, R21) | ✅ global bellwether; alarm at the 45th pctile of its 788-day record |
-| cnh_cny | capital controls (China) | 2 | 3 | — | ≤0.12 (n≈44, R21) | ✅ slot 4 (user-decided); reach cell MEASURED R13 — the alarming (up) side needs +227 pips vs a 52-obs record high of 143 (a decoration WITHIN this young calm record; baseline-relative — real capital-flight episodes blow far past it), while all five |z|>3 events are benign DOWN trembles (offshore yuan stronger). Still <60, insufficient to adjudicate; refresh at the maturity review (*4 darks are weekend/leg-timing rejections, not failures; the 08-16 dark ran hours before R18's closed status landed — weekends read `closed` from the first post-R18 weekend, 08-22/23, on) |
+| cnh_cny | capital controls (China) | 2 | 3 | — | ≤0.08 (n=42 vs credit_spread / 57 vs flights, R29) | ✅ slot 4 (user-decided); orthogonality RE-MEASURED R29 — |max Pearson| +0.076 vs credit_spread (n=42), −0.036 vs flights: the most orthogonal tier-1 line. Reach RE-MEASURED R29 — the UP alarm bar sits at ≈223 pips, +80 above the all-time record high of 143 (unreachable WITHIN this young calm record; baseline-relative; reference regime intact). All five |z|>3 events are benign DOWN trembles (07-02/07-07/07-25/08-10/08-26, offshore yuan stronger) — 0 UP-trembles in its scored history (57 at R29, 2026-09-08). RETAINED on a WEAKER external-reference-regime standard than credit_spread/flights: retention rests entirely on a real, CITED reference regime — the 2015-16 RMB devaluation / capital-flight episode (dated citation in the reachability gate below) — which is the SAME reachability standard net_outages FAILED at R28, and cnh_cny passes only because its regime is a documented, sourced world event where net_outages' 8 largest adjudicated to none. Still <60 scored (see radar-metrics.md for the live count), insufficient to adjudicate (Known limit 4: below 60, defer); refresh at the maturity review (*4 darks are weekend/leg-timing rejections, not failures; the 08-16 dark ran hours before R18's closed status landed — weekends read `closed` from the first post-R18 weekend, 08-22/23, on) |
 
 ## Tier 2 — collected  (14 candidates + 5 context + 1 control · no cap)
 
@@ -92,14 +92,14 @@ Per-line reliability/reach metrics are generated — see [radar-metrics.md](rada
 | grid_frequency | infrastructure (Nordic) | 2 | 3 | 1 | demoted R4 (regional); kept on watch — may re-challenge on orthogonality |
 | euro_hy_spread | financial (EU) | 3 | 2 | 2 | built R8 — ICE BofA Euro HY OAS ~2.5pp, keyless FRED. R22: the "different central bank → orthogonal" intuition is MEASURED FALSE — |max corr| = **+0.74 vs credit_spread** (n=783), and +0.86 vs em_corp_oas: US HY, EM corp and Euro HY are ONE global credit factor at daily z. Tier-2 for breadth; not a tier-1 candidate (redundant with the credit slot) |
 | fx_parallel_premium | capital controls (AR) | 2 | 3 | 2 | built R8 — Argentina blue-vs-official FX premium, keyless dolarapi; a hard-controlled regime, distinct from cnh_cny/kimchi |
-| hkma_aggr_balance | capital (HK) | 3 | 3 | 2 | built R8 — HK currency-board aggregate balance, keyless HKMA API; falls as the peg is defended under outflow |
+| hkma_aggr_balance | capital (HK) | 3 | 3 | 2 | built R8 — HK currency-board aggregate balance, keyless HKMA API; falls as the peg is defended under outflow. **FLAGGED R29 before it counts as a promotion candidate:** 16 dark days scattered across 07-31→09-07 (not contiguous), reliability 0.871 = scored/(scored+dark) = 108/124 (radar-metrics.md's read/rows definition gives 0.888 = 127/143; worst-in-set either way, next-worst cnh 0.949), and |z|>3 on 14 of 108 days (10 flagged trembles, all benign-direction/up — hkma alarms down, so these count as no disorder), z up to 65 (max 03-18) driven by discrete step-jumps — evaluate moving it from rolling z to anchored/scale scoring like the other discrete-step financial lines. It crosses 60 scored (108) and is orthogonal, but the worst-in-set reliability plus a mis-calibrated over-firing scorer disqualify it now |
 | — gdelt | feel: conflict share (global) | 1 | 0 | 3 | contrast line (guard gate) — v2 full-day aggregation, not a candidate slot |
 | — gdelt_tone | feel: news tone (global) | 1 | 0 | 3 | contrast line — full-day average tone, same pass as gdelt |
 | — vix | feel: priced fear (global) | 1 | 0 | 3 | contrast line — keyless FRED VIXCLS, seeded 180d from archive |
 | — polar_temp | context: planetary level (Arctic 80N) | 1 | 0 | 2 | context line, provisional-watch — DMI +80N daily anomaly vs the 1958-2002 normal (keyless, ~1d lag). A LEVEL read, not a tension indicator; the long baseline is vendored in core/arctic_clim.py. Seeded R9 to 2019 (2,740 rows): 384 warm trembles vs 4 cold — the asymmetry is the warming |
 | — space_weather | context: geomagnetic storm (global) | 1 | 0 | 3 | **built R22** — daily MAX planetary **Kp** index, rolling z (QUANTUM=1/3), keyless: NOAA SWPC live + GFZ Potsdam definitive archive, seeded to 2022-07-27 to ALIGN with gnss_interference. A CONTEXT line (fails guard gate — the Sun is the exogenous force, not a guarded equilibrium): never counted, never promotable. Its ROLE is a **confounder-subtractor** for gnss_interference + grid_frequency — a storm degrades GNSS worldwide and stresses grids, the same signatures a human hand leaves; Kp says which. Validated: the up-trembles are exactly the real G1-G5 storms — the May-2024 Gannon superstorm (Kp 9, strongest in 20y) fires on both peak days, as do the Oct-2024 and Mar-2024 storms |
 | tga_days_cash | fiscal plumbing (US) | 3 | 3 | 2 | built R11.1 — Treasury cash buffer in DAYS OF ITS OWN OUTFLOWS (closing TGA balance / trailing-20-business-day mean withdrawal), keyless Treasury Fiscal Data, T+1. The guard is visible not asserted: median 5.3 business days against Treasury's announced ~1-week policy, and the June-2023 X-date reads 0.21 days |
-| fed_srf_takeup | financial plumbing (US→global) | 3 | 3 | 3 | **built R20** — daily Standing Repo Facility take-up ($m), keyless NY Fed markets API (`/api/rp/...`), seeded to 2021-07-28 (SRF inception). Take-up = Σ accepted across the day's Repo ops (RRP excluded); anchored scale-mode (ANCHOR=0, MATERIALITY=$10bn → alarm $30bn, set ABOVE the ~$20-26bn month/quarter-end friction band). 767/1262 days are exactly $0 and score an honest z=0; only the three genuine >$30bn scarcity spikes fire — year-end 2025 $74.6bn (z=7.5, the record), Oct-2025 $50.4bn (z=5.0), mid-month 2026-02-17 $30.5bn (z=3.05, no calendar). Settle boundary is explicit UTC (TZ-robust, never partial). Promotion gated on a de-cycling pass for the sub-alarm month-end clustering (this repo has none) |
+| fed_srf_takeup | financial plumbing (US→global) | 3 | 3 | 3 | **built R20** — daily Standing Repo Facility take-up ($m), keyless NY Fed markets API (`/api/rp/...`), seeded to 2021-07-28 (SRF inception). Take-up = Σ accepted across the day's Repo ops (RRP excluded); anchored scale-mode (ANCHOR=0, MATERIALITY=$10bn → alarm $30bn, set ABOVE the ~$20-26bn month/quarter-end friction band). 767/1262 days are exactly $0 and score an honest z=0; only the three genuine >$30bn scarcity spikes fire — year-end 2025 $74.6bn (z=7.5, the record), Oct-2025 $50.4bn (z=5.0), mid-month 2026-02-17 $30.5bn (z=3.05, no calendar). Settle boundary is explicit UTC (TZ-robust, never partial). Promotion gated on a de-cycling pass for the sub-alarm month-end clustering (this repo has none). **R29 — named the lead tier-1 challenger** on raw merit for the slot the net_outages demotion vacated: 1274 scored, |max corr| 0.0998 vs flights (0.0969 vs cnh_cny), fresh NY-Fed T+1, guard 3, 3 clean >$30bn scarcity alarms. Promotion points at the two standing gates below — the R20 calendar de-cycling debt (month/qtr-end nonzero days warp the baseline; the exact count depends on the ±window cut) and the R15 anchored-scale promotion gates (materiality replay-validation + episode/serial-dependence overlay) — both DEFERRED (large, approval-gated). Note: fed_srf and any BGP line are both dollar/plumbing vs communications; preserving the empty slot for a comms line is the deliberate choice the S2 probe serves |
 | stablecoin_peg | crypto dollar peg (global) | 3 | 3 | 3 | **built R14, scored R15** — worst-of-{USDC,USDT} deviation-from-$1 in bp, settled daily CLOSE, keyless Bitstamp OHLC, seeded 2020-10→now. Guard clean; cadence-reject OVERTURNED (SVB was a multi-day close-visible depeg, USDC close $0.9685). Now scored in **anchored scale-mode** (ANCHOR=0, MATERIALITY=25bp → alarm at 75bp) instead of the rolling z: the R14 build fired 214 trembles ≈10%/day on USDT's normal ~10bp venue discount; scale-mode drops that to **3 real trembles (SVB 03-11 z=12.6, 03-12 z=3.4, a 2021-01-07 wobble), 0 blind**, ordinary fuzz z<1. Honestly scored now; promotion still gated on materiality-validation + an episode / serial-dependence overlay |
 | — control_daylength | CONTROL: pipeline canary (no world) | 0 | 0 | — | control line, added 2026-07-30, registered R9 — day length at 51.4779N, 0.0E (sunrise-sunset.org). Set by orbital mechanics; nothing on Earth moves it, so any tremble here is measurement error by definition. obs_date is RECORDED, not inferred, so a one-day pipeline slip trips the ~1-minute canary tolerance even near the solstices |
 
@@ -113,10 +113,10 @@ above.)
 
 | candidate | domain | hypothesis (guard → leak) | what it still needs |
 |---|---|---|---|
-| third ADS-B provider (flights redundancy) | airspace — same guard as tier-1 `flights` (airlines defend on-time profit → closed airspace, weather, pandemic leaks) | not a new domain — a REDUNDANCY item for the existing `flights` line. `airplanes.live` was removed from `core/adsb.py` PROVIDERS 2026-09-08: it had returned HTTP 403 since before 2026-08-12 (an access-policy block — the response body asks for a project description, and every User-Agent fails, so this is not the keyless-header case a workaround could restore). `flights` still runs under the max-of-providers rule on the two survivors (`adsb.fi`, `adsb.lol`), both answering; removing the third provider moved the region max by only ~1-2%, inside noise. But two providers is one fewer corroborating source than the line shipped with | find and probe a third keyless, un-gated community ADS-B aggregator (`adsb.one` is the obvious first candidate; any host must serve live JSON shaped like `{"ac": [...]}` with `alt_baro`, no key, no access-policy gate) before it is added back to `core/adsb.py` PROVIDERS |
+| third ADS-B provider (flights redundancy) | airspace — same guard as tier-1 `flights` (airlines defend on-time profit → closed airspace, weather, pandemic leaks) | not a new domain — a REDUNDANCY item for the existing `flights` line. `airplanes.live` was removed from `core/adsb.py` PROVIDERS 2026-09-08: it had returned HTTP 403 since before 2026-08-12 (an access-policy block — the response body asks for a project description, and every User-Agent fails, so this is not the keyless-header case a workaround could restore). `flights` still runs under the max-of-providers rule on the two survivors (`adsb.fi`, `adsb.lol`), both answering; removing the third provider moved the region max by only ~1-2%, inside noise. But two providers is one fewer corroborating source than the line shipped with | find and probe a third keyless, un-gated community ADS-B aggregator (`adsb.one` is the obvious first candidate; any host must serve live JSON shaped like `{"ac": [...]}` with `alt_baro`, no key, no access-policy gate) before it is added back to `core/adsb.py` PROVIDERS. **R29:** the two survivors adsb.fi (900) and adsb.lol (897) are <1% apart with 0 dark/79, and are accepted for now (the R28 health audit alarms on a silent death). The keyless-mirror search is NOT repeated — adsb.one returns Cloudflare 403, airplanes.live an access-policy 403, adsbiq a feeder 403/429, and OpenSky is anonymous-deprecated with GH-Actions shared-IP unreliability. Cheap future re-probe: is OpenSky /states/all reliable from GH-Actions IPs post-2026-03 OAuth2? (untested since) |
 | euro_fragmentation | financial (EU) | ECB defends cohesion → a widening periphery-core 10y spread leaks euro-breakup stress | a DAILY periphery-core spread source — the probed ECB SDMX IRS series is MONTHLY, which can't be a daily line; find the daily government-yield series |
 | entsog_gas_flow | energy (EU) | pipelines keep gas flowing → a drop in cross-border physical flow leaks cutoff / sabotage | **source CONFIRMED keyless-live R20** — `.../api/v1/operationaldata?indicator=Physical Flow&periodType=day` returns real daily per-point flows (Fos LNG 129 GWh/d 2026-08-16, ~2d lag, no key); guard/cadence/reachability all pass. The ONLY remaining blocker is the AGGREGATION DESIGN: picking a non-diluting, non-frame-churning set of import points (dilution is a known failure mode). No longer sourcing-blocked — design-blocked |
-| bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | the right global formulation — RIPEstat routing-status for one AS is not a global instability measure; a withdrawal/update-rate is exposed to sensor-inflation and low-count-integer failure modes and must be designed against them. **Re-probed R20, still blocked:** RIPEstat is keyless but `resource=` is mandatory on every routing endpoint → SINGLE-AS only; the one true global aggregate (Cloudflare Radar BGP) requires an `Authorization: Bearer` token even free-tier |
+| bgp_instability | infrastructure | networks keep routes stable → a surge in BGP withdrawals leaks outages, hijacks, war | **PROBED R29 (probe-only — no live line built this round).** The correct global formulation is IODA's pre-aggregated BGP signal (RIPE RIS + RouteViews), NOT RIPEstat single-AS (`resource=` mandatory → one AS only) nor Cloudflare Radar BGP (keyed even free-tier); a DIY ris-live/RouteViews-MRT build is rejected as a redundant survivability liability. IODA GTR is a design ingredient covering BGP's access-layer blind spot, not a separate corroboration sibling — so the search is not re-run. **R29 probe result:** endpoint `/v2/signals/raw/country/{CC}?datasource=bgp` (keyless, ~0.4h lag); aggregation = a size-floored 153-country watch-list (≥512 /24s), each country's daily-min ÷ its 28-day rolling-median baseline, worst-of across the list, scored down. It PLAUSIBLY PASSES all gates — reachable (alarm bar frac 0.583, observed min 0.409, max down-|z| 15.25 — the up-side is a larger benign rolling-Qn artifact, which is why anchored scale-mode is the recommended scorer), fires on Syria 2022-05-30 −96.9% (z−24.6) and Sudan 2023-04-24 −68.6% (z−9.1), orthogonality max Pearson 0.167 (flights .167 / credit .154 / cnh .082), freshness ~0.4h — and it is structurally immune to the active-probing common-mode that demoted net_outages (BGP is a passive read of route announcements). DISCLOSURE: BGP measures route ANNOUNCEMENT, not reachability — it MISSES the Gaza 2023-10 total blackout (~3.7% BGP drop, z≈−0.4, routes stayed announced), so a built line MUST be disclosed as route-WITHDRAWAL detection (the gnss "effective reach 1" precedent), with anchored scale-mode (anchor 1.0, materiality ≈0.10) the recommended scorer. Evidence: data/archive/bgp_probe_2026-09-08.csv. The empty communications slot now has a credible candidate (net_bgp_withdrawal) that would enter at tier-2 under the ≥60 funnel — NOT built this round; the build is a separate operator decision |
 | cp_funding_spread | financial (US) | the Fed backstops the CP market → a CP-minus-funds spike leaks short-term funding stress | **construction RESOLVED R13, now cadence-BLOCKED** — `CPFF` IS exactly (3M AA-financial CP − fed funds), verified to the cent (2020-03-25 CPFF 2.43 = CP 2.53 − DFF 0.10; equivalently `RIFSPPFAAD90NB − DFF`), keyless daily, reachable (+240 bp in Mar-2020). BUT the term-CP leg is blank on a ~50%-and-rising, STRESS-CLUSTERED share of business days (2019 7% → 2024 56% → 2026 50%) and the ENTIRE 2023-03 SVB window is missing, so a daily differenced z would need a fill across exactly the gap carrying the signal; the only dense leg (overnight CP) is arbitrage-pinned and leaks nothing. **Scoring UNBLOCKED R15** (anchored scale-mode, ANCHOR=0, MATERIALITY≈15bp → alarm 45bp, Mar-2020 +240bp → z=16, each PRESENT day honest with no differencing-across-a-gap) — but scale-mode cannot conjure the missing days; still BLOCKED on SOURCING, a denser term-CP feed, not on scale |
 | **border_wait** | trade / mobility (US land borders) | borders are staffed open for trade → a sustained spike in commercial-lane wait times, or an UNSCHEDULED closure of a 24h crossing, leaks blockade / coercion / crisis at a land chokepoint the maritime (PortWatch) and air (ADS-B) lines cannot see | **new R13, live-probed** — `bwt.cbp.gov/api/waittimes` returns real keyless JSON, 85 land ports (55 MX, 30 CA), 2026-08-14 snapshot Laredo 55m / Otay Mesa 40m / median 0 / max 55. Needs an AGGREGATION DESIGN before it is a line: restrict to COMMERCIAL lanes, git-scrape at a FIXED daily UTC hour so same-hour comparison cancels the commuter intraday cycle (cadence gate), and count only closures UNSCHEDULED against each port's `hours` field (raw Closed is dominated by nightly scheduled closures). Reach NATIONAL (US-MX/CA); no free historical backfill — build forward, zero baseline day 1. Global land-border non-find: WFP/HDX is a static location inventory, no free daily waits |
 | crypto_capital_flight_premium | capital controls (per country) | a state defends an official FX rate / capital controls → residents buy USDT to move value out, so its local-currency P2P price trades ABOVE the official rate; a widening premium leaks accelerating flight — the same guard as cnh_cny / fx_parallel_premium, a faster mechanism | **probed R14 — guard real, cadence PASSES (a structural premium persists for weeks, unlike a transient depeg), Binance P2P adv/search is keyless + live.** BLOCKED because reachable ∩ orthogonal ∩ strong-guard ∩ clean-keyless-official-leg is nearly empty: ARS (+4%) and CNY (−1%, a banned gray discount) are redundant with existing lines, NGN/RUB return 0 ads (Binance banned/exited), TRY/EGP are weak-guard floats, and the one orthogonal hard-controlled case — Venezuela VES (+14% vs a near-parallel rate; the true BCV gap is 85%+) — has no keyless TRUE-official leg. Parked on official-leg sourcing + order-book aggregation, same shape as `usd_xccy_basis`. If ever built: a single USDT/VES line with a keyless BCV official leg, not China/Argentina, not Nigeria via Binance |
@@ -149,14 +149,20 @@ that adds orthogonal value**, and only as the confounder line above — not as a
 | ais_dark_activity | R20 non-find + guard-questionable: vessels going dark (disabling AIS) would leak sanctions evasion / pre-conflict staging, but every source is key-gated (Global Fishing Watch Events = HTTP 401 without a free-registration token; SkyTruth/Datalastic/MarineTraffic/UN Global Platform all keyed or commercial), and a dark-ship count is an INFERRED detection, not a number a guardian defends. Same lineage as marine_war_risk. |
 | tropical_cyclone (context) | R22: fails the **context-line admission bar on PAYOFF** — not on source, not on design (both are solved). SOURCES ARE EXCELLENT and verified keyless + all-basin, banked so the search is not repeated: **GDACS** `EVENTS4APP` GeoJSON (live, ~hourly, every active global TC with intensity, CORS-open) + **IBTrACS** v04r01 `since1980.list` CSV at NCEI (seed, dense 6-hourly best-track 1980→present, `last3years` as the 90-day window) — both close the NHC/CPHC West-Pacific gap. A non-diluting AGGREGATION also exists (port/hub-**gated worst-of**: the strongest storm within ~500 km of a fixed top-20 port/airspace-hub list — MAX-form kills dilution and frame-churn). It is REJECTED anyway because the two lines it would disambiguate are BOTH too diluted for a cyclone to move: **measured**, a full Shanghai+Ningbo closure moves port_throughput only **z=0.49**, and the ENTIRE E-Asia/Japan airspace going dark moves flights only **z=0.63** — both far under the \|z\|>3 alarm, because the storm's footprint (<1% of 2065 global ports; ~8% of a 4-region flight sample) is smaller than each line's own daily noise (Qn 245 calls; 199 aircraft). So a cyclone essentially never creates a weather-tremble to SUBTRACT — the "named ambiguity" the admission bar demands is empirically empty. This is the exact OPPOSITE of `space_weather`/gnss, where a geomagnetic storm degrades the WHOLE global GNSS at once, undiluted — which is why Kp cleared the bar and cyclones do not. (A workflow scouted this R22 and returned BUILD-READY on qualitative reasoning; the load-bearing "typhoon dips flights" claim was then MEASURED and failed. Sources are build-ready the day a globally-cyclone-sensitive line, or a per-hub sub-line — a Shanghai-only port line, a Japan-only flights line — exists to carry the signal undiluted; until then, do not build.) |
 
-**Deferred instrument-hygiene follow-ups (opened R28, not yet built)** — three items the
-net_outages demotion surfaced, none blocking, recorded here so the search is not repeated:
-(1) a render_smoke / lint check that no `docs/index.html` `T[lang]` string carries a literal
-tier-1 line count (the covLead / covBlind counts are derived off `TIER1` now, but nothing yet
-guards a future hard-coded one); (2) re-evaluate the dark-count banner threshold — `darkCount
->= 3` now means all three primary lines dark at once, a different bar than it was at four
-lines; (3) a per-line STABLE_SINCE map, so one line's tier or scoring change no longer bumps a
-single global mark that governs every line's replay.
+**Instrument-hygiene follow-ups opened R28** — three items the net_outages demotion surfaced,
+recorded so the search is not repeated. (1) **DONE R29 (C2)** — a lint now binds every tier-1
+line-count literal in the public copy to the source (the `docs/index.html` `const T` block + the
+README claims above its machine-checked table), so a future hard-coded count cannot drift from
+`TIER1`; `countColor`'s separate 4-step colour ramp (`n>=3`) is deliberately out of that scope.
+(2) **DONE R29 (C1)** — the dark-count banner threshold is now the TIER1.length-derived majority
+rule `darkCount*2 > TIER1.length` (2-of-3 today, reproducing the historical 3-of-5 / 3-of-4), a
+chosen semantic (majority, not all-dark). (3) **per-line STABLE_SINCE map — DEFERRED R29 (C3), no
+code.** Four facts are banked: (a) `scoring_attrs` omits TIER, so per-line replay is tier-independent
+(527 rows, 0 divergence since 08-17); (b) only the summary re-derivation loop (replay.py :134 filter
+→ :175-192) is tier-sensitive; (c) the lighter fix is a separate `TIER_CHANGED_SINCE` used only at
+the summary guard, with `STABLE_SINCE` reverted and its ledger block ordering kept per lint_ssot T6;
+(d) DEFERRED because the restored ~504-row per-line window is daily-checked-while-recent,
+tier-independent, and frozen — zero detection benefit at ~22× the daily `--check` cost.
 
 ---
 
@@ -192,10 +198,18 @@ data exists):
   is reachable within its own record OR under a documented **reference regime** — real
   historical episodes of the guarded quantity that blew past the alarm. This is the
   same baseline-relativity the NOTE already declares, made explicit for a young line whose
-  own record is too calm to contain its alarm. Applied to cnh_cny: its UP alarm needs +227
-  pips vs a 52-obs high of 143 (unreachable WITHIN the record) but real capital-flight
-  episodes have run hundreds of pips — it passes. The reference regime must be cited, not
-  assumed, and is re-checked at the line's maturity review.
+  own record is too calm to contain its alarm. Applied to cnh_cny: its UP alarm bar sits at
+  ≈223 pips, +80 above the all-time record high of 143 (unreachable WITHIN the record), but a
+  real capital-flight regime has blown far past it — **the 2015-16 RMB devaluation / capital-flight
+  episode** (PBOC surprise devaluation of the onshore fix 2015-08-11, the first since 1994; the
+  offshore squeeze of 2016-01-12 drove overnight CNH HIBOR to a record ~66-67%, punishing yuan
+  short-sellers; the CNH-CNY spread ran to the hundreds of pips, multiples of the ~223-pip alarm
+  bar) — so it passes. Sources (cited, not assumed, per this very rule): BIS Working Paper No. 446
+  "One currency, two markets: the renminbi's growing influence", and CNBC 2016-01-12 for the record
+  overnight CNH HIBOR spike. This is the same reachability standard net_outages FAILED at R28 (its 8
+  largest readings adjudicated to no cited event); cnh_cny passes only because its reference regime
+  is a documented, sourced world event. The reference regime must be cited, not assumed, and is
+  re-checked at the line's maturity review (n=57 <60 as of R29).
 
 **Freshness rule for tier-1:** a displayed instrument must be FRESH (low publication lag). A
 line that is daily but lags a week (e.g. IMF PortWatch, ~10 days measured) only shows a disruption long
@@ -356,17 +370,23 @@ re-reading the log. Close an item by editing it out with a round reference.
   [opened R25 · owner R26 · fires: rows_since(flights, 2026-09-02) >= 60]
 - **cnh_cny maturity refresh** — at n≥60 scored: re-measure the reach cell + benign-tremble recount
   (queued R13). R23: now n=48 (record range −45..143; 4 trembles, all benign DOWN), still <60 — keep
-  waiting. Respelled from `distinct_scored` to `scored`: the record carries 8 non-distinct cnh_cny
+  waiting. R29: now n=57 (5 trembles, all benign DOWN: 07-02/07-07/07-25/08-10/08-26), still <60 —
+  keep waiting; bank the open question for the n≥60 review — is the zero UP-alarm-direction reach a
+  young-calm-record artifact (guard sound, tail unsampled) or a sign the bar/statistic needs
+  revisiting (post-fix responsiveness is thin — only 08-26 −43 pips is a clean attributable reading).
+  Respelled from `distinct_scored` to `scored`: the record carries 8 non-distinct cnh_cny
   rows by the distinct-observation rule (Known limits #6), so `distinct_scored` currently equals raw
   `scored` and cannot honestly stand in for a dedup the tool does not yet implement; the maturity
   review has always used the raw scored count n, so `scored` is the honest predicate until the rule
   is built into the tool. [opened R13 · owner R26 · fires: scored(cnh_cny) >= 60]
 - **anchored-scale promotion gates** (R15, standing): before ANY anchored line promotes, its
   MATERIALITY must be replay-validated to the R11 bar and an episode/serial-dependence overlay run.
-  Applies to stablecoin_peg, fed_srf_takeup.
+  Applies to stablecoin_peg, fed_srf_takeup. R29: now aimed at fed_srf_takeup as the named lead
+  tier-1 challenger (Tier 2 cell) — DEFERRED (approval-gated).
 - **calendar de-cycling debt** (named R20): month/quarter-end rhythm gates fed_srf_takeup's
   promotion and warps tga_days_cash; payable on fed_srf's 1,262-day seed. This repo still has no
-  de-cycling beyond weekday.
+  de-cycling beyond weekday. R29: this is the standing gate pointed at fed_srf_takeup's promotion,
+  now the named lead challenger; DEFERRED (large, approval-gated).
 - **closed-status first live weekend** — RESULT (R23): 08-23 (Sun) correctly read `closed` ✓; 08-22
   (Sat) read `scoring` raw 83 (z−0.24) — Friday's close re-scored, because the weekend guard keys on
   the NEWER leg being Sat/Sun and Saturday-morning still sees two Friday timestamps. Follow-up:
@@ -379,11 +399,19 @@ re-reading the log. Close an item by editing it out with a round reference.
 - **level-layer → flights** (opened R23.1) — decide ~Nov 2026 (once flights per-region components
   banked since 08-02 can populate an honest reference window) whether to extend the level layer to
   flights regions; the second headline currently rides one lagging, panel-churning source
-  (PortWatch, ~10d). [opened R23.1 · owner R26 · fires: date >= 2026-11-01]
+  (PortWatch, ~10d). R29: flights structural work stays DEFERRED to the two scheduled reviews that
+  both mature ~Nov — this item (fires date≥2026-11-01) and the fixed-hour re-review (fires
+  rows_since(flights)≥60, now ~7/60). The planned Nov fix is a per-region **worst-of-region z**
+  (restores Europe −7.84z / Japan −7.33z at the EXISTING 22:30Z hour) — a REFORMULATION of the single
+  flights slot, not new counted lines; a second sample hour is REJECTED (regional peaks are staggered
+  globally, so no hour makes all four regions large-share — a 2nd hour only shifts which region is
+  drowned while doubling fetch fragility). [opened R23.1 · owner R26 · fires: date >= 2026-11-01]
 - **cnh_cny reachability reference-regime re-check** (opened R23.1) — the reachability gate passed
-  cnh_cny on a cited reference regime (real capital-flight episodes past +227 pips). Re-confirm at
-  n≥60 that the reference-regime evidence still holds, alongside the maturity refresh.
-  [opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60]
+  cnh_cny on a cited reference regime, now WRITTEN into the record at R29: the 2015-16 RMB
+  devaluation / capital-flight episode (PBOC devaluation 2015-08-11; overnight CNH HIBOR ~66-67% on
+  2016-01-12; CNH-CNY spread to the hundreds of pips vs the ~223-pip alarm bar; BIS WP No. 446, CNBC
+  2016-01-12 — see the reachability gate). Re-confirm at n≥60 that the reference-regime evidence still
+  holds, alongside the maturity refresh. [opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60]
 - **radar-log.md roll tripwire — DONE R29** — the log split into an archive once it crossed its
   self-set **2,000-line** threshold (crossed at R28, which took radar-log.md to 2,036 lines). R29 ran
   `tools/roll_radar_log.py --split-round 20` (byte-identity + round-coverage verified): rounds 1-19
@@ -405,8 +433,9 @@ re-reading the log. Close an item by editing it out with a round reference.
   (em_corp_oas) and Euro HY (euro_hy_spread) are ONE global credit factor — |max corr| +0.80 / +0.74
   vs the tier-1 credit line, +0.86 to each other. NO second credit-family line may be promoted to
   tier-1: it would fail the orthogonality gate AND break the headline's iid null (Known limits #3).
-  The genuinely-orthogonal financial challenger is `sofr_iorb_spread` (max corr +0.34, n=35 — defer
-  until ≥60 scored).
+  The genuinely-orthogonal financial challenger is `sofr_iorb_spread`, now n=49 as of R29 (the note
+  cited n=35) with |max corr| 0.231 vs cnh_cny — keep deferred until n≥60 scored, then re-measure
+  orthogonality.
 
 ---
 
@@ -532,3 +561,12 @@ gets one line added here.
   global-communications slot left empty and disclosed. 9 annotations (8 artifact + 1 DEMOTED method);
   STABLE_SINCE bumped to 2026-09-08 (a tier change alters the summary re-derivation); replay
   0-divergence. Roll tripwire CROSSED (radar-log.md past 2,000 lines); the roll is deferred to R29.
+- **Round 29** — 2026-09-08 · the discipline-holding round: no tier move — roll the log (rounds 1-19
+  → radar-log-1.md), refresh cnh_cny's stale cells and WRITE its cited reference regime (the 2015-16
+  RMB devaluation / capital-flight episode; overnight CNH HIBOR ~66-67% on 2016-01-12; BIS WP No.
+  446) so retention on the weaker standard is cited not assumed, and the net_outages symmetry stated;
+  probe (probe-only) the IODA passive-BGP comms candidate (plausibly passes all gates, route-
+  WITHDRAWAL-only disclosure, net_bgp_withdrawal a tier-2 candidate — not built); C1 darkCount
+  majority banner + C2 tier-1-count lint; S3-S7 registry bookkeeping (bgp Backlog consolidation,
+  flights defer to ~Nov, fed_srf named lead challenger, hkma investigation flag, sofr note n=49); C3
+  per-line STABLE_SINCE defer. bgp probe evidence CSV committed

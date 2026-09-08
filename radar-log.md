@@ -811,3 +811,81 @@ only. net_outages did not tremble on 2026-09-08, so the 2026-09-08 summary row r
 replay --check stays 0-divergence. Full suite green (gate, lint stdlib-only in a bare venv, replay
 0-divergence, annotations mirror byte-identical). radar-log.md crosses 2,000 lines with this entry; the roll
 (tool shipped R26) is deferred to R29.
+
+### Round 29 — 2026-09-08 (the discipline-holding round: roll the log, cite cnh_cny's regime, probe one forward path)
+
+A discipline-holding round, not a tier-move round. No line clears count + orthogonal + fresh + real-guard + its own
+gates at once, so nothing is promoted and the communications slot stays disclosed-empty. The work is three honest
+things — tell the registry's own truth, open one credible forward path, consolidate dead-ends — with every structural
+fix parked to ~Nov, when its banked window matures. Eleven items ship in one round; A/C1/C2 are code, the rest is record.
+
+**A — the log roll.** radar-log.md crossed its self-set 2,000-line threshold at R28 (2,036 lines).
+`tools/roll_radar_log.py --split-round 20` archived rounds 1-19 into radar-log-1.md and left 20+ here, verified
+byte-identical and round-complete. The tool gained a required `--split-round` CLI, injectable path/round kwargs, a
+6-line archive preamble (so every archived round keeps its exact line number), and a guard against overwriting an
+existing archive; its tests moved to a synthetic fixture, so no test reads the live log now. `lint_registry`'s
+round-index parity globs `radar-log*.md`, so both files are swept in and the 1-28 index matches with no lint change.
+
+**C1 — the dark-count banner.** docs/index.html's alarm banner fired at a hard-coded `darkCount >= 3` — a majority at
+four tier-1 lines, but all-dark at three, a bar that silently shifted when net_outages left. It now reads
+`darkCount*2 > TIER1.length`, a majority rule off the live count (2-of-3 today, reproducing the historical 3-of-5 /
+3-of-4), asserted in both languages by a render_smoke fixture with runtime-current dates and two of three lines dark.
+
+**C2 — the tier-1-count lint.** A new lint in lint_public_surface.py scans the `const T` block and the README's claims
+prose and binds every "three primary lines"/"三条主线"-shape literal to `_docs_tier1_line_count()` — green today (5
+matches, each 3), red when a literal is planted to four — so a hard-coded count can no longer drift off `TIER1`.
+
+**S1 — cnh_cny, retained on a cited regime.** cnh_cny sits at n=57 scored, a short week from its n≥60 maturity review,
+so neither pending review closes (Known limit 4: below 60, defer). The stale cells are refreshed: orthogonality
+|max Pearson| +0.076 vs credit_spread (n=42), −0.036 vs flights — the most orthogonal tier-1 line; the UP alarm bar is
+≈223 pips, +80 above the all-time record high of 143, unreachable within this young calm record; all five |z|>3 events
+are benign DOWN trembles (07-02/07-07/07-25/08-10/08-26), zero UP-trembles in 57 days. Retention therefore rests
+entirely on a WEAKER external-reference-regime standard than credit_spread or flights, and R23.1's rule is that the
+regime be cited, not assumed. The citation is now written into the reachability gate: the 2015-16 RMB devaluation /
+capital-flight episode — the PBOC's surprise onshore devaluation of 2015-08-11 (its first since 1994) and the offshore
+squeeze of 2016-01-12, when overnight CNH HIBOR spiked to a record ~66-67% and the CNH-CNY spread ran to the hundreds
+of pips, multiples of the ~223-pip alarm bar (BIS Working Paper No. 446, CNBC 2016-01-12). This is the SAME
+reachability standard net_outages FAILED at R28: cnh_cny passes only because its regime is a documented, sourced world
+event, where net_outages' 8 largest readings adjudicated to no cited event. Banked for the n≥60 review: is the zero
+alarm-direction reach a young-calm-record artifact, or a sign the bar or statistic needs revisiting?
+
+**S2 — the passive-BGP comms-slot probe (probe-only).** A probe, not a build: no fetcher, no scored line, no tier
+change. It tests whether IODA's pre-aggregated passive-BGP signal (RIPE RIS + RouteViews) can pass the reachability
+standard net_outages could not. The keyless endpoint `/v2/signals/raw/country/{CC}?datasource=bgp` returns per-country
+visible-/24 counts at ~0.4h lag; a flicker-beating aggregation — a size-floored 153-country watch-list (≥512 /24s),
+each country's daily-min over its 28-day rolling-median baseline, worst-of across the list — plausibly passes every
+gate: reachable (alarm bar frac 0.583, observed min 0.409, max down-|z| 15.25, the up-side a larger benign rolling-Qn artifact), firing on Syria 2022-05-30 −96.9%
+(z−24.6) and Sudan 2023-04-24 −68.6% (z−9.1); orthogonal (max Pearson 0.167 vs flights, .154 credit, .082 cnh); fresh
+(~0.4h); and structurally immune to the active-probing common-mode that demoted net_outages, because BGP is a passive
+read of route announcements. The load-bearing disclosure: BGP measures route ANNOUNCEMENT, not reachability, so it
+misses the Gaza 2023-10 total blackout (~3.7% BGP drop, z≈−0.4, routes stayed announced). A built line must therefore
+be disclosed as route-WITHDRAWAL detection — the gnss "effective reach 1" precedent — in anchored scale-mode (anchor
+1.0, materiality ≈0.10). Evidence: data/archive/bgp_probe_2026-09-08.csv (committed this round, diagnostic, not
+mirrored). The empty communications slot now has a credible candidate, net_bgp_withdrawal, that would enter at tier-2
+under the ≥60 funnel — but it is NOT built this round; the build is a separate operator decision, and no line is ever
+seated in tier-1 on a reference regime alone.
+
+**S3-S7 — registry bookkeeping.** S3: the Backlog bgp_instability entry is rewritten to the measured finding above
+(IODA is the correct global formulation; RIPEstat single-AS and keyed Cloudflare Radar BGP are not; a DIY collector is
+rejected). S4: flights structural work stays deferred to the two ~Nov reviews (the level-layer extension and the
+fixed-hour re-review, ~7/60); the planned fix is a per-region worst-of-region z (restoring Europe −7.84z / Japan −7.33z
+at the existing 22:30Z hour), and a second sample hour is rejected; the two ADS-B survivors (adsb.fi 900 / adsb.lol
+897, <1% apart) are accepted, the gated hosts and OpenSky recorded so the mirror search is not repeated. S5:
+fed_srf_takeup is named the lead tier-1 challenger on raw merit (1274 scored, |max corr| 0.0998 vs flights, fresh
+NY-Fed T+1, guard 3, three clean >$30bn alarms), the R20 de-cycling debt and R15 anchored-scale gates pointed at it
+and deferred — though it, like any BGP line, is dollar/plumbing, and preserving the empty slot for a comms line is the
+deliberate choice S2 serves. S6: hkma_aggr_balance is flagged before it can count as a promotion candidate — 16
+scattered dark days, worst-in-set reliability (0.871 = 108/124, or 0.888 = 127/143 by the read/rows definition), and a
+|z|>3 on 14/108 days (10 flagged trembles, all benign up) from discrete step-jumps argue for anchored scoring; it is disqualified now. S7: the
+single-credit-slot bar note is refreshed — sofr_iorb_spread is now n=49 with |max corr| 0.231 vs cnh_cny, still
+deferred to n≥60.
+
+**C3 — the per-line STABLE_SINCE map, deferred (no code).** Banked as prose: per-line replay is already
+tier-independent (scoring_attrs omits TIER; 527 rows, 0 divergence since 08-17), and only the summary re-derivation
+loop is tier-sensitive; the lighter fix is a separate TIER_CHANGED_SINCE used only at the summary guard; deferred
+because the restored ~504-row per-line window is daily-checked-while-recent, tier-independent, and frozen — zero
+detection benefit at ~22× the daily --check cost.
+
+Full suite green (gate, audit including radar-metrics freshness, lint stdlib-only in a bare venv, replay 0-divergence,
+pending 0 overdue); radar-metrics.md regenerated; the bgp probe CSV committed as evidence. No served or scored line
+changed this round.

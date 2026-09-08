@@ -48,4 +48,4 @@ fails on it.
 - **cnh_cny maturity refresh** — opened R13 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 58 / 60
 - **level-layer → flights** — opened R23.1 · owner R26 · fires: date >= 2026-11-01 · date = 2026-09-09 / 2026-11-01
 - **cnh_cny reachability reference-regime re-check** — opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 58 / 60
-- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 28 / 30
+- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 29 / 30
