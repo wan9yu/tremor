@@ -11,10 +11,20 @@ Fetcher contract — each module in ``fetchers/`` provides:
     ``obs_date`` to the observation's own date, or duplicate readings will
     quietly shrink the robust-scale baseline — the pseudo-replication the obs-dedup
     rule exists to kill.
+    ``raw_value`` MUST be either ``None`` or a FINITE number (or a string that
+    parses to one) — never ``nan``/``inf``, never a bool, never a string
+    ``float()`` cannot parse. A fetcher does not have to enforce this itself:
+    ``collect()`` darkens any value coerce_finite rejects before it reaches a
+    baseline or the forward-only CSV (see ``coerce_finite``), so a fetcher
+    returning a bad number loses only its own day, the same as one that raises.
+    ``obs_date`` shape validation is OUT OF SCOPE here — this contract covers
+    ``raw_value`` only.
     A fetcher MAY also return ``components``: ``{name: value}``, the breakdown
     the reading was aggregated from (per-strait, per-region, per-provider).
     These are written to ``data/components/<line>.csv`` and are DIAGNOSTIC ONLY —
-    nothing scores them, nothing displays them. See ``write_components``.
+    nothing scores them, nothing displays them. A non-numeric, non-finite, or
+    boolean component value is dropped silently rather than stored or judged;
+    a non-mapping ``components`` writes nothing. See ``write_components``.
   - module attrs: ``LINE``, ``LABEL``, ``UNIT``, ``ANOMALY_DIRECTION``
     ("up"/"down" — the alarm direction; only trembles in this direction feed
     trembling_count), optional ``TIER`` (default 1), optional ``WEEKLY_CYCLE``
@@ -43,6 +53,7 @@ reason — never a fabricated or forward-filled number. The only composite is th
 trembling count; the lines are never multiplied into a single doom score.
 """
 import csv
+import math
 import os
 import shutil
 from datetime import datetime, timezone
@@ -145,6 +156,44 @@ def _fmt(value):
     return str(value)
 
 
+def _stored_float(raw):
+    """The float a raw value becomes once it is rendered and re-parsed — the
+    exact expression ``score_row`` judges and stores, factored out so the
+    collection-time guard (``coerce_finite``) can test it with no risk of the
+    two drifting apart."""
+    return float(_fmt(raw))
+
+
+def coerce_finite(raw):
+    """``(raw, None)`` when ``raw`` may reach ``score_row`` as-is, else
+    ``(None, reason)`` when it must be darkened first.
+
+    ``None`` passes through unchanged (a fetcher's own "no reading"). A bool
+    is treated as non-numeric even though ``float(True) == 1.0`` is finite:
+    ``score_row`` re-renders the stored value through ``_fmt``, and
+    ``_fmt(True)`` is the string ``"True"``, which ``float()`` cannot parse —
+    letting a bool through here would only move the failure one line down.
+    Anything ``_stored_float`` cannot parse, and anything it parses to a
+    non-finite float (``nan``/``inf``/``-inf`` — accepted by ``float()`` and
+    otherwise rendered as the bare string ``'nan'``/``'inf'``), is darkened
+    the same way. On success the ORIGINAL ``raw`` is returned, not the parsed
+    float, so ``score_row`` re-renders it exactly as it does today — no
+    second, potentially different, formatting pass.
+    """
+    if raw is None:
+        return None, None
+    reason = f"non-numeric/non-finite raw_value ({repr(raw)[:40]})"
+    if isinstance(raw, bool):
+        return None, reason
+    try:
+        v = _stored_float(raw)
+    except (ValueError, TypeError):
+        return None, reason
+    if not math.isfinite(v):
+        return None, reason
+    return raw, None
+
+
 def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False,
               quantum=None, anchor=None, materiality=None, weekend_market=False):
     """Judge one reading against ``prior_rows`` and return the CSV row for it.
@@ -161,7 +210,14 @@ def score_row(date, raw, note, obs_date, prior_rows, weekly_cycle=False,
     # every fetcher pre-rounds. The record must be judged from what the record
     # holds.
     if raw is not None:
-        raw = float(_fmt(raw))
+        raw = _stored_float(raw)
+    if raw is not None and not math.isfinite(raw):
+        # Live cannot reach this: collect() darkens through coerce_finite
+        # before this call. A seeder (tools/seedlib.py) or tools/replay.py
+        # casts with a bare float(), which accepts nan/inf and would
+        # otherwise let one slip into the forward-only record silently
+        # (score_row's own caller-side finite check is what closes that).
+        raise ValueError(f"{date}: non-finite raw {raw!r} must be darkened by the caller")
     history, hist_dates, hist_obs = _history(prior_rows, date)
     z, trembling, direction, verdict_note, status = normalize.judge(
         history, hist_dates, hist_obs, raw, obs_date, date,
@@ -315,13 +371,28 @@ def write_components(line, date, components):
     analyses this project has already wanted — a per-strait breadth count, a
     regional rebalancing of the airspace line, a level layer — possible later
     without a time machine.
+
+    A single bad component, or a malformed container, must never cost the
+    line its own scalar reading or abort a later line: a non-mapping
+    ``components`` (a list, a string) would hit ``.items()`` below and raise,
+    so it is refused up front like the fetcher-shape guard in ``collect()``;
+    a component whose value is not a finite, non-bool number is dropped
+    silently — components are diagnostic-only, so there is no verdict to
+    protect by darkening the whole day, only a stray reading to not store.
     """
     if not components:
+        return
+    if not isinstance(components, dict):
+        return
+    kept = {name: value for name, value in components.items()
+            if isinstance(value, (int, float)) and not isinstance(value, bool)
+            and math.isfinite(value)}
+    if not kept:
         return
     path = os.path.join(COMPONENTS, line + ".csv")
     rows = [r for r in _read_rows(path) if r.get("date") != date]
     rows += [{"date": date, "component": name, "value": _fmt(float(value))}
-             for name, value in sorted(components.items())]
+             for name, value in sorted(kept.items())]
     rows.sort(key=lambda r: (r["date"], r["component"]))
     _write_rows(path, COMPONENT_HEADER, rows)
 
@@ -362,6 +433,14 @@ def collect():
         raw = result["raw_value"]
         note = f"{result['source_note']} [sampled {sampled}]"
         obs_date = result.get("obs_date") or ""
+        # A well-shaped result whose raw_value is not a finite number (a
+        # non-numeric string, a bool, nan/inf) is darkened HERE, at collection
+        # time, before it can shrink a rolling baseline or reach the
+        # forward-only CSV as the bare string 'nan'/'inf' — see coerce_finite.
+        raw, reason = coerce_finite(raw)
+        if reason:
+            obs_date = ""
+            note = f"no reading: fetcher returned a {reason} — not scored :: {note}"
         # Any line declaring SAMPLE_TARGET_UTC_H (today flights and cnh_cny) refuses
         # a reading sampled too far from its fixed hour — read the target off the
         # module here, never in scoring_attrs (a collection-time input, not a

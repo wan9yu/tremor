@@ -24,6 +24,7 @@ re-derivation. One owner, one O(n^2) replay per day.
 import csv
 import datetime
 import glob
+import math
 import os
 import re
 import statistics
@@ -542,6 +543,44 @@ class TestFlightsReachClaimBindsToTheRecord(unittest.TestCase):
                       "44% 与 34%", "13%", "9%", "1.2z", "0.8z", "2.0z"):
             self.assertIn(phrase, text,
                           f"docs/index.html: field-of-view copy no longer states {phrase!r}")
+
+
+class TestRecordHasNoNonFiniteValue(unittest.TestCase):
+    """Every stored ``raw_value``/``z_score`` and every component value
+    parses to a FINITE float. ``collect.coerce_finite`` darkens a
+    non-finite ``raw_value`` at the collection boundary, and
+    ``write_components`` drops a non-finite component silently, so this is a
+    free backstop for exactly the failure mode those guards exist to
+    prevent: a stored ``nan``/``inf`` is invisible to ``replay --check``,
+    which only compares strings (``'nan' == 'nan'``) and never asks whether
+    either side is a real number. The record is clean today; this holds it
+    to that.
+    """
+
+    def _assert_all_finite(self, path, fields):
+        with open(path, newline="") as f:
+            for row in csv.DictReader(f):
+                for field in fields:
+                    value = row.get(field)
+                    if not value:
+                        continue
+                    parsed = float(value)
+                    self.assertTrue(
+                        math.isfinite(parsed),
+                        f"{path}: {field}={value!r} on date {row.get('date')} "
+                        f"is not a finite number")
+
+    def test_every_line_raw_value_and_z_score_are_finite(self):
+        paths = sorted(glob.glob(os.path.join(ROOT, "data", "*.csv")))
+        self.assertTrue(paths, "no data/*.csv found to audit")
+        for path in paths:
+            self._assert_all_finite(path, ("raw_value", "z_score"))
+
+    def test_every_component_value_is_finite(self):
+        paths = sorted(glob.glob(os.path.join(ROOT, "data", "components", "*.csv")))
+        self.assertTrue(paths, "no data/components/*.csv found to audit")
+        for path in paths:
+            self._assert_all_finite(path, ("value",))
 
 
 if __name__ == "__main__":

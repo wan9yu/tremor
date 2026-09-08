@@ -4,9 +4,13 @@ through every day, and until now nothing exercised it directly.
 Every test here calls the real `collect()` against stub fetcher modules, with
 the module's own record-directory and workflow-list attributes redirected to
 scratch locations for the block (never a real path under the repository's
-record directory). No stub fetcher ever returns a `components` breakdown, so
-the collector's separate diagnostic-file writer is never reached either. This
-file reads no committed record and is safe in the pre-collect gate.
+record directory). A stub fetcher may return a `components` breakdown via
+`_mod`'s `components=` kwarg, which exercises the collector's separate
+diagnostic-file writer too, through that same scratch-redirected components
+directory — `_CollectCase._run` reads it back by its scratch PATH, never
+through the module attribute the collector itself uses for it (a name
+`test_side_channel.py` forbids spelling out in any `test_*.py`). This file
+reads no committed record and is safe in the pre-collect gate.
 """
 import contextlib
 import io
@@ -25,7 +29,7 @@ from core import normalize
 
 
 def _mod(line, tier=1, direction="down", crash=False, bad=False, raw=1.0,
-         note="stub", target=None, tol=1.5):
+         note="stub", target=None, tol=1.5, components=None):
     """A minimal stand-in for a ``fetchers/*.py`` module."""
     m = types.SimpleNamespace(LINE=line, LABEL=line, UNIT="u", TIER=tier,
                               ANOMALY_DIRECTION=direction)
@@ -38,7 +42,10 @@ def _mod(line, tier=1, direction="down", crash=False, bad=False, raw=1.0,
             raise RuntimeError("source exploded")
         if bad:
             return "not a dict"
-        return {"raw_value": raw, "source_note": note}
+        result = {"raw_value": raw, "source_note": note}
+        if components is not None:
+            result["components"] = components
+        return result
     m.fetch_daily = fetch_daily
     return m
 
@@ -68,7 +75,15 @@ class _CollectCase(unittest.TestCase):
             lines = {mod.LINE: collect._read_rows(os.path.join(scratch, mod.LINE + ".csv"))
                      for mod in mods}
             summary = collect._read_rows(os.path.join(scratch, "summary.csv"))
-        return lines, summary
+            # Read the scratch components directory back BY PATH, not through
+            # the collector's own module-level constant for it (spelling
+            # that out is forbidden in any test_*.py by test_side_channel.py)
+            # — a module with no components breakdown simply reads back an
+            # empty list, since write_components never created its file.
+            components = {mod.LINE: collect._read_rows(
+                              os.path.join(scratch, "components", mod.LINE + ".csv"))
+                         for mod in mods}
+        return lines, summary, components
 
 
 class TestOneBadSourceCannotAbortTheRun(_CollectCase):
@@ -78,7 +93,7 @@ class TestOneBadSourceCannotAbortTheRun(_CollectCase):
     def test_a_crashing_fetcher_does_not_abort_the_run(self):
         crashed = _mod("crashed_line", crash=True)
         healthy = _mod("healthy_line", raw=1.0)
-        lines, _ = self._run([crashed, healthy])
+        lines, _, _ = self._run([crashed, healthy])
 
         (row,) = lines["crashed_line"]
         self.assertEqual(row["status"], normalize.STATUS_DARK)
@@ -91,7 +106,7 @@ class TestOneBadSourceCannotAbortTheRun(_CollectCase):
     def test_a_malformed_result_does_not_abort_the_run(self):
         malformed = _mod("malformed_line", bad=True)
         healthy = _mod("healthy_line", raw=1.0)
-        lines, _ = self._run([malformed, healthy])
+        lines, _, _ = self._run([malformed, healthy])
 
         (row,) = lines["malformed_line"]
         self.assertEqual(row["status"], normalize.STATUS_DARK)
@@ -156,7 +171,7 @@ class TestTierOneOnlyCountingAndTheDarkBlindSplit(_CollectCase):
             _mod("t1_blind_b", tier=1, raw=9.0),
             _mod("t2_blind", tier=2, raw=10.0),
         ]
-        _, summary = self._run(mods, score_row=fake_score_row)
+        _, summary, _ = self._run(mods, score_row=fake_score_row)
 
         (row,) = summary
         self.assertEqual(row["trembling_count"], "2")
@@ -217,6 +232,156 @@ class TestScoringAttrsNeverReachesTheScorerThroughTheLoop(_CollectCase):
         for banned in ("sample_target_utc_h", "SAMPLE_TARGET_UTC_H",
                        "sample_tol_h", "SAMPLE_TOL_H"):
             self.assertNotIn(banned, captured["kwargs"])
+
+
+class TestNonNumericOrNonFiniteRawIsDarkened(_CollectCase):
+    """A fetcher can also return a well-SHAPED result whose ``raw_value`` is
+    not a finite number: ``"banana"``, a bool, or nan/inf (which ``float()``
+    happily accepts). ``coerce_finite`` in ``collect()`` closes that boundary
+    gap — this line must be darkened, exactly like the crashing/malformed
+    fetchers in ``TestOneBadSourceCannotAbortTheRun`` above, and must never
+    let a stored ``'nan'``/``'inf'`` string reach the forward-only CSV."""
+
+    def test_each_bad_raw_shape_is_darkened_and_the_run_continues(self):
+        for bad_raw in ("banana", True, float("nan"), float("inf"), float("-inf")):
+            with self.subTest(raw=bad_raw):
+                bad = _mod("bad_line", raw=bad_raw)
+                healthy = _mod("healthy_line", raw=1.0)
+                lines, _, _ = self._run([bad, healthy])
+
+                (row,) = lines["bad_line"]
+                self.assertEqual(row["status"], normalize.STATUS_DARK)
+                self.assertEqual(row["raw_value"], "")
+                self.assertEqual(row["obs_date"], "")
+                self.assertEqual(row["z_score"], "")
+                self.assertIn("non-numeric/non-finite raw_value", row["source_note"])
+                # The failure this guards against: a stored 'nan'/'inf'
+                # STRING in a SCORED field. (The prose note legitimately
+                # names the rejected value for diagnosis, so it is not
+                # checked here.)
+                for field in ("raw_value", "z_score"):
+                    self.assertNotIn("nan", row[field])
+                    self.assertNotIn("inf", row[field])
+
+                # The run did not stop at the bad line: the line after it
+                # was still collected.
+                (healthy_row,) = lines["healthy_line"]
+                self.assertEqual(healthy_row["raw_value"], "1")
+
+
+class TestGoodRawShapesAreStoredByteIdenticalAcrossTheCoercionStep(_CollectCase):
+    """``coerce_finite``'s new step in ``collect()`` must be invisible to
+    every GOOD ``raw_value``. This pins the exact stored
+    ``raw_value``/``z_score``/``trembling``/``status`` strings for a battery
+    of ordinary shapes a fetcher already returns today (an int, a float with
+    more than four decimals, a float with a trailing zero, a numeric
+    string), so a regression in the new boundary code — re-rendering ``raw``
+    a second time, or losing a string's original precision — fails here even
+    though ``TestNonNumericOrNonFiniteRawIsDarkened`` above only exercises
+    the FAILURE modes ``coerce_finite`` exists for.
+
+    ``tools/replay.py --check`` cannot stand in for this: it re-scores the
+    STORED csv string, never this live coercion step.
+    """
+
+    CASES = [
+        ("int_line", 45, "45"),
+        ("many_decimals_line", 45.12345, "45.1234"),
+        ("trailing_zero_line", 1.0, "1"),
+        ("plain_int_line", 7, "7"),
+        ("numeric_string_line", "45.5", "45.5"),
+    ]
+
+    def test_ordinary_raw_shapes_are_stored_exactly_as_before(self):
+        mods = [_mod(name, raw=raw) for name, raw, _ in self.CASES]
+        lines, _, _ = self._run(mods)
+        for name, _, expected_raw in self.CASES:
+            (row,) = lines[name]
+            self.assertEqual(row["raw_value"], expected_raw)
+            self.assertEqual(row["z_score"], "")
+            self.assertEqual(row["trembling"], "0")
+            self.assertEqual(row["status"], normalize.STATUS_WARMING)
+
+
+class TestCoerceFiniteDirectly(unittest.TestCase):
+    """``coerce_finite`` is the pure predicate ``collect()`` darkens a
+    ``raw_value`` through; exercised directly here so each branch has its
+    own assertion, not just an end-to-end darkened row."""
+
+    def test_none_passes_through_unchanged(self):
+        self.assertEqual(collect.coerce_finite(None), (None, None))
+
+    def test_int_is_kept(self):
+        self.assertEqual(collect.coerce_finite(45), (45, None))
+
+    def test_numeric_string_is_kept(self):
+        self.assertEqual(collect.coerce_finite("45.5"), ("45.5", None))
+
+    def test_non_numeric_string_is_darkened(self):
+        raw, reason = collect.coerce_finite("banana")
+        self.assertIsNone(raw)
+        self.assertIn("banana", reason)
+
+    def test_bool_is_darkened_even_though_float_of_it_is_finite(self):
+        # float(True) == 1.0, finite -- but score_row would then re-render it
+        # through _fmt as the string "True", which float() cannot parse.
+        raw, reason = collect.coerce_finite(True)
+        self.assertIsNone(raw)
+        self.assertIn("True", reason)
+
+    def test_nan_is_darkened(self):
+        raw, reason = collect.coerce_finite(float("nan"))
+        self.assertIsNone(raw)
+        self.assertIn("nan", reason)
+
+    def test_inf_is_darkened(self):
+        raw, reason = collect.coerce_finite(float("inf"))
+        self.assertIsNone(raw)
+        self.assertIn("inf", reason)
+
+    def test_negative_inf_is_darkened(self):
+        raw, reason = collect.coerce_finite(float("-inf"))
+        self.assertIsNone(raw)
+        self.assertIn("-inf", reason)
+
+
+class TestWriteComponentsSkipsBadValuesWithoutCrashing(_CollectCase):
+    """``write_components`` has the same non-numeric/non-finite exposure as
+    ``raw_value``, plus a shape exposure of its own: a non-mapping
+    ``components`` (a list, a string) hits ``.items()`` OUTSIDE any
+    try/except. Neither a single bad component nor a malformed container may
+    cost the line its own scalar reading, let alone abort the line
+    dispatched after it — components are diagnostic-only."""
+
+    def test_bad_components_are_dropped_the_good_sibling_and_scalar_survive(self):
+        mixed = _mod("mixed_components_line", raw=1.0,
+                     components={"good": 2.0, "none_val": None,
+                                 "banana": "banana", "nan_val": float("nan"),
+                                 "inf_val": float("inf")})
+        healthy = _mod("healthy_line", raw=1.0)
+        lines, _, components = self._run([mixed, healthy])
+
+        (row,) = lines["mixed_components_line"]
+        self.assertEqual(row["raw_value"], "1")
+
+        comp_rows = {r["component"]: r["value"]
+                    for r in components["mixed_components_line"]}
+        self.assertEqual(comp_rows, {"good": "2"})
+
+        (healthy_row,) = lines["healthy_line"]
+        self.assertEqual(healthy_row["raw_value"], "1")
+
+    def test_a_non_mapping_components_writes_nothing_and_does_not_abort(self):
+        bad_container = _mod("bad_container_line", raw=1.0, components=["x"])
+        healthy = _mod("healthy_line", raw=1.0)
+        lines, _, components = self._run([bad_container, healthy])
+
+        (row,) = lines["bad_container_line"]
+        self.assertEqual(row["raw_value"], "1")
+        self.assertEqual(components["bad_container_line"], [])
+
+        (healthy_row,) = lines["healthy_line"]
+        self.assertEqual(healthy_row["raw_value"], "1")
 
 
 if __name__ == "__main__":
