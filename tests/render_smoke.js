@@ -246,6 +246,36 @@ function buildAdjPrecedenceFixtureData() {
   };
 }
 
+// T24 (R29 C1): the sysstatus banner's alarm branch (docs/index.html:903) is a
+// TIER1.length-derived MAJORITY rule (`darkCount*2 > TIER1.length`), not the
+// old hard-coded `darkCount>=3` -- at today's TIER1.length=3 that is 2-of-3,
+// not 3-of-3. The date must be RUNTIME China-today (not a fixed fixture date)
+// -- gapDays is computed from `nowChinaMidnight()`, which reads the real
+// clock, so a stale date would make gapDays>=2 true and the EARLIER disrupt
+// branch (:902) fire first, and the assertion below would then check
+// disruptH/disruptB and never actually reach :903 at all. darkNames is built
+// from each TIER1 line's own today-row (hasToday/isClosed), not from the
+// summary row, so making darkCount*summary agree with reality means marking
+// 2 of the 3 tier-1 lines actually dark (raw_value:"", status:"dark"), not
+// just setting a summary count.
+const RUNTIME_TODAY = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+function buildDarkAlarmFixtureData() {
+  const lines = {
+    // 2 of 3 tier-1 lines dark today (same shape as the net_outages dark
+    // fixture row above: raw_value:"" via the fixtureRow default, status:"dark").
+    flights: [fixtureRow({ date: RUNTIME_TODAY, status: "dark",
+      source_note: "fixture: dark (ADS-B feed down)" })],
+    credit_spread: [fixtureRow({ date: RUNTIME_TODAY, status: "dark",
+      source_note: "fixture: dark (FRED feed down)" })],
+    // the third tier-1 line has a real reading today -- NOT dark -- so this
+    // is genuinely 2-of-3, not 3-of-3.
+    cnh_cny: [fixtureRow({ date: RUNTIME_TODAY, raw_value: "10", z_score: "0.3",
+      trembling: "0", direction: "up", status: "scoring" })],
+  };
+  const summary = [{ date: RUNTIME_TODAY, trembling_count: "0", dark_count: "2", blind_count: "0" }];
+  return { summary, dates: [RUNTIME_TODAY], lines, annotations: [], annoMap: new Map(), stuck: [] };
+}
+
 (async () => {
   try {
   await load();
@@ -421,6 +451,32 @@ function buildAdjPrecedenceFixtureData() {
             + `(a method annotation must not block the common-mode lean's hatch)`);
       }
     } catch (e) { errors.push(`adj2 render(${lang}): ${e.stack || e}`); }
+  }
+
+  // T24 (R29 C1): sysstatus alarm banner fires on a TIER1.length-derived
+  // MAJORITY (2-of-3 today), not the old hard-coded 3-of-3. Assert the
+  // alarmDark-SPECIFIC text in both languages -- a className-only check
+  // ("alarm") cannot distinguish this branch from the disrupt branch just
+  // above it (:902), which also sets className "sysstatus alarm".
+  const darkAlarmFixture = buildDarkAlarmFixtureData();
+  for (const lang of ["en", "zh"]) {
+    global.document.cookie = "tremor_lang=" + lang;
+    setDATA(darkAlarmFixture);
+    appendedNodes = [];
+    try {
+      render();
+      sweepForBadValues("darkalarm-" + lang);
+      const Tl = T[lang];
+      const st = el("sysstatus");
+      const expectH = Tl.alarmDarkH(2, 3);
+      if (st.className !== "sysstatus alarm") {
+        errors.push(`darkalarm(${lang}): expected className "sysstatus alarm", got "${st.className}"`);
+      }
+      if (!st.innerHTML.includes(expectH)) {
+        errors.push(`darkalarm(${lang}): expected the alarmDarkH(2,3) text "${expectH}" in the `
+          + `sysstatus banner, got: ${st.innerHTML}`);
+      }
+    } catch (e) { errors.push(`darkalarm render(${lang}): ${e.stack || e}`); }
   }
 
   await new Promise(r => setTimeout(r, 50));

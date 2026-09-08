@@ -900,7 +900,7 @@ function render(){
   const st=document.getElementById("sysstatus"); st.hidden=false;
   if(!last){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].nodata}</span>`; }
   else if(gapDays>=2){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].disruptH}</span>${T[lang].disruptB(last.date,gapDays)}`; }
-  else if(darkCount>=3){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].alarmDarkH(darkCount,TIER1.length)}</span>${T[lang].alarmDarkB(darkNames.join(", "))}`; }
+  else if(darkCount*2>TIER1.length){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].alarmDarkH(darkCount,TIER1.length)}</span>${T[lang].alarmDarkB(darkNames.join(", "))}`; }
   else if(darkCount>=1){ st.className="sysstatus warn"; st.innerHTML=`<span class="h">${T[lang].warnH(darkCount)}</span>${T[lang].warnB(darkNames.join(", "))}`; }
   else { st.className="sysstatus ok"; st.innerHTML=`<span class="h">${T[lang].statusOk}</span>`+(gapDays>=1?T[lang].awaiting(last.date):""); }
 
