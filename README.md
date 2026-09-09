@@ -4,13 +4,14 @@
 
 中文：tremor 是一台诚实的、长期运行的仪器，回答"这个世界是不是真的更乱了"。它**不预言**末日——是地震仪，不是先知。
 
-tremor watches a few **tension indicators**: guarded equilibria that something powerful normally holds still. When one moves anyway, a larger — often hidden — force has overpowered its guard. Three lines, each guarding a different domain:
+tremor watches a few **tension indicators**: guarded equilibria that something powerful normally holds still. When one moves anyway, a larger — often hidden — force has overpowered its guard. Four lines, each guarding a different domain:
 
 - **Flights airborne** — airspace (community ADS-B)
 - **US high-yield credit spread** — financial system (FRED)
 - **Offshore−onshore yuan spread** — capital controls (CNH−CNY)
+- **Fed SRF take-up** — financial plumbing / US dollar funding (NY Fed markets API)
 
-(The communications slot ran **Internet outages** — how many countries are dark at once, via IODA — until R28 demoted that line to tier-2 after its eight largest readings adjudicated as artifacts; it now rides in the watchlist and the primary slot is left empty and disclosed.)
+(The communications slot ran **Internet outages** — how many countries are dark at once, via IODA — until R28 demoted that line to tier-2 after its eight largest readings adjudicated as artifacts. R30 filled the open primary slot with **Fed SRF take-up** — a fourth financial line whose two standing gates cleared — rather than a communications line, because the sole comms candidate was still unbuilt; communications now rides the watchlist as a passive-BGP route-withdrawal line, the standing candidate for a future slot.)
 
 The primary set is chosen and re-chosen by a scored radar process — see `radar.md` for the
 current tiers, the metrics, and every calibration decision. A larger watchlist rides
@@ -21,7 +22,7 @@ confounder-subtractor), and one control line with no world in it at all.
 
 Each line is normalized on its own (most against their own recent history with a robust z-score; a few pegged or near-constant lines are scored against a declared anchor and materiality instead, because "normal" for a $1 peg is the peg, not a rolling window; lines with a known weekly rhythm are de-cycled by weekday so a routine weekend dip doesn't false-trigger); they are never combined into a single doom score. What matters is **resonance** — how many lines are trembling at once. Several independent instruments screaming together is what "actually more disordered" looks like; one moving alone is just a local event.
 
-The dashboard states its own **field of view**: the three primary lines watch airspace over four fixed regions (W/C Europe, US East, US West, Japan/E Asia — but at the sample hour only the two US regions hold enough share to move the line's alarm), US high-yield credit, and the onshore/offshore yuan. (The communications slot ran worldwide internet reachability until R28 demoted that line to tier-2 — its eight largest readings adjudicated, none a cited world event — so the slot is left empty and disclosed.) Strain outside that can be entirely real and still read 0 — and because each line is scored against its own recent history, a disorder that has already been running for weeks sits inside its own baseline and reads calm too. Both limits are written down in `radar.md`. The second one is why a separate **level layer** (`tools/level_layer.py`) walks the per-strait record for states that are stuck broken, and why the dashboard carries a second headline — how many guarded states are broken right now. It is what says, while every scored line reads calm, that the Strait of Hormuz has been stuck far below its pinned normal since April (the current ratio, and any other broken states, are on the dashboard).
+The dashboard states its own **field of view**: the four primary lines watch airspace over four fixed regions (W/C Europe, US East, US West, Japan/E Asia — but at the sample hour only the two US regions hold enough share to move the line's alarm), US high-yield credit, the onshore/offshore yuan, and daily Fed Standing Repo Facility take-up (US dollar-funding plumbing). (The communications slot ran worldwide internet reachability until R28 demoted that line to tier-2 — its eight largest readings adjudicated, none a cited world event; R30 filled the open slot with a fourth financial line, and communications now rides tier-2 as a passive-BGP route-withdrawal candidate.) Strain outside that can be entirely real and still read 0 — and because each line is scored against its own recent history, a disorder that has already been running for weeks sits inside its own baseline and reads calm too. Both limits are written down in `radar.md`. The second one is why a separate **level layer** (`tools/level_layer.py`) walks the per-strait record for states that are stuck broken, and why the dashboard carries a second headline — how many guarded states are broken right now. It is what says, while every scored line reads calm, that the Strait of Hormuz has been stuck far below its pinned normal since April (the current ratio, and any other broken states, are on the dashboard).
 
 Missing data is never faked or hidden: a source going dark is recorded as a gap, and a prolonged collection blackout is shown as its own "system disruption" — because the instrument itself falling silent is a kind of tremor.
 
@@ -36,7 +37,7 @@ pip install -r requirements.txt
 python collect.py && python render.py
 ```
 
-All three primary lines run keyless (flights, yuan spread, and the credit spread via a public FRED fallback). Adding a free `FRED_API_KEY` as a repo Secret just gives the credit line its primary, keyed source.
+All four primary lines run keyless (flights, yuan spread, Fed SRF take-up via the NY Fed markets API, and the credit spread via a public FRED fallback). Adding a free `FRED_API_KEY` as a repo Secret just gives the credit line its primary, keyed source.
 
 ## Machine-checked claims
 
@@ -44,6 +45,6 @@ A few numbers in this document are checked against the code by `tests/lint_publi
 
 | claim | value |
 |---|---|
-| primary (tier-1) lines | 3 |
+| primary (tier-1) lines | 4 |
 | status values `core/normalize.py` can emit | 6 |
-| primary lines that run keyless | 3 |
+| primary lines that run keyless | 4 |

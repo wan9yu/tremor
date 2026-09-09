@@ -70,7 +70,19 @@ from core import normalize
 # 2026-09-08 summary row (0/0/0) re-derives byte-exact with net_outages dropped from
 # the tier-1 set — --check stays 0-divergence. Dated to the first collection the new
 # tiering governs.
-STABLE_SINCE = "2026-09-08"
+#
+# 2026-09-09 — round 30: fed_srf_takeup is PROMOTED tier-2 -> tier-1, filling the
+# OPEN primary slot net_outages vacated at R28 (roster back to 4/4, with a
+# financial-plumbing line, not a comms one — see radar-log.md R30), its two standing
+# gates cleared. A TIER change
+# alters the summary re-derivation, which counts tier-1 lines only (see main()
+# below), so the headline reconstruction must be pinned from this date. fed_srf did
+# not tremble/dark/blind on 2026-09-09: its row is `stale` (obs_date 2026-09-04
+# already recorded), which counts toward neither the trembling, dark nor blind
+# tally, so the 2026-09-09 summary row (0/0/0) re-derives byte-exact with fed_srf
+# added to the tier-1 set — --check stays 0-divergence. Dated to the first
+# collection the new tiering governs.
+STABLE_SINCE = "2026-09-09"
 
 
 def replay_line(mod, since=None):

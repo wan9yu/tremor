@@ -66,9 +66,14 @@ normal is a declared constant (full route visibility), not a rolling window, so
 z = (raw − 1.0) / 0.10 and the alarm at 3·MATERIALITY lands at a 30% worst-of
 withdrawal (fraction 0.70). The cited events clear it strongly — Syria
 2022-05-30 fraction 0.031 → z −9.69, Sudan 2023-04-24 fraction 0.314 → z −6.86 —
-while the structural benign floor (a few countries with large diurnal BGP swings
-sit near fraction 0.75) reads a visible bump that does not fire, and Gaza's
-~0.96 reads z ≈ −0.4. A rolling Qn was rejected by the probe: on very calm days
+while on a calm window the structural benign floor (a few countries with large
+diurnal BGP swings sit near fraction 0.75) reads a visible bump that does not
+fire, and Gaza's ~0.96 reads z ≈ −0.4. BASE RATE, not a bump-only line: the
+anchored bar fires ~21% of the full seed (352/1673 days) — it flags CHRONIC
+route-withdrawal states each day (Sudan/Iraq/Syria ≈ 48% of runs) — versus the
+probe's rolling-Qn ~5% on the recent calm 2026 window; a pre-tier-1-promotion
+calibration item (sustained-duration variant, or re-set materiality /
+chronic-state handling) — see radar.md. A rolling Qn was rejected by the probe: on very calm days
 the worst-of near 1.0 against a tight early-window Qn threw degenerate large
 POSITIVE z (a benign-direction artifact), the same corner stablecoin_peg and
 fed_srf_takeup hit; the declared anchor removes it and still fires on every
@@ -99,8 +104,10 @@ TIER = 2  # built R30 as the communications-slot route-withdrawal candidate; it
 # declared constant, not a rolling window — see collect.py's fetcher contract and
 # normalize.robust_z. z = (raw − 1.0) / 0.10; the alarm at 3·MATERIALITY is a 30%
 # worst-of withdrawal (fraction 0.70), set below the structural benign floor
-# (~0.75, from countries with large diurnal BGP swings) so ordinary days read a
-# bump, not a tremble, and above Gaza's ~0.96 access-layer miss.
+# (~0.75, from countries with large diurnal BGP swings) so on a calm window
+# ordinary days read a bump, not a tremble; the full seed fires ~21%, driven by
+# chronic route-withdrawal states — see radar.md. Set above Gaza's ~0.96
+# access-layer miss.
 ANCHOR = 1.0        # full route visibility (daily-min == the country's own baseline)
 MATERIALITY = 0.10  # fraction; alarm at 3×0.10 below the anchor → fraction 0.70.
 # Fires: Syria 2022-05-30 frac 0.031 → z −9.69, Sudan 2023-04-24 frac 0.314 →

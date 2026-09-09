@@ -889,3 +889,91 @@ detection benefit at ~22× the daily --check cost.
 Full suite green (gate, audit including radar-metrics freshness, lint stdlib-only in a bare venv, replay 0-divergence,
 pending 0 overdue); radar-metrics.md regenerated; the bgp probe CSV committed as evidence. No served or scored line
 changed this round.
+
+### Round 30 — 2026-09-09 (the promote-one round: fed_srf_takeup fills the open primary slot at 4/4)
+
+A tier-move round. The board was scored whole, one line cleared count + orthogonality + freshness + real-guard + its
+own standing gates at once, and it was promoted — the first tier-1 addition since the net_outages demotion at R28 left
+the roster at 3/4. fed_srf_takeup goes tier-2 → tier-1, filling the open primary slot back to 4/4. The round also
+records the domain decision that filling it made, and the tier-2 BGP line built to carry communications forward.
+
+**The pick — fed_srf, on the data.** The R29 board had already named fed_srf_takeup the lead tier-1 challenger on raw
+merit; the whole-board re-score confirmed it as the most orthogonal candidate for the open slot: |max Pearson| 0.008 vs
+credit_spread (shared-date n=750), 0.10 vs flights (n=45), 0.10 vs cnh_cny (n=40) — a distinct dollar-plumbing domain,
+not a second reading of one already covered, on 1,274 scored days overall. Fresh (NY-Fed T+1), guard 3, reach 3, three
+clean >$30bn scarcity alarms on a 1,283-row
+seed back to SRF inception (2021-07-28). Nothing else on the board cleared every gate at once.
+
+**The gate-work — both standing gates cleared.** Promotion pointed at the two gates the registry had parked against this
+exact line; both were worked and both cleared on the data (full analysis in the R30 gate-work report; the figures below
+are cited from it).
+
+- **R20 calendar de-cycling debt — CLEARS, on two independent grounds.** First, it is structurally MOOT for an anchored
+  line: normalize.robust_z's materiality branch returns (today − anchor) / materiality and reads only `today`, never the
+  rolling window — no median centre, no Qn scale, no weekday de-cycling term on that path — so month/quarter-end
+  baseline-warping cannot move fed_srf's z at all. Second, even ignoring mootness, the month-turn friction band tops at
+  $26.0bn (z 2.60), $4.0bn (0.40 z) below the $30bn / 3×MATERIALITY alarm; no routine reading anywhere lands in the
+  z 2.60 → 3.05 gap. Routine month/quarter-end reserve-friction ops do not approach the alarm.
+
+- **R15 anchored-scale gates — CLEAR.** MATERIALITY is validated: the routine (non-alarm) take-up distribution is
+  median $0, p90 $10m, p95 $100m, max-routine z 2.60, with a clean 0.45 z empty gap between the z-2.60 friction ceiling
+  and the z-3.05 lowest fire — no reading falls inside it. 85.4% of nonzero routine days are <$100m dust at z<0.01,
+  exactly the docstring's claim. The episode / serial-dependence overlay: the 3 alarms (2025-10-31 z 5.04, 2025-12-31
+  z 7.46 the record, 2026-02-17 z 3.05) are 3 DISTINCT single-day episodes 61 and 48 days apart, each a solitary spike
+  (its neighbours sit below the alarm), full-series lag-1 autocorr 0.406 — no two trembling days adjacent, so 3
+  trembling days = 3 episodes, 1:1. Unlike a second credit-family line (lag-1 0.986-0.993, day-counts ~8× episode
+  counts), this does not threaten the headline's iid null.
+
+**The promotion.** fed_srf_takeup.TIER 2 → 1, applied across every surface that reads it: the fetcher module,
+docs/index.html's `const LINES` (tier:1, plus the `watches` field the coverage line and covModal need for a tier-1
+line), collect.py's LINES grouping, and radar.md's tier tables (the row moved into Tier 1; the counts 3→4 primary; tier-2
+candidates net 14→14 this round — one out via this promotion, one in via the BGP build). The customer copy's
+tier-1-count claims move with it — "three primary lines" → "four" and "三条主线"
+→ "四条主线" in the `const T` block, and the README prose ("Three lines"/"three primary lines") plus its
+machine-checked-claims table (primary lines 3→4, keyless 3→4, fed_srf being keyless) — all kept green under the R29 C2
+parity lint. The C1 darkCount majority banner now spans 4 lines by its own `darkCount*2 > TIER1.length` rule; the
+render_smoke fixture that exercised it was updated from a 2-of-3 to a genuine 3-of-4 majority.
+
+**STABLE_SINCE.** A tier change alters the summary re-derivation (replay reconstructs the headline counts from each
+line's CURRENT tier), so STABLE_SINCE is bumped 2026-09-08 → 2026-09-09 — the first collection the new tiering governs
+— with a dated ledger entry (kept in order for the lint_ssot T6 constraint). fed_srf did not tremble/dark/blind on
+2026-09-09: its row is stale (obs_date 2026-09-04 already recorded), counting toward none of the three tallies, so the
+2026-09-09 summary row (0/0/0) re-derives byte-exact with fed_srf added to the tier-1 set. `replay.py --check` is
+0-divergence.
+
+**The domain decision.** The open slot had been reserved, in intent, for a communications line to replace the demoted
+net_outages. But the sole comms candidate — a passive-BGP route-withdrawal line — was still unbuilt when the promotion
+came due, and an empty disclosed slot with a data-backed financial line waiting is worse than a fourth financial line
+filling it. So the slot takes fed_srf: the tier-1 domains are now airspace + credit + capital-controls + dollar-plumbing
+(three financial, one airspace). Communications is not abandoned — it now rides tier-2 as net_bgp_withdrawal, the
+standing candidate for a future slot, to earn tier-1 over the ≥60-scored funnel like any other line, not by
+declaration. The mild cost (three of four primary lines now financial) is recorded openly against the benefit of a
+proven, orthogonal, fresh instrument over an empty slot.
+
+**The BGP build.** net_bgp_withdrawal is BUILT at tier-2 — the route-WITHDRAWAL candidate the R29 probe validated.
+Passive-BGP worst-of route visibility over a size-floored 153-country watch-list (median daily-median visible-/24 ≥
+512), each country's daily-min ÷ its 28-day rolling-median baseline, worst-of across the list, scored DOWN in anchored
+scale-mode (ANCHOR 1.0, MATERIALITY 0.10 → alarm at fraction 0.70, below the ~0.75 structural benign floor). It fires
+strongly on the cited events (Syria 2022-05-30 z −9.69, Sudan 2023-04-24 z −6.86) and is structurally immune to the
+active-probing common-mode that demoted net_outages — BGP is a passive read of route announcements, with no probe
+vantage to lose. BASE-RATE CALIBRATION, recorded pre-promotion: the anchored bar (frac<0.70) fires ~21% of the full
+seed (352/1673 days) — NOT a bump-only line — because it flags CHRONIC route-withdrawal states each day (Sudan 61 /
+Iraq 58 / Syria 51 ≈ 48% of runs, Cameroon 40; by year 6%/25%/34%/25%/10%), versus the probe's rolling-Qn ~5% on the
+recent calm 2026 window (the anchored bar itself reads ~6.4% on 2026-03..09). So "ordinary days read a bump, not a
+tremble" holds only on a calm window; before any tier-1 promotion the line needs a calibration pass — a
+sustained-duration variant, or a re-set materiality / explicit chronic-state handling — so the count reflects new
+withdrawals, not standing ones. DISCLOSURE (the gnss "effective reach 1" precedent): it measures route ANNOUNCEMENT,
+not reachability, so it catches shutdowns/cable-cuts/transit failures that WITHDRAW prefixes but MISSES access-layer
+blackouts where routes stay announced (Gaza 2023-10's total blackout read only ~−4%, the ASes announcing into the
+dark). It closes the withdrawal subclass of the communications question, not the whole of it.
+
+**Pending.** fed_srf's two gate items are closed as cleared: the R15 anchored-scale gate still stands for stablecoin_peg
+(tier-2, unpromoted) and any future anchored line, and the R20 de-cycling item's tga_days_cash warp remains noted (tga
+is not a promotion candidate). The usd_xccy_basis parking review's R30 sourcing re-probe fell inside this focused
+promote-one round and was not run; its standing keyless-exhausted finding holds and the cadence is rolled to R40. Every
+other pending item stands.
+
+Full suite green (gate, audit including radar-metrics freshness + round-index parity + no-overdue + retracted-phrase,
+lint stdlib-only in a bare venv including the lint_registry TIER parity and the C2 tier-1-count lint, replay
+0-divergence, pending 0 overdue); render_smoke passes both languages, the headline reading "of 4"; radar-metrics.md
+regenerated to reflect the tier change and the closed pending items.

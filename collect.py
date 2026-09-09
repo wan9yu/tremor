@@ -68,20 +68,22 @@ from fetchers import (capital_premium, chokepoint, cnh_cny, control_daylength,
                       vix)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
-# (airspace / financial system / capital controls), so several trembling at once
-# means more than any one moving alone. The communications slot ran net_outages
-# until R28 demoted it to tier-2 (its 8 largest readings adjudicated, none a cited
-# world event); that tier-1 slot is now left empty and disclosed. Tier-2 lines ride
+# (airspace / financial system / capital controls / financial plumbing), so
+# several trembling at once means more than any one moving alone. The communications
+# slot ran net_outages until R28 demoted it to tier-2 (its 8 largest readings
+# adjudicated, none a cited world event); R30 filled the OPEN primary slot (roster
+# back to 4/4) with fed_srf_takeup — a 4th financial line, its two gates cleared — rather than a comms
+# line, because the sole comms candidate was still unbuilt (comms now rides tier-2 as
+# net_bgp_withdrawal, the standing candidate for a future slot). Tier-2 lines ride
 # along to build history until they earn promotion. The grouping below is a reading
 # aid; ``TIER`` on each module is what actually decides.
-LINES = [flights, credit_spread, cnh_cny,               # tier 1 (primary, displayed)
+LINES = [flights, credit_spread, cnh_cny, fed_srf_takeup,  # tier 1 (primary, displayed)
          net_outages, net_bgp_withdrawal,               # tier 2 (comms: demoted R28 / built R30)
          gnss, capital_premium, grid_frequency,         # tier 2 (demoted)
          chokepoint, sofr_iorb, em_oas, ports,          # tier 2 (candidates)
          euro_hy_spread, fx_parallel_premium, hkma_aggr_balance,  # tier 2 (built round 8)
          tga_days_cash,                                 # tier 2 (built round 11)
          stablecoin_peg,                                # tier 2 (built round 14)
-         fed_srf_takeup,                                # tier 2 (built round 20)
          gdelt, gdelt_tone, vix, polar_temp, space_weather,  # tier 2 (context, never promotable)
          control_daylength]                             # tier 2 (CONTROL — no world in it)
 

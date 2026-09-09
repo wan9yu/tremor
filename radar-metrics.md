@@ -15,6 +15,7 @@ days into runs (module docstring). `mature` marks scored >= 60 — the tier-1 pr
 | flights | 1 | 80 | 80 | 0 | 70 | 0.19 | 2 | 0 | 2 | 1 | 0.307 | yes | 2026-09-09 |
 | credit_spread | 1 | 837 | 836 | 1 | 801 | 3.07 | 66 | 0 | 8 | 36 | 0.986 | yes | 2026-09-07 |
 | cnh_cny | 1 | 80 | 76 | 4 | 58 | 0.19 | 0 | 5 | 0 | 0 | 0.270 | no | 2026-09-08 |
+| fed_srf_takeup | 1 | 1283 | 1283 | 0 | 1274 | 5.11 | 3 | 0 | 3 | 1 | 0.406 | yes | 2026-09-04 |
 | net_outages | 2 | 1683 | 1671 | 12 | 1661 | 4.59 | 60 | 0 | 39 | 7 | 0.362 | yes | 2026-09-07 |
 | net_bgp_withdrawal | 2 | 1673 | 1673 | 0 | 1673 | 4.58 | 352 | 0 | 90 | 30 | 0.599 | yes | 2026-09-08 |
 | gnss_interference | 2 | 1503 | 1503 | 0 | 1485 | 4.09 | 49 | 1 | 28 | 10 | 0.895 | yes | 2026-09-07 |
@@ -29,7 +30,6 @@ days into runs (module docstring). `mature` marks scored >= 60 — the tier-1 pr
 | hkma_aggr_balance | 2 | 144 | 128 | 16 | 109 | 0.48 | 0 | 10 | 0 | 0 | 0.165 | yes | 2026-09-08 |
 | tga_days_cash | 2 | 36 | 36 | 0 | 15 | 0.06 | 0 | 0 | 0 | 0 | 0.716 | no | 2026-09-04 |
 | stablecoin_peg | 2 | 2152 | 2152 | 0 | 2148 | 5.89 | 3 | 0 | 2 | 2 | 0.417 | yes | 2026-09-07 |
-| fed_srf_takeup | 2 | 1283 | 1283 | 0 | 1274 | 5.11 | 3 | 0 | 3 | 1 | 0.406 | yes | 2026-09-04 |
 | gdelt | 2 | 62 | 62 | 0 | 47 | 0.14 | 0 | 0 | 0 | 0 | 0.659 | no | 2026-09-07 |
 | gdelt_tone | 2 | 62 | 62 | 0 | 47 | 0.14 | 1 | 0 | 1 | 1 | 0.460 | no | 2026-09-07 |
 | vix | 2 | 242 | 242 | 0 | 212 | 0.83 | 13 | 0 | 5 | 6 | 0.905 | yes | 2026-09-07 |
@@ -49,4 +49,4 @@ fails on it.
 - **cnh_cny maturity refresh** — opened R13 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 58 / 60
 - **level-layer → flights** — opened R23.1 · owner R26 · fires: date >= 2026-11-01 · date = 2026-09-09 / 2026-11-01
 - **cnh_cny reachability reference-regime re-check** — opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 58 / 60
-- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 30 · round = 29 / 30
+- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 40 · round = 30 / 40

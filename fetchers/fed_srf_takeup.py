@@ -1,4 +1,4 @@
-"""Fed SRF take-up — borrowing from the plumbing's own ceiling (tier 2).
+"""Fed SRF take-up — borrowing from the plumbing's own ceiling (tier 1).
 
 Guarded equilibrium: the Fed's Standing Repo Facility (SRF) is a full-allotment
 backstop offered every business day (a morning and an afternoon operation) that
@@ -24,8 +24,10 @@ deliberately ABOVE the routine post-2025 month/quarter-end friction band
 (~$20-26bn -> z 2.0-2.6, a visible bump that does NOT fire), so only genuine
 scarcity trembles: replayed over the whole record it fires on exactly the three
 >$30bn days and nothing else. The month-end clustering below the alarm is a
-calendar structure this line does not yet de-cycle — acceptable for a tier-2 line
-banking history, to be handled before any tier-1 promotion.
+calendar structure this line does not de-cycle — and R30 measured that it need
+not: the anchored z reads only today (normalize.robust_z's materiality branch,
+no rolling window), so month/quarter-end baseline-warping cannot move it, and the
+friction band tops at $26bn (z 2.60), $4bn under the $30bn alarm.
 
 Source: NY Fed markets API repo operation results (keyless). The live line reads
 the most recent operations; the seeder pulls the full range off the same shape, so
@@ -44,7 +46,14 @@ LINE = "fed_srf_takeup"
 LABEL = "Fed SRF take-up — daily Standing Repo Facility borrowing ($m)"
 UNIT = "$m"
 ANOMALY_DIRECTION = "up"
-TIER = 2
+TIER = 1  # PROMOTED R30 to tier-1, filling the OPEN primary slot net_outages
+          # vacated at R28 (roster back to 4/4; slot 4 itself is cnh_cny, user-decided).
+          # Both standing gates cleared on the data: de-cycling is moot for an
+          # anchored line (z reads only today; friction band tops z 2.60, $4bn under
+          # the $30bn alarm) and MATERIALITY is validated (0.45z gap to the lowest
+          # fire, 85% of nonzero days <$100m dust, 3 distinct single-day episodes,
+          # lag-1 0.406). A 4th financial line (dollar-plumbing), not a comms line;
+          # comms is now the tier-2 net_bgp_withdrawal candidate. See radar-log.md R30.
 # Anchored scale-mode (round 15 mechanism): normal is the defended $0 facility,
 # not a rolling window — see the fetcher contract in collect.py and
 # normalize.robust_z. MATERIALITY is set above the post-2025 month/quarter-end
@@ -59,9 +68,9 @@ MATERIALITY = 10000   # $m; alarm at 3*10,000 = $30bn. Dust (<$100m PM ops) -> z
                       # count of three is a descriptive replay output, and the
                       # lowest of them (02-17) clears the bar by only ~$0.5bn — if a
                       # re-pull ever revised it under $30bn it would simply read as a
-                      # bump, which is honest, not a regression. Declared, so
-                      # replay-validate before any promotion; a de-cycling pass (this
-                      # repo has none) is the promotion gate.
+                      # bump, which is honest, not a regression. R30 replay-validated
+                      # this MATERIALITY and found the de-cycling debt moot for an
+                      # anchored line (see the docstring), clearing the promotion gate.
 
 _SEARCH = "https://markets.newyorkfed.org/api/rp/results/search.json"
 _LAST = "https://markets.newyorkfed.org/api/rp/all/all/results/last/{n}.json"
