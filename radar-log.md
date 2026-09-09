@@ -977,3 +977,45 @@ Full suite green (gate, audit including radar-metrics freshness + round-index pa
 lint stdlib-only in a bare venv including the lint_registry TIER parity and the C2 tier-1-count lint, replay
 0-divergence, pending 0 overdue); render_smoke passes both languages, the headline reading "of 4"; radar-metrics.md
 regenerated to reflect the tier change and the closed pending items.
+
+### Round 31 — 2026-09-09 (net_bgp_withdrawal calibration: anchored MATERIALITY 0.10 → 0.20, seed re-scored)
+
+A one-line calibration-correction round on the R30 BGP build. R30 recorded net_bgp_withdrawal's ~21% seed fire rate as
+a pre-promotion calibration item; this round makes the correction, one day later, before the tier-2 candidate is ever
+counted in any headline.
+
+**The correction.** The R30 build set the anchored MATERIALITY to 0.10 (alarm at a 30% worst-of route drop, fraction
+0.70) to match the R29 probe's rolling-Qn fired/benign separation (~5% on the recent calm window). On the anchored full
+seed that bar fired ~21% (352/1673 days) — it flags CHRONIC route-withdrawal states each day (Sudan 61 / Iraq 58 /
+Syria 51 ≈ 48% of runs, Cameroon 40) rather than the withdrawal EVENTS the line exists to catch, so the 0.10 never
+achieved its intended separation on the anchored line. R31 tightens MATERIALITY to 0.20 (alarm at a ≥60% withdrawal,
+fraction 0.40): the seed fire rate drops to 8.7% (145/1673 down-trembles), and both cited events are preserved — Syria
+2022-05-30 frac 0.031 z −9.69 → −4.84, Sudan 2023-04-24 frac 0.314 z −6.86 → −3.43. 0.20 is the CHOSEN value, not a
+hard tightest: strictly any materiality ≤ ~0.229 still fires Sudan (frac 0.314 → 0.22 gives z −3.12), and a materiality
+of 0.23 or tighter would drop it.
+
+**What 0.20 did and did NOT fix.** Tightening resolved the BASE-RATE over-fire (21% → 8.7%) but did NOT make the count
+reflect new withdrawals rather than standing ones: the re-scored fires are STILL dominated by chronic states — Syria 49
+/ Iraq 39 / Sudan 16 = 104 of 145 fires (~72%), UP from ~48% at 0.10, because raising the bar drops the shallow benign
+floor faster than it drops the deep chronic withdrawals. So chronic-state handling — a sustained-duration variant, or
+per-country / explicit chronic-state handling — REMAINS the pre-promotion calibration item; only the base-rate half of
+the R30 item is resolved.
+
+**The re-score, forward-only.** The committed seed (2022-02-09 → 2026-09-08) was re-scored at 0.20 through the same
+anchored path collect.score_row uses — z = (raw − 1.0) / 0.20 — with raw_value, the MEASUREMENT, left byte-for-byte
+unchanged; only z_score and trembling recompute (direction stays down, status stays scoring on every row). The whole
+seed predates STABLE_SINCE (2026-09-09) and net_bgp_withdrawal is tier-2 (uncounted), so replay --check does not
+re-derive the seed rows and the summary is unaffected: replay --check stays 0-divergence, no STABLE_SINCE bump, no
+headline change. Because the z_scores changed, the correction is recorded in a 2026-09-09 method annotation
+(data/annotations.csv, mirrored byte-for-byte to docs/data/) under the forward-only protocol, and the pre-correction
+(MATERIALITY 0.10) scoring is preserved at commit 7f0eb08 — this is a calibration of
+a one-day-old, never-counted tier-2 candidate that did not achieve its declared intent, not a scoring-policy change to a
+mature line.
+
+**Pending.** The R30 net_bgp_withdrawal calibration item is NARROWED, not closed: its base-rate over-fire half is
+resolved (21% → 8.7%), while chronic-state handling remains open as the pre-promotion calibration item. Every other
+pending item stands.
+
+Full suite green (gate, audit including radar-metrics freshness + round-index parity + no-overdue + retracted-phrase,
+lint stdlib-only in a bare venv including lint_registry TIER parity, replay 0-divergence, pending 0 overdue);
+radar-metrics.md regenerated.

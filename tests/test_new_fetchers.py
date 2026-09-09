@@ -167,7 +167,8 @@ class TestNetBgpWithdrawalAggregation(unittest.TestCase):
         opts = collect.scoring_attrs(M)
         fires = collect.score_row("2026-01-01", 0.031, "n", "2026-01-01", [], **opts)
         self.assertEqual((fires["trembling"], fires["direction"]), ("1", "down"))
-        self.assertAlmostEqual(float(fires["z_score"]), -9.69, places=2)
+        # anchored MATERIALITY 0.20 (R31 calibration): z = (0.031 − 1.0) / 0.20
+        self.assertAlmostEqual(float(fires["z_score"]), -4.845, places=3)
         benign = collect.score_row("2026-01-01", 0.96, "n", "2026-01-01", [], **opts)
         self.assertEqual(benign["trembling"], "0")  # Gaza-like ~0.96 never fires
 

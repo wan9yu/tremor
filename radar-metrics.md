@@ -17,7 +17,7 @@ days into runs (module docstring). `mature` marks scored >= 60 — the tier-1 pr
 | cnh_cny | 1 | 80 | 76 | 4 | 58 | 0.19 | 0 | 5 | 0 | 0 | 0.270 | no | 2026-09-08 |
 | fed_srf_takeup | 1 | 1283 | 1283 | 0 | 1274 | 5.11 | 3 | 0 | 3 | 1 | 0.406 | yes | 2026-09-04 |
 | net_outages | 2 | 1683 | 1671 | 12 | 1661 | 4.59 | 60 | 0 | 39 | 7 | 0.362 | yes | 2026-09-07 |
-| net_bgp_withdrawal | 2 | 1673 | 1673 | 0 | 1673 | 4.58 | 352 | 0 | 90 | 30 | 0.599 | yes | 2026-09-08 |
+| net_bgp_withdrawal | 2 | 1673 | 1673 | 0 | 1673 | 4.58 | 145 | 0 | 38 | 16 | 0.599 | yes | 2026-09-08 |
 | gnss_interference | 2 | 1503 | 1503 | 0 | 1485 | 4.09 | 49 | 1 | 28 | 10 | 0.895 | yes | 2026-09-07 |
 | capital_premium | 2 | 80 | 80 | 0 | 70 | 0.19 | 0 | 1 | 0 | 0 | 0.687 | yes | 2026-09-09 |
 | grid_frequency | 2 | 80 | 80 | 0 | 70 | 0.19 | 2 | 0 | 2 | 1 | -0.069 | yes | 2026-09-09 |
@@ -49,4 +49,4 @@ fails on it.
 - **cnh_cny maturity refresh** — opened R13 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 58 / 60
 - **level-layer → flights** — opened R23.1 · owner R26 · fires: date >= 2026-11-01 · date = 2026-09-09 / 2026-11-01
 - **cnh_cny reachability reference-regime re-check** — opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60 · scored(cnh_cny) = 58 / 60
-- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 40 · round = 30 / 40
+- **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 40 · round = 31 / 40
