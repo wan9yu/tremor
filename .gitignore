@@ -19,3 +19,7 @@ venv/
 # Logs and temp
 *.log
 tmp/
+
+# BGP seed fetch cache (bulky per-country diagnostic scratch; the seeded line
+# CSV is the committed record, this cache only makes the sweep resumable)
+data/archive/bgp_seed_cache/

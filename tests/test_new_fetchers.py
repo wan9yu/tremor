@@ -1,4 +1,5 @@
 """Parse locks for the round-8 fetchers (network fetch not exercised here)."""
+import datetime
 import os
 import sys
 import unittest
@@ -77,6 +78,98 @@ class TestCnhCnyLegTimestamps(unittest.TestCase):
     def test_a_missing_quote_time_is_written_empty(self):
         out = self._fetch(None, 1774386000)
         self.assertIsNone(out["raw_value"])
+
+
+class TestNetBgpWithdrawalAggregation(unittest.TestCase):
+    """The worst-of route-withdrawal aggregation, PURE (no network).
+
+    Builds hourly points for a few countries so daily_stats yields controlled
+    daily-min / daily-median, then checks the whole chain — per-country
+    fraction against a 28-day rolling-median baseline, worst-of across the
+    watch-list — reproduces the probe's Syria (0.031) and Sudan (0.314)
+    fractions and picks the deepest withdrawal as the driver.
+    """
+    _DAY0 = datetime.datetime(2022, 1, 1, tzinfo=datetime.timezone.utc)
+
+    def _country_points(self, level, event_frac, event_day_index=28, days=29):
+        """Hourly points where every prior day sits flat at ``level`` (so its
+        daily-min == daily-median == level), and the event day dips to
+        ``level*event_frac`` for one hour (daily-min == that dip, daily-median
+        stays ``level``)."""
+        base = int(self._DAY0.timestamp())
+        pts = []
+        for d in range(days):
+            for h in range(24):
+                pts.append((base + d * 86400 + h * 3600, float(level)))
+        # overwrite one hour of the event day with the withdrawal depth
+        ev = event_day_index
+        pts[ev * 24 + 12] = (base + ev * 86400 + 12 * 3600, float(level) * event_frac)
+        return pts
+
+    def _event_day(self, index=28):
+        return (self._DAY0 + datetime.timedelta(days=index)).date().isoformat()
+
+    def test_daily_stats_min_and_median(self):
+        import fetchers.net_bgp_withdrawal as M
+        pts = self._country_points(1000, 0.1, event_day_index=0, days=1)  # one day, one hour at 100
+        stats = M.daily_stats(pts)
+        day = self._event_day(0)
+        self.assertEqual(stats[day], (100.0, 1000.0))  # min=100, median=1000
+
+    def test_rolling_baseline_needs_min_valid_days(self):
+        import fetchers.net_bgp_withdrawal as M
+        medians = {(datetime.date(2022, 2, 1) + datetime.timedelta(days=n)).isoformat(): 500.0
+                   for n in range(13)}  # only 13 prior days
+        day = (datetime.date(2022, 2, 1) + datetime.timedelta(days=13)).isoformat()
+        self.assertIsNone(M.rolling_baseline(medians, day))  # 13 < 14 → no baseline
+        medians[(datetime.date(2022, 2, 1) + datetime.timedelta(days=13)).isoformat()] = 500.0
+        day = (datetime.date(2022, 2, 1) + datetime.timedelta(days=14)).isoformat()
+        self.assertEqual(M.rolling_baseline(medians, day), 500.0)  # 14 valid → median
+
+    def test_worst_of_picks_the_deepest_fraction(self):
+        import fetchers.net_bgp_withdrawal as M
+        frac, cc = M.worst_of({"SY": 0.031, "SD": 0.314, "ID": 0.758, "NG": 0.99})
+        self.assertEqual((round(frac, 3), cc), (0.031, "SY"))
+        self.assertEqual(M.worst_of({}), (None, None))
+        self.assertEqual(M.worst_of({"XX": None}), (None, None))
+
+    def test_aggregate_reproduces_probe_fractions_and_driver(self):
+        import fetchers.net_bgp_withdrawal as M
+        day = self._event_day(28)
+        country_points = {
+            "SY": self._country_points(4734.4, 148.0 / 4734.4),  # → 0.031
+            "SD": self._country_points(7333.5, 2303.0 / 7333.5),  # → 0.314
+            "NG": self._country_points(5000.0, 0.99),             # benign
+        }
+        worst, driver, fractions = M.aggregate(day, country_points)
+        self.assertEqual(driver, "SY")
+        self.assertAlmostEqual(fractions["SY"], 0.0313, places=3)
+        self.assertAlmostEqual(fractions["SD"], 0.314, places=3)
+        self.assertAlmostEqual(worst, 0.0313, places=3)
+
+    def test_country_with_too_little_baseline_is_excluded(self):
+        import fetchers.net_bgp_withdrawal as M
+        day = self._event_day(28)
+        # only 10 days of history for the deep-withdrawal country → no baseline,
+        # so it cannot drive the worst-of even though its dip is deepest
+        short = self._country_points(4000.0, 0.02, event_day_index=10, days=11)
+        deep_day = self._event_day(10)
+        good = self._country_points(5000.0, 0.5, event_day_index=28, days=29)
+        w_short, drv_short, fr_short = M.aggregate(deep_day, {"SY": short})
+        self.assertEqual((w_short, drv_short), (None, None))  # no baseline yet
+        w, drv, fr = M.aggregate(day, {"SY": short, "GB": good})
+        self.assertEqual(drv, "GB")  # SY has no reading for `day`; GB drives it
+        self.assertNotIn("SY", fr)
+
+    def test_anchored_scoring_fires_on_withdrawal_not_on_benign(self):
+        import collect
+        import fetchers.net_bgp_withdrawal as M
+        opts = collect.scoring_attrs(M)
+        fires = collect.score_row("2026-01-01", 0.031, "n", "2026-01-01", [], **opts)
+        self.assertEqual((fires["trembling"], fires["direction"]), ("1", "down"))
+        self.assertAlmostEqual(float(fires["z_score"]), -9.69, places=2)
+        benign = collect.score_row("2026-01-01", 0.96, "n", "2026-01-01", [], **opts)
+        self.assertEqual(benign["trembling"], "0")  # Gaza-like ~0.96 never fires
 
 
 class TestAdsbProviderCorroboration(unittest.TestCase):
