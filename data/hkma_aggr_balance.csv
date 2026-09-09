@@ -143,3 +143,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-07,,,0,,HKMA request failed: ReadTimeout after 25.9s [sampled 22:30:28Z],,dark
 2026-09-08,54019,0.373,0,up,HKMA aggregate balance 54019 HK$m (2026-09-07) [sampled 22:30:36Z],2026-09-07,scoring
 2026-09-09,54019,0.381,0,up,HKMA aggregate balance 54019 HK$m (2026-09-08) [sampled 22:30:31Z],2026-09-08,scoring
+2026-09-10,54023,0.420,0,up,HKMA aggregate balance 54023 HK$m (2026-09-09) [sampled 22:30:44Z],2026-09-09,scoring
