@@ -314,6 +314,15 @@ const LINES = [
     explain:{
       en:"ISPs and states defend a country's internet connectivity as critical infrastructure. When a country goes dark, a larger force overwhelmed that — a censorship shutdown, a war, a major cable cut, a grid failure. Counting how many countries are in outage at once turns local incidents into a global breadth-of-disruption signal. Outages persist hours–days, so daily sampling is honest.",
       zh:"运营商和政府把一国的互联网连通性当作关键基础设施来守护。当一个国家陷入黑暗，就是有更大的力量压垮了它——审查式断网、战争、大型海缆断裂、电网崩溃。数有多少国家同时断网，就把局部事件变成了全球的「失序广度」信号。断网持续数小时到数天，所以日频采样是诚实的。"} },
+  { id:"net_bgp_withdrawal", color:"#4fb0a5", alarm:"down", tier:2,
+    watches:{en:"country-level BGP route announcement, worldwide",zh:"全球范围的国家级 BGP 路由通告"},
+    unit:{en:"fraction",zh:"比值"},
+    domain:{en:"Communications (global) — route withdrawal",zh:"通信（全球）— 路由撤回"},
+    label:{en:"Worst-of country BGP route visibility",zh:"最差国家 BGP 路由可见度"},
+    source:{en:"IODA (Georgia Tech) — passive BGP (RIPE RIS + RouteViews)",zh:"IODA（佐治亚理工）— 被动 BGP（RIPE RIS + RouteViews）"},
+    explain:{
+      en:"States, ISPs and transit providers defend a country's place in the global routing table — a network fights to keep its prefixes announced. When a country's announced routes fall away, a larger force withdrew them: a censorship shutdown pulling prefixes, a war or cable cut severing the backbone, a transit failure. For each of 153 large countries the day's minimum announced route count is divided by that country's own 28-day baseline, and the worst (deepest) fraction across the list is read — a drop is the alarm. Passive BGP, not the active probing that demoted net_outages, so it carries none of that line's synchronized common-mode. THE HONEST LIMIT: BGP measures route ANNOUNCEMENT, not reachability — it detects route WITHDRAWAL (shutdowns, cable cuts, transit failures) but MISSES access-layer blackouts where routes stay announced. Through Gaza's 2023-10 total blackout, Palestine's BGP visibility never fell below ~96% — the routes kept being announced into the dark. Read it as a route-withdrawal detector, not a reachability gauge.",
+      zh:"政府、运营商和中转商守护一国在全球路由表里的位置——网络拼命让自己的前缀保持通告。当一个国家的已通告路由消失，就是有更大的力量把它们撤回了：审查式断网抽走前缀、战争或海缆断裂切断骨干、中转失效。对 153 个大国，取当天最低的已通告路由数，除以该国自己 28 天的基线，再取全表最差（最深）的那个比值——骤降就是警报。这是被动 BGP，而非拖垮 net_outages 的主动探测，因此不带那条线的同步共模。诚实的局限：BGP 测的是路由「通告」，不是可达性——它探测路由撤回（断网、海缆断裂、中转失效），却漏掉路由仍在通告、但接入层已黑的封锁。2023 年 10 月加沙全境断网期间，巴勒斯坦的 BGP 可见度从未跌破约 96%——路由一直在向黑暗中通告。请把它读作路由撤回探测器，而不是可达性表。"} },
   { id:"euro_hy_spread", color:"#a3be8c", alarm:"up", tier:2,
     unit:{en:"pp",zh:"个百分点"},
     domain:{en:"European financial",zh:"欧洲金融"},

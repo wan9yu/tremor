@@ -63,8 +63,9 @@ from core import clock, normalize
 from fetchers import (capital_premium, chokepoint, cnh_cny, control_daylength,
                       credit_spread, em_oas, euro_hy_spread, fed_srf_takeup, flights,
                       fx_parallel_premium, gdelt, gdelt_tone, gnss, grid_frequency,
-                      hkma_aggr_balance, net_outages, polar_temp, ports, sofr_iorb,
-                      space_weather, stablecoin_peg, tga_days_cash, vix)
+                      hkma_aggr_balance, net_bgp_withdrawal, net_outages, polar_temp,
+                      ports, sofr_iorb, space_weather, stablecoin_peg, tga_days_cash,
+                      vix)
 
 # Every fetcher, both tiers. The tier-1 lines each guard a DIFFERENT domain
 # (airspace / financial system / capital controls), so several trembling at once
@@ -74,7 +75,7 @@ from fetchers import (capital_premium, chokepoint, cnh_cny, control_daylength,
 # along to build history until they earn promotion. The grouping below is a reading
 # aid; ``TIER`` on each module is what actually decides.
 LINES = [flights, credit_spread, cnh_cny,               # tier 1 (primary, displayed)
-         net_outages,                                   # tier 2 (demoted R28)
+         net_outages, net_bgp_withdrawal,               # tier 2 (comms: demoted R28 / built R30)
          gnss, capital_premium, grid_frequency,         # tier 2 (demoted)
          chokepoint, sofr_iorb, em_oas, ports,          # tier 2 (candidates)
          euro_hy_spread, fx_parallel_premium, hkma_aggr_balance,  # tier 2 (built round 8)
