@@ -1038,42 +1038,65 @@ biggest un-spanned dimension read as ENERGY / the physical real economy — with
 mattered: sovereign-solvency was NOT the gap, because a sovereign-stress factor co-moves with credit
 (+0.80), so it would fail orthogonality; energy was the genuinely orthogonal hole. Two probes followed.
 
-**Probe A — can net_bgp's chronic contamination be neutralized? FAILS, closed AS STRUCTURAL.** The R31
+**Probe A — can net_bgp's chronic contamination be neutralized? FAILS (corrected by fable R32).** The R31
 calibration resolved the base-rate over-fire but left chronic states SY/IQ/SD driving ~72% of fires,
-carried as a pre-promotion item. Probe A tested whether a level residual could subtract that beta. It
-cannot: SY/IQ/SD are an event-FREQUENCY concentration (17 of 28 onset episodes, 60.7%), not a
-subtractable level. A per-country level residual (variant a) drives lag-1 autocorrelation WORSE
-(0.72–0.86) and drops the Sudan event to z −2.86, sub-alarm; a milder form (variant b) leaves lag-1 at
-0.49–0.52, never reaching the 0.14–0.41 fresh band, chronic share ~68%; a ceiling test leaves 60.7%
-even under ideal episode-collapse. Per the doctrine's decay test, an event-frequency concentration is
-structural and un-neutralizable — distinct from a subtractable beta. So the item is CLOSED-AS-STRUCTURAL,
-not a tuning miss: net_bgp stays tier-2 at MAT=0.20 as-is, the communications slot stays open and
-disclosed, and the only remaining construct with a chance — a per-episode / per-country fire cap or a
-breadth requirement, NOT a level residual — is recorded as a separate future build (it changes what
-the line measures), not a pending on the current line.
+carried as a pre-promotion item. Probe A tested whether a per-country level residual could subtract that
+beta. It cannot do so cleanly. A short-window residual (7–14 days) DOES cut the chronic share from 71.7%
+to ~50–53%, but the 7-day form LOSES the Sudan reference event (z −2.86, sub-alarm); a longer window
+keeps Sudan but leaves lag-1 autocorrelation at 0.49–0.52 — never down into the counted tier-1 lines'
+fresh band (flights 0.31 / cnh_cny 0.27 / fed_srf 0.41; cf. Known limit 3's cited 0.07–0.33), chronic
+share still ~68%. So no residual reaches both freshness AND event-preservation: the honest statement is
+'not level-cleanable without losing the event or the freshness', not 'un-neutralizable' in the abstract
+(the first draft of this entry overstated it, and cited an unverifiable 17/28 onset figure now dropped).
+The deeper reading: SY/IQ/SD dominate because they ARE the world's most chronically-disordered route
+tables — that concentration is the withdrawal factor's DISTRIBUTION, not contamination to subtract. A
+per-episode / breadth CAP is unlikely to rescue it either — the Sudan 2023-04-24 reference is a
+single-country event at frac 0.314, so any ≥2-country breadth bar would kill it, and a per-country cap
+makes the operator path-dependent (a STABLE_SINCE-bumping DIFFERENT line, not a tuning of this one).
+net_bgp stays tier-2 at MAT=0.20 as-is, the communications slot stays open and disclosed. On promotion:
+the line is past the ≥60-scored funnel (1673 scored, 8.7% fire) but is NOT promotion-ready — its fires
+are chronic-state-dominated, a disclosure the counted headline should not carry — so it is held as a
+tier-2 communications watchlist candidate, not a tier-1 challenger, pending a fresh-onset construct.
 
 **Probe B — build the energy axis (entsog_gas_flow)? BUILT, then REJECTED on the IC gate.** A tier-2
 line was built transplanting net_bgp's worst-of / own-baseline-fraction / anchored-scale construct onto
-ENTSOG cross-border physical-flow data (keyless, daily, ~1-day lag; guard, cadence, and reachability all
-pass), and its full 2021→2026 history was seeded (252 points cached) and scored. It is DEGENERATE. The
-single-day worst-of fires 97.5% of days — the median worst-fraction is 0.00, because gas flow at a
-single entry point is inherently lumpy (LNG terminals receive discrete cargoes → flow falls to ~0
-between them; pipes swing on commercial nominations and seasonal routing), so some point in a
+ENTSOG cross-border physical-flow data (keyless, daily, ~1-day lag; guard and cadence pass, reachability
+APPEARED to pass), and its full 2021→2026 history was seeded (252 points cached) and scored. It is
+DEGENERATE. The single-day worst-of fires 97.5% of days — the median worst-fraction is 0.00, because gas
+flow at a single entry point is inherently lumpy (LNG terminals receive discrete cargoes → flow falls to
+~0 between them; pipes swing on commercial nominations and seasonal routing), so some point in a
 size-floored watch-list reads near-zero against its own baseline nearly every day. A sustained-duration
-variant (3/5/7-day) does not rescue it (94.6/89.8/86.3%); neither does a strict steady-corridor watch-list (24
-points, share-of-flowing-days ≥ 0.99, low relative dispersion) — at the deepest cutoff tested (fraction
-≤ 0.05, a 95% cut) it still fires 16.8%, and there its LARGEST episodes are 2021, PRE-WAR seasonal LNG
-lumpiness, with the real cuts (Yamal, Nord Stream 1, the Ukraine transit halt) present but smaller than
-and indistinguishable from the benign noise. The construct's earlier "reachability" was spurious: the
-events do drive a corridor to fraction 0, but so does nearly every calm day — reachability WITHOUT a
-base-rate check is not IC. A min-over-N-lumpy-series crosses any fixed bar near-daily; net_bgp survives
-the same construct only because route-counts are rock-steady, and gas flows are not. The line was fully
-reverted — no registration in collect.py, docs, or the tier tables; the seed cache and measurements are
-banked in session scratch so the negative is not re-run. The one construct that might work — worst-of
-across SOURCE-COUNTRY aggregates (Russia-total, Norway-total, LNG-total…), where within-source
-aggregation kills the lumpiness while worst-of across sources avoids dilution — needs a live adjacency
-fetch and a fresh base-rate/reach test; it is a different line, recorded in Rejected as the only future
-path, not built now.
+variant (3/5/7-day) does not rescue it (94.6/89.8/86.3%); neither does a strict steady-corridor watch-list
+(24 points, share-of-flowing-days ≥ 0.99, low relative dispersion) — at the deepest cutoff tested
+(fraction ≤ 0.05, a 95% cut) it still fires 16.8%, its episodes benign (the largest a 2023
+Norwegian-maintenance season, then 2021 seasonal LNG lumpiness). A min-over-N-lumpy-series crosses any
+fixed bar near-daily; net_bgp survives the same construct only because route-counts are rock-steady, and
+gas flows are not.
+
+**Correction (fable R32).** The salvage narrative first written here — "the real cuts are present but
+indistinguishable from the noise" — was WRONG, and the truth is worse for the construct. The watch-lists
+were floored on a RECENT window (last-120d as-built, last-365d steady), which SURVIVORSHIP-excludes every
+corridor that has since died: Mallnow/Yamal, both Greifswald/NS1 points, and Velké Kapušany all read 0
+today and are dropped, so the cited cuts were never in the measured set, and the steady-24 list is
+entirely LNG terminals + intra-EU VIPs (it fires ZERO in the Ukraine-halt window). The salvage therefore
+tested whether LNG/VIP points are lumpy (yes), not whether a real cut is distinguishable; and the ex-post
+watch-list derivation is itself the lookahead the doctrine's Point-in-time rule forbids — a build flaw
+that net_bgp's frozen recent-window list shares, and that any future basket line must avoid. The reject
+still stands on the decisive full-list 97.5%; the earlier "reachability" was spurious (events produce
+frac=0, but so does nearly every calm day — reach without a base-rate check ≠ IC).
+
+**Energy: un-spanned, but UNTESTED — not un-spannable.** The line was fully reverted — no registration in
+collect.py, docs, or the tier tables; the seed cache is banked in session scratch (the measurement
+scripts import the reverted fetcher, so they are not re-runnable as-is — the cache is the durable
+artifact). Per Coverage-is-not-a-goal the energy axis is left un-spanned rather than registering a factor
+that fires on everything, but the record does NOT claim it is un-spannable: the cheapest untried
+construct — a SINGLE summed series (EU total pipeline entry ex-LNG, or a Russia-corridor total; the five
+cited corridors are known by key, so NO adjacency fetch is needed) whose dilution was asserted from the
+docstring and never measured — was NOT run this round, deliberately, per the step-back. It is recorded as
+the one construct worth a future test, not dismissed. The axis now holds two dead candidates on different
+gates: entsog (IC) and eu_gas_storage (parked R24 on reachability). One retroactive consequence of the IC
+test: any pre-R32 Backlog row asserting "reachability passes" (border_wait, cp_funding_spread) claims the
+OLD standard — reach without a base-rate check is not IC — and is re-qualified accordingly when next probed.
 
 **The step-back: coverage is not a goal.** The instinct on probe B's failure was to grow the pile
 harder (the source-aggregate build, a live adjacency fetch, more scaffolding) — the same coverage
@@ -1096,7 +1119,9 @@ the probe to the standing engine.
 longer than the per-command ceiling detached the fetch, spawned sleep-poll watcher shells, and abandoned
 the task mid-run, leaving orphaned processes and uncommitted work. The controller killed the orphans, ran
 the seed fetch cleanly as one owned background job, and adjudicated the probe itself — the same
-controlled-ownership recovery as R28. Recorded here so the pattern is visible.
+controlled-ownership recovery as R28. Recorded now as a standing RULE, not just a visible pattern: a
+fetch longer than the per-command ceiling runs as ONE controller-owned background job (the harness wakes
+the controller on exit), never as a subagent's detached job with a self-poll loop.
 
 No line moved, no scoring changed, no new line registered — docs-only. Full suite green (gate, audit
 including radar-metrics freshness + round-index parity + no-overdue + retracted-phrase, lint stdlib-only
