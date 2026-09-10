@@ -1019,3 +1019,86 @@ pending item stands.
 Full suite green (gate, audit including radar-metrics freshness + round-index parity + no-overdue + retracted-phrase,
 lint stdlib-only in a bare venv including lint_registry TIER parity, replay 0-divergence, pending 0 overdue);
 radar-metrics.md regenerated.
+
+### Round 32 — 2026-09-10 (the factor-model round: two probes, both fail, the doctrine sediments)
+
+A doctrine round. It began by reading the whole roster through one lens — tremor as a FACTOR LIBRARY
+for world disorder, each line an operator over a raw source, curated like a quant factor model and
+read as a panel — and ended by writing that lens into radar.md ("tremor is a factor library for world
+disorder") after two probes tested it against the hardest open questions and both came back NEGATIVE.
+The negatives are the round's value: the discipline killed two bad factors before either entered the
+panel, which is exactly what a factor model's validation stage is for.
+
+**The factor-lens review.** Run as a quant model, the roster reads: credit_spread + fed_srf_takeup are
+live alpha (distinct guards, low mutual correlation, real fires); flights is a stale AGGREGATE — one
+worldwide number with poor recent precision, the least-orthogonal survivor, to be reconceived
+per-region (~Nov); cnh_cny is a reference-regime axis (its alarm reachable only under the cited 2015-16
+regime); net_bgp_withdrawal is a chronic BETA (fires dominated by standing withdrawal states). The
+biggest un-spanned dimension read as ENERGY / the physical real economy — with one correction that
+mattered: sovereign-solvency was NOT the gap, because a sovereign-stress factor co-moves with credit
+(+0.80), so it would fail orthogonality; energy was the genuinely orthogonal hole. Two probes followed.
+
+**Probe A — can net_bgp's chronic contamination be neutralized? FAILS, closed AS STRUCTURAL.** The R31
+calibration resolved the base-rate over-fire but left chronic states SY/IQ/SD driving ~72% of fires,
+carried as a pre-promotion item. Probe A tested whether a level residual could subtract that beta. It
+cannot: SY/IQ/SD are an event-FREQUENCY concentration (17 of 28 onset episodes, 60.7%), not a
+subtractable level. A per-country level residual (variant a) drives lag-1 autocorrelation WORSE
+(0.72–0.86) and drops the Sudan event to z −2.86, sub-alarm; a milder form (variant b) leaves lag-1 at
+0.49–0.52, never reaching the 0.14–0.41 fresh band, chronic share ~68%; a ceiling test leaves 60.7%
+even under ideal episode-collapse. Per the doctrine's decay test, an event-frequency concentration is
+structural and un-neutralizable — distinct from a subtractable beta. So the item is CLOSED-AS-STRUCTURAL,
+not a tuning miss: net_bgp stays tier-2 at MAT=0.20 as-is, the communications slot stays open and
+disclosed, and the only remaining construct with a chance — a per-episode / per-country fire cap or a
+breadth requirement, NOT a level residual — is recorded as a separate future build (it changes what
+the line measures), not a pending on the current line.
+
+**Probe B — build the energy axis (entsog_gas_flow)? BUILT, then REJECTED on the IC gate.** A tier-2
+line was built transplanting net_bgp's worst-of / own-baseline-fraction / anchored-scale construct onto
+ENTSOG cross-border physical-flow data (keyless, daily, ~1-day lag; guard, cadence, and reachability all
+pass), and its full 2021→2026 history was seeded (252 points cached) and scored. It is DEGENERATE. The
+single-day worst-of fires 97.5% of days — the median worst-fraction is 0.00, because gas flow at a
+single entry point is inherently lumpy (LNG terminals receive discrete cargoes → flow falls to ~0
+between them; pipes swing on commercial nominations and seasonal routing), so some point in a
+size-floored watch-list reads near-zero against its own baseline nearly every day. A sustained-duration
+variant (3/5/7-day) does not rescue it (94.6/89.8/86.3%); neither does a strict steady-corridor watch-list (24
+points, share-of-flowing-days ≥ 0.99, low relative dispersion) — at the deepest cutoff tested (fraction
+≤ 0.05, a 95% cut) it still fires 16.8%, and there its LARGEST episodes are 2021, PRE-WAR seasonal LNG
+lumpiness, with the real cuts (Yamal, Nord Stream 1, the Ukraine transit halt) present but smaller than
+and indistinguishable from the benign noise. The construct's earlier "reachability" was spurious: the
+events do drive a corridor to fraction 0, but so does nearly every calm day — reachability WITHOUT a
+base-rate check is not IC. A min-over-N-lumpy-series crosses any fixed bar near-daily; net_bgp survives
+the same construct only because route-counts are rock-steady, and gas flows are not. The line was fully
+reverted — no registration in collect.py, docs, or the tier tables; the seed cache and measurements are
+banked in session scratch so the negative is not re-run. The one construct that might work — worst-of
+across SOURCE-COUNTRY aggregates (Russia-total, Norway-total, LNG-total…), where within-source
+aggregation kills the lumpiness while worst-of across sources avoids dilution — needs a live adjacency
+fetch and a fresh base-rate/reach test; it is a different line, recorded in Rejected as the only future
+path, not built now.
+
+**The step-back: coverage is not a goal.** The instinct on probe B's failure was to grow the pile
+harder (the source-aggregate build, a live adjacency fetch, more scaffolding) — the same coverage
+impulse that had framed "energy is un-spanned" as a gap that must be filled. Stepping back, that impulse
+is exactly what the doctrine exists to refuse. A factor library's health is orthogonal IC PER FACTOR,
+not dimensional completeness; an un-spanned axis is honest information and beats a manufactured weak
+factor; and a factor that needs stacked filters, sustain windows, and re-aggregation to barely clear a
+gate is a gate failing quietly, not a signal. That sharpening — coverage is not a goal — is written into
+the doctrine and is R32's durable output. The energy axis stays open and un-spanned until a clean
+construct actually presents itself.
+
+**The doctrine, sedimented.** radar.md gains a philosophy section stating the factor-library lens
+explicitly: four tests (rationale/guard, IC as the standing coincidence probe, decay/neutralization,
+orthogonality + spanning); the probe as the sole arbiter; the standard worst-of aggregation AND its
+limit (steady-baseline entities only, not lumpy ones); coverage is not a goal; no doom score; and the
+point-in-time (STABLE_SINCE/replay) rule. It makes explicit what the registry has been doing and elevates
+the probe to the standing engine.
+
+**Process note.** For the second time (after R28's P0-1), an implementer subagent faced with a fetch
+longer than the per-command ceiling detached the fetch, spawned sleep-poll watcher shells, and abandoned
+the task mid-run, leaving orphaned processes and uncommitted work. The controller killed the orphans, ran
+the seed fetch cleanly as one owned background job, and adjudicated the probe itself — the same
+controlled-ownership recovery as R28. Recorded here so the pattern is visible.
+
+No line moved, no scoring changed, no new line registered — docs-only. Full suite green (gate, audit
+including radar-metrics freshness + round-index parity + no-overdue + retracted-phrase, lint stdlib-only
+in a bare venv including lint_registry TIER parity, replay --check 0-divergence, pending 0 overdue);
+radar-metrics.md regenerated.
