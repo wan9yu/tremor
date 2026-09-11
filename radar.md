@@ -47,7 +47,7 @@ future slot. Per-line reliability/reach metrics are generated — see
 |---|---|:--:|:--:|:--:|:--:|---|
 | flights | airspace (4 regions; only US alarm-reachable) | 3 | 3 | 2 | ≤0.08 (n≈50, R21) | ⚠️ **RETAINED at the pre-committed review, R25** — the 2026-08-31 review ran (de-cycling engaged on schedule at window-row 71): replayed episode-rate Wilson 95% LB = 0.89% < 2% bar, and the 08-28 alarm is ADJUDICATED (not just adjudicable) by the R11-named intraday sampler — 08-28T23:22Z read 1660 at baseline hour while the daily 05:54Z snapshot read 1035; the drop is a CI-queue sample-hour artifact, not airspace. Neither demotion condition met → retained. Both of flights' alarms are now artifacts; the sample-hour confound is STRUCTURAL (snapshot line, GH-Actions queue-drifted sample hour, weekday de-cycling is orthogonal to it). Fix SHIPPED R25.1 (re-review pending) |
 | credit_spread | financial (US→global) | 3 | 3 | 3 | ≤0.08 (n=788, R21) | ✅ global bellwether; alarm at the 45th pctile of its 788-day record |
-| cnh_cny | capital controls (China) | 2 | 3 | — | ≤0.08 (n=42 vs credit_spread / 57 vs flights, R29) | ✅ slot 4 (user-decided); orthogonality RE-MEASURED R29 — |max Pearson| +0.076 vs credit_spread (n=42), −0.036 vs flights: the most orthogonal tier-1 line. Reach RE-MEASURED R29 — the UP alarm bar sits at ≈223 pips, +80 above the all-time record high of 143 (unreachable WITHIN this young calm record; baseline-relative; reference regime intact). All five |z|>3 events are benign DOWN trembles (07-02/07-07/07-25/08-10/08-26, offshore yuan stronger) — 0 UP-trembles in its scored history (57 at R29, 2026-09-08). RETAINED on a WEAKER external-reference-regime standard than credit_spread/flights: retention rests entirely on a real, CITED reference regime — the 2015-16 RMB devaluation / capital-flight episode (dated citation in the reachability gate below) — which is the SAME reachability standard net_outages FAILED at R28, and cnh_cny passes only because its regime is a documented, sourced world event where net_outages' 8 largest adjudicated to none. Still <60 scored (see radar-metrics.md for the live count), insufficient to adjudicate (Known limit 4: below 60, defer); refresh at the maturity review (*4 darks are weekend/leg-timing rejections, not failures; the 08-16 dark ran hours before R18's closed status landed — weekends read `closed` from the first post-R18 weekend, 08-22/23, on) |
+| cnh_cny | capital controls (China) | 2 | 3 | — | ≤0.10 (R33: 0.084 credit / −0.037 flights / 0.098 fed_srf) | ✅ slot 4 (user-decided); **MATURITY REVIEW DONE R33 (n=60) — RETAINED on a narrowed basis (fable-corrected).** Orthogonality RE-MEASURED R33 vs the full tier-1 set: |max Pearson| **0.098** (credit_spread +0.084 n=45, flights −0.037 n=60, fed_srf +0.098 n=42) — nominally the most orthogonal tier-1 line, BUT all three overlaps are calm-on-calm and the fed_srf pair is calm-on-FLAT (fed_srf's z is dust, <0.01 under its $10bn materiality across the 42-day overlap), so 0.098 is an absence-of-variance NON-measurement, not confirmation; orthogonality UNDER STRESS is unmeasured, and the 2015-16 reference regime (a global risk-off) suggests cnh would then co-move positively with credit/plumbing. Reach RE-MEASURED R33: on the raw window the UP +3 bar ≈**221 pips** (the scorer's deduped 09-11 window, n=69, gives ~220–222), well above the record high of 143 — but 143 (2026-07-11) is a **pre-guard SATURDAY restamp artifact** (leg-guard shipped 07-25); the clean post-guard record high is **113** (08-19), against which the bar is even MORE unreachable (z ≈ +1.15). 0 UP-trembles in 60 scored (2026-09-11). The 5 |z|>3 events are direction-benign DOWN (07-02/07-07/07-25/08-10/08-26) — NOT adjudicated, and 3 of 5 are pre-guard (07-25 is itself a Saturday read from the day the ~6.5 h desync was measured, plausibly the collection artifact that motivated the guard); only 08-10/08-26 are clean post-guard reads. So "mature" means 60 ROWS, not 60 clean rows (~36 leg-stamped, ~7 fully post-sample-hour-guard). **IC — the doctrine's standing test — is UNDEFINED here: 0 alarm-direction fires, 0 in-window reference events (0/0)**; the 0 UP-trembles bound the false-positive rate but leave recall unmeasured. cnh_cny is retained on guard + orthogonality + the cited 2015-16 reference regime, NOT on a measured own-IC — the slot is PROVISIONAL until the first UP event lets recall be judged. It is the only line on the China-capital-controls axis, so the alternative is a disclosed empty slot, which the R32 doctrine prefers to a filler. RETAINED on a WEAKER external-reference-regime standard than credit_spread/flights: retention rests entirely on a real, CITED reference regime — the 2015-16 RMB devaluation / capital-flight episode (dated citation in the reachability gate below) — which is the SAME reachability standard net_outages FAILED at R28, and cnh_cny passes only because its regime is a documented, sourced world event where net_outages' 8 largest adjudicated to none. The maturity question banked at R29 — artifact or broken bar/statistic? — resolves as ARTIFACT (the bar re-derives correctly and only TIGHTENS on clean data); the alarm tail is unsampled and the benign tail is partly clock-contaminated. The 2015-16 reference regime was re-AFFIRMED — re-read, not re-measured for the as-built instrument (a Yahoo daily 22:30Z close-difference snapshot is not the intraday HIBOR-driven spread the citation describes) — R33. Next re-measurement is armed on the first fully post-guard 90-row window (when the pre-guard restamps age out, ~late Oct, and the bar re-derives on clean data); an ad-hoc re-adjudication on the first UP tremble is a standing note, NOT a machine tripwire (the pending tool has no direction predicate) (*4 darks are weekend/leg-timing rejections, not failures; the 08-16 dark ran hours before R18's closed status landed — weekends read `closed` from the first post-R18 weekend, 08-22/23, on) |
 | fed_srf_takeup | financial plumbing (US→global) | 3 | 3 | 3 | \|max Pearson\| 0.008 vs credit_spread (n=750), 0.10 vs flights (n=45), 0.10 vs cnh_cny (n=40) — shared-date pairs, R30; the most orthogonal candidate (1274 scored overall) | ✅ **PROMOTED R30** — fills the roster back to 4/4 (the open communications slot net_outages vacated at R28, repurposed for a financial line). Daily Standing Repo Facility take-up ($m), keyless NY Fed markets API, anchored scale-mode (ANCHOR=0, MATERIALITY=$10bn → alarm $30bn). Both standing promotion gates CLEARED on the data (gate-work: R30). **R20 de-cycling debt — CLEARS:** structurally MOOT for anchored scoring (normalize.robust_z's materiality branch reads only today, never the rolling window, so month/quarter-end baseline-warping cannot move the z), and the month-turn friction band tops at $26.0bn (z 2.60), $4.0bn under the $30bn alarm — routine calendar ops never approach it. **R15 anchored-scale gates — CLEAR:** MATERIALITY validated (routine median $0 / p90 $10m / p95 $100m, max-routine z 2.60, a clean 0.45z empty gap to the lowest fire z 3.05; 85.4% of nonzero days <$100m dust at z<0.01), and the 3 alarms are 3 DISTINCT single-day episodes (2025-10-31 z 5.04, 2025-12-31 z 7.46 record, 2026-02-17 z 3.05; 61/48 days apart, lag-1 autocorr 0.406, no adjacent fires — 3 trembling days = 3 episodes 1:1, the iid null is not threatened). DOMAIN DECISION: a 4th FINANCIAL line accepted (airspace + credit + capital-controls + dollar-plumbing) because the sole comms candidate net_bgp_withdrawal was unbuilt at the decision; comms is now the tier-2 BGP line, the standing candidate for a future slot |
 
 ## Tier 2 — collected  (14 candidates + 5 context + 1 control · no cap)
@@ -277,7 +277,10 @@ data exists):
   overnight CNH HIBOR spike. This is the same reachability standard net_outages FAILED at R28 (its 8
   largest readings adjudicated to no cited event); cnh_cny passes only because its reference regime
   is a documented, sourced world event. The reference regime must be cited, not assumed, and is
-  re-checked at the line's maturity review (n=57 <60 as of R29).
+  re-checked at the line's maturity review — DONE R33 (n=60): reference regime re-affirmed (re-read,
+  not re-measured for the as-built daily-snapshot instrument), the UP alarm re-derives at ≈221 pips
+  and stays unreachable within the record; retention holds on guard + orthogonality + this cited
+  regime, with own-record IC still undefined (0 UP fires / 0 in-window events).
 
 **Freshness rule for tier-1:** a displayed instrument must be FRESH (low publication lag). A
 line that is daily but lags a week (e.g. IMF PortWatch, ~10 days measured) only shows a disruption long
@@ -446,8 +449,19 @@ re-reading the log. Close an item by editing it out with a round reference.
   Respelled from `distinct_scored` to `scored`: the record carries 8 non-distinct cnh_cny
   rows by the distinct-observation rule (Known limits #6), so `distinct_scored` currently equals raw
   `scored` and cannot honestly stand in for a dedup the tool does not yet implement; the maturity
-  review has always used the raw scored count n, so `scored` is the honest predicate until the rule
-  is built into the tool. [opened R13 · owner R26 · fires: scored(cnh_cny) >= 60]
+  review has always used the raw scored count n, so `scored` was the honest predicate.
+  **DONE R33 (n=60):** reach re-measured (UP +3 bar 221 pips, +78 above the record high of 143, z +1.32
+  at the peak — unreachable within the record), trembles recounted (5 benign DOWN, 0 UP over 60 scored),
+  orthogonality re-measured against the full tier-1 set (|max Pearson| 0.098, incl fed_srf +0.098) —
+  cnh_cny RETAINED at tier-1; the banked open question resolves as a young-calm-record artifact (guard
+  sound, tail unsampled).
+- **cnh_cny post-guard reach re-measurement** — when the pre-guard weekend-restamp rows age out of the
+  90-row window (so the reach bar re-derives on clean leg+sample-hour-guarded data), re-measure reach +
+  orthogonality. The R33 review found the current bar rests partly on pre-guard artifacts (record high
+  143 = a pre-guard Saturday restamp; 3 of 5 benign trembles pre-guard, incl the guard-motivating
+  07-25). Supersedes the R13 + R23.1 n≥60 maturity items, both DONE R33. A separate re-adjudication of
+  own-IC waits on the first UP-alarm tremble — a standing PROSE trigger, NOT machine-tracked (the
+  pending tool has no direction predicate). [opened R33 · owner R40 · fires: rows_since(cnh_cny, 2026-07-27) >= 90]
 - **anchored-scale promotion gates** (R15, standing): before ANY anchored line promotes, its
   MATERIALITY must be replay-validated to the R11 bar and an episode/serial-dependence overlay run.
   Applies to stablecoin_peg, fed_srf_takeup. **CLEARED for fed_srf_takeup at R30** (promoted): the
@@ -485,7 +499,9 @@ re-reading the log. Close an item by editing it out with a round reference.
   devaluation / capital-flight episode (PBOC devaluation 2015-08-11; overnight CNH HIBOR ~66-67% on
   2016-01-12; CNH-CNY spread to the hundreds of pips vs the ~223-pip alarm bar; BIS WP No. 446, CNBC
   2016-01-12 — see the reachability gate). Re-confirm at n≥60 that the reference-regime evidence still
-  holds, alongside the maturity refresh. [opened R23.1 · owner R26 · fires: scored(cnh_cny) >= 60]
+  holds, alongside the maturity refresh. **DONE R33 (n=60):** the 2015-16 reference regime re-affirmed —
+  its hundreds-of-pips spread still dwarfs the re-derived 221-pip alarm bar; reachability PASS on the
+  cited regime confirmed. Superseded by the cnh_cny deep maturity re-check (n≥250) above.
 - **radar-log.md roll tripwire — DONE R29** — the log split into an archive once it crossed its
   self-set **2,000-line** threshold (crossed at R28, which took radar-log.md to 2,036 lines). R29 ran
   `tools/roll_radar_log.py --split-round 20` (byte-identity + round-coverage verified): rounds 1-19
@@ -700,3 +716,16 @@ gets one line added here.
   implementer subagent again backgrounded a long fetch + sleep-poll shells and abandoned mid-task (the
   R28 pattern) — henceforth a fetch past the per-command ceiling runs as ONE controller-owned background
   job, never a subagent's self-poll. radar-metrics regenerated.
+- **Round 33** — 2026-09-11 · cnh_cny maturity review: the n≥60 promise came due (cron pushed cnh_cny to
+  60 scored, firing the R13 refresh + R23.1 reference-regime re-check and reddening the no-overdue audit).
+  Reviewed and RETAINED at tier-1, on a narrowed basis (fable-corrected). Reach re-measured (UP +3 bar
+  ≈221 pips, unreachable within the record), trembles recounted (5 benign DOWN, 0 UP over 60 scored),
+  orthogonality re-measured vs the full tier-1 set incl fed_srf (|max Pearson| 0.098). fable's catches,
+  folded: the record high 143 (2026-07-11) is a PRE-GUARD Saturday restamp artifact (clean post-guard
+  high 113, bar even more unreachable); IC — the standing test — is UNDEFINED (0 UP fires / 0 in-window
+  events), so retention rests on guard + orthogonality + the cited 2015-16 reference regime, not a
+  measured own-IC, and the slot is PROVISIONAL until the first UP event; the fed_srf orthogonality pair
+  is calm-on-flat (a non-measurement, unmeasured under stress). Both n≥60 items DONE R33, superseded by a
+  post-guard reach re-measurement (`rows_since(cnh_cny, 2026-07-27) >= 90`, when the pre-guard restamps
+  age out) + a prose trigger on the first UP tremble. Docs-only; no line moved, no scoring changed (replay
+  --check 0-divergence, no STABLE_SINCE bump); audit back to green. radar-metrics regenerated.

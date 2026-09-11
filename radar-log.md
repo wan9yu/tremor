@@ -1127,3 +1127,69 @@ No line moved, no scoring changed, no new line registered — docs-only. Full su
 including radar-metrics freshness + round-index parity + no-overdue + retracted-phrase, lint stdlib-only
 in a bare venv including lint_registry TIER parity, replay --check 0-divergence, pending 0 overdue);
 radar-metrics.md regenerated.
+
+### Round 33 — 2026-09-11 (cnh_cny maturity review: the n≥60 promise comes due, line retained)
+
+A scheduled-tripwire round, not a discretionary one. Overnight cron data pushed cnh_cny to exactly 60
+scored readings, firing the two maturity promises the registry made itself — the R13 maturity refresh
+(re-measure reach + recount trembles) and the R23.1 reachability reference-regime re-check — and turning
+the post-commit audit red on the no-overdue-pending gate until the review was done. This round does the
+review and closes both.
+
+**Reach, re-measured (window 74, robust center 81.5 / Qn 46.5 pips).** The UP +3 alarm bar sits at
+221 pips — +78 above the all-time record high of 143 (2026-07-11), which itself scores only z +1.32.
+The alarm is UP (offshore yuan weakening past onshore = capital-flight direction); the record is calm
+in that direction, with 0 UP-trembles across all 60 scored days. So the alarm remains UNREACHABLE
+within the line's own record, exactly as at R29 — the R29 estimate of ≈223 pips / +80 was accurate.
+The open question banked at R29 — is the zero UP-reach a young-calm-record artifact or a broken
+bar/statistic? — resolves as ARTIFACT: the bar re-derives correctly, the guard is sound, the tail is
+simply unsampled (the record has not yet contained a capital-flight regime).
+
+**Trembles, recounted.** 5 |z|>3 events over 60 scored, all benign DOWN (offshore yuan STRONGER):
+07-02, 07-07, 07-25, 08-10, 08-26. 0 in the alarm (UP) direction. Unchanged in character from R29.
+
+**Orthogonality, re-measured against the FULL tier-1 set.** The R29 measure predated the R30 promotion
+of fed_srf_takeup, so cnh_cny had never been checked against the current four-line roster. Re-measured:
+|max Pearson| = 0.098 — credit_spread +0.084 (n=45), flights −0.037 (n=60), fed_srf_takeup +0.098
+(n=42). Still the most orthogonal tier-1 line, now confirmed against every counted peer including the
+newest.
+
+**Verdict: RETAINED at tier-1 — on a narrowed basis.** cnh_cny passes three of the doctrine's four
+tests — a real PBOC guard (1), fresh (3, lag-1 0.27), best-in-set orthogonality (4) — but the STANDING
+test, IC (2), is UNDEFINED: 0 alarm-direction fires and 0 in-window reference events (0/0). It is
+retained not on a measured own-IC but on guard + orthogonality + the cited, sourced 2015-16 RMB
+devaluation / capital-flight reference regime (the R23.1-sanctioned standard, its hundreds-of-pips spread
+still dwarfing the ≈221-pip bar). Under the R32 doctrine that is enough: the doctrine's failure mode is
+decorations that fire on calm days (net_outages, entsog), and cnh_cny has the opposite profile — 0 false
+positives in 60 days is precision-CONSISTENT, if not precision-measured — and it is the only line on the
+China-capital-controls axis, so the alternative is a disclosed empty slot, which the doctrine prefers to
+a filler. But "tested by calm" only bounds the false-positive rate; recall is unmeasured, so the slot is
+PROVISIONAL until the first UP event. Nothing argues for demotion; the roster's redundancy risk is the
+three-line finance cluster, not this slot.
+
+**Bookkeeping.** Both n≥60 maturity items (R13, R23.1) are marked DONE R33 and superseded by one machine
+tripwire — a post-guard reach re-measurement that fires when the pre-guard restamp rows age out of the
+90-row window (`rows_since(cnh_cny, 2026-07-27) >= 90`), the point at which the bar re-derives on clean
+data — plus a standing PROSE note (the pending tool has no direction predicate) to re-adjudicate own-IC
+on the first UP-alarm tremble. The audit returns to green.
+
+**Correction (fable R33).** fable reproduced every number from the committed CSVs and confirmed RETAIN,
+but flagged that the review was measured on partly artifact-contaminated data and overstated in three
+places, now folded here and in the cell. (1) The all-time record high of 143 (2026-07-11) is a PRE-GUARD
+SATURDAY restamp artifact (the leg guard shipped 07-25; the six highest readings are pre-guard weekend
+restamp pairs — the exact class the fetcher docstring warns of), and the 07-25 benign tremble is itself a
+pre-guard Saturday read from the day the ~6.5 h desync was measured; 3 of the 5 benign DOWN trembles are
+pre-guard, and "benign" was a direction recount, not an adjudication. The clean post-guard record high is
+113 (08-19), against which the bar is MORE unreachable — so RETAIN strengthens on clean data. (2)
+"Legitimate tested factor" was too generous: IC is the one standing test cnh_cny is UNDEFINED on (0/0),
+so the honest status is "own-IC undefined, slot provisional until the first UP event". (3) The fed_srf
+orthogonality is calm-on-FLAT (fed_srf's z is dust, <0.01 under its materiality across the overlap), so
+0.098 is an absence-of-variance non-measurement; orthogonality under stress is unmeasured, and the
+2015-16 regime (a global risk-off) suggests cnh would then co-move positively with credit/plumbing. The
+reference regime was re-AFFIRMED (re-read), not re-measured for the as-built Yahoo daily-snapshot
+instrument. And "mature" means 60 ROWS across three collection regimes (pre-leg-guard; leg-guarded but
+pre-sample-hour-guard; ~7 fully post-09-02-guard rows), not 60 clean rows.
+
+No line moved, no scoring changed — docs-only. Full suite green (gate, audit including radar-metrics
+freshness + round-index parity + no-overdue-pending + retracted-phrase, lint stdlib-only in a bare venv,
+replay --check 0-divergence, pending 0 overdue); radar-metrics.md regenerated.
