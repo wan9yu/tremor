@@ -1193,3 +1193,74 @@ pre-sample-hour-guard; ~7 fully post-09-02-guard rows), not 60 clean rows.
 No line moved, no scoring changed — docs-only. Full suite green (gate, audit including radar-metrics
 freshness + round-index parity + no-overdue-pending + retracted-phrase, lint stdlib-only in a bare venv,
 replay --check 0-divergence, pending 0 overdue); radar-metrics.md regenerated.
+
+### Round 34 — 2026-09-13 (the flights airspace-reconception: a full measure-first arc to a coverage rejection, no line built)
+
+The factor-lens (R32) had flagged tier-1 `flights` as a stale AGGREGATE — a single worldwide airborne-
+aircraft sum whose high alarm bar rarely fires. This round tried to reconceive it into a probe for the
+invisible HUMAN hand: military / geopolitical airspace CLOSURES that leave a shadow only in how many
+aircraft are actually flying. The arc ran the full discipline — brainstorm, probe, coverage-validate,
+plan, fable-review, redesign, historical backtest — and ended at a clean, data-backed REJECTION: the
+airspace human-hand axis is un-spannable on the tested conflict zones (Ukraine, Israel) with keyless
+community ADS-B — the live-admitted Gulf/Korea boxes were coverage-adequate but not backtested, and the
+monthly-1st-noon method cannot see transient hour-to-day closures, so they are un-built-here rather than
+proven un-spannable, though the phase-trap still bars a fixed-hour construct over them. No line was built; `flights`
+stays exactly as it is (user-confirmed), the weather-suppressing aggregate its high bar makes it.
+
+**Construct 1 — per-region worst-of. REJECTED (phase seam).** `flights` already samples 4 fixed regions
+(W/C Europe, US East/West, E Asia/Japan) and sums them; the per-region breakdown is in each row's
+source_note. Un-summing and scoring each region on its own weekday-decycled z surfaced 15 down-fires
+over 64 days vs the sum's 1 — apparently promising. Adjudication killed it: the largest cluster (a
+3-week E-Asia drop, ~160→110 aircraft, first read via web search as Typhoon Dolphin recall) was a
+SAMPLE-HOUR PHASE SEAM — the GH-Actions cron drifted ~30 min earlier around 2026-08-08 (queue latency,
+no workflow change) and Japan sits on a ~100-aircraft/hour morning ramp at 22:30Z, so 30 min = the whole
+−50. The pinned 22:30Z regime (09-02→09-11) reads E-Asia 109–120 — i.e. ~110 IS the 22:30Z level; the
+apparent 08-28→09-01 "recovery" to 159–221 rode LATE off-hour samples (23:50Z–05:54Z, deeper into
+Japan's morning), which only sharpens the seam thesis. Precision on the window is 0/15, and the
+"sustained-duration" discriminator is inverted here (the artifacts are sustained, the real weather
+events single-day). The dense-coverage regions are also stable — human-hand closures have ~zero base
+rate in them, so recall would be 0/0 regardless.
+
+**Construct 2 — conflict-corridor closure. Probed, planned, then REJECTED (coverage).** A live probe of
+corridor boxes looked incontrovertible: Kyiv-250nm read 1 aircraft while Frankfurt read 917 and
+Ukraine's neighbours (Poland/Romania/Turkey) were full — traffic flowing around, not through. A
+coverage-validation over a UTC day (per-box peak = daytime plateau) admitted 5 conflict-prone,
+currently-open, ≥2-provider-solid boxes (Poland-UA, Kaliningrad, Levant, Persian Gulf, Korea; Taiwan
+and others excluded as sparse). A plan was written for a worst-of `(box÷neighbor)÷normal_ratio` line.
+fable's pre-build review returned DON'T-BUILD: at 250-nm radius the box and neighbour circles overlap
+31–64%, so the denominator contains the numerator — a closure large enough to fire is one that darkens
+the pair. It also flagged that a fixed sample hour cannot put 20°E and 127°E on plateau at once (the
+per-region phase trap again), and — decisively — that keyless HISTORICAL ADS-B snapshots exist
+(adsbexchange readsb-hist, the 1st of each month), so the construct could be backtested before building.
+
+**The backtest settled it.** Redesigned to fable's cleaner geometry (a jurisdiction polygon ÷ the ring
+of the same query, coverage-cancelling and disjoint by construction) and run on the historical
+snapshots, the closure signal collapsed into a COVERAGE FLOOR. Community ADS-B coverage is driven by
+volunteer ground receivers, which cluster in stable, wealthy regions and are structurally absent over
+conflict zones. Measured at noon UTC, same instant, equal-area central boxes, PRE-war 2022-02-01:
+central Ukraine (Kyiv) = 1 airborne aircraft, against Poland 22, Germany 69, France 74 (global total
+4038 — not a sparse file). Kyiv airspace was busy in reality; adsbexchange saw 1 because there were
+almost no receivers over Ukraine. During the war it also read ~1 — so a closure there is
+indistinguishable from the ever-present floor, and the live "Ukraine=1" first read as a closure was that
+floor. Israel read ~0 historically (unmeasurable). Where coverage IS dense, closures essentially never
+happen, and a loose bbox dilutes with border traffic (the Ukraine war-closure moved a loose bbox only ~2×,
+below any alarm). No geometry rescues a source that cannot see the sky over the places that matter.
+
+**Two retractions, both caught by the discipline.** The "Typhoon Dolphin recall" and the "incontrovertible
+Ukraine closure" were each presented as positive results and each overturned by the next check — a
+sample-hour control and a pre-war base-rate control respectively. Both were caught by the measure-first
+gate (a fable review, then a user-requested historical backtest) before any line was built or committed —
+the doctrine's "reachability without a base-rate check is not IC" doing its job, on airspace this time.
+
+**Disposition.** `flights` unchanged — the single summed weather-suppressing aggregate; its high bar
+rightly ignores summer thunderstorms (the guard it exists for), and un-summing only removes that
+protection. The airspace human-hand axis is left honestly UN-SPANNED (per Coverage-is-not-a-goal, better
+than a coverage-confounded factor). The Nov per-region flights tripwire is KILLED (its −7.84/−7.33z were
+phase-seam artifacts, and its planned per-region fix is the construct just rejected); the extend-level-
+layer decision keeps its own Nov date. BANKED for future work: keyless historical ADS-B (adsbexchange
+readsb-hist monthly-1st) is a real backtest tool, and the phase-seam + coverage-floor confounds are the
+two traps any future ADS-B geometry must clear before it is trusted.
+
+No line moved, no scoring changed, no new line registered — docs-only. Full suite green (gate, audit
+including radar-metrics freshness + round-index parity + no-overdue-pending + retracted-phrase, lint
+stdlib-only in a bare venv, replay --check 0-divergence, pending 0 overdue); radar-metrics.md regenerated.
