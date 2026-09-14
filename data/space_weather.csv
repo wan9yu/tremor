@@ -1509,3 +1509,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-12,2.67,0.002,0,up,NOAA SWPC planetary Kp daily max 2.67 on 2026-09-10 [sampled 22:31:06Z],2026-09-10,scoring
 2026-09-13,3,0.235,0,up,NOAA SWPC planetary Kp daily max 3 on 2026-09-11 [sampled 22:31:08Z],2026-09-11,scoring
 2026-09-14,3,0.235,0,up,NOAA SWPC planetary Kp daily max 3 on 2026-09-12 [sampled 22:31:03Z],2026-09-12,scoring
+2026-09-15,3,0.235,0,up,NOAA SWPC planetary Kp daily max 3 on 2026-09-13 [sampled 22:30:47Z],2026-09-13,scoring
