@@ -128,11 +128,11 @@ import to a `lint_*.py` or the module it imports.
 - **A calibration round** ("radar round") = score → explore → calibrate over the registry,
   recorded as a new `### Round N` entry in `radar-log.md` + updates to `radar.md` (+ a
   round-index line; regenerate `radar-metrics.md`). The procedure is driven by the
-  `tremor-radar` skill, installed in the maintainer's local agent skills directory (outside the
-  repo). Each round is
+  `tremor-radar` skill, vendored in this repo at `skills/tremor-radar/SKILL.md` (also auto-loaded
+  from the maintainer's agent skills directory when the agent supports it). Each round is
   data-backed — computed from `data/*.csv` + the rubric, never gut-feel ("data-backed, never
   拍脑袋").
-- **Periodic audits** use the `audit` skill (waste / drift / strategic).
+- **Periodic audits** use the `audit` skill (waste / drift / strategic), vendored at `skills/audit/`.
 - **Building/changing a line:** brainstorm/probe first (measure before building), then a
   subagent-driven build with an independent review, then the full test suite, then the push
   gate. Probes that fail are RECORDED in `radar.md` Rejected + a round entry so the search is
