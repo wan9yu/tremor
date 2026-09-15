@@ -1688,3 +1688,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-13,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h to 2026-09-11 22:00Z) [Cape Verde, Congo] [sampled 22:30:06Z]",2026-09-11,scoring
 2026-09-14,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h to 2026-09-12 22:00Z) [Cape Verde, Guyana] [sampled 22:30:07Z]",2026-09-12,scoring
 2026-09-15,4,0.938,0,up,"IODA 4 countries with ping-slash24 outages (24h to 2026-09-13 22:00Z) [Burundi, Cape Verde, Mauritius, Rwanda] [sampled 22:30:09Z]",2026-09-13,scoring
+2026-09-16,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h to 2026-09-14 22:00Z) [Cape Verde, Portugal] [sampled 22:30:14Z]",2026-09-14,scoring
