@@ -256,3 +256,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-15,4670,,0,,"IMF PortWatch global port calls 2026-09-04 [behind: wanted 2026-09-05, newest available 2026-09-04] [sampled 22:30:36Z] [stale: observation already recorded]",2026-09-04,stale
 2026-09-16,4222,-2.153,0,down,IMF PortWatch global port calls 2026-09-06 [sampled 22:30:36Z],2026-09-06,scoring
 2026-09-17,4927,-1.865,0,down,IMF PortWatch global port calls 2026-09-07 [sampled 22:30:32Z],2026-09-07,scoring
+2026-09-18,4738,-1.295,0,down,IMF PortWatch global port calls 2026-09-08 [sampled 22:30:35Z],2026-09-08,scoring
