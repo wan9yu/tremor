@@ -258,3 +258,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-17,1922,0.479,0,up,"IMF PortWatch 28 chokepoints, total transits 2026-09-07 [sampled 22:30:22Z]",2026-09-07,scoring
 2026-09-18,1842,-0.344,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-09-08 [sampled 22:30:24Z]",2026-09-08,scoring
 2026-09-19,1787,-0.891,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-09-09 [sampled 22:30:22Z]",2026-09-09,scoring
+2026-09-20,1869,-0.005,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-09-10 [sampled 22:30:21Z]",2026-09-10,scoring
