@@ -90,3 +90,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-18,-3,-0.957,0,down,FRED SOFR 3.62 − IORB 3.65 (both 2026-09-16) [sampled 22:30:24Z],2026-09-16,scoring
 2026-09-19,-5,-1.842,0,down,FRED SOFR 3.85 − IORB 3.9 (both 2026-09-17) [sampled 22:30:22Z],2026-09-17,scoring
 2026-09-20,-5,,0,,FRED SOFR 3.85 − IORB 3.9 (both 2026-09-17) [sampled 22:30:21Z] [stale: observation already recorded],2026-09-17,stale
+2026-09-21,-5,,0,,FRED SOFR 3.85 − IORB 3.9 (both 2026-09-17) [sampled 22:30:19Z] [stale: observation already recorded],2026-09-17,stale
