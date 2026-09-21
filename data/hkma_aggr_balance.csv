@@ -155,3 +155,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-19,53975,-0.224,0,down,HKMA aggregate balance 53975 HK$m (2026-09-18) [sampled 22:30:38Z],2026-09-18,scoring
 2026-09-20,53975,,0,,HKMA aggregate balance 53975 HK$m (2026-09-18) [sampled 22:30:37Z] [stale: observation already recorded],2026-09-18,stale
 2026-09-21,53975,,0,,HKMA aggregate balance 53975 HK$m (2026-09-18) [sampled 22:30:34Z] [stale: observation already recorded],2026-09-18,stale
+2026-09-22,53975,-0.224,0,down,HKMA aggregate balance 53975 HK$m (2026-09-21) [sampled 22:30:37Z],2026-09-21,scoring
