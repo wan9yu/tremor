@@ -158,3 +158,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-22,53975,-0.224,0,down,HKMA aggregate balance 53975 HK$m (2026-09-21) [sampled 22:30:37Z],2026-09-21,scoring
 2026-09-23,,,0,,"HKMA HTTP 502 after 17.5s [Via=kong/2.5.1; X-Kong-Upstream-Latency=16659; X-Kong-Proxy-Latency=0] body: <html> <head><title>502 Bad Gateway</title></head> <body bgcolor=""white""> <center><h1>502 Bad Gateway</h1></center> <hr><center>alb</center> </body> </html> [sampled 22:30:37Z]",,dark
 2026-09-24,53975,-0.240,0,down,HKMA aggregate balance 53975 HK$m (2026-09-22) [sampled 22:30:38Z],2026-09-22,scoring
+2026-09-25,,,0,,HKMA request failed: ReadTimeout after 25.9s [sampled 22:30:38Z],,dark
