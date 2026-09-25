@@ -138,7 +138,9 @@ class TestPairVerdict(unittest.TestCase):
         right = [_row("2026-07-02", 0.010, "1", "down"),
                  _row("2026-07-04", 0.020, "1", "down")]
         verdict = pair_verdict.pair_verdict(left, _Line("up"), right, _Line("down"))
-        self.assertNotEqual(verdict["verdict"], "non_measurement")
+        # Flat left side: correlation is undefined, and two alarm days are
+        # under the stress floor, so the pair is measurable but not orthogonal.
+        self.assertEqual(verdict["verdict"], "unmeasured_under_stress")
         self.assertTrue(verdict["countable"])
 
     def test_scoring_path_does_not_import_the_verdict(self):

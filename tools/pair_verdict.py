@@ -17,25 +17,25 @@ def pair_verdict(left_rows, left_mod, right_rows, right_mod):
     dates are the stress subset.
     """
     left, right, dates = _overlap(left_rows, right_rows)
-    left_rows = [left[day] for day in dates]
-    right_rows = [right[day] for day in dates]
-    alarm_days_left = _alarm_days(left_rows, left_mod)
-    alarm_days_right = _alarm_days(right_rows, right_mod)
+    shared_left = [left[day] for day in dates]
+    shared_right = [right[day] for day in dates]
+    alarm_days_left = _alarm_days(shared_left, left_mod)
+    alarm_days_right = _alarm_days(shared_right, right_mod)
     stress_n = alarm_days_right
     # Dust is a hard bar, not a number to retune after seeing a 0.025.
-    if (alarm_days_left == 0 or alarm_days_right == 0
-            or _max_abs_z(left_rows) < DUST or _max_abs_z(right_rows) < DUST):
+    if (_not_measured(shared_left, left_mod)
+            or _not_measured(shared_right, right_mod)):
         return _report("non_measurement", False, alarm_days_left,
                         alarm_days_right, stress_n)
     # A high correlation is the drop suggestion even when the stress
     # window is too short to confirm orthogonality.
-    coefficient = _pearson([_z(row) for row in left_rows],
-                           [_z(row) for row in right_rows])
+    coefficient = _pearson([_z(row) for row in shared_left],
+                           [_z(row) for row in shared_right])
     if coefficient is not None and abs(coefficient) >= SPAN:
         return _report("redundant", True, alarm_days_left,
                         alarm_days_right, stress_n)
     if stress_n < STRESS_MIN or _stress_subset_unmeasured(
-            left_rows, left_mod, right_rows, right_mod):
+            shared_left, left_mod, shared_right, right_mod):
         return _report("unmeasured_under_stress", True, alarm_days_left,
                         alarm_days_right, stress_n)
     return _report("orthogonal_in_window", True, alarm_days_left,
@@ -56,6 +56,11 @@ def _alarm_days(rows, mod):
     return sum(1 for row in rows if collect.counts_as_tremble(row, mod))
 
 
+def _not_measured(rows, mod):
+    """No alarm day on these rows, or every |z| is under the dust bar."""
+    return _alarm_days(rows, mod) == 0 or _max_abs_z(rows) < DUST
+
+
 def _stress_subset_unmeasured(left_rows, left_mod, right_rows, right_mod):
     """True when the counterpart's alarm days are not a measurement for both."""
     stress_left = []
@@ -64,12 +69,10 @@ def _stress_subset_unmeasured(left_rows, left_mod, right_rows, right_mod):
         if collect.counts_as_tremble(right_row, right_mod):
             stress_left.append(left_row)
             stress_right.append(right_row)
-    if not stress_left:
-        return True
-    return (_alarm_days(stress_left, left_mod) == 0
-            or _alarm_days(stress_right, right_mod) == 0
-            or _max_abs_z(stress_left) < DUST
-            or _max_abs_z(stress_right) < DUST)
+    # Every kept right-hand row is already an alarm day, so that side fails
+    # this check only on dust. The left side fails when those dates are calm.
+    return (_not_measured(stress_left, left_mod)
+            or _not_measured(stress_right, right_mod))
 
 
 def _max_abs_z(rows):
