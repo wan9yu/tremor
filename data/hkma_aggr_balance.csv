@@ -163,3 +163,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-27,,,0,,"HKMA HTTP 502 after 23.3s [Via=kong/2.5.1; X-Kong-Upstream-Latency=22464; X-Kong-Proxy-Latency=1] body: <html> <head><title>502 Bad Gateway</title></head> <body bgcolor=""white""> <center><h1>502 Bad Gateway</h1></center> <hr><center>alb</center> </body> </html> [sampled 22:30:36Z]",,dark
 2026-09-28,,,0,,"HKMA HTTP 502 after 24.8s [Via=kong/2.5.1; X-Kong-Upstream-Latency=23948; X-Kong-Proxy-Latency=0] body: <html> <head><title>502 Bad Gateway</title></head> <body bgcolor=""white""> <center><h1>502 Bad Gateway</h1></center> <hr><center>alb</center> </body> </html> [sampled 22:30:41Z]",,dark
 2026-09-29,,,0,,HKMA request failed: ReadTimeout after 25.8s [sampled 23:05:32Z],,dark
+2026-09-30,,,0,,HKMA request failed: ReadTimeout after 25.6s [sampled 22:30:46Z],,dark
