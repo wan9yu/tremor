@@ -2173,3 +2173,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-29,2.5,0.100,0,up,"Bitstamp settled close: USDC 0.9999 (1.5bp), USDT 0.9998 (2.5bp) -> worst USDT 2.5bp from $1 [sampled 23:05:58Z]",2026-09-27,scoring
 2026-09-30,4.7,0.188,0,up,"Bitstamp settled close: USDC 0.9999 (0.7bp), USDT 0.9995 (4.7bp) -> worst USDT 4.7bp from $1 [sampled 22:31:12Z]",2026-09-28,scoring
 2026-10-01,4.1,0.164,0,up,"Bitstamp settled close: USDC 1.0000 (0.1bp), USDT 0.9996 (4.1bp) -> worst USDT 4.1bp from $1 [sampled 22:31:05Z]",2026-09-29,scoring
+2026-10-02,6.2,0.248,0,up,"Bitstamp settled close: USDC 1.0000 (0.1bp), USDT 0.9994 (6.2bp) -> worst USDT 6.2bp from $1 [sampled 22:31:34Z]",2026-09-30,scoring

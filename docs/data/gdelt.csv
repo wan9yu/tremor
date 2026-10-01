@@ -83,3 +83,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-09-29,13.272,-1.278,0,down,"GDELT full-day conflict share, 61485 events across 96 files (2026-09-27) [sampled 23:05:59Z]",2026-09-27,scoring
 2026-09-30,12.957,-0.854,0,down,"GDELT full-day conflict share, 97242 events across 96 files (2026-09-28) [sampled 22:31:13Z]",2026-09-28,scoring
 2026-10-01,13.301,-0.270,0,down,"GDELT full-day conflict share, 113066 events across 96 files (2026-09-29) [sampled 22:31:05Z]",2026-09-29,scoring
+2026-10-02,13.006,-0.885,0,down,"GDELT full-day conflict share, 114974 events across 96 files (2026-09-30) [sampled 22:31:35Z]",2026-09-30,scoring
