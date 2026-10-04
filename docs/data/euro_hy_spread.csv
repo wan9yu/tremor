@@ -852,3 +852,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-02,3,4.456,1,up,FRED BAMLHE00EHYIOAS OAS 2026-09-30 [sampled 22:31:02Z],2026-09-30,scoring
 2026-10-03,3.17,6.450,1,up,FRED BAMLHE00EHYIOAS OAS 2026-10-01 [sampled 22:30:33Z],2026-10-01,scoring
 2026-10-04,3.17,,0,,FRED BAMLHE00EHYIOAS OAS 2026-10-01 [sampled 22:30:31Z] [stale: observation already recorded],2026-10-01,stale
+2026-10-05,3.17,,0,,FRED BAMLHE00EHYIOAS OAS 2026-10-01 [sampled 22:30:29Z] [stale: observation already recorded],2026-10-01,stale
