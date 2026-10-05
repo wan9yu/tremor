@@ -61,3 +61,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-03,4.924,-1.867,0,down,"US Treasury cash $893,699m / $181,499m mean daily withdrawal over 20 business days to 2026-10-01 = 4.92 days of outflows [sampled 22:30:40Z]",2026-10-01,scoring
 2026-10-04,4.924,,0,,"US Treasury cash $893,699m / $181,499m mean daily withdrawal over 20 business days to 2026-10-01 = 4.92 days of outflows [sampled 22:30:37Z] [stale: observation already recorded]",2026-10-01,stale
 2026-10-05,4.924,,0,,"US Treasury cash $893,699m / $181,499m mean daily withdrawal over 20 business days to 2026-10-01 = 4.92 days of outflows [sampled 22:30:59Z] [stale: observation already recorded]",2026-10-01,stale
+2026-10-06,5.286,-1.123,0,down,"US Treasury cash $871,181m / $164,812m mean daily withdrawal over 20 business days to 2026-10-02 = 5.29 days of outflows [sampled 23:55:14Z]",2026-10-02,scoring
