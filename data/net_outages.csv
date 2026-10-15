@@ -1718,3 +1718,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-13,3,0.000,0,flat,"IODA 3 countries with ping-slash24 outages (24h to 2026-10-11 22:00Z) [Burundi, Lesotho, Tunisia] [sampled 00:23:22Z]",2026-10-11,scoring
 2026-10-14,2,-0.469,0,down,"IODA 2 countries with ping-slash24 outages (24h to 2026-10-12 22:00Z) [Iraq, Tunisia] [sampled 22:30:08Z]",2026-10-12,scoring
 2026-10-15,2,-0.469,0,down,"IODA 2 countries with ping-slash24 outages (24h to 2026-10-13 22:00Z) [Dominica, Tunisia] [sampled 22:30:19Z]",2026-10-13,scoring
+2026-10-16,4,0.704,0,up,"IODA 4 countries with ping-slash24 outages (24h to 2026-10-14 22:00Z) [Bangladesh, Nepal, Syrian Arab Republic, Tunisia] [sampled 22:30:10Z]",2026-10-14,scoring
