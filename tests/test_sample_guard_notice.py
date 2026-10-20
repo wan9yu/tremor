@@ -5,16 +5,18 @@ run committed starts with the guard sentence. Status is not consulted: a
 weekend closure can still carry that sentence. An on-time row, a source
 failure, a tier-2 timeout, and an older refusal are not named. No network.
 """
+import csv
 import os
 import sys
+import tempfile
 import unittest
 from types import SimpleNamespace
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from fetchers import flights
-from tools.sample_guard_notice import refused_lines
+from fetchers import flights  # noqa: E402
+from tools.sample_guard_notice import notice_line, refused_lines  # noqa: E402
 
 GUARD = "no reading: sampled +0.6h from the 22:30Z target (CI delayed past the sleep window)"
 ON_TIME = "ADS-B regions [W/C Europe=165] [sampled 22:30:00Z]"
@@ -93,6 +95,38 @@ class TestRefusedLines(unittest.TestCase):
             ["flights"])
 
 
+class TestNoticeLine(unittest.TestCase):
+    def test_reads_only_the_named_date_and_formats_the_shell_line(self):
+        with tempfile.TemporaryDirectory() as directory:
+            self._write(directory, "cnh_cny", [
+                {"date": "2026-10-09", "source_note": GUARD},
+                {"date": "2026-10-10", "source_note": ON_TIME},
+            ])
+            self._write(directory, "flights", [
+                {"date": "2026-10-13", "source_note": GUARD},
+            ])
+            modules = [_mod("flights"), _mod("cnh_cny")]
+            self.assertEqual(notice_line(directory, "2026-10-10", modules), "")
+            self.assertEqual(
+                notice_line(directory, "2026-10-13", modules),
+                "2026-10-13 flights")
+            self.assertEqual(
+                notice_line(directory, "2026-10-09", modules),
+                "2026-10-09 cnh_cny")
+
+    def test_missing_file_is_not_a_hit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            self.assertEqual(
+                notice_line(directory, "2026-10-13", [_mod("cnh_cny")]), "")
+
+    def _write(self, directory, line, rows):
+        path = os.path.join(directory, line + ".csv")
+        with open(path, "w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=["date", "source_note"])
+            writer.writeheader()
+            writer.writerows(rows)
+
+
 class TestWorkflowPlacement(unittest.TestCase):
     def test_notice_step_sits_before_the_failure_alarm(self):
         path = os.path.join(ROOT, ".github", "workflows", "daily.yml")
@@ -106,3 +140,5 @@ class TestWorkflowPlacement(unittest.TestCase):
         self.assertNotIn("continue-on-error", block)
         self.assertNotIn("date -u", block)
         self.assertNotIn("writes no row", block)
+        self.assertIn("exit 0", block)
+        self.assertIn("|| exit 1", block)
