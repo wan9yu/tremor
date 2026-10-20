@@ -134,21 +134,55 @@ jobs:
       - name: Audit that the dashboard renders
         run: node tests/render_smoke.js
 
-      # A silent instrument is the failure mode that ends this project. The daily
-      # commit is also what keeps the schedule alive — GitHub disables a cron
-      # workflow after 60 days without repository activity — so a run that keeps
-      # failing does not merely lose days, it eventually switches tremor off with
-      # nobody told. Raise one open issue and keep appending to it.
+      # A sample-hour refusal is a written row, not a failed collection. The job
+      # stays green so a real audit failure does not look like a late queue.
+      # This step sits immediately before the failure alarm: a later failure
+      # cannot re-run that alarm, and an earlier failure skips this step.
+      # Exit 0 after the issue is filed. Exit non-zero only when the issue
+      # could not be filed, so the alarm below is the backstop and its body
+      # stays unchanged. No if: always() — an audit failure must not also
+      # open the sample-hour issue.
+      - name: Notice a counted sample-hour refusal
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notice=$(python tools/sample_guard_notice.py)
+          if [ -z "$notice" ]; then
+            exit 0
+          fi
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          run_url="$run_url/actions/runs/$GITHUB_RUN_ID"
+          TITLE="tremor: a counted line was refused for sample hour"
+          BODY="Counted sample-hour refusal on ${notice}.
+          The rows were written. This is the sample-hour guard,
+          not a missed collection.
+          ${run_url}"
+          NUM=$(gh issue list --state open --search "$TITLE in:title" \
+                --json number --jq '.[0].number // empty') || exit 1
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --body "$BODY" || exit 1
+          else
+            gh issue create --title "$TITLE" --body "$BODY" || exit 1
+          fi
+          exit 0
+
+      # A silent instrument is the failure mode that ends this project.
+      # The daily commit is also what keeps the schedule alive — GitHub
+      # disables a cron workflow after 60 days without repository activity —
+      # so a run that keeps failing does not merely lose days, it eventually
+      # switches tremor off with nobody told. Raise one open issue and keep
+      # appending to it.
       - name: Raise the alarm on failure
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          run_url="$run_url/actions/runs/$GITHUB_RUN_ID"
           TITLE="tremor: the daily collection is failing"
-          NUM=$(gh issue list --state open --search "$TITLE in:title" --json number \
-                --jq '.[0].number // empty')
-          BODY="Run failed on $(date -u +%F) — $RUN_URL
+          NUM=$(gh issue list --state open --search "$TITLE in:title" \
+                --json number --jq '.[0].number // empty')
+          BODY="Run failed on $(date -u +%F) — $run_url
 
           The instrument writes no row for a failed run, and the schedule itself
           expires after 60 days without a commit. Fix or disable deliberately."
