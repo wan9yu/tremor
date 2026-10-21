@@ -1714,3 +1714,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-19,,,0,,no reading: only 0/153 watch-list countries answered IODA bgp (0% < 90%); a thin day would understate the worst-of withdrawal [sampled 22:30:13Z],,dark
 2026-10-20,,,0,,no reading: only 0/153 watch-list countries answered IODA bgp (0% < 90%); a thin day would understate the worst-of withdrawal [sampled 22:30:12Z],,dark
 2026-10-21,,,0,,no reading: only 0/153 watch-list countries answered IODA bgp (0% < 90%); a thin day would understate the worst-of withdrawal [sampled 22:30:12Z],,dark
+2026-10-22,0.8874,-0.563,0,down,"IODA bgp worst-of route visibility 0.8874 of normal, driven by LS (daily-min ÷ 28d median), across 153/153 countries (settled UTC day 2026-10-20) [sampled 22:30:09Z]",2026-10-20,scoring

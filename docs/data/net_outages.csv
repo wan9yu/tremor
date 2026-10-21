@@ -1724,3 +1724,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-19,,,0,,IODA request failed: SSLError [sampled 22:30:12Z],,dark
 2026-10-20,,,0,,IODA request failed: SSLError [sampled 22:30:12Z],,dark
 2026-10-21,,,0,,IODA request failed: SSLError [sampled 22:30:12Z],,dark
+2026-10-22,3,0.000,0,flat,"IODA 3 countries with ping-slash24 outages (24h to 2026-10-20 22:00Z) [Benin, Guam, Mauritius] [sampled 22:30:05Z]",2026-10-20,scoring
