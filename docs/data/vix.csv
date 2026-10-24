@@ -286,3 +286,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-22,400,285.834,1,up,"FRED VIXCLS close     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300 [sampled 22:30:42Z]","    <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300",scoring
 2026-10-23,16.68,0.432,0,up,FRED VIXCLS close 2026-10-21 [sampled 22:30:41Z],2026-10-21,scoring
 2026-10-24,19.03,2.217,0,up,FRED VIXCLS close 2026-10-22 [sampled 22:30:44Z],2026-10-22,scoring
+2026-10-25,19.03,,0,,FRED VIXCLS close 2026-10-22 [sampled 22:31:12Z] [stale: observation already recorded],2026-10-22,stale

@@ -881,3 +881,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-22,400,4658.842,1,up,"FRED BAMLH0A0HYM2 OAS     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300 [keyless fallback: FRED returned a non-JSON body] [sampled 22:30:04Z]","    <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300",scoring
 2026-10-23,3.27,6.508,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-21 [sampled 22:30:05Z],2026-10-21,scoring
 2026-10-24,3.4,8.033,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-22 [sampled 22:30:05Z],2026-10-22,scoring
+2026-10-25,3.4,,0,,FRED BAMLH0A0HYM2 OAS 2026-10-22 [sampled 22:30:21Z] [stale: observation already recorded],2026-10-22,stale
