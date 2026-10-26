@@ -95,3 +95,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-24,0.968,-0.464,0,down,dolarapi blue 1565 / oficial 1550 = +1.0% premium [sampled 22:30:39Z],2026-10-23,scoring
 2026-10-25,0.968,,0,,dolarapi blue 1565 / oficial 1550 = +1.0% premium [weekend stamp 2026-10-24 -> 2026-10-23] [sampled 22:30:54Z] [stale: observation already recorded],2026-10-23,stale
 2026-10-26,0.968,,0,,dolarapi blue 1565 / oficial 1550 = +1.0% premium [weekend stamp 2026-10-25 -> 2026-10-23] [sampled 22:30:50Z] [stale: observation already recorded],2026-10-23,stale
+2026-10-27,0.962,-0.488,0,down,dolarapi blue 1575 / oficial 1560 = +1.0% premium [sampled 22:30:55Z],2026-10-26,scoring
