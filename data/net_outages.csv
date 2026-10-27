@@ -1730,3 +1730,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-25,2,-0.469,0,down,"IODA 2 countries with ping-slash24 outages (24h to 2026-10-23 22:00Z) [Guam, Us Virgin Islands] [sampled 22:30:22Z]",2026-10-23,scoring
 2026-10-26,2,-0.469,0,down,"IODA 2 countries with ping-slash24 outages (24h to 2026-10-24 22:00Z) [Guam, Us Virgin Islands] [sampled 22:30:17Z]",2026-10-24,scoring
 2026-10-27,4,0.469,0,up,"IODA 4 countries with ping-slash24 outages (24h to 2026-10-25 22:00Z) [Burkina Faso, Cape Verde, Guam, Saint Kitts And Nevis] [sampled 22:30:22Z]",2026-10-25,scoring
+2026-10-28,2,-0.469,0,down,"IODA 2 countries with ping-slash24 outages (24h to 2026-10-26 22:00Z) [Guam, Haiti] [sampled 22:30:08Z]",2026-10-26,scoring

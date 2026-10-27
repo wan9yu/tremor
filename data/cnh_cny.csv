@@ -127,3 +127,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-25,,,0,,"no new observation: FX weekend, both legs frozen (CNH 2026-10-23 20:59Z, CNY 2026-10-24 21:32Z) — no simultaneous quote exists until Monday trade; dark by market closure, not failure [sampled 22:30:21Z]",,closed
 2026-10-26,-11,,0,,"Yahoo USDCNH 6.6686 − USDCNY 6.6697 (pips) [CNH 2026-10-25 22:30Z, CNY 2026-10-25 22:01Z, 29min apart] [session 2026-10-23] [sampled 22:30:17Z] [stale: observation already recorded]",2026-10-23,stale
 2026-10-27,-16,-1.962,0,down,"Yahoo USDCNH 6.6679 − USDCNY 6.6695 (pips) [CNH 2026-10-26 22:30Z, CNY 2026-10-26 22:28Z, 1min apart] [session 2026-10-26] [sampled 22:30:21Z]",2026-10-26,scoring
+2026-10-28,-10,-1.834,0,down,"Yahoo USDCNH 6.6645 − USDCNY 6.6655 (pips) [CNH 2026-10-27 22:29Z, CNY 2026-10-27 22:11Z, 18min apart] [session 2026-10-27] [sampled 22:30:07Z]",2026-10-27,scoring
