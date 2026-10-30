@@ -130,3 +130,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-28,0.7034,0.274,0,up,Upbit KRW-BTC vs Coinbase USD @ 1325.19 KRW/USD [sampled 22:30:29Z],,scoring
 2026-10-29,1.2976,0.812,0,up,Upbit KRW-BTC vs Coinbase USD @ 1326.81 KRW/USD [sampled 22:30:23Z],,scoring
 2026-10-30,0.936,0.449,0,up,Upbit KRW-BTC vs Coinbase USD @ 1340.24 KRW/USD [sampled 22:36:44Z],,scoring
+2026-10-31,0.8039,0.318,0,up,Upbit KRW-BTC vs Coinbase USD @ 1338.04 KRW/USD [sampled 22:30:27Z],,scoring
