@@ -300,3 +300,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-29,,,0,,PortWatch returned no usable daily rows [sampled 22:30:25Z],,dark
 2026-10-30,,,0,,PortWatch returned no usable daily rows [sampled 22:36:46Z],,dark
 2026-10-31,,,0,,PortWatch returned no usable daily rows [sampled 22:30:28Z],,dark
+2026-11-01,1586,-3.851,1,down,"IMF PortWatch 28 chokepoints, total transits 2026-10-22 [sampled 22:30:23Z]",2026-10-22,scoring
