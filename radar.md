@@ -621,12 +621,12 @@ gets one line added here.
   2026-10-15 on the 8 largest readings). Annotations: 09-05 artifact (recurrence adjudicated), 09-06 method
   (corroboration measured, not a filter), 09-06 correction (withdraw R11's 2025 Iberian-blackout attribution — the
   alarm was 0/41 corroborated synced ping-only; the real blackout day read 7 countries, sub-alarm). The 09-04/09-05
-  common-mode was a 2-day transient, cleared 09-06. Suite green, replay 0-divergence, no tier moves. (Separate/open:
-  control_daylength canary false positive near the equinox, issue #3.)
+  common-mode was a 2-day transient, cleared 09-06. Suite green, replay 0-divergence, no tier moves. (Separate/open
+  at this round: control_daylength canary false positive near the equinox — CLOSED by the R28 canary fix below.)
 - **Round 28** — 2026-09-08 · the reach adjudication + demotion, folded with two spine fixes: (1)
   control_daylength's canary now reproduces the SOURCE's day-length model (Schlyter sunriset, ≈1.10°
   effective depression), not astronomical truth, and a margin closest-day check replaces strict argmin
-  (solstice-safe) — the equinox false positive (issue #3) is CLOSED; (2) A1 spine hardening — a
+  (solstice-safe) — the equinox false positive (the R27 separate item) is CLOSED; (2) A1 spine hardening — a
   non-numeric or non-finite fetcher value is darkened at the collect() boundary instead of aborting the
   run or being stored as 'nan'/'inf' into the forward-only record; (3) net_outages' 8 largest readings
   adjudicated under the R23 playbook (a live IODA re-query + a multi-source attribution search, evidence

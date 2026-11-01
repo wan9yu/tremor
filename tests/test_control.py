@@ -73,12 +73,14 @@ def astronomical_day_length_h(lat_deg, day):
     accurate formula would be off by several minutes on every row and would
     misidentify the closest day on the committed record.
 
-    The source-redefinition tell: a UNIFORM +3.5-4.5 minute offset appearing
-    on every row from one date onward means sunrise-sunset.org changed its
-    published model, not that a date slipped — the consecutive-jump audit
-    (0.15 h/day) will NOT fire on a uniform shift, because it looks at
-    day-to-day differences, not levels. Recovery from that is an annotation
-    plus a forward-only bump of this model, never a rewrite of past rows.
+    The source-redefinition tell: a UNIFORM offset — the same direction and
+    size on every row from one date onward — means sunrise-sunset.org changed
+    its published model, not that a date slipped. The observed direction and
+    size belong to that particular shift and are measured from the record, so
+    no band is quoted here. The consecutive-jump audit (0.15 h/day) will NOT
+    fire on a uniform shift, because it looks at day-to-day differences, not
+    levels. Recovery from that is an annotation plus a forward-only bump of
+    this model, never a rewrite of past rows.
 
     This is the FIRST of the source's two published generations. From
     observation date 2026-10-21 the source published a shorter day, and it
@@ -244,7 +246,7 @@ class TestControlLine(unittest.TestCase):
 
 class TestReproducesTheSourcesPublishedModel(unittest.TestCase):
     """Pins the formula to values sunrise-sunset.org actually published — not to
-    any formula, however standard. This is the test issue #3 exists to add: it
+    any formula, however standard. This is the test the R28 canary fix added: it
     is a DATE check on the SOURCE's model, and its ground truth is the vendor's
     own output, never a re-derivation.
 

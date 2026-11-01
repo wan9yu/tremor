@@ -827,3 +827,84 @@ so the "source-redefinition identification band" states the wrong sign and a ban
 contradicts). The new audit class is coupled on purpose to `level_layer.walk`'s parameters and
 `lean_panel.build_panel`'s row rule: a change to either must move this check or regenerate the
 derived file in the same commit, or the audit reds.
+
+## Iteration 9 — item 6 (docs): the redefinition band states no sign, and the equinox item points at R28
+
+**Chosen because** `.ralph/plan.md` allows prose-only items "at any time after the first item"
+and item 6 is the next unfinished item in `.ralph/items.json` (items 1-5 and 7-9 landed; only 6
+and 10 remain). Its evidence was already in the ledger from iteration 6, and no item was
+hard-blocked.
+
+**Entry state measured.** All six gates green at HEAD (pytest 342 passed; lint 61 OK; forbidden
+literal 3 OK; replay 1271 rows, 0 divergent; pending 6 tagged, 0 overdue; render smoke exit 0)
+and the audit tier 28 tests OK.
+
+**Correction 1 — the identification band (`tests/test_control.py`).** The
+`astronomical_day_length_h` docstring carried "The source-redefinition tell: a UNIFORM
++3.5-4.5 minute offset appearing on every row from one date onward ...". Iteration 6 measured
+the actual shift: every row from 2026-10-22 records a day 200.3-206.5 s (3.34-3.44 min)
+SHORTER than the first-generation model for its claimed obs_date. So the quoted band has the
+wrong sign and a magnitude range the record falls outside. The paragraph now names only the
+shape (a uniform offset — the same direction and size on every row from one date onward) and
+states that the direction and size belong to that particular shift and are measured from the
+record, so no band is quoted. The consecutive-jump sentence (0.15 h/day will not fire on a
+uniform shift) and the recovery rule (annotation plus a forward-only bump, never a rewrite) are
+unchanged. The following paragraph, which correctly records that the source published a shorter
+day from obs_date 2026-10-21, was left alone: it describes the measured second generation, not
+the identification band.
+
+**Correction 2 — the equinox item's reference (radar.md and tests/test_control.py).** The
+equinox false positive was tied to "issue #3" in three places: radar.md's Round 27 trailing
+separator, radar.md's Round 28 item 1, and
+`tests/test_control.py::TestReproducesTheSourcesPublishedModel`'s docstring. `gh issue view 3`
+confirms GitHub issue #3 is `tremor: the daily collection is failing`, state OPEN — the failure
+alarm issue, not a canary item. All three now point at the R28 canary fix instead of the issue
+number:
+- Round 27: `(Separate/open at this round: control_daylength canary false positive near the
+  equinox — CLOSED by the R28 canary fix below.)`
+- Round 28: `the equinox false positive (the R27 separate item) is CLOSED`
+- the test docstring: `This is the test the R28 canary fix added: ...`
+
+**Assumption recorded (ordinary ambiguity).** `radar-log.md` still carries "issue #3" in its
+Round 27 narrative (line 740) and Round 28 item 1 heading (line 746). The item names only
+`radar.md` and `tests/test_control.py`, and `radar-log.md` is the published per-round ledger, so
+the correction was NOT extended to it: rewriting published history was judged worse than the
+remaining stale identifier, which is now wrong in one place and right (round-referenced)
+everywhere the registry itself routes a reader. Recorded here so a later round can decide
+whether to supersede it in a new log entry rather than edit the old one.
+
+**No failing test first, and why.** The item is prose only: no code path, no data row, no
+assertion changes, so no behaviour change exists to pin with a failing test, and the item's
+steps ask for none. The step-3 requirement (test gate tier plus lint tier) is the verification,
+and every gate in the runtime contract was run in addition.
+
+**Files changed.** `tests/test_control.py` (the band paragraph rewritten; one docstring
+reference retargeted), `radar.md` (Round 27 trailer and Round 28 item 1 retargeted),
+`.ralph/items.json`, `.ralph/progress.md`. No `data/` file, no derived layer, no annotation row
+and no `radar-metrics.md` change: this item changes no line, tier, pending bullet or round
+count, so the generated metrics are unchanged and the freshness audit stays green.
+
+**Verification (all commands run at the commit that closed this item).**
+
+- `python -m pytest tests/ -q` — 342 passed, 34 subtests passed (exit 0).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 61 tests, OK (exit 0).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent.
+- `python tools/pending.py --check` — exit 0; "OK — 6 tagged pending item(s), 0 overdue,
+  0 unparseable".
+- `node tests/render_smoke.js` — exit 0, "render OK in both languages".
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 28 tests, OK (exit 0). Not a gate
+  for this bundle; run as evidence that the prose edits touched no audited surface.
+- `cmp data/annotations.csv docs/data/annotations.csv` — exit 0 (files unchanged).
+- `grep -rn "3\.5-4\.5\|+3\.5" tests/test_control.py radar.md radar-log.md
+  fetchers/control_daylength.py tests/audit_record.py` — no match, so the band is gone from
+  every file that could restate it.
+- `grep -rn "issue #3"` outside `internal/` and `.ralph/` — only `radar-log.md` lines 740/746
+  remain, the recorded deliberate exclusion above.
+
+**Next iteration should know.** Only item 10 remains: the `AGENTS.md` section 4 sentence that
+claims the scoring path must never read `data/components/`, to be replaced by the actual seam
+(`score_row`, `normalize.judge`, replay never read them; `tests/test_side_channel.py` binds it).
+It is prose-only like this one and its steps ask for the lint tier plus the public-surface and
+side-channel tests. `radar-metrics.md` was not regenerated here and does not need to be unless a
+later item changes a line file, pending bullet or round entry.
