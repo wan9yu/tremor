@@ -161,13 +161,20 @@ class TestControlLineRecord(unittest.TestCase):
         the coarser absolute-tolerance check above still carries the row).
         This is a margin, not strict argmin equality, on purpose: do not
         tighten it.
+
+        The model is ``test_control.source_day_length_h``, not one fixed
+        generation: the source re-defined its published day length on
+        observation date 2026-10-21 (see the annotation of 2026-11-01), so
+        rows before it are checked against the first generation and rows from
+        it on against the second. The dispatch keys on the ROW's obs_date
+        because the source recomputed its own past dates as well.
         """
         for r in self._rows():
             if r.get("obs_date"):
                 day, tol, which = datetime.date.fromisoformat(r["obs_date"]), 0.017, "obs_date"
             else:
                 day, tol, which = datetime.date.fromisoformat(r["date"]), 0.25, "row date (no obs_date)"
-            expected = test_control.astronomical_day_length_h(control.LAT, day)
+            expected = test_control.source_day_length_h(control.LAT, day)
             actual = float(r["raw_value"]) / 3600.0
             self.assertLess(
                 abs(actual - expected), tol,
@@ -293,7 +300,8 @@ class TestCnhCnyLegIdentity(unittest.TestCase):
         for date in LEG_REPEAT_EXEMPT:
             with self.subTest(date=date):
                 row = rows.get(date)
-                self.assertIsNotNone(row, f"{date} is exempted but not in the record")
+                if row is None:
+                    self.fail(f"{date} is exempted but not in the record")
                 self.assertEqual(datetime.date.fromisoformat(date).weekday(), 6,
                                  f"{date} is exempted as a Sunday repeat but is not a Sunday")
                 self.assertEqual((row.get("obs_date") or "").strip(), "",

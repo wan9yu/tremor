@@ -464,3 +464,149 @@ control-line offset), 8 (the five-row FRED repair, whose preconditions items 2-4
 9 (derived-recency audit assertions) and 10 (the `AGENTS.md` components claim). Items 6, 7,
 9 and 10 are independent; item 8 should run before item 9, which asserts properties the
 repair and regeneration produce.
+
+## Iteration 6 — item 7 (bug): the control-line offset is a published-model change, dated at the comparison site
+
+**Chosen because** `.ralph/plan.md` orders the record-changing group after the
+damage-stopping items and puts the control-line disposition before the five-row FRED
+repair. Items 1-5 had landed; item 7 was the next unfinished item and no item was
+hard-blocked. Item 8 (the FRED repair) already has its three preconditions (items 2-4).
+
+**Entry state measured.** `python -m unittest discover tests -p "audit_record.py" -k
+test_every_row_matches_the_astronomy_for_the_day_it_claims` failed on row 2026-10-22:
+recorded 10.3419h against 10.3976h implied by obs_date 2026-10-21 (0.0556 h vs the 0.017 h
+bar). The audit tier was 23 tests, 1 failure. The gate tier was 336 passed.
+
+**Step 1 — the offline residual table (recorded in the annotation row).** Ten committed
+rows are dated 2026-10-22 or later. Against `astronomical_day_length_h` for the claimed
+obs_date they read −200.32, −200.93, −201.39, −201.76, −203.10, −203.47, −203.93, −204.53,
+−206.36, −206.47 s; against the FOLLOWING day's model +25.07, +23.61, +22.24, +20.90,
++18.53, +17.07, +15.47, +13.64, +10.53, +9.05 s. The four rows before them sit within
+0.9 s of their claimed day. So neither the claimed day nor the next day explains the
+values within the 0.4 s fidelity the model has held on every pre-change row.
+
+**Step 2 — the dated source requests.** 2026-11-01, lat 51.4779 lng 0.0, formatted=0:
+2026-10-15 (before) returned 38601 s where the 2026-09-08 fetch returned 38799 s (−198 s);
+2026-11-03 (after) returned 34376 s against 34586 s pinned from 2026-09-08 (−210 s). The
+source recomputed dates before the change as well, so this is a published-model
+redefinition, not a per-date slip. The source's current value for each of the ten claimed
+obs_dates equals the recorded value exactly, which settles the label question in the same
+direction (a slip would have to pick the wrong day consistently for ten days while the
+offset drifted monotonically). 19 vendor samples spanning a year (seven around the change
+plus one per month 2026-11-15..2027-10-15) fit ONE flat effective solar depression of
+−0.84984 deg to within 4.44 s; the first generation's semidiameter double-subtraction is
+no longer present, though the residual level sits about 0.017 deg below the plain −50′ that
+removing that term alone would leave, so the constant is fitted and not re-derived.
+
+**Step 3 — the branch applied.** Branch one, `source-model change`. The correction is a
+dated dispatch at the comparison site for obs_date ≥ 2026-10-21, outside both pinned
+models: `source_model_for(obs_date)` returns the generation the source published that day
+and `source_day_length_h(lat, day)` applies it to one day. `tests/audit_record.py`'s canary
+compares against `source_day_length_h`; `tests/test_control.py::closest_day_margin` takes
+the model once per row and applies it to all seven candidate days.
+
+**Step 4 — the archive.** `data/archive/control_daylength_pre_model_change_2026-11-01.csv`,
+written by a snippet that refuses to start when the target exists (it did not), 95 data
+rows, byte-identical to the live file (`cmp` clean, sha256 match).
+
+**Step 5 — the annotation row.** `data/annotations.csv` line 141: `2026-11-01,
+control_daylength, method` with the residual table, the source probe, the branch, the fit,
+the rows touched (none) and the artifacts. Mirrored to `docs/data/annotations.csv`;
+`cmp` clean, both files 141 rows, 4 columns. The append is one added line: the other 139
+rows are byte-identical to `HEAD`, so nothing published was rewritten.
+
+**Assumptions recorded (ordinary ambiguity).**
+
+1. *"Leaving astronomical_day_length_h unchanged"* is read as "its numbers and its pin
+   table stay": the body was replaced by a delegate to a new private
+   `_day_length_h(lat_deg, day, depression_deg_of_r)` that evaluates the identical
+   expression in the identical order, and the delegate was checked offline against the
+   committed function over 1,200 dates from 2024-01-01 (bit-identical, no difference at any
+   date). The alternative — a second copy of the 30-line solar-position routine — was
+   rejected because two copies of an ephemeris drift apart, and the alternative of editing
+   the numbers inside `astronomical_day_length_h` is what the item forbids and what the
+   2026-09-08 pin table (which includes two post-change dates, 2026-11-03 and 2026-12-21)
+   would fail on.
+2. *The archive with no row edit.* Branch one edits no committed row, so the archive is a
+   pre-disposition snapshot rather than a pre-edit one; it was taken anyway because the
+   item's description says "archived" and its step 4 asks for the guard, and the file is
+   the record the disposition is about.
+3. *The 10 s pin for the second generation* rather than the 5 s the first generation uses:
+   the fitted depression leaves a ±4.4 s annual sinusoid, so a 5 s pin would trip on the
+   fit's own residual rather than on a source shift. The record check keeps its own
+   0.017 h (1.02 min) bar untouched.
+4. *Per-row, not per-candidate-day, generation selection in `closest_day_margin`.* The
+   distinction is unobservable on today's record (both readings give every row the same
+   verdict), but per-row is the coherent one: a row was collected at one moment, when the
+   source published one generation for all dates. A test pins it by feeding a boundary row
+   a value from the other generation, where a per-candidate dispatch finds an exact
+   neighbour (best = 0.0) and a per-row one does not (best = 26.5 s).
+5. *obs_date as the dispatch key.* The physical selector is when the row was fetched, and
+   obs_date is a 0-or-1-day proxy for it (the audit allows that gap, and the record has
+   gap-0 rows sampled at 00:xxZ). Both rows bracketing the change are 22:30Z collections,
+   so the proxy is exact here; a future shift landing between an early-UTC run and the next
+   22:30Z run could mis-dispatch one row. Recorded, not fixed, because tightening the gap
+   rule is out of scope for this bundle.
+
+**Files changed.** `tests/test_control.py` (shared `_day_length_h`; `SOURCE_MODEL_CHANGE_OBS_DATE`;
+`_V2_DEPRESSION_DEG = -0.84984`; `astronomical_day_length_h_v2`; `source_model_for`;
+`source_day_length_h`; `closest_day_margin` on the per-row model; six new tests;
+`TestClosestDayMarginLogic` synthesizes with `source_day_length_h`; one behaviour-neutral
+type narrowing in `test_it_is_a_control_and_can_never_be_counted` — the pre-existing
+`control.__doc__.upper()` on a `str | None` blocked the edit, and `control.fetch_daily.__module__ and`
+was a no-op in the same expression), `tests/audit_record.py` (canary on
+`source_day_length_h` plus its docstring; one behaviour-neutral narrowing at the
+`LEG_REPEAT_EXEMPT` lookup that cleared the same class of pre-existing analyzer blocker,
+same assertion and same failure message), `data/annotations.csv`,
+`docs/data/annotations.csv`, `data/archive/control_daylength_pre_model_change_2026-11-01.csv`
+(new), `.ralph/items.json`, `.ralph/progress.md`. `data/control_daylength.csv` is NOT in the
+diff: no row was touched. No `radar.md` or `radar-metrics.md` edit: this is not a round, no
+line, tier, pending bullet or round index changed, and the audit's registry freshness test
+stays green.
+
+**Failing tests first.** Six tests were added to `tests/test_control.py` before the
+implementation and run red (`6 failed, 6 passed`, each new one failing with `NameError` on
+`astronomical_day_length_h_v2` / `source_day_length_h`); they went green after. The
+margin-helper test was additionally run against the pre-fix per-candidate-day dispatch
+restored in-process: `FAIL ... AssertionError: 0.0 not greater than 1.0`.
+
+**Independent review.** `reviewer` (opencode-go/deepseek-v4.1-flash, thinking high) read the
+diff plus the record: verdict BLOCK on two P1s, both fixed before the commit. P1-1 —
+`closest_day_margin` dispatched per candidate day, contradicting its own docstring and the
+annotation that ships with the change (no verdict changes today, but the code did not do
+what the record said); fixed with `source_model_for` and the pinning test above. P1-2 — the
+archive was untracked, so the annotation's citation would dangle; it is staged with the
+commit. Four P2 notes were taken into the annotation row: the double-subtraction clause no
+longer equates the removal with the fitted level, the bit-identity claim is stated as the
+offline check it was, and the sunrise/sunset pair-sum is relabelled as internal consistency
+rather than independent evidence. Two P2s were left as recorded notes: obs_date is a proxy
+for fetch time (assumption 5) and the weakest new test (`test_the_generation_switches_…`)
+is a boundary pin only, which is its correct shape.
+
+**Verification (all commands run at the commit that closed this item).**
+
+- `python -m pytest tests/ -q` — 342 passed, 34 subtests passed (exit 0; 336 before, the six
+  new tests).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 61 tests, OK (exit 0).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent.
+- `python tools/pending.py --check` — exit 0; 6 tagged, 0 overdue, 0 unparseable.
+- `node tests/render_smoke.js` — exit 0, "render OK in both languages; no runtime errors,
+  no undefined/NaN".
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 23 tests, OK (exit 0). The
+  astronomy assertion that was red on entry passes; the audit tier is now green, not just
+  free of new failures.
+- `cmp data/annotations.csv docs/data/annotations.csv` — exit 0.
+- `python tools/drift_layer.py` was not re-run: this item changes no line record.
+
+**Next iteration should know.** The comparison site is `source_model_for` /
+`source_day_length_h`, so a THIRD published source shift needs its own dated generation
+pinned from fresh vendor samples — never an edit to either existing table, and never a
+loosened `closest_day_margin` margin. Item 6 (prose) now has its evidence: the measured
+offset is NEGATIVE — the recorded day is 3.34-3.44 min SHORTER than the first-generation
+model (200.3 s at 2026-10-22 widening to 206.5 s at 2026-10-31), so the
+"source-redefinition identification band" in `tests/test_control.py` currently states the
+wrong sign and a magnitude band the record contradicts; that band was deliberately left for
+item 6. The remaining unfinished items are 6 (prose), 8 (five-row FRED repair, all
+preconditions in), 9 (derived-recency audit assertions) and 10 (`AGENTS.md` components
+claim); item 8 should run before item 9.
