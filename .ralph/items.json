@@ -75,8 +75,8 @@
         "Add a presence test to tests/lint_workflows.py that extracts the alarm run block through support.workflow_run_steps and asserts the new sentence, plus an absence test for the removed clause.",
         "Run the lint tier."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 5. Pre-fix red evidence: five new lint assertions in tests/lint_workflows.py::TestFailureAlarmBodyMatchesTheStepOrder failed against HEAD's daily.yml (5 failed), each quoting the old body 'The instrument writes no row for a failed run, and the schedule itself expires after 60 days without a commit.'; green after the body edit. The alarm body now states the step order the workflow actually runs (the day is committed before the derive/render/audit steps): a run that fails before the commit step leaves the day unrecorded, a run that fails after it has already pushed the day has not lost the day and the failure lies in a later step; the schedule-expiry sentence is kept verbatim and no command substitution or backtick was added (still exactly the two pre-existing $(date -u +%F) and $(gh issue list ...), pinned by assertion). tests/lint_workflows.py also carries a behaviour-neutral type-narrowing pass over pre-existing code (the five step-index lookups and the two ci.yml job-block lookups now fail through self.fail and return a non-optional value; identical assertions and identical failure messages) to clear 10 analyzer diagnostics that were byte-identical at HEAD. Gates: pytest 336 passed; lint 61 OK (56 before, the 5 new tests); forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK. Audit tier: 23 tests, 1 failure, the pre-existing control-line astronomy assertion owned by item 7 — no new failure."
     },
     {
       "category": "docs",

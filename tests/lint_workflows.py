@@ -198,28 +198,84 @@ class TestDailyStepOrderIsGateCommitAudit(unittest.TestCase):
     def test_gate_precedes_commit_precedes_audits(self):
         steps = support.workflow_run_steps(_path("daily.yml"))
 
-        def first(predicate):
-            return next((i for i, s in enumerate(steps) if predicate(s)), None)
+        def first(msg, predicate):
+            found = next((i for i, s in enumerate(steps) if predicate(s)), None)
+            if found is None:
+                self.fail(msg)
+            return found
 
         # The pre-collect gate — plain `unittest discover tests`, not the
         # audit_*.py suite that reuses the same "unittest discover tests"
         # words with a `-p` filter appended.
-        gate = first(lambda s: "unittest discover tests" in s and "-p" not in s)
-        commit = first(lambda s: "ci_push.sh" in s)
-        replay = first(lambda s: "replay.py --check" in s)
-        audit = first(lambda s: 'discover tests -p "audit_*.py"' in s)
-        render = first(lambda s: "render_smoke.js" in s)
-
-        self.assertIsNotNone(gate, "no pre-collect gate step (`unittest discover tests`) found")
-        self.assertIsNotNone(commit, "no commit step (`ci_push.sh`) found")
-        self.assertIsNotNone(replay, "no replay --check audit step found")
-        self.assertIsNotNone(audit, "no audit_*.py audit step found")
-        self.assertIsNotNone(render, "no render-smoke audit step found")
+        gate = first("no pre-collect gate step (`unittest discover tests`) found",
+                     lambda s: "unittest discover tests" in s and "-p" not in s)
+        commit = first("no commit step (`ci_push.sh`) found",
+                       lambda s: "ci_push.sh" in s)
+        replay = first("no replay --check audit step found",
+                       lambda s: "replay.py --check" in s)
+        audit = first("no audit_*.py audit step found",
+                      lambda s: 'discover tests -p "audit_*.py"' in s)
+        render = first("no render-smoke audit step found",
+                       lambda s: "render_smoke.js" in s)
 
         self.assertLess(gate, commit, "the gate must run before the first commit")
         self.assertLess(commit, replay, "the commit must run before the replay audit")
         self.assertLess(commit, audit, "the commit must run before the audit_*.py suite")
         self.assertLess(commit, render, "the commit must run before the render-smoke audit")
+
+
+class TestFailureAlarmBodyMatchesTheStepOrder(unittest.TestCase):
+    """The failure alarm fires from ANY failed step, including the audits that
+    run AFTER the day is committed (see daily.yml's own "VERIFY AFTER
+    COMMITTING, NEVER BEFORE" comment). So its body may not claim that a failed
+    run wrote no row: a run that falls over in a derive tool or an audit has
+    already pushed the day. The body must say which failures cost the day and
+    which do not, and must keep the schedule-expiry sentence, which is true
+    either way. Pinned through ``support.workflow_run_steps`` so the assertion
+    reads the shell the workflow actually runs, not a comment beside it."""
+
+    _TITLE = 'TITLE="tremor: the daily collection is failing"'
+
+    def _alarm_block(self):
+        blocks = [s for s in support.workflow_run_steps(_path("daily.yml"))
+                  if self._TITLE in s]
+        self.assertEqual(len(blocks), 1,
+                          f"expected exactly one failure-alarm run block carrying {self._TITLE}")
+        return blocks[0]
+
+    def _alarm_body(self):
+        """The alarm block with runs of whitespace collapsed, so a sentence
+        wrapped across YAML lines compares as one string."""
+        return " ".join(self._alarm_block().split())
+
+    def test_body_says_a_pre_commit_failure_costs_the_day(self):
+        self.assertIn(
+            "A run that fails before the commit step leaves the day unrecorded.",
+            self._alarm_body())
+
+    def test_body_says_a_post_commit_failure_does_not_cost_the_day(self):
+        self.assertIn(
+            "run that fails after it has already pushed the day has not lost the day",
+            self._alarm_body())
+
+    def test_body_keeps_the_schedule_expiry_sentence(self):
+        self.assertIn(
+            "The schedule itself expires after 60 days without a commit.",
+            self._alarm_body())
+
+    def test_body_no_longer_claims_a_failed_run_writes_no_row(self):
+        body = self._alarm_body()
+        self.assertNotIn("The instrument writes no row for a failed run", body)
+        self.assertNotIn("writes no row for a failed run", body)
+
+    def test_body_adds_no_command_substitution_or_backtick(self):
+        block = self._alarm_block()
+        self.assertNotIn("`", block)
+        # The two substitutions the body already had, and no third: an issue
+        # body is prose, so anything it interpolates must be able to fail
+        # silently inside a shell double-quoted string.
+        self.assertIn("$(date -u +%F)", block)
+        self.assertEqual(block.count("$("), 2)
 
 
 class TestCiHasTheGateLintSplit(unittest.TestCase):
@@ -229,17 +285,18 @@ class TestCiHasTheGateLintSplit(unittest.TestCase):
     dependency happens to install on the runner (see ci.yml's own lint-job
     comment)."""
 
+    def _job(self, name):
+        """The one job block named `name` in ci.yml; fails loudly when absent."""
+        block = _job_block(support.read_text(_path("ci.yml")), name)
+        if block is None:
+            self.fail(f"ci.yml has no `{name}` job")
+        return block
+
     def test_gate_job_installs_requirements(self):
-        text = support.read_text(_path("ci.yml"))
-        block = _job_block(text, "gate")
-        self.assertIsNotNone(block, "ci.yml has no `gate` job")
-        self.assertIn("pip install -r requirements.txt", block)
+        self.assertIn("pip install -r requirements.txt", self._job("gate"))
 
     def test_lint_job_installs_nothing(self):
-        text = support.read_text(_path("ci.yml"))
-        block = _job_block(text, "lint")
-        self.assertIsNotNone(block, "ci.yml has no `lint` job")
-        self.assertNotIn("pip install", block)
+        self.assertNotIn("pip install", self._job("lint"))
 
 
 class TestRequirementsFileMatchesEachWorkflowsTier(unittest.TestCase):

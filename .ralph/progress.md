@@ -387,3 +387,80 @@ only: `tools/replay.py` re-scores the stored `raw_value` and never parses a sour
 needs this check. A future fetcher whose `obs_date` is stamped in a timezone ahead of China
 (UTC+8) would now be darkened; none of the 25 live fetchers does today, and a snapshot line
 that leaves `obs_date` empty is unaffected.
+
+## Iteration 5 — item 5 (bug): the failure alarm body states the step order, not a falsehood
+
+**Chosen because** `.ralph/plan.md` puts it fifth: item 1 cleared the pending gate and items
+2-4 landed the three damage-stopping guards, so this is the next unfinished item in the
+plan's order (the "items that stop further damage next" group). No item was hard-blocked.
+
+**Entry state measured.** The alarm step in `.github/workflows/daily.yml` opened with
+`The instrument writes no row for a failed run, and the schedule itself expires after 60
+days without a commit.` The first clause is false for the step order the same file
+declares: `Commit the day` (line 87) runs BEFORE the derive layer, `replay.py --check`, the
+`audit_*.py` tier and the render smoke, so every one of those failures fires the alarm on a
+run that already wrote and pushed the day. The alarm is `if: failure()`, so it covers all
+of them.
+
+**Failing test first.** `tests/lint_workflows.py::TestFailureAlarmBodyMatchesTheStepOrder`
+(new, five tests) was added and run before the workflow edit: `python -m unittest discover
+tests -p "lint_workflows.py" -k TestFailureAlarmBodyMatchesTheStepOrder -v` gave
+`Ran 5 tests ... FAILED (failures=5)`, each assertion quoting the old body. Green after the
+body edit (15/15 in that file).
+
+**Fix.** `.github/workflows/daily.yml`, alarm body only:
+`A run that fails before the commit step leaves the day unrecorded. A run that fails after
+it has already pushed the day has not lost the day; the failure lies in a later step. The
+schedule itself expires after 60 days without a commit. Fix or disable deliberately.`
+The schedule-expiry sentence is kept with its content unchanged (now its own sentence);
+the `Run failed on $(date -u +%F) — $run_url` line, `TITLE`, `NUM`, the `if [ -n "$NUM" ]`
+branch and both `gh` calls are untouched. No command substitution or backtick was added:
+the block still carries exactly `$(date -u +%F)` and the pre-existing `$(gh issue list ...)`,
+asserted by count.
+
+**Assumption recorded (ordinary ambiguity).** The item says "replace only the false clause
+… keeping the schedule-expiry sentence". The false clause is the row-less-run claim; the
+replacement says which failures cost the day and which do not, and deliberately does not
+enumerate the post-commit steps (the derived-layer commit, `replay`, the audit tier, the
+render smoke, the sample-hour notice) because that list would drift the moment a step is
+added. "The failure lies in a later step" is true for every one of them without naming any.
+
+**Behaviour-neutral analyzer pass in the same file (recorded, not scope creep).** Editing
+`tests/lint_workflows.py` surfaced 10 analyzer diagnostics on code that is byte-identical
+to `HEAD` (`git show HEAD:tests/lint_workflows.py`): four `assertLess` calls fed an
+`int | None` from the local `first()` helper, and two `assertIn`/`assertNotIn` calls fed a
+`str | None` from `_job_block()`. Both files are covered by no type-check gate in this repo
+(no pyright/mypy config, no type step in `ci.yml`), but the diagnostics block the edit, so
+they were cleared without changing any assertion: `first(msg, predicate)` now calls
+`self.fail(msg)` and returns `int` (the five `assertIsNotNone` lines are removed and their
+message strings move into the call sites verbatim), and `_job(name)` does the same for the
+two `ci.yml` job-block lookups. Same assertions, same failure messages, same passing set.
+
+**Files changed.** `.github/workflows/daily.yml`, `tests/lint_workflows.py`,
+`.ralph/items.json`, `.ralph/progress.md`. No `data/` file, no derived layer and no
+`radar-metrics.md` change: this item touches neither a line file nor a pending bullet.
+
+**Verification (all commands run at the commit that closed this item).**
+
+- `python -m pytest tests/ -q` — 336 passed, 34 subtests passed (exit 0).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 61 tests, OK (exit 0; 56 before,
+  the five new alarm-body tests).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent.
+- `python tools/pending.py --check` — exit 0; "OK — 6 tagged pending item(s), 0 overdue,
+  0 unparseable".
+- `node tests/render_smoke.js` — exit 0, render OK in both languages.
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 23 tests, 1 failure:
+  `audit_record.TestControlLineRecord.test_every_row_matches_the_astronomy_for_the_day_it_claims`
+  (2026-10-22: recorded 10.3419h but its obs_date 2026-10-21 implies 10.3976h). That is the
+  pre-existing control-line failure item 7 owns; no new audit failure. The audit tier is not
+  a global gate for this bundle.
+
+**Next iteration should know.** All six gates are green and the alarm body now matches the
+step order; `tests/lint_workflows.py` pins it through `support.workflow_run_steps`, so a
+future edit that re-introduces the row-less claim fails the lint tier. The remaining
+unfinished items are 6 (prose statements in `tests/test_control.py` and `radar.md`), 7 (the
+control-line offset), 8 (the five-row FRED repair, whose preconditions items 2-4 are all in),
+9 (derived-recency audit assertions) and 10 (the `AGENTS.md` components claim). Items 6, 7,
+9 and 10 are independent; item 8 should run before item 9, which asserts properties the
+repair and regeneration produce.

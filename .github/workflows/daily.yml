@@ -184,8 +184,10 @@ jobs:
                 --json number --jq '.[0].number // empty')
           BODY="Run failed on $(date -u +%F) — $run_url
 
-          The instrument writes no row for a failed run, and the schedule itself
-          expires after 60 days without a commit. Fix or disable deliberately."
+          A run that fails before the commit step leaves the day unrecorded. A
+          run that fails after it has already pushed the day has not lost the
+          day; the failure lies in a later step. The schedule itself expires
+          after 60 days without a commit. Fix or disable deliberately."
           if [ -n "$NUM" ]; then
             gh issue comment "$NUM" --body "$BODY"
           else
