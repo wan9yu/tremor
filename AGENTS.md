@@ -86,8 +86,14 @@ factor; an axis is called un-spanned only AFTER the cheapest construct is base-r
   the raw source under today's rules from `STABLE_SINCE` forward (0 divergence). A scoring
   change bumps `STABLE_SINCE` (`tools/replay.py` mandates it on a TIER change); a bug is
   rescored (`tools/rescore.py`). Diagnostic `components` (`data/components/…`) and the
-  intraday side-channel are DIAGNOSTIC-ONLY — the scoring path (`collect.py`,
-  `core/normalize.py`) must never read them (`tests/test_side_channel.py` enforces this).
+  intraday side-channel are DIAGNOSTIC-ONLY: the scoring DECISION — `score_row`,
+  `normalize.judge` and `tools/replay.py` — never reads either. The one component-file
+  read in `collect.py` is `write_components` merging the rows it is about to append, and
+  no component value reaches `score_row`; the derived level layer (`tools/level_layer.py`)
+  is the intended consumer. `tests/test_components.py` binds the components side of that
+  seam (the normalizer never names a breakdown; a component write cannot touch a scored
+  row), and `tests/test_side_channel.py` binds the intraday side plus the gate/audit tier
+  boundary.
 
 ## 5. The test tiers (run all before a push)
 

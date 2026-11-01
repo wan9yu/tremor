@@ -908,3 +908,80 @@ claims the scoring path must never read `data/components/`, to be replaced by th
 It is prose-only like this one and its steps ask for the lint tier plus the public-surface and
 side-channel tests. `radar-metrics.md` was not regenerated here and does not need to be unless a
 later item changes a line file, pending bullet or round entry.
+
+## Iteration 10 — item 10 (docs): AGENTS.md names the seam the scoring decision actually has
+
+**Chosen because** `.ralph/plan.md` allows prose-only items "at any time after the first item";
+item 10 is the last unfinished item (items 1-9 landed, no item was hard-blocked).
+
+**Entry state measured.** All six gates green at HEAD (pytest 342 passed; lint 61 OK; forbidden
+literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke exit 0),
+audit tier 28 tests OK, and the item-named tests green: `test_side_channel` 6 OK,
+`audit_public_surface` 3 OK, `test_components` 3 OK.
+
+**The false claim, measured.**
+
+- `collect.py:452` reads `data/components/<line>.csv` inside `write_components` (merging the rows
+  it is about to append). `grep -n "_read_rows(" collect.py` shows exactly three call sites: that
+  component read at `:452`, a line CSV at `:468` and the summary at `:558`. So "the scoring path
+  (`collect.py`, `core/normalize.py`) must never read them" was literally false about
+  `collect.py`.
+- `tests/test_side_channel.py` asserts only `read_intraday`/`sample_intraday` and the served
+  allow-list; it binds the intraday channel and the gate/audit tier boundary, not the components
+  rule. The components seam is bound by `tests/test_components.py`: `core/normalize.py` must not
+  name `components` at all, and `write_components`' body must not name `score_row`/`LINE_HEADER`.
+
+**The replacement (`AGENTS.md` section 4, third bullet).** The scoring DECISION — `score_row`,
+`normalize.judge`, `tools/replay.py` — never reads either channel. Verified before writing:
+`score_row` takes no `components` argument, and `grep -c "components"` is 0 in
+`core/normalize.py` and `tools/replay.py`. The paragraph states that the one component-file read
+in `collect.py` is `write_components` merging the rows it is about to append, that no component
+value reaches `score_row`, and that the derived level layer (`tools/level_layer.py`, whose
+`SOURCE` is `data/components/chokepoint_breadth.csv`) is the intended consumer. It closes by
+naming which test binds which half: `tests/test_components.py` the components side (the
+normalizer never names a breakdown; a component write cannot touch a scored row), and
+`tests/test_side_channel.py` the intraday side plus the gate/audit tier boundary.
+
+**Assumption recorded (ordinary ambiguity, deviation from the step's letter).** Step 1 says the
+replacement should state "that `tests/test_side_channel.py` binds that seam". That is false for
+components — the very class of false statement the item exists to remove, and the sentence the
+equivalent plan row marks as "must not drop which part the test binds". Resolved conservatively:
+`tests/test_side_channel.py` is named, but for the intraday side and the tier boundary it
+actually binds, and `tests/test_components.py` is named for the components side. Naming only
+`test_side_channel.py` would have replaced one literally false sentence with another.
+
+**No failing test first, and why.** Prose only: no code path, no data row, no assertion changes,
+so no behaviour change exists to pin, and the item's steps ask for none (`python
+-m unittest discover tests -p "lint_*.py"` plus the public-surface and side-channel tests are the
+step-2 verification). Every runtime-contract gate was run in addition.
+
+**Files changed.** `AGENTS.md` (section 4, third bullet: 2 lines replaced by 8),
+`.ralph/items.json`, `.ralph/progress.md`. No `data/` file, no derived layer, no annotation row
+and no `radar-metrics.md` change: no line, tier, pending bullet or round changed.
+
+**Verification (all commands run at the commit that closed this item).**
+
+- `python -m pytest tests/ -q` — 342 passed, 34 subtests passed (exit 0).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 61 tests, OK (exit 0).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent.
+- `python tools/pending.py --check` — exit 0; "OK — 6 tagged pending item(s), 0 overdue,
+  0 unparseable".
+- `node tests/render_smoke.js` — exit 0.
+- `python -m unittest discover tests -p "test_side_channel.py"` — Ran 6 tests, OK (exit 0).
+- `python -m unittest discover tests -p "test_components.py"` — Ran 3 tests, OK (exit 0).
+- `python -m unittest discover tests -p "audit_public_surface.py"` — Ran 3 tests, OK (exit 0).
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 28 tests, OK (exit 0). Not a gate for
+  this bundle; run as evidence that a prose edit touched no audited surface.
+- `cmp data/annotations.csv docs/data/annotations.csv` — exit 0 (files unchanged).
+- `grep -rn "\bI\b\|\bwe\b\|\bour\b\|\bmy\b" AGENTS.md` — the only match is the rule statement
+  in section 0.2 itself, so the new prose is impersonal.
+
+**Next iteration should know.** All ten items in `.ralph/items.json` are `passes: true` and every
+runtime-contract gate is green. The components rule as written is now checkable against two
+tests: `tests/test_components.py` owns the components half and `tests/test_side_channel.py` owns
+the intraday half, so an edit to either invariant must move the named test with it. The
+`write_components` docstring in `collect.py` still says "no scoring code may read it" while that
+function reads the file it appends to; the sentence is defensible as a rule about the verdict
+(and is outside this item's file scope), but a later round may want the same precision applied
+there.
