@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "runtime_contract": {
+    "source_docs": [],
+    "verification_gates": [
+      { "name": "test gate tier", "command": "python -m pytest tests/ -q" },
+      { "name": "lint tier", "command": "python -m unittest discover tests -p \"lint_*.py\"" },
+      { "name": "forbidden literal lint", "command": "python tests/lint_no_forbidden_literal.py" },
+      { "name": "replay point-in-time check", "command": "python tools/replay.py --check" },
+      { "name": "pending tripwires", "command": "python tools/pending.py --check" },
+      { "name": "dashboard render smoke", "command": "node tests/render_smoke.js" }
+    ],
+    "require_progress_append": true,
+    "require_one_item_per_iteration": true,
+    "require_commit": true
+  },
+  "items": [
+    {
+      "category": "functional",
+      "description": "The pending-reviews block carries no untagged promise, no overdue tripwire, and no reference to a nonexistent item. python tools/pending.py --check exits 0.",
+      "steps": [
+        "Run python tools/pending.py --check and python tools/pending.py; confirm the only overdue entry is 'level-layer -> flights' and record the current bullet list.",
+        "In radar.md delete the four closed bullets, each closed by the block's own rule: the flights sample-hour SHIPPED bullet, the cnh_cny maturity refresh bullet, the net_outages CLOSED bullet, and the cnh_cny reachability reference-regime bullet whose trailing line carries the phantom 'n>=250' reference.",
+        "Add the word standing to the calendar de-cycling bullet so it is marked as a standing rule.",
+        "Retag the level-layer -> flights bullet with [opened R23.1 · owner R40 · fires: date >= 2027-08-02] and retag the flights sample-hour bullet with [opened R26 · owner R40 · fires: rows_since(flights, 2026-09-02) >= 90]; retag the SOFR deferral sentence with [opened R29 · owner R40 · fires: date >= 2026-11-30].",
+        "Add one assertion to tests/lint_pending.py that every bullet paragraph in the block ends in one of three legal forms: a parseable tag with a fires predicate, the word standing, or a round-referenced closure marker.",
+        "Regenerate radar-metrics.md with python tools/episodes.py --markdown > radar-metrics.md followed by python tools/pending.py --markdown >> radar-metrics.md, then run python -m unittest discover tests -p \"audit_*.py\" and confirm the registry freshness test is the only remaining audit failure.",
+        "Run python tools/pending.py --check and confirm exit 0."
+      ],
+      "passes": true,
+      "regression_notes": "Iteration 1. python tools/pending.py --check exits 0 (6 tagged items, 0 overdue); python -m unittest discover tests -p \"audit_*.py\" leaves exactly one failure (audit_record control-line astronomy, owned by item 7 — the radar-metrics freshness failure is cleared by the regeneration); gate tier 318 passed; lint tier 56 OK; lint_no_forbidden_literal OK; replay --check 0 divergence; render_smoke OK."
+    },
+    {
+      "category": "bug",
+      "description": "tools/drift_layer.py stops crashing on a malformed obs_date and reports how many observations it skipped, so the nightly derive step completes again.",
+      "steps": [
+        "Reproduce the failure: run python tools/drift_layer.py --report and record the ValueError about an invalid isoformat string.",
+        "In tools/drift_layer.py validate dates in series_for, not in walk: an empty obs_date keeps the existing fallback to the row date, a non-empty obs_date that fails a strict YYYY-MM-DD predicate drops that observation, and one shared predicate is used instead of date.fromisoformat because that function accepts basic-format dates.",
+        "Add the skip count to the tool's existing printed summary line.",
+        "Add a gate-tier test that feeds synthetic row dictionaries through the pure validation helper, using support.stub_attr for stubbing and no reads of data/.",
+        "Re-run python tools/drift_layer.py --report and python tools/drift_layer.py against the committed record and confirm exit 0."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "bug",
+      "description": "core/fred.py refuses a response whose first column is not a date, so a keyless FRED error page can no longer become a reading, and the two causes in sofr_iorb_spread's unavailable note are distinguished.",
+      "steps": [
+        "In core/fred.py series() require the first comma-separated field of each row to match a strict YYYY-MM-DD predicate; skip rows that fail; return None when no row survives, which the existing callers already handle as unavailable.",
+        "Add a gate-tier test that feeds the HTML fragment recorded in the incident evidence and asserts the result is None, with no network access.",
+        "In fetchers/sofr_iorb.py separate the message for one leg unavailable from the message for no shared reported date.",
+        "Run the test gate tier."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "bug",
+      "description": "collect.py rejects an unusable observation date at collection time, so a malformed or future-dated obs_date becomes a stated dark row instead of a scored reading.",
+      "steps": [
+        "In collect.py add a check beside the existing coerce_finite and apply_sample_guard steps: a non-empty obs_date must match a strict YYYY-MM-DD predicate and must not be later than the row's own date; on violation clear raw_value and obs_date and prefix the note with 'no reading: source returned an unusable observation date - not scored :: '.",
+        "Amend the module docstring sentence that currently declares obs_date shape validation out of scope for this contract.",
+        "Add gate-tier tests for a malformed obs_date and for an obs_date later than the row date, asserting a dark row with the stated reason.",
+        "Run the test gate tier."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "bug",
+      "description": "The failure alarm body states something true about a run whose collection step succeeded, and a lint test pins the new sentence.",
+      "steps": [
+        "In .github/workflows/daily.yml replace only the false clause in the alarm body, keeping the schedule-expiry sentence, and add no new command substitution or backtick to the body.",
+        "Add a presence test to tests/lint_workflows.py that extracts the alarm run block through support.workflow_run_steps and asserts the new sentence, plus an absence test for the removed clause.",
+        "Run the lint tier."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "docs",
+      "description": "Two prose statements that contradict the repository are corrected, one of which names the alarm issue as the day-length canary.",
+      "steps": [
+        "In tests/test_control.py replace the source-redefinition identification band with wording that does not state a sign or a magnitude, since the committed offset is negative and outside the quoted band.",
+        "In radar.md correct the reference that ties the equinox false positive to issue number 3 so that it points at the Round 28 fix instead of the alarm issue, and make the same correction in tests/test_control.py.",
+        "Run the test gate tier and the lint tier."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "bug",
+      "description": "The control-line label offset from 2026-10-22 onward is measured, dispositioned, archived and annotated, and the audit tier's astronomy assertion stops failing.",
+      "steps": [
+        "Compute offline, for every committed row from 2026-10-22 onward, the residual of the recorded day length against test_control.astronomical_day_length_h for the claimed obs_date and for the following day; record the table in the annotation work.",
+        "Issue one dated request to the source for one date before 2026-10-22 and one after, and record the residual of the source value against the same model.",
+        "Apply the branch the measurement supports: a source-model change becomes a dated correction applied at the comparison site for obs_date on or after 2026-10-21, leaving astronomical_day_length_h unchanged; a label slip becomes a relabel of the affected rows to their own date plus a forward fix in the fetcher; an inconclusive measurement leaves the rows untouched and is recorded with a trigger.",
+        "Archive data/control_daylength.csv before any edit and refuse to start if the archive already exists.",
+        "Add one annotation row describing the measurement, the branch taken, and the rows touched, then make data/annotations.csv and docs/data/annotations.csv byte-equal.",
+        "Run python -m unittest discover tests -p \"audit_*.py\" and confirm the astronomy assertion passes."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "bug",
+      "description": "The five 2026-10-22 FRED rows that recorded an HTML error page as a reading are archived, darkened with a stated reason, and the affected tail is re-derived so replay stays at zero divergence.",
+      "steps": [
+        "Confirm the derive guard and the collection-time obs_date check are already passing, because the repair removes the rows that reproduce the crash.",
+        "Archive the five line files with a capture-named suffix and refuse to start when that archive already exists.",
+        "Rebuild each of the five 2026-10-22 rows through collect.score_row with raw_value None and a note beginning 'no reading: source returned an HTML page, not a CSV - not scored :: '.",
+        "Re-derive only rows dated 2026-10-22 or later, using published prior rows as history, and strip existing verdict notes with seedlib.strip_verdict_notes before re-scoring so verdict prose is not duplicated.",
+        "Regenerate derived outputs by running the derive command block from the daily workflow, and sync every file in collect.MIRRORED.",
+        "Add an audit-tier assertion that every committed obs_date matches a strict YYYY-MM-DD predicate.",
+        "Run python tools/replay.py --check and confirm zero divergence, then run the audit tier."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "functional",
+      "description": "The audit tier notices a frozen derived layer: levels, stuck and leans outputs are checked against their own inputs so a silent ten-day freeze cannot recur.",
+      "steps": [
+        "Add an audit assertion that the newest date in data/levels.csv equals the newest date in data/components/chokepoint_breadth.csv, evaluated only when an open state exists on that newest component date, because the level layer emits no row after a state closes.",
+        "Add recency checks for docs/data/stuck.csv and docs/data/leans.csv in the same audit file.",
+        "Run python -m unittest discover tests -p \"audit_*.py\" and confirm the new assertions pass against the regenerated files."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "docs",
+      "description": "The operating contract names the seam that actually enforces the components rule, instead of a sentence that is literally false.",
+      "steps": [
+        "In AGENTS.md section 4 replace the claim that the scoring path must never read components with a statement that the scoring decision, meaning score_row, normalize.judge and replay, never reads them, and that tests/test_side_channel.py binds that seam.",
+        "Run the lint tier and confirm the public-surface and side-channel tests still pass."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    }
+  ]
+}

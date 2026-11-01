@@ -423,41 +423,16 @@ Written down because they are structural, not bugs, and a reader deserves them u
 Every open commitment in one place, so a radar round can check this list instead of
 re-reading the log. Close an item by editing it out with a round reference.
 
-- **flights sample-hour fix — SHIPPED R25.1** (opened R25, which CLOSED the R11 pre-committed
-  review: RETAINED, neither demotion condition met; replayed episode-rate Wilson LB 0.89% < 2%, the
-  08-28 alarm ADJUDICATED via the intraday sampler as a CI-queue sample-hour artifact). The fix
-  fixes the sample TIME, not the reading: the daily workflow schedules early (`0 18 * * *`) and
-  SLEEPS to 22:30:00Z before collecting, so — GH queue delay being one-sided (always late, measured
-  +0.44..+7.91h) — the sample lands on the fixed hour whenever the delay is within the 4.5h
-  head-start (all 31 non-trough days of the record). 22:30Z is the historical effective hour, so the
-  baseline is continuous (no reseed) — TRUE FOR THE TOTAL, but NOT for a per-region SHARE: R34 found
-  Japan's share moved with a ~30-min cron drift across ~08-08 (a diurnal-ramp phase seam), so any
-  future per-region reformulation cannot treat this baseline as continuous. A backstop guard (`collect.py apply_sample_guard`, declared
-  via `flights.SAMPLE_TARGET_UTC_H`=22.5 / `SAMPLE_TOL_H`=1.5, bound to the CI target by a test)
-  darks a reading still >1.5h off on a run delayed past the sleep window (~1/34). Collection-time
-  decision frozen into the stored raw → replay 0-divergence, STABLE_SINCE untouched; the 3 pre-fix
-  off-hour rows stay forward-only. Simulated over 34 days: 31/34 land exactly at 22:30Z, 08-28
-  darks, the other two troughs score near-target without trembling, 0 clean days newly darken. STILL
-  OPEN: **re-review after ~60 collection days of the fixed-hour regime** confirming the live
-  18Z-cron delay distribution behaves (its own delay is unmeasured — 2pm ET may differ) and that no
-  artifact of this class recurs. ANTI-LOOPHOLE (standing): a repeat of this adjudicated artifact
-  class AFTER the fix is itself demotion-disqualifying.
-  [opened R25 · owner R26 · fires: rows_since(flights, 2026-09-02) >= 60]
-- **cnh_cny maturity refresh** — at n≥60 scored: re-measure the reach cell + benign-tremble recount
-  (queued R13). R23: now n=48 (record range −45..143; 4 trembles, all benign DOWN), still <60 — keep
-  waiting. R29: now n=57 (5 trembles, all benign DOWN: 07-02/07-07/07-25/08-10/08-26), still <60 —
-  keep waiting; bank the open question for the n≥60 review — is the zero UP-alarm-direction reach a
-  young-calm-record artifact (guard sound, tail unsampled) or a sign the bar/statistic needs
-  revisiting (post-fix responsiveness is thin — only 08-26 −43 pips is a clean attributable reading).
-  Respelled from `distinct_scored` to `scored`: the record carries 8 non-distinct cnh_cny
-  rows by the distinct-observation rule (Known limits #6), so `distinct_scored` currently equals raw
-  `scored` and cannot honestly stand in for a dedup the tool does not yet implement; the maturity
-  review has always used the raw scored count n, so `scored` was the honest predicate.
-  **DONE R33 (n=60):** reach re-measured (UP +3 bar 221 pips, +78 above the record high of 143, z +1.32
-  at the peak — unreachable within the record), trembles recounted (5 benign DOWN, 0 UP over 60 scored),
-  orthogonality re-measured against the full tier-1 set (|max Pearson| 0.098, incl fed_srf +0.098) —
-  cnh_cny RETAINED at tier-1; the banked open question resolves as a young-calm-record artifact (guard
-  sound, tail unsampled).
+- **flights fixed-hour re-review** (opened R26; the R25.1 sample-hour fix itself SHIPPED and is
+  closed — the fix, its guard and the 34-day simulation are in radar-log.md R25.1) — re-review after
+  ~90 collection days of the fixed-hour regime: confirm the live 18Z-cron delay distribution still
+  lands the sample on the fixed hour (the workflow schedules early and sleeps to 22:30:00Z, so the
+  sample hour is deterministic only within that head-start) and that no artifact of the adjudicated
+  CI-queue sample-hour class recurs. ANTI-LOOPHOLE (standing): a repeat of that adjudicated artifact
+  class AFTER the fix is itself demotion-disqualifying. The 22:30Z baseline is continuous for the
+  TOTAL only — R34 found Japan's SHARE moving with a ~30-min cron drift (a diurnal-ramp phase seam),
+  so no future per-region reformulation may treat it as continuous.
+  [opened R26 · owner R40 · fires: rows_since(flights, 2026-09-02) >= 90]
 - **cnh_cny post-guard reach re-measurement** — when the pre-guard weekend-restamp rows age out of the
   90-row window (so the reach bar re-derives on clean leg+sample-hour-guarded data), re-measure reach +
   orthogonality. The R33 review found the current bar rests partly on pre-guard artifacts (record high
@@ -472,7 +447,7 @@ re-reading the log. Close an item by editing it out with a round reference.
   clean 0.45z gap to the lowest fire) and found 3 DISTINCT single-day episodes (lag-1 0.406, no
   adjacent fires) — see the Tier-1 cell + radar-log.md R30. STILL STANDS for stablecoin_peg (tier-2,
   unpromoted) and any future anchored line.
-- **calendar de-cycling debt** (named R20): month/quarter-end rhythm warps tga_days_cash; once
+- **calendar de-cycling debt** (named R20, standing): month/quarter-end rhythm warps tga_days_cash; once
   gated fed_srf_takeup's promotion. This repo still has no de-cycling beyond weekday. **CLEARED for
   fed_srf_takeup at R30** (promoted): the debt is structurally MOOT for an anchored line — its z
   reads only today (normalize.robust_z materiality branch), never the rolling window, so the
@@ -480,19 +455,18 @@ re-reading the log. Close an item by editing it out with a round reference.
   The tga_days_cash warp remains noted (tga is not a promotion candidate).
 - **closed-status first live weekend** — RESULT (R23): 08-23 (Sun) correctly read `closed` ✓; 08-22
   (Sat) read `scoring` raw 83 (z−0.24) — Friday's close re-scored, because the weekend guard keys on
-  the NEWER leg being Sat/Sun and Saturday-morning still sees two Friday timestamps. Follow-up:
-  confirm obs-dedup isn't double-counting Friday's close, and decide whether the guard should also
-  cover Saturday (a fetcher change → needs approval).
-- **net_outages — DEMOTED TO TIER-2, R28 (condition (c) fired) — CLOSED** (opened R23.1 as the settle
-  tripwire; rewritten R27; closed R28). Both tags removed — the reach-deadline (`date >= 2026-10-15`)
-  fired, and the per-recurrence `manual` tripwire is no longer a tier-1 duty. Full reasoning and evidence:
-  Known limit 7 and the 2026-09-08 net_outages DEMOTED annotation.
+  the NEWER leg being Sat/Sun and Saturday-morning still sees two Friday timestamps.
+- **flights weekend guard — extend to Saturday?** (opened R23, split out of the R23 result above so
+  that the promise is tracked instead of trailing a closed item) — a Saturday-morning read still sees
+  two Friday timestamps and re-scores Friday's close. Covering Saturday is a FETCHER change, so it
+  needs human approval before any code moves.
+  [opened R23 · owner R40 · fires: manual]
 - **level-layer → flights** (opened R23.1) — decide ~Nov 2026 (once flights per-region components
   banked since 08-02 can populate an honest reference window) whether to extend the level layer to
   flights regions; the second headline currently rides one lagging, panel-churning source
   (PortWatch, ~10d). R29: flights structural work stays DEFERRED to the two scheduled reviews that
-  both mature ~Nov — this item (fires date≥2026-11-01) and the fixed-hour re-review (fires
-  rows_since(flights)≥60, now ~10/60). **R34 KILLS the planned per-region fix.** The Nov plan was a
+  both mature ~Nov — this item (then tagged date≥2026-11-01) and the fixed-hour re-review (tagged
+  rows_since(flights)≥60 at R25). **R34 KILLS the planned per-region fix.** The Nov plan was a
   per-region **worst-of-region z** (its cited −7.84z / −7.33z were PHASE-SEAM artifacts — a ~30-min
   cron drift on a diurnal ramp, not signal), and R34 rejected the whole per-region reconception:
   un-summing exposes sample-hour phase seams (precision 0/15 on the 64-day window), and its successor,
@@ -504,15 +478,10 @@ re-reading the log. Close an item by editing it out with a round reference.
   per-region reformulation and the second-sample-hour are both KILLED R34. This tripwire now covers
   ONLY the remaining question — whether to extend the level layer to flights (still motivated by the
   stale, panel-churning PortWatch second headline), which is a display-layer choice, NOT a
-  flights-scoring change. [opened R23.1 · owner R26 · fires: date >= 2026-11-01]
-- **cnh_cny reachability reference-regime re-check** (opened R23.1) — the reachability gate passed
-  cnh_cny on a cited reference regime, now WRITTEN into the record at R29: the 2015-16 RMB
-  devaluation / capital-flight episode (PBOC devaluation 2015-08-11; overnight CNH HIBOR ~66-67% on
-  2016-01-12; CNH-CNY spread to the hundreds of pips vs the ~223-pip alarm bar; BIS WP No. 446, CNBC
-  2016-01-12 — see the reachability gate). Re-confirm at n≥60 that the reference-regime evidence still
-  holds, alongside the maturity refresh. **DONE R33 (n=60):** the 2015-16 reference regime re-affirmed —
-  its hundreds-of-pips spread still dwarfs the re-derived 221-pip alarm bar; reachability PASS on the
-  cited regime confirmed. Superseded by the cnh_cny deep maturity re-check (n≥250) above.
+  flights-scoring change. Re-tagged at R34 to `date >= 2027-08-02`: the Nov 2026 target belonged to
+  the per-region component plan R34 killed, so the surviving display-layer question rides the next
+  annual review rather than the date the rejected plan set.
+  [opened R23.1 · owner R40 · fires: date >= 2027-08-02]
 - **radar-log.md roll tripwire — DONE R29** — the log split into an archive once it crossed its
   self-set **2,000-line** threshold (crossed at R28, which took radar-log.md to 2,036 lines). R29 ran
   `tools/roll_radar_log.py --split-round 20` (byte-identity + round-coverage verified): rounds 1-19
@@ -537,9 +506,11 @@ re-reading the log. Close an item by editing it out with a round reference.
   (em_corp_oas) and Euro HY (euro_hy_spread) are ONE global credit factor — |max corr| +0.80 / +0.74
   vs the tier-1 credit line, +0.86 to each other. NO second credit-family line may be promoted to
   tier-1: it would fail the orthogonality gate AND break the headline's iid null (Known limits #3).
-  The genuinely-orthogonal financial challenger is `sofr_iorb_spread`, now n=49 as of R29 (the note
-  cited n=35) with |max corr| 0.231 vs cnh_cny — keep deferred until n≥60 scored, then re-measure
-  orthogonality.
+- **sofr_iorb_spread orthogonality deferral** (opened R29) — the genuinely-orthogonal financial
+  challenger of the single-credit-slot bar above: now n=49 as of R29 (the note cited n=35) with
+  |max corr| 0.231 vs cnh_cny — keep deferred until n≥60 scored, then re-measure orthogonality.
+  Split into its own bullet so the tracked label names the line the tripwire is about.
+  [opened R29 · owner R40 · fires: date >= 2026-11-30]
 
 ---
 

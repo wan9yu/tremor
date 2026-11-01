@@ -65,11 +65,14 @@ RADAR_MD = os.path.join(ROOT, "radar.md")
 COLLECT_PATH = os.path.join(ROOT, "collect.py")
 FETCHERS_DIR = os.path.join(ROOT, "fetchers")
 
-# The block this reads from, and the next top-level heading that ends it —
-# a text-scan boundary (not a markdown parse), the same pragmatic approach
-# tests/lint_workflows.py takes to its own text.
+# The block this reads from, and the two things that end it — the next
+# top-level heading, or the horizontal rule the block closes with (a
+# text-scan boundary, not a markdown parse; the same pragmatic approach
+# tests/lint_workflows.py takes to its own text). The rule matters: without
+# it the block's LAST bullet swallows the trailing `---`, so a "bullet ends
+# in a tag" test would read a separator as part of the bullet.
 _BLOCK_HEADER = "### Pending reviews & tripwires"
-_BLOCK_END_RE = re.compile(r"^## ", re.MULTILINE)
+_BLOCK_END_RE = re.compile(r"^(?:## |---\s*$)", re.MULTILINE)
 
 # A top-level bullet: a line starting "- " at column 0. Continuation lines
 # inside one bullet are indented (this block uses two spaces); a nested list
@@ -123,7 +126,12 @@ def _fetcher_module_names():
                 alias_to_module[alias.asname or alias.name] = alias.name
         elif (isinstance(node, ast.Assign) and len(node.targets) == 1
                 and isinstance(node.targets[0], ast.Name)
-                and node.targets[0].id == "LINES"):
+                and node.targets[0].id == "LINES"
+                # A list literal, not just any expression: `.elts` exists only
+                # on List/Tuple, so without this guard a `LINES = something_else`
+                # would escape as an AttributeError instead of the parse error
+                # below.
+                and isinstance(node.value, ast.List)):
             lines_aliases = [elt.id for elt in node.value.elts
                               if isinstance(elt, ast.Name)]
     if not lines_aliases:
@@ -218,6 +226,19 @@ def _label(bullet):
     return m["label"].strip() if m else bullet.strip().splitlines()[0][:60]
 
 
+def block_bullets(text=None):
+    """Every top-level bullet text in radar.md's Pending block, in order.
+
+    The ONE block scan (``_pending_block`` + ``_BULLET_SPLIT_RE``), exposed so a
+    lint can assert a property of EVERY bullet — including the UNTAGGED ones
+    ``collect_items`` never returns, which is exactly where an untracked promise
+    hides — without re-implementing the block boundary.
+    """
+    text = text if text is not None else _read(RADAR_MD)
+    return [b for b in _BULLET_SPLIT_RE.split(_pending_block(text))
+            if b.strip().startswith("- ")]
+
+
 def collect_items(text=None):
     """Every OPEN, tagged item in radar.md's Pending block, parsed into a
     plain dict: label/opened/owner/predicate_text/kind/args, plus
@@ -229,11 +250,8 @@ def collect_items(text=None):
     row to silently skip.
     """
     text = text if text is not None else _read(RADAR_MD)
-    block = _pending_block(text)
     items = []
-    for bullet in _BULLET_SPLIT_RE.split(block):
-        if not bullet.strip().startswith("- "):
-            continue
+    for bullet in block_bullets(text):
         label = _label(bullet)
         for raw_tag in _TAG_CANDIDATE_RE.findall(bullet):
             m = _TAG_STRICT_RE.match(raw_tag)

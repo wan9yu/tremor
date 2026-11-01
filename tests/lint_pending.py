@@ -18,6 +18,7 @@ round index and today's date both come from source/the clock), so this lint
 is the right, cheap place to catch those two forms going stale.
 """
 import os
+import re
 import sys
 import unittest
 
@@ -27,7 +28,22 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 from core import clock
 
-import pending
+# Imported through the package path, not as a bare ``import pending``: the bare
+# form is what the rest of the suite uses, but it only resolves at runtime
+# (the sys.path insert above), so a static analyzer reads it as an unresolved
+# import. ``tools.pending`` is the same module object either way — pending.py
+# takes its own ROOT from ``__file__`` and inserts both paths itself.
+from tools import pending  # noqa: E402  (needs the sys.path insert above)
+
+# The three legal ways a bullet can stop being an untracked promise. A CLOSED
+# item stays in the block only with a round reference attached (the block's own
+# header rule: "Close an item by editing it out with a round reference"), so a
+# closure marker that names no round is not legal either.
+_TAG_AT_END_RE = re.compile(
+    r"\[opened R\d+(?:\.\d+)?\s*·\s*owner R\d+(?:\.\d+)?\s*·\s*"
+    r"fires:\s*[^\[\]]+\]\s*$")
+_STANDING_RE = re.compile(r"\bstanding\b", re.IGNORECASE)
+_CLOSURE_RE = re.compile(r"\b(?:DONE|CLOSED|RESULT)\b[^\n]{0,30}?R\d")
 
 
 class TestEveryPendingTagParses(unittest.TestCase):
@@ -61,6 +77,37 @@ class TestNoRoundOrDateItemIsAlreadyOverdue(unittest.TestCase):
         self.assertEqual(overdue, [],
                           f"pending item(s) already OVERDUE by round/date "
                           f"(close them or re-tag): {overdue}")
+
+
+class TestEveryBulletIsTrackedOrClosed(unittest.TestCase):
+    """Every bullet in the block must END in one of three legal forms.
+
+    The two tests above only see the TAGGED bullets — ``collect_items`` returns
+    nothing for an untagged one, so a bare paragraph promising a re-review is
+    invisible to them (that is how four closed items and one phantom reference
+    outlived their reviews). This asserts the complement over every bullet,
+    tagged or not: the bullet ends in a parseable ``[opened R.. · owner R.. ·
+    fires: ...]`` tag, OR it carries the word ``standing`` (a rule that never
+    fires by construction), OR it is closed with a round reference on its own
+    first line. Anything else is an untracked promise: close it, tag it, or
+    declare it standing.
+    """
+
+    def test_every_pending_bullet_ends_tagged_standing_or_round_closed(self):
+        unaccounted = []
+        for bullet in pending.block_bullets():
+            body = bullet.strip()
+            first_line = body.splitlines()[0]
+            if (_TAG_AT_END_RE.search(body) or _STANDING_RE.search(body)
+                    or _CLOSURE_RE.search(first_line)):
+                continue
+            unaccounted.append(first_line[:100])
+        self.assertEqual(
+            unaccounted, [],
+            "Pending-block bullet(s) carry no ending tag, no 'standing' marker, "
+            "and no round-referenced closure marker — an untracked promise "
+            "(tag it, close it with a round reference, or mark it standing): "
+            + "; ".join(unaccounted))
 
 
 if __name__ == "__main__":
