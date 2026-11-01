@@ -985,3 +985,99 @@ the intraday half, so an edit to either invariant must move the named test with 
 function reads the file it appends to; the sentence is defensible as a rule about the verdict
 (and is outside this item's file scope), but a later round may want the same precision applied
 there.
+
+## Iteration 11 — post-close-out residue pass (operator-requested; no item state changes)
+
+**Why.** An overall check of the closed-out branch (all 10 items `passes: true`, six gates
+green, audit tier green) reported four residues; the operator asked for them to be optimized
+before the push. This pass is outside the item list: `.ralph/items.json` is unchanged and no
+record file was rewritten.
+
+**Check performed (the evidence the pass rests on).** Gate 342/34, lint 61 OK, forbidden
+literal 3 OK, replay 1271 rows 0 divergent, pending 6 tagged 0 overdue, render exit 0, audit
+28 OK; the same suites on Python 3.12 (CI's interpreter) with the same numbers. Record
+invariants: 26/26 `MIRRORED` files byte-equal, annotations mirror byte-equal (141 rows), 6
+archives byte-equal to their pre-change commits, every cited artifact present,
+`items.json` descriptions/steps identical to the first committed version, no test file
+net-shrunk, no new vacuous skip, no first-person in added tracked prose, no commit trailer.
+The data diff is confined: raw/verdict changes only on 2026-10-22 (the five darkened rows),
+20 further z-only tail moves, no scored row's trembling/direction flipped, summary
+2026-10-22 = 0/1/0. The full derive block re-ran byte-identically.
+
+**Residue 1 — `write_components` said "no scoring code may read it" while reading its own
+file.** The docstring now states the seam AGENTS.md §4 states: no scoring DECISION reads a
+component; the one read of the file is the merge that carries the line's own rows forward;
+no component value reaches a scored row. The literal `score_row` is deliberately absent from
+that sentence — the pre-existing pin `test_a_component_write_does_not_touch_the_scored_row`
+text-scans the function body including its docstring, and it fired on the first wording.
+
+**Residue 2 — the AGENTS.md seam was only partly machine-bound.** `tests/test_components.py`
+gained `test_the_scoring_decision_takes_no_component_input` (`inspect.signature` over
+`collect.score_row` and `normalize.judge`: no `components` parameter, so a breakdown cannot
+enter the signature of the verdict even if the body ignored it) and its source scan now
+includes `tools/replay.py`. Gate tier 342 → 343. Red evidence the pin is not vacuous: the
+same predicate run against a stub callable carrying `components=None` detects it. Red on the
+current tree only if a signature grows the parameter.
+
+**Residue 3 — the record's own dark run could read as a frozen layer.** radar.md Known limit
+#1 gained a durable rule ("a derived layer stops at its last INPUT") plus the current
+instance: the chokepoint capture has recorded no usable daily row since collection
+2026-10-28 (last observation 2026-10-17), so `data/levels.csv` and the served
+`docs/data/stuck.csv` end 2026-10-17 while the scored record reaches 2026-10-31; the audit
+binds the level and stuck layers to that last captured day, so truncation cannot read as a
+silent freeze. No threshold, tier or scoring change; `radar-metrics.md` regenerated
+byte-identically (it does not summarize Known limits).
+
+**Residue 4 — five pre-existing Pyright findings in tools, surfaced by the new test's import
+graph.** All five files were unmodified vs HEAD and the repo has no type-check gate; they were
+cleared with reachable-behaviour-preserving narrowings, each verified:
+- `tools/episodes.py`: `last_i is not None` added to a guard already short-circuited by
+  `out`; 1,600 synthetic (alarms, gap) cases produce byte-identical episode lists to the HEAD
+  implementation loaded side by side.
+- `tools/stuck_panel.py`: the caller passes `frozenset(stale_now)`; the helper only tests
+  membership, and the regenerated panel is byte-identical.
+- `tools/rescore.py`: refuses to write when `archive_current` returns None, with the guard
+  placed BEFORE `write_line` (it previously would have rewritten the record and then crashed
+  on the archive name — a latent write-without-archive hole, unreachable while the read
+  returned rows); `__doc__` is narrowed before the usage line. The no-argument path still
+  prints `python tools/rescore.py net_outages` and exits 1.
+- `tools/seed_ioda.py` / `tools/seed_gnss.py`: a cached row that carries entities/a total but
+  no count is refused with a stated reason instead of raising `TypeError` at the arithmetic.
+  Reachable behaviour unchanged (the malformed row was already fatal); neither seeder was run
+  against the network, so only the guard's dead branch changed.
+
+**Deliberately left, with reasons.**
+- `radar-log.md` R27/R28 still say "issue #3": it is the published per-round ledger, the
+  forward-only rule applies, and radar.md now routes readers to the R28 fix (iteration 9).
+- The PortWatch outage itself: closing it needs the source back; fetcher value edits are out of
+  scope. The record states the dark rows and the new Known-limit paragraph states the rule.
+- `fetchers/gnss.py` parse shape and `tools/lean_panel.py` green-on-failure: Scope Out, recorded
+  in the plan register (`internal/plans/2026-10-31-zero-debt.md` C3/D10), not tracked prose.
+
+**Files changed.** `collect.py`, `radar.md`, `tests/test_components.py`, `tools/episodes.py`,
+`tools/rescore.py`, `tools/seed_gnss.py`, `tools/seed_ioda.py`, `tools/stuck_panel.py`,
+`.ralph/progress.md`. No `data/`, `docs/data/`, chart, annotation or `radar-metrics.md` change;
+the derive block re-ran byte-identically.
+
+**Verification (all at the commit that closed this pass).**
+
+- `python -m pytest tests/ -q` — 343 passed, 34 subtests passed (exit 0).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 61 tests, OK (exit 0).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent.
+- `python tools/pending.py --check` — exit 0; 6 tagged, 0 overdue, 0 unparseable.
+- `node tests/render_smoke.js` — exit 0.
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 28 tests, OK (exit 0).
+- `cmp data/annotations.csv docs/data/annotations.csv` — exit 0 (unchanged).
+- Full derive block (`level_layer`, `drift_layer`, `stuck_panel`, `lean_panel`, `episodes
+  --markdown` + `pending --markdown`, `render.py`) — all exit 0, zero diff.
+- Python 3.12 venv (requests 2.34.2 / pytest 9.2.0, a compatibility check, not the pinned
+  environment): gate 343/34, audit 28 OK, replay 1271/0, pending 0 overdue; the stdlib-only
+  lint tier also passes on bare 3.12 and 3.13.
+
+**Next iteration should know.** The branch is ready to push; `main` is untouched and merging
+remains a human decision. The components seam now has a test on each half
+(`tests/test_components.py` for components, `tests/test_side_channel.py` for intraday), so an
+edit to either invariant must move the named test with it. The PortWatch dark run is the only
+open operational gap: it is stated in the record and now in Known limits, and it resolves when
+the source serves usable daily rows again.

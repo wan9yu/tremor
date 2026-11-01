@@ -71,7 +71,7 @@ def episodes(observed, alarms, gap=GAP):
         i = index.get(date)
         if i is None:
             continue
-        if out and i - last_i <= gap + 1:
+        if out and last_i is not None and i - last_i <= gap + 1:
             start, _, n = out[-1]
             out[-1] = (start, date, n + 1)
         else:

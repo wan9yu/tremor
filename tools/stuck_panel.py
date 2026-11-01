@@ -77,7 +77,7 @@ def main():
         for comp in open_now:
             if level_layer.stale_note(newest, seen.get(comp, newest)):
                 stale_now.add(comp)
-    rows = build_panel(level_rows, stale_now)
+    rows = build_panel(level_rows, frozenset(stale_now))
     collect._write_rows(OUT, HEADER, rows)
     latest = rows[-1]["date"] if rows else None
     n_now = sum(1 for r in rows if r["date"] == latest)

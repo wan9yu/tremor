@@ -134,6 +134,9 @@ def main(argv):
         if not total:
             absent.append(d)
             continue
+        if bad is None:
+            raise SystemExit(f"{d}: cached total without a bad count — refusing to "
+                             "seed from a malformed cache")
         counts[d] = (bad, total)
         history.append((d, round(bad / total * 100.0, 4)))
     print(f"fetched: {len(history)} observations, {len(absent)} days served nothing"

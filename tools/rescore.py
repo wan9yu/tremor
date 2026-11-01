@@ -72,6 +72,9 @@ def rescore(mod, dry):
         return 0
 
     archived = seedlib.archive_current(mod.LINE, "prerescore")
+    if archived is None:
+        raise SystemExit(f"{mod.LINE}: no record to archive — refusing a rewrite "
+                         "without one")
     collect.write_line(mod.LINE, out)
     print(f"  archived {os.path.basename(archived)}, rewrote {len(out)} rows")
     print("  NOW: add a method row to data/annotations.csv saying what was wrong "
@@ -82,8 +85,11 @@ def rescore(mod, dry):
 
 def main(argv):
     names = [a for a in argv if not a.startswith("--")]
+    usage = __doc__
+    if not usage:
+        raise SystemExit("rescore.py: the module docstring carries the usage line")
     if len(names) != 1:
-        raise SystemExit(__doc__.strip().splitlines()[-1].strip())
+        raise SystemExit(usage.strip().splitlines()[-1].strip())
     return rescore(line_module(names[0]), "--dry-run" in argv)
 
 

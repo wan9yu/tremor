@@ -332,6 +332,16 @@ Written down because they are structural, not bugs, and a reader deserves them u
    scoring path (a diagnostic panel), never as a `summary.csv` column, which would break the
    side-channel firewall, replay's forward-only re-derivation, and the tier-1-only summary
    contract at once. See round 12.
+   **Truncation at the input, not staleness** (2026-11-01, zero-debt close-out): a
+   derived layer stops at its last INPUT, so it is current through the newest captured
+   component day, never through the newest scored day. The chokepoint capture
+   (`data/components/chokepoint_breadth.csv`) has recorded no usable daily row since
+   collection 2026-10-28 (PortWatch returned nothing; last observation 2026-10-17), so
+   `data/levels.csv` and the served `docs/data/stuck.csv` end 2026-10-17 while the scored
+   record reaches 2026-10-31. The dark rows are the record's own statement of the outage,
+   nothing is extrapolated across the gap, and `tests/audit_record.py` binds the level and
+   stuck layers to that last captured day, so truncation cannot read as a silent freeze.
+   Closing it needs the source back, not a derived-layer edit.
 2. **The tremble bar is not one number — it depends on how much evidence built the
    verdict.** A robust z measures today against an ESTIMATED median in units of an
    ESTIMATED scale, and estimates from ten readings wobble in a way estimates from ninety

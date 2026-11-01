@@ -425,11 +425,13 @@ def write_components(line, date, components):
     was never written down. PortWatch will not serve 2019 forever.
 
     So the breakdown is stored beside the reading. It is DIAGNOSTIC ONLY, under
-    the same rule as the intraday sampler: no scoring code may read it, it is not
-    mirrored to the dashboard, and it changes no verdict. Its job is to make the
-    analyses this project has already wanted — a per-strait breadth count, a
-    regional rebalancing of the airspace line, a level layer — possible later
-    without a time machine.
+    the same rule as the intraday sampler: no scoring decision reads it, it is not
+    mirrored to the dashboard, and it changes no verdict. The one read of this
+    file is the merge below, which carries this line's own rows forward; no
+    component value reaches a scored row. Its job is to make the analyses this
+    project has already wanted — a per-strait breadth count, a regional
+    rebalancing of the airspace line, a level layer — possible later without a
+    time machine.
 
     A single bad component, or a malformed container, must never cost the
     line its own scalar reading or abort a later line: a non-mapping

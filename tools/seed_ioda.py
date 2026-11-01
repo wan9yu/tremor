@@ -306,6 +306,9 @@ def main(argv):
             swept.append(d)
             history.append((d, None))
             continue
+        if hits is None:
+            raise SystemExit(f"{d}: cached entities without a hit count — refusing "
+                             "to seed from a malformed cache")
         history.append((d, float(hits)))
     print(f"  {len(swept)} day(s) refused as monitor sweeps: {swept}")
     print(f"fetched: {len(history)} observations, {len(absent)} days without one "
