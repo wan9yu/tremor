@@ -1,0 +1,295 @@
+date,raw_value,z_score,trembling,direction,source_note,obs_date,status
+2025-10-27,15.79,,0,,FRED VIXCLS close 2025-10-27 (seeded from archive 2026-07-10),2025-10-27,warming-up
+2025-10-28,16.42,,0,,FRED VIXCLS close 2025-10-28 (seeded from archive 2026-07-10),2025-10-28,warming-up
+2025-10-29,16.92,,0,,FRED VIXCLS close 2025-10-29 (seeded from archive 2026-07-10),2025-10-29,warming-up
+2025-10-30,16.91,,0,,FRED VIXCLS close 2025-10-30 (seeded from archive 2026-07-10),2025-10-30,warming-up
+2025-10-31,17.44,,0,,FRED VIXCLS close 2025-10-31 (seeded from archive 2026-07-10),2025-10-31,warming-up
+2025-11-03,17.17,,0,,FRED VIXCLS close 2025-11-03 (seeded from archive 2026-07-10),2025-11-03,warming-up
+2025-11-04,19,,0,,FRED VIXCLS close 2025-11-04 (seeded from archive 2026-07-10),2025-11-04,warming-up
+2025-11-05,18.01,,0,,FRED VIXCLS close 2025-11-05 (seeded from archive 2026-07-10),2025-11-05,warming-up
+2025-11-06,19.5,,0,,FRED VIXCLS close 2025-11-06 (seeded from archive 2026-07-10),2025-11-06,warming-up
+2025-11-07,19.08,,0,,FRED VIXCLS close 2025-11-07 (seeded from archive 2026-07-10),2025-11-07,warming-up
+2025-11-10,17.6,0.250,0,up,FRED VIXCLS close 2025-11-10 (seeded from archive 2026-07-10),2025-11-10,scoring
+2025-11-11,17.28,-0.189,0,down,FRED VIXCLS close 2025-11-11 (seeded from archive 2026-07-10),2025-11-11,scoring
+2025-11-12,17.51,0.184,0,up,FRED VIXCLS close 2025-11-12 (seeded from archive 2026-07-10),2025-11-12,scoring
+2025-11-13,20,3.258,1,up,FRED VIXCLS close 2025-11-13 (seeded from archive 2026-07-10),2025-11-13,scoring
+2025-11-14,19.83,2.836,0,up,FRED VIXCLS close 2025-11-14 (seeded from archive 2026-07-10),2025-11-14,scoring
+2025-11-17,22.38,5.475,1,up,FRED VIXCLS close 2025-11-17 (seeded from archive 2026-07-10),2025-11-17,scoring
+2025-11-18,24.69,5.407,1,up,FRED VIXCLS close 2025-11-18 (seeded from archive 2026-07-10),2025-11-18,scoring
+2025-11-19,23.66,3.464,1,up,FRED VIXCLS close 2025-11-19 (seeded from archive 2026-07-10),2025-11-19,scoring
+2025-11-20,26.42,4.705,1,up,FRED VIXCLS close 2025-11-20 (seeded from archive 2026-07-10),2025-11-20,scoring
+2025-11-21,23.43,3.323,1,up,FRED VIXCLS close 2025-11-21 (seeded from archive 2026-07-10),2025-11-21,scoring
+2025-11-24,20.52,0.960,0,up,FRED VIXCLS close 2025-11-24 (seeded from archive 2026-07-10),2025-11-24,scoring
+2025-11-25,18.56,-0.173,0,down,FRED VIXCLS close 2025-11-25 (seeded from archive 2026-07-10),2025-11-25,scoring
+2025-11-26,17.19,-0.690,0,down,FRED VIXCLS close 2025-11-26 (seeded from archive 2026-07-10),2025-11-26,scoring
+2025-11-27,17.21,-0.655,0,down,FRED VIXCLS close 2025-11-27 (seeded from archive 2026-07-10),2025-11-27,scoring
+2025-11-28,16.35,-1.012,0,down,FRED VIXCLS close 2025-11-28 (seeded from archive 2026-07-10),2025-11-28,scoring
+2025-12-01,17.24,-0.472,0,down,FRED VIXCLS close 2025-12-01 (seeded from archive 2026-07-10),2025-12-01,scoring
+2025-12-02,16.59,-0.664,0,down,FRED VIXCLS close 2025-12-02 (seeded from archive 2026-07-10),2025-12-02,scoring
+2025-12-03,16.08,-0.869,0,down,FRED VIXCLS close 2025-12-03 (seeded from archive 2026-07-10),2025-12-03,scoring
+2025-12-04,15.78,-1.023,0,down,FRED VIXCLS close 2025-12-04 (seeded from archive 2026-07-10),2025-12-04,scoring
+2025-12-05,15.41,-1.221,0,down,FRED VIXCLS close 2025-12-05 (seeded from archive 2026-07-10),2025-12-05,scoring
+2025-12-08,16.66,-0.436,0,down,FRED VIXCLS close 2025-12-08 (seeded from archive 2026-07-10),2025-12-08,scoring
+2025-12-09,16.93,-0.307,0,down,FRED VIXCLS close 2025-12-09 (seeded from archive 2026-07-10),2025-12-09,scoring
+2025-12-10,15.77,-0.971,0,down,FRED VIXCLS close 2025-12-10 (seeded from archive 2026-07-10),2025-12-10,scoring
+2025-12-11,14.85,-1.366,0,down,FRED VIXCLS close 2025-12-11 (seeded from archive 2026-07-10),2025-12-11,scoring
+2025-12-12,15.74,-0.827,0,down,FRED VIXCLS close 2025-12-12 (seeded from archive 2026-07-10),2025-12-12,scoring
+2025-12-15,16.5,-0.378,0,down,FRED VIXCLS close 2025-12-15 (seeded from archive 2026-07-10),2025-12-15,scoring
+2025-12-16,16.48,-0.405,0,down,FRED VIXCLS close 2025-12-16 (seeded from archive 2026-07-10),2025-12-16,scoring
+2025-12-17,17.62,0.245,0,up,FRED VIXCLS close 2025-12-17 (seeded from archive 2026-07-10),2025-12-17,scoring
+2025-12-18,16.87,-0.237,0,down,FRED VIXCLS close 2025-12-18 (seeded from archive 2026-07-10),2025-12-18,scoring
+2025-12-19,14.91,-1.804,0,down,FRED VIXCLS close 2025-12-19 (seeded from archive 2026-07-10),2025-12-19,scoring
+2025-12-22,14.08,-2.136,0,down,FRED VIXCLS close 2025-12-22 (seeded from archive 2026-07-10),2025-12-22,scoring
+2025-12-23,14,-1.938,0,down,FRED VIXCLS close 2025-12-23 (seeded from archive 2026-07-10),2025-12-23,scoring
+2025-12-24,13.47,-2.018,0,down,FRED VIXCLS close 2025-12-24 (seeded from archive 2026-07-10),2025-12-24,scoring
+2025-12-26,13.6,-1.745,0,down,FRED VIXCLS close 2025-12-26 (seeded from archive 2026-07-10),2025-12-26,scoring
+2025-12-29,14.2,-1.520,0,down,FRED VIXCLS close 2025-12-29 (seeded from archive 2026-07-10),2025-12-29,scoring
+2025-12-30,14.33,-1.525,0,down,FRED VIXCLS close 2025-12-30 (seeded from archive 2026-07-10),2025-12-30,scoring
+2025-12-31,14.95,-1.158,0,down,FRED VIXCLS close 2025-12-31 (seeded from archive 2026-07-10),2025-12-31,scoring
+2026-01-02,14.51,-1.413,0,down,FRED VIXCLS close 2026-01-02 (seeded from archive 2026-07-10),2026-01-02,scoring
+2026-01-05,14.9,-1.172,0,down,FRED VIXCLS close 2026-01-05 (seeded from archive 2026-07-10),2026-01-05,scoring
+2026-01-06,14.75,-1.245,0,down,FRED VIXCLS close 2026-01-06 (seeded from archive 2026-07-10),2026-01-06,scoring
+2026-01-07,15.38,-0.775,0,down,FRED VIXCLS close 2026-01-07 (seeded from archive 2026-07-10),2026-01-07,scoring
+2026-01-08,15.45,-0.656,0,down,FRED VIXCLS close 2026-01-08 (seeded from archive 2026-07-10),2026-01-08,scoring
+2026-01-09,14.49,-1.149,0,down,FRED VIXCLS close 2026-01-09 (seeded from archive 2026-07-10),2026-01-09,scoring
+2026-01-12,15.12,-0.811,0,down,FRED VIXCLS close 2026-01-12 (seeded from archive 2026-07-10),2026-01-12,scoring
+2026-01-13,15.98,-0.331,0,down,FRED VIXCLS close 2026-01-13 (seeded from archive 2026-07-10),2026-01-13,scoring
+2026-01-14,16.75,0.089,0,up,FRED VIXCLS close 2026-01-14 (seeded from archive 2026-07-10),2026-01-14,scoring
+2026-01-15,15.84,-0.430,0,down,FRED VIXCLS close 2026-01-15 (seeded from archive 2026-07-10),2026-01-15,scoring
+2026-01-16,15.86,-0.417,0,down,FRED VIXCLS close 2026-01-16 (seeded from archive 2026-07-10),2026-01-16,scoring
+2026-01-19,18.84,1.388,0,up,FRED VIXCLS close 2026-01-19 (seeded from archive 2026-07-10),2026-01-19,scoring
+2026-01-20,20.09,2.001,0,up,FRED VIXCLS close 2026-01-20 (seeded from archive 2026-07-10),2026-01-20,scoring
+2026-01-21,16.9,0.151,0,up,FRED VIXCLS close 2026-01-21 (seeded from archive 2026-07-10),2026-01-21,scoring
+2026-01-22,15.64,-0.550,0,down,FRED VIXCLS close 2026-01-22 (seeded from archive 2026-07-10),2026-01-22,scoring
+2026-01-23,16.09,-0.302,0,down,FRED VIXCLS close 2026-01-23 (seeded from archive 2026-07-10),2026-01-23,scoring
+2026-01-26,16.15,-0.260,0,down,FRED VIXCLS close 2026-01-26 (seeded from archive 2026-07-10),2026-01-26,scoring
+2026-01-27,16.35,-0.121,0,down,FRED VIXCLS close 2026-01-27 (seeded from archive 2026-07-10),2026-01-27,scoring
+2026-01-28,16.35,-0.093,0,down,FRED VIXCLS close 2026-01-28 (seeded from archive 2026-07-10),2026-01-28,scoring
+2026-01-29,16.88,0.248,0,up,FRED VIXCLS close 2026-01-29 (seeded from archive 2026-07-10),2026-01-29,scoring
+2026-01-30,17.44,0.604,0,up,FRED VIXCLS close 2026-01-30 (seeded from archive 2026-07-10),2026-01-30,scoring
+2026-02-02,16.34,-0.137,0,down,FRED VIXCLS close 2026-02-02 (seeded from archive 2026-07-10),2026-02-02,scoring
+2026-02-03,18,1.002,0,up,FRED VIXCLS close 2026-02-03 (seeded from archive 2026-07-10),2026-02-03,scoring
+2026-02-04,18.64,1.399,0,up,FRED VIXCLS close 2026-02-04 (seeded from archive 2026-07-10),2026-02-04,scoring
+2026-02-05,21.77,3.459,1,up,FRED VIXCLS close 2026-02-05 (seeded from archive 2026-07-10),2026-02-05,scoring
+2026-02-06,17.76,0.773,0,up,FRED VIXCLS close 2026-02-06 (seeded from archive 2026-07-10),2026-02-06,scoring
+2026-02-09,17.36,0.463,0,up,FRED VIXCLS close 2026-02-09 (seeded from archive 2026-07-10),2026-02-09,scoring
+2026-02-10,17.79,0.725,0,up,FRED VIXCLS close 2026-02-10 (seeded from archive 2026-07-10),2026-02-10,scoring
+2026-02-11,17.65,0.601,0,up,FRED VIXCLS close 2026-02-11 (seeded from archive 2026-07-10),2026-02-11,scoring
+2026-02-12,20.82,2.613,0,up,FRED VIXCLS close 2026-02-12 (seeded from archive 2026-07-10),2026-02-12,scoring
+2026-02-13,20.6,2.287,0,up,FRED VIXCLS close 2026-02-13 (seeded from archive 2026-07-10),2026-02-13,scoring
+2026-02-16,21.2,2.616,0,up,FRED VIXCLS close 2026-02-16 (seeded from archive 2026-07-10),2026-02-16,scoring
+2026-02-17,20.29,2.054,0,up,FRED VIXCLS close 2026-02-17 (seeded from archive 2026-07-10),2026-02-17,scoring
+2026-02-18,19.62,1.644,0,up,FRED VIXCLS close 2026-02-18 (seeded from archive 2026-07-10),2026-02-18,scoring
+2026-02-19,20.23,1.988,0,up,FRED VIXCLS close 2026-02-19 (seeded from archive 2026-07-10),2026-02-19,scoring
+2026-02-20,19.09,1.282,0,up,FRED VIXCLS close 2026-02-20 (seeded from archive 2026-07-10),2026-02-20,scoring
+2026-02-23,21.01,2.364,0,up,FRED VIXCLS close 2026-02-23 (seeded from archive 2026-07-10),2026-02-23,scoring
+2026-02-24,19.55,1.451,0,up,FRED VIXCLS close 2026-02-24 (seeded from archive 2026-07-10),2026-02-24,scoring
+2026-02-25,17.93,0.532,0,up,FRED VIXCLS close 2026-02-25 (seeded from archive 2026-07-10),2026-02-25,scoring
+2026-02-26,18.63,0.931,0,up,FRED VIXCLS close 2026-02-26 (seeded from archive 2026-07-10),2026-02-26,scoring
+2026-02-27,19.86,1.532,0,up,FRED VIXCLS close 2026-02-27 (seeded from archive 2026-07-10),2026-02-27,scoring
+2026-03-02,21.44,2.028,0,up,FRED VIXCLS close 2026-03-02 (seeded from archive 2026-07-10),2026-03-02,scoring
+2026-03-03,23.57,2.957,0,up,FRED VIXCLS close 2026-03-03 (seeded from archive 2026-07-10),2026-03-03,scoring
+2026-03-04,21.15,1.840,0,up,FRED VIXCLS close 2026-03-04 (seeded from archive 2026-07-10),2026-03-04,scoring
+2026-03-05,23.75,2.926,0,up,FRED VIXCLS close 2026-03-05 (seeded from archive 2026-07-10),2026-03-05,scoring
+2026-03-06,29.49,5.170,1,up,FRED VIXCLS close 2026-03-06 (seeded from archive 2026-07-10),2026-03-06,scoring
+2026-03-09,25.5,3.308,1,up,FRED VIXCLS close 2026-03-09 (seeded from archive 2026-07-10),2026-03-09,scoring
+2026-03-10,24.93,2.984,0,up,FRED VIXCLS close 2026-03-10 (seeded from archive 2026-07-10),2026-03-10,scoring
+2026-03-11,24.23,2.641,0,up,FRED VIXCLS close 2026-03-11 (seeded from archive 2026-07-10),2026-03-11,scoring
+2026-03-12,27.29,3.596,1,up,FRED VIXCLS close 2026-03-12 (seeded from archive 2026-07-10),2026-03-12,scoring
+2026-03-13,27.19,3.352,1,up,FRED VIXCLS close 2026-03-13 (seeded from archive 2026-07-10),2026-03-13,scoring
+2026-03-16,23.51,2.055,0,up,FRED VIXCLS close 2026-03-16 (seeded from archive 2026-07-10),2026-03-16,scoring
+2026-03-17,22.37,1.672,0,up,FRED VIXCLS close 2026-03-17 (seeded from archive 2026-07-10),2026-03-17,scoring
+2026-03-18,25.09,2.488,0,up,FRED VIXCLS close 2026-03-18 (seeded from archive 2026-07-10),2026-03-18,scoring
+2026-03-19,24.06,2.056,0,up,FRED VIXCLS close 2026-03-19 (seeded from archive 2026-07-10),2026-03-19,scoring
+2026-03-20,26.78,2.789,0,up,FRED VIXCLS close 2026-03-20 (seeded from archive 2026-07-10),2026-03-20,scoring
+2026-03-23,26.15,2.511,0,up,FRED VIXCLS close 2026-03-23 (seeded from archive 2026-07-10),2026-03-23,scoring
+2026-03-24,26.95,2.745,0,up,FRED VIXCLS close 2026-03-24 (seeded from archive 2026-07-10),2026-03-24,scoring
+2026-03-25,25.33,2.220,0,up,FRED VIXCLS close 2026-03-25 (seeded from archive 2026-07-10),2026-03-25,scoring
+2026-03-26,27.44,2.820,0,up,FRED VIXCLS close 2026-03-26 (seeded from archive 2026-07-10),2026-03-26,scoring
+2026-03-27,31.05,3.848,1,up,FRED VIXCLS close 2026-03-27 (seeded from archive 2026-07-10),2026-03-27,scoring
+2026-03-30,30.61,3.723,1,up,FRED VIXCLS close 2026-03-30 (seeded from archive 2026-07-10),2026-03-30,scoring
+2026-03-31,25.25,2.197,0,up,FRED VIXCLS close 2026-03-31 (seeded from archive 2026-07-10),2026-03-31,scoring
+2026-04-01,24.54,1.995,0,up,FRED VIXCLS close 2026-04-01 (seeded from archive 2026-07-10),2026-04-01,scoring
+2026-04-02,23.87,1.804,0,up,FRED VIXCLS close 2026-04-02 (seeded from archive 2026-07-10),2026-04-02,scoring
+2026-04-06,24.17,1.802,0,up,FRED VIXCLS close 2026-04-06 (seeded from archive 2026-07-10),2026-04-06,scoring
+2026-04-07,25.78,2.150,0,up,FRED VIXCLS close 2026-04-07 (seeded from archive 2026-07-10),2026-04-07,scoring
+2026-04-08,21.04,0.870,0,up,FRED VIXCLS close 2026-04-08 (seeded from archive 2026-07-10),2026-04-08,scoring
+2026-04-09,19.49,0.422,0,up,FRED VIXCLS close 2026-04-09 (seeded from archive 2026-07-10),2026-04-09,scoring
+2026-04-10,19.23,0.337,0,up,FRED VIXCLS close 2026-04-10 (seeded from archive 2026-07-10),2026-04-10,scoring
+2026-04-13,19.12,0.284,0,up,FRED VIXCLS close 2026-04-13 (seeded from archive 2026-07-10),2026-04-13,scoring
+2026-04-14,18.36,0.011,0,up,FRED VIXCLS close 2026-04-14 (seeded from archive 2026-07-10),2026-04-14,scoring
+2026-04-15,18.17,-0.080,0,down,FRED VIXCLS close 2026-04-15 (seeded from archive 2026-07-10),2026-04-15,scoring
+2026-04-16,17.94,-0.138,0,down,FRED VIXCLS close 2026-04-16 (seeded from archive 2026-07-10),2026-04-16,scoring
+2026-04-17,17.48,-0.252,0,down,FRED VIXCLS close 2026-04-17 (seeded from archive 2026-07-10),2026-04-17,scoring
+2026-04-20,18.87,0.093,0,up,FRED VIXCLS close 2026-04-20 (seeded from archive 2026-07-10),2026-04-20,scoring
+2026-04-21,19.5,0.209,0,up,FRED VIXCLS close 2026-04-21 (seeded from archive 2026-07-10),2026-04-21,scoring
+2026-04-22,18.92,0.044,0,up,FRED VIXCLS close 2026-04-22 (seeded from archive 2026-07-10),2026-04-22,scoring
+2026-04-23,19.31,0.112,0,up,FRED VIXCLS close 2026-04-23 (seeded from archive 2026-07-10),2026-04-23,scoring
+2026-04-24,18.71,-0.045,0,down,FRED VIXCLS close 2026-04-24 (seeded from archive 2026-07-10),2026-04-24,scoring
+2026-04-27,18.02,-0.213,0,down,FRED VIXCLS close 2026-04-27 (seeded from archive 2026-07-10),2026-04-27,scoring
+2026-04-28,17.83,-0.259,0,down,FRED VIXCLS close 2026-04-28 (seeded from archive 2026-07-10),2026-04-28,scoring
+2026-04-29,18.81,-0.021,0,down,FRED VIXCLS close 2026-04-29 (seeded from archive 2026-07-10),2026-04-29,scoring
+2026-04-30,16.89,-0.510,0,down,FRED VIXCLS close 2026-04-30 (seeded from archive 2026-07-10),2026-04-30,scoring
+2026-05-01,16.99,-0.504,0,down,FRED VIXCLS close 2026-05-01 (seeded from archive 2026-07-10),2026-05-01,scoring
+2026-05-04,18.29,-0.160,0,down,FRED VIXCLS close 2026-05-04 (seeded from archive 2026-07-10),2026-05-04,scoring
+2026-05-05,17.38,-0.402,0,down,FRED VIXCLS close 2026-05-05 (seeded from archive 2026-07-10),2026-05-05,scoring
+2026-05-06,17.39,-0.419,0,down,FRED VIXCLS close 2026-05-06 (seeded from archive 2026-07-10),2026-05-06,scoring
+2026-05-07,17.08,-0.537,0,down,FRED VIXCLS close 2026-05-07 (seeded from archive 2026-07-10),2026-05-07,scoring
+2026-05-08,17.19,-0.523,0,down,FRED VIXCLS close 2026-05-08 (seeded from archive 2026-07-10),2026-05-08,scoring
+2026-05-11,18.38,-0.162,0,down,FRED VIXCLS close 2026-05-11 (seeded from archive 2026-07-10),2026-05-11,scoring
+2026-05-12,17.99,-0.287,0,down,FRED VIXCLS close 2026-05-12 (seeded from archive 2026-07-10),2026-05-12,scoring
+2026-05-13,17.87,-0.335,0,down,FRED VIXCLS close 2026-05-13 (seeded from archive 2026-07-10),2026-05-13,scoring
+2026-05-14,17.26,-0.549,0,down,FRED VIXCLS close 2026-05-14 (seeded from archive 2026-07-10),2026-05-14,scoring
+2026-05-15,18.43,-0.157,0,down,FRED VIXCLS close 2026-05-15 (seeded from archive 2026-07-10),2026-05-15,scoring
+2026-05-18,17.82,-0.370,0,down,FRED VIXCLS close 2026-05-18 (seeded from archive 2026-07-10),2026-05-18,scoring
+2026-05-19,18.06,-0.294,0,down,FRED VIXCLS close 2026-05-19 (seeded from archive 2026-07-10),2026-05-19,scoring
+2026-05-20,17.44,-0.528,0,down,FRED VIXCLS close 2026-05-20 (seeded from archive 2026-07-10),2026-05-20,scoring
+2026-05-21,16.76,-0.818,0,down,FRED VIXCLS close 2026-05-21 (seeded from archive 2026-07-10),2026-05-21,scoring
+2026-05-22,16.7,-0.841,0,down,FRED VIXCLS close 2026-05-22 (seeded from archive 2026-07-10),2026-05-22,scoring
+2026-05-25,16.59,-0.883,0,down,FRED VIXCLS close 2026-05-25 (seeded from archive 2026-07-10),2026-05-25,scoring
+2026-05-26,17.01,-0.722,0,down,FRED VIXCLS close 2026-05-26 (seeded from archive 2026-07-10),2026-05-26,scoring
+2026-05-27,16.29,-0.950,0,down,FRED VIXCLS close 2026-05-27 (seeded from archive 2026-07-10),2026-05-27,scoring
+2026-05-28,15.74,-1.136,0,down,FRED VIXCLS close 2026-05-28 (seeded from archive 2026-07-10),2026-05-28,scoring
+2026-05-29,15.32,-1.290,0,down,FRED VIXCLS close 2026-05-29 (seeded from archive 2026-07-10),2026-05-29,scoring
+2026-06-01,16.05,-1.023,0,down,FRED VIXCLS close 2026-06-01 (seeded from archive 2026-07-10),2026-06-01,scoring
+2026-06-02,15.77,-1.125,0,down,FRED VIXCLS close 2026-06-02 (seeded from archive 2026-07-10),2026-06-02,scoring
+2026-06-03,16.06,-1.019,0,down,FRED VIXCLS close 2026-06-03 (seeded from archive 2026-07-10),2026-06-03,scoring
+2026-06-04,15.4,-1.261,0,down,FRED VIXCLS close 2026-06-04 (seeded from archive 2026-07-10),2026-06-04,scoring
+2026-06-05,21.51,0.979,0,up,FRED VIXCLS close 2026-06-05 (seeded from archive 2026-07-10),2026-06-05,scoring
+2026-06-08,18.92,0.009,0,up,FRED VIXCLS close 2026-06-08 (seeded from archive 2026-07-10),2026-06-08,scoring
+2026-06-09,19.87,0.336,0,up,FRED VIXCLS close 2026-06-09 (seeded from archive 2026-07-10),2026-06-09,scoring
+2026-06-10,22.22,1.160,0,up,FRED VIXCLS close 2026-06-10 (seeded from archive 2026-07-10),2026-06-10,scoring
+2026-06-11,19.44,0.117,0,up,FRED VIXCLS close 2026-06-11 (seeded from archive 2026-07-10),2026-06-11,scoring
+2026-06-12,17.68,-0.518,0,down,FRED VIXCLS close 2026-06-12 (seeded from archive 2026-07-10),2026-06-12,scoring
+2026-06-15,16.2,-1.026,0,down,FRED VIXCLS close 2026-06-15 (seeded from archive 2026-07-10),2026-06-15,scoring
+2026-06-16,16.41,-0.944,0,down,FRED VIXCLS close 2026-06-16 (seeded from archive 2026-07-10),2026-06-16,scoring
+2026-06-17,18.44,-0.227,0,down,FRED VIXCLS close 2026-06-17 (seeded from archive 2026-07-10),2026-06-17,scoring
+2026-06-18,16.4,-0.921,0,down,FRED VIXCLS close 2026-06-18 (seeded from archive 2026-07-10),2026-06-18,scoring
+2026-06-19,16.78,-0.771,0,down,FRED VIXCLS close 2026-06-19 (seeded from archive 2026-07-10),2026-06-19,scoring
+2026-06-22,17.28,-0.575,0,down,FRED VIXCLS close 2026-06-22 (seeded from archive 2026-07-10),2026-06-22,scoring
+2026-06-23,19.49,0.187,0,up,FRED VIXCLS close 2026-06-23 (seeded from archive 2026-07-10),2026-06-23,scoring
+2026-06-24,18.63,-0.099,0,down,FRED VIXCLS close 2026-06-24 (seeded from archive 2026-07-10),2026-06-24,scoring
+2026-06-25,18.89,-0.002,0,down,FRED VIXCLS close 2026-06-25 (seeded from archive 2026-07-10),2026-06-25,scoring
+2026-06-26,18.41,-0.163,0,down,FRED VIXCLS close 2026-06-26 (seeded from archive 2026-07-10),2026-06-26,scoring
+2026-06-29,17.65,-0.422,0,down,FRED VIXCLS close 2026-06-29 (seeded from archive 2026-07-10),2026-06-29,scoring
+2026-06-30,16.45,-0.856,0,down,FRED VIXCLS close 2026-06-30 (seeded from archive 2026-07-10),2026-06-30,scoring
+2026-07-01,16.59,-0.811,0,down,FRED VIXCLS close 2026-07-01 (seeded from archive 2026-07-10),2026-07-01,scoring
+2026-07-02,16.15,-0.932,0,down,FRED VIXCLS close 2026-07-02 (seeded from archive 2026-07-10),2026-07-02,scoring
+2026-07-03,15.81,-1.023,0,down,FRED VIXCLS close 2026-07-03 (seeded from archive 2026-07-10),2026-07-03,scoring
+2026-07-06,15.57,-1.108,0,down,FRED VIXCLS close 2026-07-06 (seeded from archive 2026-07-10),2026-07-06,scoring
+2026-07-07,16.13,-0.869,0,down,FRED VIXCLS close 2026-07-07 (seeded from archive 2026-07-10),2026-07-07,scoring
+2026-07-08,16.9,-0.578,0,down,FRED VIXCLS close 2026-07-08 (seeded from archive 2026-07-10),2026-07-08,scoring
+2026-07-10,16.9,,0,,FRED VIXCLS close 2026-07-08 [stale: observation already recorded],2026-07-08,stale
+2026-07-11,15.84,-1.035,0,down,FRED VIXCLS close 2026-07-09,2026-07-09,scoring
+2026-07-12,15.84,,0,,FRED VIXCLS close 2026-07-09 [stale: observation already recorded],2026-07-09,stale
+2026-07-13,15.84,,0,,FRED VIXCLS close 2026-07-09 [stale: observation already recorded],2026-07-09,stale
+2026-07-14,15.03,-1.374,0,down,FRED VIXCLS close 2026-07-10,2026-07-10,scoring
+2026-07-15,17.16,-0.493,0,down,FRED VIXCLS close 2026-07-13,2026-07-13,scoring
+2026-07-16,16.5,-0.778,0,down,FRED VIXCLS close 2026-07-14,2026-07-14,scoring
+2026-07-17,15.67,-1.178,0,down,FRED VIXCLS close 2026-07-15,2026-07-15,scoring
+2026-07-18,16.73,-0.609,0,down,FRED VIXCLS close 2026-07-16,2026-07-16,scoring
+2026-07-19,16.73,,0,,FRED VIXCLS close 2026-07-16 [stale: observation already recorded],2026-07-16,stale
+2026-07-20,16.73,,0,,FRED VIXCLS close 2026-07-16 [stale: observation already recorded],2026-07-16,stale
+2026-07-21,18.77,0.362,0,up,FRED VIXCLS close 2026-07-17,2026-07-17,scoring
+2026-07-22,18.65,0.307,0,up,FRED VIXCLS close 2026-07-20,2026-07-20,scoring
+2026-07-23,17.05,-0.452,0,down,FRED VIXCLS close 2026-07-21,2026-07-21,scoring
+2026-07-24,16.64,-0.654,0,down,FRED VIXCLS close 2026-07-22,2026-07-22,scoring
+2026-07-25,18.7,0.401,0,up,FRED VIXCLS close 2026-07-23,2026-07-23,scoring
+2026-07-26,18.7,,0,,FRED VIXCLS close 2026-07-23 [stale: observation already recorded],2026-07-23,stale
+2026-07-27,18.7,,0,,FRED VIXCLS close 2026-07-23 [stale: observation already recorded],2026-07-23,stale
+2026-07-28,18.58,0.352,0,up,FRED VIXCLS close 2026-07-24,2026-07-24,scoring
+2026-07-29,18.67,0.408,0,up,FRED VIXCLS close 2026-07-27,2026-07-27,scoring
+2026-07-30,18.21,0.168,0,up,FRED VIXCLS close 2026-07-28 [sampled 23:02:02Z],2026-07-28,scoring
+2026-07-31,20.66,1.557,0,up,FRED VIXCLS close 2026-07-29 [sampled 23:12:37Z],2026-07-29,scoring
+2026-08-01,17.09,-0.461,0,down,FRED VIXCLS close 2026-07-30 [sampled 23:06:52Z],2026-07-30,scoring
+2026-08-02,17.09,,0,,FRED VIXCLS close 2026-07-30 [sampled 22:58:42Z] [stale: observation already recorded],2026-07-30,stale
+2026-08-03,17.09,,0,,FRED VIXCLS close 2026-07-30 [sampled 22:59:49Z] [stale: observation already recorded],2026-07-30,stale
+2026-08-04,15.99,-1.091,0,down,FRED VIXCLS close 2026-07-31 [sampled 00:53:39Z],2026-07-31,scoring
+2026-08-05,15.86,-1.182,0,down,FRED VIXCLS close 2026-08-03 [sampled 23:07:28Z],2026-08-03,scoring
+2026-08-06,16.5,-0.761,0,down,FRED VIXCLS close 2026-08-04 [sampled 23:05:43Z],2026-08-04,scoring
+2026-08-07,15.81,-1.160,0,down,FRED VIXCLS close 2026-08-05 [sampled 01:31:39Z],2026-08-05,scoring
+2026-08-08,15.15,-1.552,0,down,FRED VIXCLS close 2026-08-06 [sampled 22:42:32Z],2026-08-06,scoring
+2026-08-09,15.15,,0,,FRED VIXCLS close 2026-08-06 [sampled 22:34:45Z] [stale: observation already recorded],2026-08-06,stale
+2026-08-10,15.15,,0,,FRED VIXCLS close 2026-08-06 [sampled 22:36:18Z] [stale: observation already recorded],2026-08-06,stale
+2026-08-11,14.9,-1.645,0,down,FRED VIXCLS close 2026-08-07 [sampled 22:43:13Z],2026-08-07,scoring
+2026-08-12,15.46,-1.256,0,down,FRED VIXCLS close 2026-08-10 [sampled 22:49:49Z],2026-08-10,scoring
+2026-08-13,15.28,-1.391,0,down,FRED VIXCLS close 2026-08-11 [sampled 22:47:38Z],2026-08-11,scoring
+2026-08-14,14.55,-1.863,0,down,FRED VIXCLS close 2026-08-12 [sampled 22:49:44Z],2026-08-12,scoring
+2026-08-15,14.63,-1.769,0,down,FRED VIXCLS close 2026-08-13 [sampled 22:28:45Z],2026-08-13,scoring
+2026-08-16,14.63,,0,,FRED VIXCLS close 2026-08-13 [sampled 22:27:03Z] [stale: observation already recorded],2026-08-13,stale
+2026-08-17,14.63,,0,,FRED VIXCLS close 2026-08-13 [sampled 22:26:55Z] [stale: observation already recorded],2026-08-13,stale
+2026-08-18,14.25,-1.965,0,down,FRED VIXCLS close 2026-08-14 [sampled 22:29:47Z],2026-08-14,scoring
+2026-08-19,15.19,-1.311,0,down,FRED VIXCLS close 2026-08-17 [sampled 22:28:53Z],2026-08-17,scoring
+2026-08-20,15.84,-0.849,0,down,FRED VIXCLS close 2026-08-18 [sampled 22:29:38Z],2026-08-18,scoring
+2026-08-21,14.89,-1.430,0,down,FRED VIXCLS close 2026-08-19 [sampled 22:32:43Z],2026-08-19,scoring
+2026-08-22,16.01,-0.678,0,down,FRED VIXCLS close 2026-08-20 [sampled 22:30:32Z],2026-08-20,scoring
+2026-08-23,16.01,,0,,FRED VIXCLS close 2026-08-20 [sampled 22:26:58Z] [stale: observation already recorded],2026-08-20,stale
+2026-08-24,16.01,,0,,FRED VIXCLS close 2026-08-20 [sampled 22:27:01Z] [stale: observation already recorded],2026-08-20,stale
+2026-08-25,15.13,-1.221,0,down,FRED VIXCLS close 2026-08-21 [sampled 22:32:08Z],2026-08-21,scoring
+2026-08-26,15.85,-0.739,0,down,FRED VIXCLS close 2026-08-24 [sampled 22:32:31Z],2026-08-24,scoring
+2026-08-27,15.45,-0.974,0,down,FRED VIXCLS close 2026-08-25 [sampled 02:48:57Z],2026-08-25,scoring
+2026-08-28,15.21,-1.113,0,down,FRED VIXCLS close 2026-08-26 [sampled 05:55:14Z],2026-08-26,scoring
+2026-08-29,14.51,-1.536,0,down,FRED VIXCLS close 2026-08-27 [sampled 03:27:24Z],2026-08-27,scoring
+2026-08-30,14.51,,0,,FRED VIXCLS close 2026-08-27 [sampled 23:51:23Z] [stale: observation already recorded],2026-08-27,stale
+2026-08-31,14.51,,0,,FRED VIXCLS close 2026-08-27 [sampled 00:09:54Z] [stale: observation already recorded],2026-08-27,stale
+2026-09-01,14.43,-1.546,0,down,FRED VIXCLS close 2026-08-28 [sampled 00:57:24Z],2026-08-28,scoring
+2026-09-02,14.92,-1.206,0,down,FRED VIXCLS close 2026-08-31 [sampled 22:31:03Z],2026-08-31,scoring
+2026-09-03,16.34,-0.248,0,down,FRED VIXCLS close 2026-09-01 [sampled 22:30:59Z],2026-09-01,scoring
+2026-09-04,15.2,-0.971,0,down,FRED VIXCLS close 2026-09-02 [sampled 22:30:35Z],2026-09-02,scoring
+2026-09-05,14.32,-1.560,0,down,FRED VIXCLS close 2026-09-03 [sampled 22:30:55Z],2026-09-03,scoring
+2026-09-06,14.32,,0,,FRED VIXCLS close 2026-09-03 [sampled 22:30:31Z] [stale: observation already recorded],2026-09-03,stale
+2026-09-07,14.32,,0,,FRED VIXCLS close 2026-09-03 [sampled 22:30:56Z] [stale: observation already recorded],2026-09-03,stale
+2026-09-08,14.32,,0,,FRED VIXCLS close 2026-09-03 [sampled 22:30:41Z] [stale: observation already recorded],2026-09-03,stale
+2026-09-09,15.3,-0.852,0,down,FRED VIXCLS close 2026-09-07 [sampled 22:30:36Z],2026-09-07,scoring
+2026-09-10,15.72,-0.545,0,down,FRED VIXCLS close 2026-09-08 [sampled 22:30:49Z],2026-09-08,scoring
+2026-09-11,16.46,-0.027,0,down,FRED VIXCLS close 2026-09-09 [sampled 22:30:46Z],2026-09-09,scoring
+2026-09-12,17.84,0.925,0,up,FRED VIXCLS close 2026-09-10 [sampled 22:31:05Z],2026-09-10,scoring
+2026-09-13,17.84,,0,,FRED VIXCLS close 2026-09-10 [sampled 22:31:07Z] [stale: observation already recorded],2026-09-10,stale
+2026-09-14,17.84,,0,,FRED VIXCLS close 2026-09-10 [sampled 22:31:02Z] [stale: observation already recorded],2026-09-10,stale
+2026-09-15,15.84,-0.435,0,down,FRED VIXCLS close 2026-09-11 [sampled 22:30:46Z],2026-09-11,scoring
+2026-09-16,17.1,0.438,0,up,FRED VIXCLS close 2026-09-14 [sampled 22:30:46Z],2026-09-14,scoring
+2026-09-17,17.2,0.506,0,up,FRED VIXCLS close 2026-09-15 [sampled 22:30:47Z],2026-09-15,scoring
+2026-09-18,17.71,0.853,0,up,FRED VIXCLS close 2026-09-16 [sampled 22:30:45Z],2026-09-16,scoring
+2026-09-19,15.44,-0.690,0,down,FRED VIXCLS close 2026-09-17 [sampled 22:30:55Z],2026-09-17,scoring
+2026-09-20,15.44,,0,,FRED VIXCLS close 2026-09-17 [sampled 22:30:41Z] [stale: observation already recorded],2026-09-17,stale
+2026-09-21,15.44,,0,,FRED VIXCLS close 2026-09-17 [sampled 22:30:39Z] [stale: observation already recorded],2026-09-17,stale
+2026-09-22,14.81,-1.134,0,down,FRED VIXCLS close 2026-09-18 [sampled 22:30:41Z],2026-09-18,scoring
+2026-09-23,14.87,-1.075,0,down,FRED VIXCLS close 2026-09-21 [sampled 22:30:57Z],2026-09-21,scoring
+2026-09-24,14.21,-1.535,0,down,FRED VIXCLS close 2026-09-22 [sampled 22:30:50Z],2026-09-22,scoring
+2026-09-25,14.21,,0,,FRED VIXCLS close 2026-09-22 [sampled 22:31:06Z] [stale: observation already recorded],2026-09-22,stale
+2026-09-26,14.21,,0,,FRED VIXCLS close 2026-09-22 [sampled 22:31:26Z] [stale: observation already recorded],2026-09-22,stale
+2026-09-27,14.21,,0,,FRED VIXCLS close 2026-09-22 [sampled 22:31:02Z] [stale: observation already recorded],2026-09-22,stale
+2026-09-28,14.21,,0,,FRED VIXCLS close 2026-09-22 [sampled 22:31:09Z] [stale: observation already recorded],2026-09-22,stale
+2026-09-29,14.21,,0,,FRED VIXCLS close 2026-09-22 [sampled 23:06:01Z] [stale: observation already recorded],2026-09-22,stale
+2026-09-30,16.07,-0.172,0,down,FRED VIXCLS close 2026-09-28 [sampled 22:31:14Z],2026-09-28,scoring
+2026-10-01,16.04,-0.148,0,down,FRED VIXCLS close 2026-09-29 [sampled 22:31:07Z],2026-09-29,scoring
+2026-10-02,16.34,0.121,0,up,FRED VIXCLS close 2026-09-30 [sampled 22:31:36Z],2026-09-30,scoring
+2026-10-03,16.39,0.158,0,up,FRED VIXCLS close 2026-10-01 [sampled 22:30:43Z],2026-10-01,scoring
+2026-10-04,16.39,,0,,FRED VIXCLS close 2026-10-01 [sampled 22:30:40Z] [stale: observation already recorded],2026-10-01,stale
+2026-10-05,16.39,,0,,FRED VIXCLS close 2026-10-01 [sampled 22:31:02Z] [stale: observation already recorded],2026-10-01,stale
+2026-10-06,15.31,-0.634,0,down,FRED VIXCLS close 2026-10-02 [sampled 23:55:16Z],2026-10-02,scoring
+2026-10-07,15.52,-0.454,0,down,FRED VIXCLS close 2026-10-05 [sampled 22:32:46Z],2026-10-05,scoring
+2026-10-08,15.01,-0.825,0,down,FRED VIXCLS close 2026-10-06 [sampled 22:56:05Z],2026-10-06,scoring
+2026-10-09,15.08,-0.733,0,down,FRED VIXCLS close 2026-10-07 [sampled 23:08:16Z],2026-10-07,scoring
+2026-10-10,15.41,-0.480,0,down,FRED VIXCLS close 2026-10-08 [sampled 22:30:41Z],2026-10-08,scoring
+2026-10-11,15.41,,0,,FRED VIXCLS close 2026-10-08 [sampled 22:30:56Z] [stale: observation already recorded],2026-10-08,stale
+2026-10-12,15.41,,0,,FRED VIXCLS close 2026-10-08 [sampled 22:31:24Z] [stale: observation already recorded],2026-10-08,stale
+2026-10-13,14.84,-0.898,0,down,FRED VIXCLS close 2026-10-09 [sampled 00:24:18Z],2026-10-09,scoring
+2026-10-14,15.21,-0.627,0,down,FRED VIXCLS close 2026-10-12 [sampled 22:30:42Z],2026-10-12,scoring
+2026-10-15,15.27,-0.583,0,down,FRED VIXCLS close 2026-10-13 [sampled 22:30:56Z],2026-10-13,scoring
+2026-10-16,16.87,0.597,0,up,FRED VIXCLS close 2026-10-14 [sampled 22:30:44Z],2026-10-14,scoring
+2026-10-17,16.46,0.260,0,up,FRED VIXCLS close 2026-10-15 [sampled 22:30:56Z],2026-10-15,scoring
+2026-10-18,16.46,,0,,FRED VIXCLS close 2026-10-15 [sampled 22:32:03Z] [stale: observation already recorded],2026-10-15,stale
+2026-10-19,16.46,,0,,FRED VIXCLS close 2026-10-15 [sampled 22:31:06Z] [stale: observation already recorded],2026-10-15,stale
+2026-10-20,19.99,2.896,0,up,FRED VIXCLS close 2026-10-16 [sampled 22:30:47Z],2026-10-16,scoring
+2026-10-21,18.44,1.715,0,up,FRED VIXCLS close 2026-10-19 [sampled 22:30:40Z],2026-10-19,scoring
+2026-10-22,400,285.834,1,up,"FRED VIXCLS close     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300 [sampled 22:30:42Z]","    <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300",scoring
+2026-10-23,16.68,0.432,0,up,FRED VIXCLS close 2026-10-21 [sampled 22:30:41Z],2026-10-21,scoring
+2026-10-24,19.03,2.217,0,up,FRED VIXCLS close 2026-10-22 [sampled 22:30:44Z],2026-10-22,scoring
+2026-10-25,19.03,,0,,FRED VIXCLS close 2026-10-22 [sampled 22:31:12Z] [stale: observation already recorded],2026-10-22,stale
+2026-10-26,19.03,,0,,FRED VIXCLS close 2026-10-22 [sampled 22:30:53Z] [stale: observation already recorded],2026-10-22,stale
+2026-10-27,19.45,2.534,0,up,FRED VIXCLS close 2026-10-23 [sampled 22:30:59Z],2026-10-23,scoring
+2026-10-28,18.39,1.705,0,up,FRED VIXCLS close 2026-10-26 [sampled 22:30:55Z],2026-10-26,scoring
+2026-10-29,17.52,1.041,0,up,FRED VIXCLS close 2026-10-27 [sampled 22:30:59Z],2026-10-27,scoring
+2026-10-30,16.91,0.594,0,up,FRED VIXCLS close 2026-10-28 [sampled 22:37:10Z],2026-10-28,scoring
+2026-10-31,17.2,0.794,0,up,FRED VIXCLS close 2026-10-29 [sampled 22:31:00Z],2026-10-29,scoring

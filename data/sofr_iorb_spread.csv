@@ -121,13 +121,13 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-19,-1,,0,,FRED SOFR 3.89 − IORB 3.9 (both 2026-10-15) [sampled 22:30:23Z] [stale: observation already recorded],2026-10-15,stale
 2026-10-20,-2,0.000,0,flat,FRED SOFR 3.88 − IORB 3.9 (both 2026-10-16) [sampled 22:30:27Z],2026-10-16,scoring
 2026-10-21,-3,-0.471,0,down,FRED SOFR 3.87 − IORB 3.9 (both 2026-10-19) [sampled 22:30:21Z],2026-10-19,scoring
-2026-10-22,0,0.915,0,up,"FRED SOFR 400.0 − IORB 400.0 (both     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300) [sampled 22:30:22Z]","    <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300",scoring
+2026-10-22,,,0,,"no reading: source returned an HTML page, not a CSV - not scored :: FRED SOFR 400.0 − IORB 400.0 (both     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300) [sampled 22:30:22Z]",,dark
 2026-10-23,-2,0.000,0,flat,FRED SOFR 3.88 − IORB 3.9 (both 2026-10-21) [sampled 22:30:22Z],2026-10-21,scoring
-2026-10-24,0,0.915,0,up,FRED SOFR 3.9 − IORB 3.9 (both 2026-10-22) [sampled 22:30:24Z],2026-10-22,scoring
+2026-10-24,0,0.941,0,up,FRED SOFR 3.9 − IORB 3.9 (both 2026-10-22) [sampled 22:30:24Z],2026-10-22,scoring
 2026-10-25,0,,0,,FRED SOFR 3.9 − IORB 3.9 (both 2026-10-22) [sampled 22:30:39Z] [stale: observation already recorded],2026-10-22,stale
 2026-10-26,0,,0,,FRED SOFR 3.9 − IORB 3.9 (both 2026-10-22) [sampled 22:30:34Z] [stale: observation already recorded],2026-10-22,stale
-2026-10-27,2,1.880,0,up,FRED SOFR 3.92 − IORB 3.9 (both 2026-10-23) [sampled 22:30:39Z],2026-10-23,scoring
-2026-10-28,3,2.287,0,up,FRED SOFR 3.93 − IORB 3.9 (both 2026-10-26) [sampled 22:30:35Z],2026-10-26,scoring
-2026-10-29,5,3.052,1,up,FRED SOFR 3.95 − IORB 3.9 (both 2026-10-27) [sampled 22:30:26Z],2026-10-27,scoring
-2026-10-30,4,2.286,0,up,FRED SOFR 3.94 − IORB 3.9 (both 2026-10-28) [sampled 22:36:48Z],2026-10-28,scoring
-2026-10-31,4,2.345,0,up,FRED SOFR 3.94 − IORB 3.9 (both 2026-10-29) [sampled 22:30:41Z],2026-10-29,scoring
+2026-10-27,2,1.830,0,up,FRED SOFR 3.92 − IORB 3.9 (both 2026-10-23) [sampled 22:30:39Z],2026-10-23,scoring
+2026-10-28,3,2.350,0,up,FRED SOFR 3.93 − IORB 3.9 (both 2026-10-26) [sampled 22:30:35Z],2026-10-26,scoring
+2026-10-29,5,3.201,1,up,FRED SOFR 3.95 − IORB 3.9 (both 2026-10-27) [sampled 22:30:26Z],2026-10-27,scoring
+2026-10-30,4,2.582,0,up,FRED SOFR 3.94 − IORB 3.9 (both 2026-10-28) [sampled 22:36:48Z],2026-10-28,scoring
+2026-10-31,4,2.286,0,up,FRED SOFR 3.94 − IORB 3.9 (both 2026-10-29) [sampled 22:30:41Z],2026-10-29,scoring

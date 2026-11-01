@@ -610,3 +610,118 @@ wrong sign and a magnitude band the record contradicts; that band was deliberate
 item 6. The remaining unfinished items are 6 (prose), 8 (five-row FRED repair, all
 preconditions in), 9 (derived-recency audit assertions) and 10 (`AGENTS.md` components
 claim); item 8 should run before item 9.
+
+## Iteration 7 — item 8 (bug): the five FRED HTML rows are darkened, archived and the tail re-derived
+
+**Chosen because** `.ralph/plan.md` orders the record-changing group after the damage-stopping
+items: "control-line disposition, then the five-row repair". Item 7 (the control line) landed,
+item 8 was the next unfinished item, its three preconditions (items 2, 3, 4) were in, and no item
+was hard-blocked. Items 6 and 10 are prose-only and allowed "any time after the first item"; item 9
+asserts properties this repair produces, so it follows.
+
+**Entry state measured.** All six gates green at HEAD (pytest 342 passed; lint 61 OK; forbidden
+literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke exit 0) and the
+audit tier 23 tests OK. The two preconditions named by step 1 pass: `python -m pytest tests/test_level.py
+-k DriftDateGuard tests/test_collect_loop.py -k "UnusableObsDate or ObsDateProblem"` gave 7 passed.
+
+**Failing test first.** `tests/audit_record.py::TestObservationDatesAreWellFormed` was added and run
+before the repair: `python -m unittest discover tests -p "audit_record.py" -k
+TestObservationDatesAreWellFormed` failed on exactly five rows — credit_spread, em_corp_oas,
+euro_hy_spread, sofr_iorb_spread and vix, all dated 2026-10-22 — each carrying
+`'    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300'` in obs_date. Green after
+the repair. A second assertion, added after review, pins that every `collect.LINES` file still
+declares the obs_date column.
+
+**The repair.** New one-off `tools/repair_fred_html_rows.py` (entirely offline). It refuses to start
+when any archive from this repair exists, and also when the 2026-10-22 row no longer carries an
+unusable obs_date, so neither a deleted archive nor a re-broken row can lead to a silent second
+repair. It archived the five line files byte-identically as
+`data/archive/<line>_pre_html_repair_2026-11-01.csv` (`cmp` clean against `git show
+HEAD:data/<line>.csv` for all five), rebuilt each 2026-10-22 row through `collect.score_row` with
+`raw_value` None, obs_date cleared and the note prefixed
+`no reading: source returned an HTML page, not a CSV - not scored :: `, then re-derived every row
+dated 2026-10-22 or later oldest-first against the published prior rows, stripping stored verdict
+prose through `seedlib.strip_verdict_notes` first. 25 of the 50 tail rows change: the five darkened
+rows, plus 20 z-only moves (credit_spread 10-28 6.801 -> 6.860, 10-29 5.336 -> 5.394, 10-30 4.808 ->
+4.867; em_corp_oas 10-28 3.635 -> 4.847, 10-30 3.108 -> 3.166, 10-31 3.401 -> 3.459; euro_hy_spread
+10-23 6.989 -> 7.036, 10-28 7.740 -> 9.334, 10-29 7.622 -> 7.661, 10-30 6.567 -> 6.606;
+sofr_iorb_spread 10-24 0.915 -> 0.941, 10-27 1.880 -> 1.830, 10-28 2.287 -> 2.350, 10-29 3.052 ->
+3.201, 10-30 2.286 -> 2.582, 10-31 2.345 -> 2.286; vix 10-27 2.534 -> 2.576, 10-28 1.705 -> 1.733,
+10-29 1.041 -> 1.057, 10-31 0.794 -> 0.819). No scored row's trembling or direction flips; the other
+25 tail rows re-derive byte-identically.
+
+**Assumptions recorded (ordinary ambiguity).**
+
+1. *`data/summary.csv` is a derived file, not a record file.* The item's steps do not name it, but
+   `tools/replay.py --check` audits the summary re-derivation (`summary_bad`) and the phantom reading
+   had changed the day's headline. Recomputed from the repaired tier-1 rows and stated in the
+   annotation row: 2026-10-22 `1/0/0 -> 0/1/0` (the phantom had been the day's only counted tremble;
+   credit_spread is tier-1). No later summary row changes.
+2. *History semantics.* "using published prior rows as history" read as: rows before 2026-10-22 are
+   untouched and are the history for that row, and each re-derived row is then history for the next —
+   the same oldest-first construction `tools/replay.py` uses, which is why `--check` stays at zero.
+3. *The captured note is kept, not replaced.* The required prefix is prepended to the stripped
+   original note, so what the source actually returned survives as evidence.
+4. *A tracked one-off tool is the mechanism*, in the house style of `tools/repair_fred_seed.py`; the
+   annotation row is written separately because that is the protocol.
+
+**Derive layer.** The daily derive block was re-run verbatim (`tools/level_layer.py`,
+`tools/drift_layer.py`, `tools/stuck_panel.py`, `tools/lean_panel.py`, `tools/episodes.py --markdown >
+radar-metrics.md`, `tools/pending.py --markdown >> radar-metrics.md`, `python render.py`) and every
+file in `collect.MIRRORED` was re-synced (26 files) plus the annotations row. That also caught the
+frozen layers up to their inputs: `data/levels.csv` and `docs/data/stuck.csv` 2026-10-11 ->
+2026-10-17, `docs/data/leans.csv` to 2026-10-31. The chokepoint component capture
+(`data/components/chokepoint_breadth.csv`, unchanged by this item) has no row after 2026-10-17, so
+levels and stuck stop there. That component freeze predates this item, was not caused by it, and is
+outside its scope (Scope Out: PortWatch probe results beyond recording them); it is a known open
+defect — item 9's assertion (levels newest equals components newest) holds with both at 2026-10-17,
+but the served stuck panel stays behind the record until the capture is restored. The annotation row
+states this so the regenerated layer is not read as current-through-end-of-record.
+
+**Files changed.** `tools/repair_fred_html_rows.py` (new),
+`tests/audit_record.py` (new `TestObservationDatesAreWellFormed`),
+`data/{credit_spread,em_corp_oas,euro_hy_spread,sofr_iorb_spread,vix}.csv`,
+`data/summary.csv`, `data/annotations.csv`, `data/levels.csv`,
+`data/archive/{credit_spread,em_corp_oas,euro_hy_spread,sofr_iorb_spread,vix}_pre_html_repair_2026-11-01.csv`
+(new), the matching `docs/data/` mirrors, `docs/data/stuck.csv`, `docs/data/leans.csv`,
+`radar-metrics.md`, `charts/{overview,flights,credit_spread,cnh_cny,fed_srf_takeup}.png`,
+`.ralph/items.json`, `.ralph/progress.md`. `data/drifts.csv` re-derived byte-identically (the five
+dark rows are skipped by the derive guard, so the drop tally fell from 5 to 0 with no row change) and
+is not in the diff. No scoring rule or `STABLE_SINCE` change.
+
+**Verification (all commands run at the commit that closed this item).**
+
+- `python -m pytest tests/ -q` — 342 passed, 34 subtests passed (exit 0).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 61 tests, OK (exit 0).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent, 0 summary days bad.
+- `python tools/pending.py --check` — exit 0; "OK — 6 tagged pending item(s), 0 overdue, 0
+  unparseable".
+- `node tests/render_smoke.js` — exit 0.
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 25 tests, OK (exit 0; 23 before, the
+  obs_date shape test and its header check).
+- `cmp data/annotations.csv docs/data/annotations.csv` — exit 0.
+- `python tools/repair_fred_html_rows.py --dry-run` after the repair — exit 1 with the archive
+  refusal, proving the one-shot guard.
+
+**Independent review.** `reviewer` (opencode-go/deepseek-v4.1-flash, thinking high) returned OK with
+notes, no P0/P1. All six P2s were addressed before the commit: the annotation sentence that called all
+25 changed rows "z-only" (false for the five darkened rows) was split into 20 z-only later rows plus
+the five darkened rows; the obs_date audit gained the column-declaration assertion so a header loss
+cannot make a file skip silently; the non-recursive `data/*.csv` glob and the deliberate
+`data/archive/` exclusion are documented in the test docstring; the annotation now states that levels
+and stuck stop at 2026-10-17 because of the component capture; the six untracked artifacts the
+annotation cites are staged with the record change; and the tool docstring states that recovery from
+an aborted run is manual because the guard will not resume. The reviewer's suggestion to give the
+component freeze a `radar.md` pending tripwire was not taken: that is registry/round work outside
+this item's scope, recorded above instead. One note left as-is: the repair note prefix ("source
+returned an HTML page, not a CSV") differs from what `collect.py` now writes for the same class
+("unusable observation date") — both are accurate and the annotation quotes the prefix verbatim.
+
+**Next iteration should know.** The five rows are now dark with a stated reason, the archives hold the
+pre-repair files, and `replay --check` is at zero. `data/summary.csv` 2026-10-22 reads 0/1/0 and the
+served `docs/data/` copies are byte-equal again. The remaining unfinished items are 6 (prose), 9
+(derived-recency assertions) and 10 (the `AGENTS.md` components claim). Item 9 should be checked
+against the regenerated layer: its levels-vs-components assertion holds at 2026-10-17, and the
+chokepoint component freeze after that date is the open defect recorded above, not a derived-layer
+bug.

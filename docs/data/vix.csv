@@ -283,13 +283,13 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-19,16.46,,0,,FRED VIXCLS close 2026-10-15 [sampled 22:31:06Z] [stale: observation already recorded],2026-10-15,stale
 2026-10-20,19.99,2.896,0,up,FRED VIXCLS close 2026-10-16 [sampled 22:30:47Z],2026-10-16,scoring
 2026-10-21,18.44,1.715,0,up,FRED VIXCLS close 2026-10-19 [sampled 22:30:40Z],2026-10-19,scoring
-2026-10-22,400,285.834,1,up,"FRED VIXCLS close     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300 [sampled 22:30:42Z]","    <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300",scoring
+2026-10-22,,,0,,"no reading: source returned an HTML page, not a CSV - not scored :: FRED VIXCLS close     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300 [sampled 22:30:42Z]",,dark
 2026-10-23,16.68,0.432,0,up,FRED VIXCLS close 2026-10-21 [sampled 22:30:41Z],2026-10-21,scoring
 2026-10-24,19.03,2.217,0,up,FRED VIXCLS close 2026-10-22 [sampled 22:30:44Z],2026-10-22,scoring
 2026-10-25,19.03,,0,,FRED VIXCLS close 2026-10-22 [sampled 22:31:12Z] [stale: observation already recorded],2026-10-22,stale
 2026-10-26,19.03,,0,,FRED VIXCLS close 2026-10-22 [sampled 22:30:53Z] [stale: observation already recorded],2026-10-22,stale
-2026-10-27,19.45,2.534,0,up,FRED VIXCLS close 2026-10-23 [sampled 22:30:59Z],2026-10-23,scoring
-2026-10-28,18.39,1.705,0,up,FRED VIXCLS close 2026-10-26 [sampled 22:30:55Z],2026-10-26,scoring
-2026-10-29,17.52,1.041,0,up,FRED VIXCLS close 2026-10-27 [sampled 22:30:59Z],2026-10-27,scoring
+2026-10-27,19.45,2.576,0,up,FRED VIXCLS close 2026-10-23 [sampled 22:30:59Z],2026-10-23,scoring
+2026-10-28,18.39,1.733,0,up,FRED VIXCLS close 2026-10-26 [sampled 22:30:55Z],2026-10-26,scoring
+2026-10-29,17.52,1.057,0,up,FRED VIXCLS close 2026-10-27 [sampled 22:30:59Z],2026-10-27,scoring
 2026-10-30,16.91,0.594,0,up,FRED VIXCLS close 2026-10-28 [sampled 22:37:10Z],2026-10-28,scoring
-2026-10-31,17.2,0.794,0,up,FRED VIXCLS close 2026-10-29 [sampled 22:31:00Z],2026-10-29,scoring
+2026-10-31,17.2,0.819,0,up,FRED VIXCLS close 2026-10-29 [sampled 22:31:00Z],2026-10-29,scoring

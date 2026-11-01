@@ -878,13 +878,13 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-19,1.59,,0,,FRED BAMLEMCBPIOAS OAS 2026-10-15 [sampled 22:30:28Z] [stale: observation already recorded],2026-10-15,stale
 2026-10-20,1.61,2.814,0,up,FRED BAMLEMCBPIOAS OAS 2026-10-16 [sampled 22:30:32Z],2026-10-16,scoring
 2026-10-21,1.6,2.658,0,up,FRED BAMLEMCBPIOAS OAS 2026-10-19 [sampled 22:30:26Z],2026-10-19,scoring
-2026-10-22,400,6231.881,1,up,"FRED BAMLEMCBPIOAS OAS     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300 [sampled 22:30:27Z]","    <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300",scoring
+2026-10-22,,,0,,"no reading: source returned an HTML page, not a CSV - not scored :: FRED BAMLEMCBPIOAS OAS     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300 [sampled 22:30:27Z]",,dark
 2026-10-23,1.63,3.127,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-21 [sampled 22:30:27Z],2026-10-21,scoring
 2026-10-24,1.73,4.691,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-22 [sampled 22:30:29Z],2026-10-22,scoring
 2026-10-25,1.73,,0,,FRED BAMLEMCBPIOAS OAS 2026-10-22 [sampled 22:30:44Z] [stale: observation already recorded],2026-10-22,stale
 2026-10-26,1.73,,0,,FRED BAMLEMCBPIOAS OAS 2026-10-22 [sampled 22:30:40Z] [stale: observation already recorded],2026-10-22,stale
 2026-10-27,1.72,4.534,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-23 [sampled 22:30:45Z],2026-10-23,scoring
-2026-10-28,1.74,3.635,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-26 [sampled 22:30:41Z],2026-10-26,scoring
+2026-10-28,1.74,4.847,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-26 [sampled 22:30:41Z],2026-10-26,scoring
 2026-10-29,1.73,3.518,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-27 [sampled 22:30:31Z],2026-10-27,scoring
-2026-10-30,1.7,3.108,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-28 [sampled 22:36:53Z],2026-10-28,scoring
-2026-10-31,1.73,3.401,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-29 [sampled 22:30:46Z],2026-10-29,scoring
+2026-10-30,1.7,3.166,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-28 [sampled 22:36:53Z],2026-10-28,scoring
+2026-10-31,1.73,3.459,1,up,FRED BAMLEMCBPIOAS OAS 2026-10-29 [sampled 22:30:46Z],2026-10-29,scoring

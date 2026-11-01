@@ -878,13 +878,13 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-19,3.23,,0,,FRED BAMLH0A0HYM2 OAS 2026-10-15 [sampled 22:30:09Z] [stale: observation already recorded],2026-10-15,stale
 2026-10-20,3.31,9.303,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-16 [sampled 22:30:06Z],2026-10-16,scoring
 2026-10-21,3.29,6.743,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-19 [sampled 22:30:06Z],2026-10-19,scoring
-2026-10-22,400,4658.842,1,up,"FRED BAMLH0A0HYM2 OAS     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300 [keyless fallback: FRED returned a non-JSON body] [sampled 22:30:04Z]","    <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300",scoring
+2026-10-22,,,0,,"no reading: source returned an HTML page, not a CSV - not scored :: FRED BAMLH0A0HYM2 OAS     <link href=""https://fonts.googleapis.com/css?family=Open+Sans:300 [keyless fallback: FRED returned a non-JSON body] [sampled 22:30:04Z]",,dark
 2026-10-23,3.27,6.508,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-21 [sampled 22:30:05Z],2026-10-21,scoring
 2026-10-24,3.4,8.033,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-22 [sampled 22:30:05Z],2026-10-22,scoring
 2026-10-25,3.4,,0,,FRED BAMLH0A0HYM2 OAS 2026-10-22 [sampled 22:30:21Z] [stale: observation already recorded],2026-10-22,stale
 2026-10-26,3.4,,0,,FRED BAMLH0A0HYM2 OAS 2026-10-22 [keyless fallback: FRED HTTP 502] [sampled 22:30:15Z] [stale: observation already recorded],2026-10-22,stale
 2026-10-27,3.38,7.798,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-23 [sampled 22:30:18Z],2026-10-23,scoring
-2026-10-28,3.3,6.801,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-26 [sampled 22:30:05Z],2026-10-26,scoring
-2026-10-29,3.18,5.336,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-27 [sampled 22:30:05Z],2026-10-27,scoring
-2026-10-30,3.14,4.808,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-28 [sampled 22:36:31Z],2026-10-28,scoring
+2026-10-28,3.3,6.860,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-26 [sampled 22:30:05Z],2026-10-26,scoring
+2026-10-29,3.18,5.394,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-27 [sampled 22:30:05Z],2026-10-27,scoring
+2026-10-30,3.14,4.867,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-28 [sampled 22:36:31Z],2026-10-28,scoring
 2026-10-31,3.26,6.215,1,up,FRED BAMLH0A0HYM2 OAS 2026-10-29 [sampled 22:30:04Z],2026-10-29,scoring

@@ -591,5 +591,74 @@ class TestRecordHasNoNonFiniteValue(unittest.TestCase):
             self._assert_all_finite(path, ("value",))
 
 
+class TestObservationDatesAreWellFormed(unittest.TestCase):
+    """Every committed ``obs_date`` is empty or a real ISO calendar day.
+
+    The column states WHICH day a reading belongs to, and two things read it:
+    the scorers dedupe and de-cycle on it, and the derive tools parse it with
+    ``date.fromisoformat``. A malformed value therefore does not merely look
+    wrong, it can crash a derive step — and it did: on 2026-10-22 the first
+    comma-separated field of a FRED HTML error page was stored in this column
+    on five rows, and ``tools/drift_layer.py`` raised ValueError on the whole
+    record because of it (the FRED incident, items 2-4 and 8 of the zero-debt
+    close-out). ``collect.obs_date_problem`` now refuses such a value at
+    collection time; this holds the committed record to the same rule, so a
+    row written by any other path cannot reintroduce it.
+
+    Empty is legal: a snapshot line has no observation date and is stamped
+    with its collection date. Anything non-empty must be the strict shape the
+    collector demands — ASCII digits, four-two-two — and a day that exists.
+    The predicate is spelled here rather than imported so a future loosening
+    of the collector's copy cannot loosen the audit with it.
+
+    ``data/archive/`` is deliberately OUT of scope: the pre-repair files are
+    required to keep the malformed value as provenance (the 2026-11-01
+    annotations row cites them), so the glob stays non-recursive on purpose and
+    widening it would turn the audit red on the protocol's own record. Every
+    collected line file must also still DECLARE the column; a file that lost
+    the header would otherwise be skipped row by row and pass silently.
+    """
+
+    _STRICT_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}\Z")
+
+    def _is_strict_date(self, value):
+        if not self._STRICT_DATE.match(value):
+            return False
+        try:
+            datetime.date(int(value[0:4]), int(value[5:7]), int(value[8:10]))
+        except ValueError:
+            return False
+        return True
+
+    def test_every_line_file_declares_the_obs_date_column(self):
+        import collect  # the collected roster; local so this file's import block
+                        # stays as it is (it already carries the sys.path idiom)
+
+        for mod in collect.LINES:
+            path = os.path.join(collect.DATA, mod.LINE + ".csv")
+            with open(path, newline="") as f:
+                header = next(csv.reader(f), [])
+            self.assertIn("obs_date", header,
+                          f"{mod.LINE}.csv no longer declares the obs_date column; "
+                          f"the shape audit below would skip the whole file")
+
+    def test_every_obs_date_is_a_strict_date_or_empty(self):
+        paths = sorted(glob.glob(os.path.join(ROOT, "data", "*.csv")))
+        self.assertTrue(paths, "no data/*.csv found to audit")
+        bad = []
+        for path in paths:
+            with open(path, newline="") as f:
+                reader = csv.DictReader(f)
+                if "obs_date" not in (reader.fieldnames or []):
+                    continue  # summary, levels, drifts, annotations: no such column
+                for row in reader:
+                    value = row.get("obs_date") or ""
+                    if value and not self._is_strict_date(value):
+                        bad.append(f"{os.path.basename(path)}: "
+                                   f"{row.get('date')} -> {value!r}")
+        self.assertEqual(bad, [], "obs_date is not a strict YYYY-MM-DD or empty "
+                                  "on these rows:\n  " + "\n  ".join(bad))
+
+
 if __name__ == "__main__":
     unittest.main()
