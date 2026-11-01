@@ -12,7 +12,9 @@ fallback engages), which without spacing runs at half the measured lockout rate
 from a CI address this project cannot afford to burn. Every request through
 this module therefore waits out a minimum gap from the previous one.
 """
+import re
 import time
+from datetime import date
 
 import requests
 
@@ -23,6 +25,36 @@ _HEADERS = useragent.HEADERS
 
 _MIN_GAP_S = 5.0
 _last_request = 0.0
+
+# A served row must START with a date. fredgraph answers a bot block with an
+# HTML page, and an HTML line splits at a comma too: on 2026-10-22 the Google
+# Fonts <link> split into ("    <link href=…Open+Sans:300", "400"), which the
+# old parse returned as a reading of 400 dated with half a URL. Only the value
+# column was ever checked, so five lines committed it as an observation, and
+# the malformed obs_date later crashed the nightly derive step.
+#
+# Same predicate as ``tools/drift_layer.is_strict_date`` (the derive step's
+# guard over the obs_date it reads); the two must not diverge.
+_ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}\Z")
+
+
+def _is_iso_date(field):
+    """True when ``field`` is exactly ``YYYY-MM-DD`` AND a real calendar day.
+
+    Deliberately not ``date.fromisoformat``: since 3.11 that also accepts the
+    basic form ``20261022``, which fredgraph never serves. The record-shape
+    gate over the same field (``tools/drift_layer.is_strict_date``) already
+    rejects it, so accepting it here would write an obs_date the derive layer
+    then drops as unusable. Total over any input, so a caller can pass a
+    parsed field without pre-checking its type.
+    """
+    if not isinstance(field, str) or not _ISO_DATE.match(field):
+        return False
+    try:
+        date(int(field[0:4]), int(field[5:7]), int(field[8:10]))
+    except ValueError:
+        return False
+    return True
 
 
 def _spaced_get(params, timeout=15):
@@ -38,7 +70,11 @@ def _spaced_get(params, timeout=15):
 def series(series_id, timeout=15):
     """[(date, value)] for a FRED series, oldest-first, or None.
 
-    Rows are "observation_date,VALUE"; "." marks a missing observation.
+    Rows are "observation_date,VALUE"; "." marks a missing observation. A row
+    whose first field is not a strict date is dropped (see ``_is_iso_date``),
+    and a body with no surviving row is ``None`` — the same unavailable answer
+    every caller already handles.
+
     The seeder passes a longer timeout; EVERY caller goes through the pacing
     above — this module is the only sanctioned path to fredgraph.
     """
@@ -51,11 +87,14 @@ def series(series_id, timeout=15):
     out = []
     for row in r.text.strip().splitlines()[1:]:
         parts = row.split(",")
-        if len(parts) >= 2 and parts[1] not in ("", ".", "NaN"):
-            try:
-                out.append((parts[0], float(parts[1])))
-            except ValueError:
-                continue
+        if len(parts) < 2 or not _is_iso_date(parts[0]):
+            continue
+        if parts[1] in ("", ".", "NaN"):
+            continue
+        try:
+            out.append((parts[0], float(parts[1])))
+        except ValueError:
+            continue
     return out or None
 
 
@@ -67,24 +106,39 @@ def latest_value(series_id):
     return rows[-1]
 
 
-def latest_common(series_a, series_b):
-    """``(date, value_a, value_b)`` on the newest date BOTH series report.
+def common_pair(series_a, series_b):
+    """``(date, value_a, value_b, missing)`` on the newest date BOTH report.
 
     For a spread of two series this is the only honest pairing: the two need
     not publish on the same schedule (SOFR posts T+1, IORB same-day), so
     "latest of each" can subtract values from different days — across an FOMC
     move that manufactures a spread jump the size of the policy step itself.
-    Returns ``(None, None, None)`` if either series is unavailable or they
-    share no date.
+
+    ``missing`` lists the ids whose fetch came back empty. A caller that only
+    wants the pair should use ``latest_common``; a caller that must describe
+    the failure needs the difference between "one leg is down" and "both legs
+    are healthy but share no date", which a bare ``None`` date erases.
     """
     rows_a, rows_b = series(series_a), series(series_b)
     if not rows_a or not rows_b:
-        return None, None, None
+        return None, None, None, [sid for sid, rows in
+                                  ((series_a, rows_a), (series_b, rows_b))
+                                  if not rows]
     by_date_b = dict(rows_b)
-    for date, value_a in reversed(rows_a):
-        if date in by_date_b:
-            return date, value_a, by_date_b[date]
-    return None, None, None
+    for obs, value_a in reversed(rows_a):
+        if obs in by_date_b:
+            return obs, value_a, by_date_b[obs], []
+    return None, None, None, []
+
+
+def latest_common(series_a, series_b):
+    """``(date, value_a, value_b)`` on the newest date BOTH series report.
+
+    Returns ``(None, None, None)`` if either series is unavailable or they
+    share no date; ``common_pair`` is the same lookup with the cause kept.
+    """
+    obs, value_a, value_b, _ = common_pair(series_a, series_b)
+    return obs, value_a, value_b
 
 
 def reading(series_id, label="OAS"):

@@ -188,3 +188,105 @@ line record still needs its own shape check (item 4 adds the collection-time che
 `collect.py`; item 8 repairs the five bad rows and re-derives the tail). Item 3
 (`core/fred.py` shape validation) is next in the plan's order, then item 4; item 8 requires
 both of them plus this item.
+
+## Iteration 3 — item 3 (bug): core/fred.py refuses a body whose first column is not a date
+
+**Chosen because** `.ralph/plan.md` puts it third: one of the two damage-stopping items left
+after the derive guard, and the direct cause of the five contaminated rows item 8 repairs.
+No item was hard-blocked.
+
+**Entry state measured.** `python -m pytest tests/ -q` 321 passed. The mechanism was
+reproduced offline before any edit: the committed rows carry the fragment
+`    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300` as `obs_date` and
+`400` as `raw_value`, and feeding a page with that line through `series()` returned
+`[('    <link href=…Open+Sans:300', 400.0)]` — the link splits at its comma pair, the old
+parse checked only the value column, and `float("400")` succeeded.
+
+**Fix.** `core/fred.py`:
+- `_is_iso_date(field)` — `[0-9]{4}-[0-9]{2}-[0-9]{2}\Z` (ASCII digits, absolute end)
+  plus a real calendar check via `date(y, m, d)`, and an `isinstance(str)` guard so the
+  predicate is total. Deliberately not `date.fromisoformat`, which from 3.11 also accepts
+  the basic form `20261022`. Same predicate as `tools/drift_layer.is_strict_date`, with a
+  cross-reference in the comment; the duplication is deliberate for now because the two
+  live in different layers (item 4 adds the third copy at collection time) and a shared
+  module is not this item's change.
+- `series()` drops any row whose first field fails that predicate and returns `None` when
+  no row survives. Field count is still not asserted (a three-column response reads
+  unavailable rather than being parsed), which is what the source-shape plan asked for and
+  what keeps a future extra column from darkening all five FRED lines into a parse.
+- `common_pair(a, b)` returns `(date, value_a, value_b, missing)`; `latest_common`
+  delegates and keeps its `(date, value_a, value_b)` contract (its only caller is
+  `tests/test_seedlib.py`).
+`fetchers/sofr_iorb.py` uses `common_pair` and separates the two causes: a dark leg reads
+`FRED <leg> unavailable`, a shared-date gap still reads `FRED SOFR/IORB share no reported
+date` (same string as before, now built from `SERIES` instead of a second literal). The
+module docstring states why the two are different failures.
+
+**Assumption recorded (ordinary ambiguity).** The item says "the first comma-separated
+field of each row"; the existing parse already skips the first line as a header, and that
+was left alone. An HTML body's first line is therefore dropped as a "header" before the
+predicate runs, which changes nothing: no HTML page's second line is a dated pair, and a
+one-line body still returns `None` through `out or None`.
+
+**Failing test first.** `tests/test_fred_shape.py` (new) and two tests in
+`tests/test_seedlib.py::TestLegDiscipline`. Red evidence: with `core/fred.py` and
+`fetchers/sofr_iorb.py` copied back from `HEAD`, `python -m pytest tests/test_fred_shape.py
+tests/test_seedlib.py -q` gave `5 failed, 17 passed`; green after the fix. The cases pin
+behaviour, not the implementation: the incident page returns `None` end to end through
+`reading()`, a dated CSV still parses, and a mixed body keeps only the dated row. The
+mixed body deliberately includes `20261022` (basic format), Arabic-Indic `٢٠٢٦-10-22` and
+full-width `２０２６-10-23` (both match `\d` and both are valid inputs to `int()`), and
+`2026-02-31` (right shape, impossible day) — so a `[0-9]`→`\d` mutation or a dropped
+calendar check fails the test. The non-200 case now serves a well-formed body, so only the
+status branch can reject it.
+
+**Independent review.** `reviewer` (opencode-go/deepseek-v4.1-flash) reviewed the diff:
+verdict "OK with notes", no P0/P1, and six P2 notes on test robustness and doc accuracy.
+Five were taken in this iteration: the shared-predicate cross-reference, the `isinstance`
+guard, the corrected claim about what downstream readers accept, the Unicode-digit and
+faithful-link rows, the non-200 body, and the both-legs-dark note test. The sixth (extract
+the predicate to one home) is deferred: it spans `tools/drift_layer.py`, `core/fred.py` and
+the not-yet-written `collect.py` check, and the review itself recommends doing it when the
+third copy lands.
+
+**Files changed.** `core/fred.py`, `fetchers/sofr_iorb.py`, `tests/test_seedlib.py`,
+`tests/test_fred_shape.py` (new), `.ralph/items.json`, `.ralph/progress.md`. No `data/`
+file changed; no derived layer re-ran; `radar-metrics.md` untouched (no line, pending item
+or round changed).
+
+**Why the record does not change here.** `tools/replay.py` re-scores the STORED
+`raw_value`, so it cannot see a bad response; the five committed rows stay exactly as they
+are until item 8 archives and darkens them. This item only makes the recurrence impossible.
+
+**Verification (all commands run at the commit that closed this item).**
+
+- `python -m pytest tests/ -q` — 329 passed, 20 subtests passed (exit 0; 321 before, the
+  eight new tests).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 56 tests, OK (exit 0).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent.
+- `python tools/pending.py --check` — exit 0; 6 tagged, 0 overdue, 0 unparseable.
+- `node tests/render_smoke.js` — exit 0, "render OK in both languages; no runtime errors,
+  no undefined/NaN".
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 23 tests, 1 failure:
+  `audit_record.TestControlLineRecord.test_every_row_matches_the_astronomy_for_the_day_it_claims`
+  (2026-10-22: recorded 10.3419h vs 10.3976h implied by obs_date 2026-10-21). That is the
+  pre-existing failure item 7 owns; no new audit failure. The audit tier is not a global
+  gate for this bundle.
+
+**Note on the test-file import change.** `tests/test_seedlib.py` switched `import seedlib`
+to `from tools import seedlib` to clear the static analyzer's unresolved-import note; same
+module object graph at runtime (`tools/` is a namespace package, and no test patches
+`seedlib` attributes). The file's two remaining analyzer notes (import block order, module
+level import not at top of file) were already present at `L15`/`L16` before this iteration
+and come from the file's `sys.path.insert` idiom, which `tests/test_pending.py` and
+`tests/audit_registry.py` share.
+
+**Next iteration should know.** `core/fred.py` is now the third place a strict date
+predicate is spelled (`tools/drift_layer.is_strict_date` is the first); item 4 adds one in
+`collect.py`, and the reviewer's recommendation is to extract the predicate to one home at
+that point rather than ship three copies. The `missing` list from `common_pair` is the
+supported way to describe a two-leg failure without a second fetch, so a future fetcher
+that wants a cause-distinguishing note should use it instead of `latest_common`. Item 4
+(the collection-time `obs_date` check) is next in the plan's order; item 8 still requires
+items 2 and 4 plus this one.

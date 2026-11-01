@@ -52,8 +52,8 @@
         "In fetchers/sofr_iorb.py separate the message for one leg unavailable from the message for no shared reported date.",
         "Run the test gate tier."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 3. Pre-fix red evidence: with core/fred.py and fetchers/sofr_iorb.py restored to HEAD, pytest on tests/test_fred_shape.py + tests/test_seedlib.py gave 5 failed, 17 passed (the HTML page parsed to ('    <link href=...Open+Sans:300', 400.0), so series() returned a reading and reading() returned raw_value 400.0 on a non-date; the sofr note said 'share no reported date' for a single dark leg and for two dark legs). Green after. series() drops any row whose first field fails a strict YYYY-MM-DD predicate ([0-9]{4}-[0-9]{2}-[0-9]{2} plus a real calendar check, and not date.fromisoformat because 3.11+ accepts 20261022) and returns None when no row survives, which every caller already reads as unavailable; field count is not asserted, per the source-shape plan. common_pair() returns (date, a, b, missing) and latest_common() delegates, keeping its 3-tuple contract. sofr_iorb emits 'FRED <leg> unavailable' for a dark leg and 'FRED SOFR/IORB share no reported date' only for a shared-date gap. Gates: pytest 329 passed; lint 56 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK. Audit tier: 23 tests, 1 failure, the pre-existing control-line astronomy assertion owned by item 7 — no new failure."
     },
     {
       "category": "bug",

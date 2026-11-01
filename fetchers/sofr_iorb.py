@@ -17,6 +17,12 @@ policy step that manufactures a ~25bp spread jump, a z of ~12 against this
 line's measured Qn of ~2bp, out of nothing but leg misalignment. The spread is
 therefore computed on the newest date BOTH series report, and that date is the
 observation.
+
+A DARK LEG AND A SHARED-DATE GAP ARE DIFFERENT FAILURES, and the note names
+which: one is a source outage on a named series, the other is two healthy
+series that did not publish the same day. Collapsing both into "share no
+reported date" would report an outage as a calendar mismatch, which is the
+class of note quality every other dark row in the record avoids.
 """
 from core import fred
 
@@ -36,10 +42,13 @@ SERIES = ("SOFR", "IORB")  # two legs, not one — see the docstring on why both
 
 
 def fetch_daily():
-    date, sofr, iorb = fred.latest_common(*SERIES)
+    date, sofr, iorb, missing = fred.common_pair(*SERIES)
+    if missing:
+        return {"raw_value": None,
+                "source_note": f"FRED {'/'.join(missing)} unavailable"}
     if date is None:
         return {"raw_value": None,
-                "source_note": "FRED SOFR/IORB share no reported date"}
+                "source_note": f"FRED {'/'.join(SERIES)} share no reported date"}
     bps = (sofr - iorb) * 100.0
     return {
         "raw_value": round(bps, 1),

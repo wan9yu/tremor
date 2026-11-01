@@ -12,8 +12,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 
-import seedlib
 import support
+from tools import seedlib
 
 
 def _live(date, raw, obs, note="live"):
@@ -114,6 +114,36 @@ class TestLegDiscipline(unittest.TestCase):
         # 07-30 has no IORB leg; the honest pair is 07-29, spread zero — not
         # the post-step SOFR against the pre-step IORB.
         self.assertEqual((date, a, b), ("2026-07-29", 3.65, 3.65))
+
+    def test_sofr_iorb_note_names_the_unavailable_leg(self):
+        from core import fred
+        from fetchers import sofr_iorb
+        legs = {"SOFR": [("2026-07-29", 3.65)], "IORB": None}
+        with support.stub_attr(fred, "series", lambda sid: legs[sid]):
+            out = sofr_iorb.fetch_daily()
+        # One leg dark is not the same failure as two healthy legs that share
+        # no date; the note must say which, or the record cannot tell them apart.
+        self.assertIsNone(out["raw_value"])
+        self.assertEqual(out["source_note"], "FRED IORB unavailable")
+
+    def test_sofr_iorb_note_names_both_legs_when_both_are_dark(self):
+        from core import fred
+        from fetchers import sofr_iorb
+        legs = {"SOFR": None, "IORB": None}
+        with support.stub_attr(fred, "series", lambda sid: legs[sid]):
+            out = sofr_iorb.fetch_daily()
+        self.assertEqual(out["source_note"], "FRED SOFR/IORB unavailable")
+
+    def test_sofr_iorb_note_still_reports_a_leg_date_gap(self):
+        from core import fred
+        from fetchers import sofr_iorb
+        legs = {"SOFR": [("2026-07-30", 3.40)],
+                "IORB": [("2026-07-29", 3.65)]}
+        with support.stub_attr(fred, "series", lambda sid: legs[sid]):
+            out = sofr_iorb.fetch_daily()
+        self.assertIsNone(out["raw_value"])
+        self.assertEqual(out["source_note"],
+                         "FRED SOFR/IORB share no reported date")
 
     def test_weekend_stamp_maps_to_friday(self):
         from fetchers import fx_parallel_premium as fx
