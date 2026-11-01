@@ -725,3 +725,105 @@ served `docs/data/` copies are byte-equal again. The remaining unfinished items 
 against the regenerated layer: its levels-vs-components assertion holds at 2026-10-17, and the
 chokepoint component freeze after that date is the open defect recorded above, not a derived-layer
 bug.
+
+## Iteration 8 — item 9 (functional): the derived layers are checked against their own inputs
+
+**Chosen because** `.ralph/plan.md` puts the derived-recency assertions fourth, after the
+record-changing items: item 8 regenerated the layers, so the properties to assert now exist.
+Items 1-5, 7 and 8 had landed; item 9 was the next unfinished item and no item was
+hard-blocked. Items 6 and 10 are prose-only and remain.
+
+**Entry state measured.** All six gates green at HEAD (pytest 342 passed; lint 61 OK;
+forbidden literal 3 OK; replay 1271 rows, 0 divergent; pending 6 tagged, 0 overdue; render
+smoke exit 0); audit tier 25 tests OK. The three inputs and outputs on the committed record:
+components newest 2026-10-17, levels newest 2026-10-17 (hold rows for Kerch and Hormuz),
+stuck newest 2026-10-17, summary newest 2026-10-31, leans newest 2026-10-31.
+
+**Red evidence before the assertions were accepted (scratch script, not committed).** The
+pre-repair freeze is committed at `0b12b49`: levels 2026-10-11 against components 2026-10-17,
+leans 2026-10-21 against summary 2026-10-31, stuck 2026-10-11 against levels 2026-10-11.
+Running the new class with its class-attribute paths pointed at that tree: levels red
+(`'2026-10-11' != '2026-10-17'`), leans red (`'2026-10-21' != '2026-10-31'`), stuck green
+because stuck did match its own (frozen) input — the correct division of responsibility, the
+levels check is what catches that freeze. Running against live copies with the newest day
+removed, one file at a time: levels red (`2026-10-16` vs the replayed `2026-10-17`), stuck red
+(`2026-10-16` vs `2026-10-17`), leans red (`2026-10-30` vs `2026-10-31`).
+
+**Implementation.** New audit-tier class `TestDerivedLayersAreCurrent` in
+`tests/audit_record.py`, three tests, one per layer. The level check replays
+`level_layer.walk` over `data/components/chokepoint_breadth.csv` and asserts that
+`data/levels.csv`'s newest date equals the last date that replay emits; the stuck check
+asserts `docs/data/stuck.csv`'s newest date equals the last `open`/`hold` date in
+`data/levels.csv` (`build_panel` drops only the `clear` row); the lean check asserts
+`docs/data/leans.csv`'s newest date equals the newest `data/summary.csv` day on which a
+tier-1 line (`TIER` absent = 1) trembles in its own alarm direction, through the shared
+`collect.counts_as_tremble`. No production code changed.
+
+**Assumption recorded (ordinary ambiguity, review-driven).** The item's step 1 says the
+levels equality is "evaluated only when an open state exists on that newest component date".
+The delivered check compares against the layer's own last emitted event date instead, with no
+open-state gate. The gate exists to avoid a false red when the layer legitimately stops
+early (level_layer writes nothing after a state closes), and the exact last-emitted date has
+that same protection without two blind spots the independent review identified: when every
+open strait has gone stale-unserved, and when the newest input day closes the only state, the
+gate would skip exactly where a freeze could hide. A divergence under the exact form can only
+mean the file was not regenerated from the code and record in the tree. The trade-off is
+recorded in the class docstring: a retune of `level_layer`'s thresholds without regenerating
+`data/levels.csv` reds the audit, which is the honest signal.
+
+**Second decision.** The leans expectation restates the reporter's row rule
+(`lean_panel.build_panel`) rather than calling it, so a deliberate rule change in the
+reporter cannot silently move the audit's own definition of "current". The docstring states
+the two are one invariant and the assertion message names both causes (a stale file, or a
+rule that moved without this check). The reviewer's alternative (bind to `build_panel` with a
+stub classifier) was considered and not taken, for that reason.
+
+**Out of scope by decision.** `data/drifts.csv` is not checked: it records open/clear events
+and has carried none since 2023-11-19, so a recency check there would skip unconditionally
+today, and `tools/drift_layer.py` exits non-zero on a crash, so a freeze in that tool already
+reds the derive step. The class docstring says so.
+
+**Absence contract.** `tests/audit_record.py` treats a missing tracked derived file as a
+defect; `tests/audit_public_surface.py` keeps its historical skip when
+`docs/data/leans.csv` is absent. That asymmetry is deliberate (one owns recency and the file
+is tracked, the other owns row shape and keeps its old tolerance) and is now stated in both
+docstrings; the stale "so nothing else checks it" sentence in `audit_public_surface.py` was
+corrected.
+
+**Files changed.** `tests/audit_record.py` (new class plus its local-import helpers),
+`tests/audit_public_surface.py` (two docstring corrections and a behaviour-neutral import
+cleanup: the bare `import lean_panel` became a test-local `from tools import lean_panel`,
+clearing its unresolved-import diagnostic, and ruff's single blank line was added to the
+import block in both files), `.ralph/items.json`, `.ralph/progress.md`. No `data/` file, no
+derived file, no `radar-metrics.md` change: this item asserts properties, it does not
+regenerate.
+
+**Independent review.** `reviewer` (opencode-go/deepseek-v4.1-flash, thinking high) returned
+OK with notes, no P0/P1, and five P2s. Taken: the docstring overclaim ("every served derived
+layer"; levels is not served and drifts is a fourth layer) reworded with the out-of-scope
+reason; the two skip holes replaced by the exact last-emitted date; the leans message widened
+to name rule drift; the `audit_public_surface.py` staleness corrected; the garbled
+local-import comment and the imprecise "day before the last clear" prose fixed. The fifth
+(restate vs bind) is the deliberate choice recorded above.
+
+**Verification (all commands run at the commit that closed this item).**
+
+- `python -m pytest tests/ -q` — 342 passed, 34 subtests passed (exit 0).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 61 tests, OK (exit 0).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent, 0 summary days bad.
+- `python tools/pending.py --check` — exit 0; "OK — 6 tagged pending item(s), 0 overdue,
+  0 unparseable".
+- `node tests/render_smoke.js` — exit 0.
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 28 tests, OK (exit 0; 25 before,
+  the three new tests). Run verbosely for the new class, all three report `ok`, none `skipped`,
+  on the committed record.
+- `cmp data/annotations.csv docs/data/annotations.csv` — exit 0 (unchanged by this item).
+
+**Next iteration should know.** Items 6 (two prose statements in `tests/test_control.py` and
+`radar.md`) and 10 (the `AGENTS.md` components claim) remain; both are prose-only. Item 6's
+evidence is already in the ledger (iteration 6: the measured offset is negative, 200.3-206.5 s,
+so the "source-redefinition identification band" states the wrong sign and a band the record
+contradicts). The new audit class is coupled on purpose to `level_layer.walk`'s parameters and
+`lean_panel.build_panel`'s row rule: a change to either must move this check or regenerate the
+derived file in the same commit, or the audit reds.

@@ -37,6 +37,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import support
 import test_control  # the astronomy lives with the control line's logic tests
+
 from core import normalize
 from fetchers import control_daylength as control
 from fetchers import flights
@@ -658,6 +659,158 @@ class TestObservationDatesAreWellFormed(unittest.TestCase):
                                    f"{row.get('date')} -> {value!r}")
         self.assertEqual(bad, [], "obs_date is not a strict YYYY-MM-DD or empty "
                                   "on these rows:\n  " + "\n  ".join(bad))
+
+
+class TestDerivedLayersAreCurrent(unittest.TestCase):
+    """The level, stuck and lean layers stop where their own input stops.
+
+    A derived layer that stops running is silent: the daily derive step is
+    post-commit and its tools are recomputed-from-scratch reporters, so a
+    crash (or a never-fail path that leaves a prior file in place) freezes the
+    layer while the record keeps advancing, and nothing reds. That is the
+    ten-day freeze this file did not notice: on 2026-10-22,
+    ``data/levels.csv`` and ``docs/data/stuck.csv`` sat at 2026-10-11 while
+    ``data/components/chokepoint_breadth.csv`` had reached 2026-10-17, and
+    ``docs/data/leans.csv`` sat ten days behind ``data/summary.csv``.
+
+    One check per layer, each comparing that layer's newest date with the
+    newest date ITS OWN INPUT earns:
+
+    * ``data/levels.csv`` vs the component record, replayed through
+      ``level_layer.walk`` (its only input);
+    * ``docs/data/stuck.csv`` vs ``data/levels.csv``'s open/hold rows (its
+      only input);
+    * ``docs/data/leans.csv`` vs ``data/summary.csv`` joined with the tier-1
+      line files (its only inputs).
+
+    Each expected date is the LAST date the layer's own rule can emit, not the
+    newest date of the input. That distinction is what keeps these from
+    false-redding on a healthy pipeline: ``level_layer.walk`` writes
+    ``open``/``hold`` rows only while a strait's state is OPEN and nothing
+    after the final ``clear``, and ``stuck_panel.build_panel`` drops the
+    ``clear`` row, so both layers legitimately stop before their input. Gating
+    on "a state is still open" is narrower in the wrong direction: when every
+    open strait has gone stale-unserved, or the newest input day closes the
+    only state, the gate would skip exactly where a freeze could hide. The
+    exact last-emitted date has no such blind spot, and a divergence still
+    means one thing — the file was not regenerated from the code and record
+    now in the tree (a parameter retune without a regeneration reds here too,
+    which is the honest signal).
+
+    Every expectation is computed from the layer's INPUT, never from the file
+    under test: reading the states out of a frozen ``data/levels.csv`` would
+    skip exactly in the case the check exists to catch.
+
+    The lean panel stops the same way: it carries one row per committed day on
+    which a tier-1 line trembles in its own alarm direction, so a day with no
+    such tremble has no row. Its expected newest day is restated here
+    independently of ``lean_panel.build_panel`` — the shared
+    ``collect.counts_as_tremble`` predicate and the ``TIER`` rule (absent
+    means 1), not the reporter's roster list — so the two are one invariant:
+    a deliberate rule change in the reporter must move this check with it, and
+    the assertion message names both possible causes.
+
+    ``data/drifts.csv`` is deliberately out of scope: it records drift
+    open/clear events and has carried no event since 2023-11-19, so a recency
+    check there would skip unconditionally today; and ``tools/drift_layer.py``
+    exits non-zero on a crash, so a freeze in that tool reds the derive step
+    itself.
+
+    These are RECENCY checks, not re-derivation: content is the daily
+    workflow's job (the derive step runs before this tier). They exist so a
+    layer that stops advancing turns the alarm issue red instead of leaving a
+    stale panel served as current.
+    """
+
+    LEVELS = os.path.join(ROOT, "data", "levels.csv")
+    COMPONENTS = os.path.join(ROOT, "data", "components", "chokepoint_breadth.csv")
+    STUCK = os.path.join(ROOT, "docs", "data", "stuck.csv")
+    LEANS = os.path.join(ROOT, "docs", "data", "leans.csv")
+    SUMMARY = os.path.join(ROOT, "data", "summary.csv")
+
+    def _rows(self, path):
+        self.assertTrue(os.path.exists(path), f"{path} is missing")
+        with open(path, newline="") as f:
+            return list(csv.DictReader(f))
+
+    def _newest(self, path):
+        rows = self._rows(path)
+        self.assertTrue(rows, f"{path} carries no dated row")
+        return max(r["date"] for r in rows)
+
+    def _level_events(self, components_path):
+        """``(date, component, event)`` for every event ``walk`` produces.
+
+        Replays ``level_layer.walk`` over the component record alone — the
+        committed ``data/levels.csv`` is deliberately not consulted, because
+        it is the file whose recency is being checked.
+        """
+        from tools import level_layer  # local, following this file's own
+                                        # precedent (see the import inside
+                                        # test_every_line_file_declares_the_
+                                        # obs_date_column)
+        by_component = {}
+        for r in self._rows(components_path):
+            by_component.setdefault(r["component"], []).append(
+                (r["date"], float(r["value"])))
+        events = []
+        for component, series in by_component.items():
+            series.sort()
+            for date, event, _trail, _reference, _ratio in level_layer.walk(series):
+                events.append((date, component, event))
+        return sorted(events)
+
+    def test_levels_reach_the_last_date_the_component_record_emits(self):
+        events = self._level_events(self.COMPONENTS)
+        if not events:
+            self.skipTest("the component record produces no level event yet")
+        expected = max(date for date, _component, _event in events)
+        newest_level = self._newest(self.LEVELS)
+        self.assertEqual(
+            newest_level, expected,
+            f"data/levels.csv stops at {newest_level} but replaying its only "
+            f"input data/components/chokepoint_breadth.csv through "
+            f"level_layer.walk emits events up to {expected} — the level layer "
+            f"did not run")
+
+    def test_the_stuck_panel_reaches_the_newest_open_level_date(self):
+        level_rows = self._rows(self.LEVELS)
+        self.assertTrue(level_rows, f"{self.LEVELS} carries no dated row")
+        served = [r["date"] for r in level_rows if r["event"] != "clear"]
+        if not served:
+            self.skipTest("data/levels.csv carries no open/hold row for the "
+                          "stuck panel to serve")
+        expected = max(served)
+        newest_stuck = self._newest(self.STUCK)
+        self.assertEqual(
+            newest_stuck, expected,
+            f"docs/data/stuck.csv stops at {newest_stuck} while its only input "
+            f"data/levels.csv carries an open/hold row through {expected} — "
+            f"the stuck panel did not run")
+
+    def test_the_lean_panel_reaches_the_newest_day_that_earns_a_lean_row(self):
+        import collect  # the collected roster; local, like _level_events
+        summary_days = sorted({r["date"] for r in self._rows(self.SUMMARY)})
+        self.assertTrue(summary_days, f"{self.SUMMARY} carries no committed day")
+        tier1 = [mod for mod in collect.LINES if getattr(mod, "TIER", 1) == 1]
+        by_line = {
+            mod.LINE: {r["date"]: r for r in self._rows(
+                os.path.join(collect.DATA, mod.LINE + ".csv"))}
+            for mod in tier1
+        }
+        earned = [day for day in summary_days
+                  if any(collect.counts_as_tremble(by_line[mod.LINE][day], mod)
+                         for mod in tier1 if day in by_line[mod.LINE])]
+        if not earned:
+            self.skipTest("no committed day carries a tier-1 alarm-direction "
+                          "tremble, so the lean panel legitimately has no row")
+        newest_lean = self._newest(self.LEANS)
+        self.assertEqual(
+            newest_lean, earned[-1],
+            f"docs/data/leans.csv stops at {newest_lean} while the committed "
+            f"record earns a lean row through {earned[-1]} — either the lean "
+            f"panel did not run (or left a prior file in place), or its "
+            f"row-selection rule moved and this check was not moved with it")
 
 
 if __name__ == "__main__":

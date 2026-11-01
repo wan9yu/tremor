@@ -1,7 +1,7 @@
 """AUDIT: docs/index.html's served surface and its new tier-2 gap-chip claim,
 checked against the committed record.
 
-Two things, neither owned by any existing check:
+Three things the gate, the lint tier and replay do not cover:
 
   1. MIRRORED byte-equality. daily.yml's push step copies ``data/`` onto
      ``docs/data/`` verbatim (``tools/ci_push.sh ... data/ docs/data/``), and
@@ -47,8 +47,11 @@ Two things, neither owned by any existing check:
   3. ``docs/data/leans.csv`` (T2: the dashboard headline reads this as a
      same-day machine lean). Like ``docs/data/stuck.csv``, it is DERIVED and
      served straight to ``docs/data/`` by its own reporter
-     (``tools/lean_panel.py``) — never through ``collect.MIRRORED`` — so
-     nothing else checks it. If the file is present: every ``line`` value
+     (``tools/lean_panel.py``) — never through ``collect.MIRRORED`` — so no
+     byte-for-byte mirror check can see it; its RECENCY against the record is
+     checked in tests/audit_record.py, which requires the tracked file. This
+     check keeps its historical tolerance for absence and validates the row
+     shape only when the file is present: every ``line`` value
      must be a tier-1 line id (read off ``lean_panel.TIER1``, the reporter's
      own list, rather than re-derived here — the reporter is what actually
      decides which lines it serves), and every ``lean`` value must be one of
@@ -71,9 +74,9 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 
-import collect
-import lean_panel
 import support
+
+import collect
 from core import normalize
 
 DATA_DIR = os.path.join(ROOT, "data")
@@ -169,6 +172,7 @@ class TestLeansCsvIsWellFormedAndTier1Only(unittest.TestCase):
     """
 
     def test_leans_csv_is_well_formed_and_scoped_to_tier1(self):
+        from tools import lean_panel  # local, following the file's own precedent
         if not os.path.exists(DOCS_LEANS):
             self.skipTest("docs/data/leans.csv not present")
         rows = collect._read_rows(DOCS_LEANS)
