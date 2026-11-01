@@ -290,3 +290,100 @@ supported way to describe a two-leg failure without a second fetch, so a future 
 that wants a cause-distinguishing note should use it instead of `latest_common`. Item 4
 (the collection-time `obs_date` check) is next in the plan's order; item 8 still requires
 items 2 and 4 plus this one.
+
+## Iteration 4 — item 4 (bug): collect.py refuses an unusable obs_date at collection time
+
+**Chosen because** `.ralph/plan.md` puts it fourth: after the derive guard (item 2) and the
+FRED shape check (item 3) it is the last damage-stopping item, and item 8 (the five-row
+repair) lists it as a precondition. No item was hard-blocked.
+
+**Entry state measured.** `python -m pytest tests/ -q` 336 passed after the change, 329
+before it; `python tools/pending.py --check` exit 0. The hole was reproduced offline before
+any edit: a stub fetcher returning `{"raw_value": 400.0, "obs_date": "<the incident's HTML
+first comma-field>"}` through the real `collect()` was SCORED — status warm, raw stored,
+the phantom observation date written into the row. That is the same shape that produced the
+five 2026-10-22 rows.
+
+**Fix.** `collect.py`:
+- `is_strict_date(value)` — `[0-9]{4}-[0-9]{2}-[0-9]{2}\Z` (ASCII digits, absolute end) plus
+  a real calendar check via `datetime.strptime`. Not `date.fromisoformat`, which from 3.11
+  also accepts the basic form `20261022`. Same predicate as `tools/drift_layer.is_strict_date`
+  and `core.fred._is_iso_date`, cross-referenced in the docstring.
+- `obs_date_problem(obs_date, date)` — `None` for an empty `obs_date` (a snapshot line keeps
+  the collection date) or a strict date on/before the row date; otherwise the reason string.
+  Both operands of the `>` comparison are strict-shaped when it is reached, so lexicographic
+  order is calendar order.
+- `collect()` — the check sits between `coerce_finite` and `apply_sample_guard`. On a
+  violation it sets `raw = None`, clears `obs_date`, and prefixes the note with exactly
+  `no reading: source returned an unusable observation date - not scored :: `, then appends
+  the reason and the original note. Collection-time only, like `apply_sample_guard`: the
+  refusal is frozen into the stored row as dark, so it replays deterministically and no
+  scoring rule or `STABLE_SINCE` is touched.
+- The module docstring sentence declaring `obs_date` shape validation out of scope is
+  replaced by the actual contract (non-empty must be a real YYYY-MM-DD and not later than
+  the row; empty is legitimate).
+
+**Assumptions recorded (ordinary ambiguity).**
+
+1. Ordering: `coerce_finite` → obs_date check → `apply_sample_guard`. A darkened raw has
+   already cleared `obs_date`, so the two guards never double-report, and the sample guard
+   returns unchanged on a `None` raw. `write_components` then keys the darkened row by the
+   collection date, which is what every other dark row already does.
+2. "Not later than the row's own date" is compared against `clock.china_today()`, the same
+   memoized date the row is stamped with, so the guard cannot disagree with the record's own
+   dating.
+3. The strict predicate is now spelled in three places (`tools/drift_layer.py`,
+   `core/fred.py`, `collect.py`). Item 3's review recommended extracting it when the third
+   copy landed; this item's steps do not ask for that refactor, so it is deferred and the
+   three docstrings cross-reference each other. Extraction would touch the fetch parser and
+   the derive tool, which item 8 depends on, for no behaviour change.
+
+**Failing test first.** `tests/test_collect_loop.py`: `_mod` gained an optional `obs_date`
+kwarg and its `raw` parameter is annotated `object` (the stub deliberately hands the
+collector shapes a real fetcher must never return); two new classes were added,
+`TestUnusableObsDateIsDarkened` (malformed shapes including the incident HTML field,
+`20261022`, `2026-02-31`, `2026-13-01`, a timestamp suffix and `22/10/2026`; a future
+`obs_date`; and a usable one stored verbatim) and `TestObsDateProblemDirectly` (the pure
+predicate, each branch its own assertion). Red evidence: with only `collect.py` stashed back
+to HEAD, `python -m pytest tests/test_collect_loop.py -k "UnusableObsDate or ObsDateProblem"`
+gave `16 failed, 3 passed, 2 subtests passed`; green after.
+
+**Record scan (offline, no network).** Every committed `data/*.csv` obs_date was run through
+`collect.obs_date_problem` against its own row date: exactly five rows are refused, the five
+known 2026-10-22 FRED rows (`credit_spread`, `em_corp_oas`, `euro_hy_spread`,
+`sofr_iorb_spread`, `vix`). No other committed row is affected, so the guard is invisible to
+the good record and item 8 owns the repair of those five.
+
+**Analyzer note.** The lens ast-grep rule `unchecked-throwing-call-python` reports five
+findings on `_read_rows`, `_write_rows` and the `docs/` mirror loop. Those lines are
+pre-existing at HEAD (`git show HEAD:collect.py` has the same calls; this diff's hunks are
+the docstring, `import re`, the new helpers, and the `collect()` check). Not changed
+deliberately: a failed write to the forward-only record must abort the run loudly, and
+wrapping it would either swallow the failure or re-raise for no gain. Not a project gate.
+
+**Files changed.** `collect.py`, `tests/test_collect_loop.py`, `.ralph/items.json`,
+`.ralph/progress.md`. No `data/` file changed; no derived layer re-ran; `radar-metrics.md`
+untouched (no line, pending item or round changed).
+
+**Verification (all commands run at the commit that closed this item).**
+
+- `python -m pytest tests/ -q` — 336 passed, 34 subtests passed (exit 0; 329 before, the
+  seven new tests).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 56 tests, OK (exit 0).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent.
+- `python tools/pending.py --check` — exit 0; 6 tagged, 0 overdue, 0 unparseable.
+- `node tests/render_smoke.js` — exit 0, render OK in both languages.
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 23 tests, 1 failure:
+  `audit_record.TestControlLineRecord.test_every_row_matches_the_astronomy_for_the_day_it_claims`
+  (2026-10-22: recorded 10.3419h vs 10.3976h implied by obs_date 2026-10-21). That is the
+  pre-existing failure item 7 owns; no new audit failure. The audit tier is not a global
+  gate for this bundle.
+
+**Next iteration should know.** Item 5 (the failure-alarm body) is next in the plan's order;
+item 8 now has all three of its preconditions (items 2, 3, 4). The guard lives in `collect()`
+only: `tools/replay.py` re-scores the stored `raw_value` and never parses a source
+`obs_date`, and the derive tools parse committed rows (guarded by item 2), so no other path
+needs this check. A future fetcher whose `obs_date` is stamped in a timezone ahead of China
+(UTC+8) would now be darkened; none of the 25 live fetchers does today, and a snapshot line
+that leaves `obs_date` empty is unaffected.

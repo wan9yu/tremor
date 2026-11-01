@@ -64,8 +64,8 @@
         "Add gate-tier tests for a malformed obs_date and for an obs_date later than the row date, asserting a dark row with the stated reason.",
         "Run the test gate tier."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 4. Pre-fix red evidence: with collect.py restored to HEAD, python -m pytest tests/test_collect_loop.py -k \"UnusableObsDate or ObsDateProblem\" gave 16 failed, 3 passed (AttributeError on obs_date_problem, and a malformed obs_date scored as a reading); green after. collect.py gained is_strict_date (strict [0-9]{4}-[0-9]{2}-[0-9]{2} shape plus a real calendar check; not date.fromisoformat, which accepts 20261022) and obs_date_problem(obs_date, date); collect() darkens a row whose non-empty obs_date fails either rule with the note prefix 'no reading: source returned an unusable observation date - not scored :: '; an empty obs_date is unchanged (snapshot lines keep the collection date). The module docstring's out-of-scope sentence is replaced by the contract. A scan of every committed data/*.csv shows exactly the five known 2026-10-22 HTML obs_date rows refused and no other row affected. Gates: pytest 336 passed; lint 56 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK. Audit tier: 23 tests, 1 failure, the pre-existing control-line astronomy assertion owned by item 7 — no new failure."
     },
     {
       "category": "bug",

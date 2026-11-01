@@ -13,6 +13,7 @@ through the module attribute the collector itself uses for it (a name
 reads no committed record and is safe in the pre-collect gate.
 """
 import contextlib
+import datetime
 import io
 import os
 import sys
@@ -28,9 +29,14 @@ import support
 from core import normalize
 
 
-def _mod(line, tier=1, direction="down", crash=False, bad=False, raw=1.0,
-         note="stub", target=None, tol=1.5, components=None):
-    """A minimal stand-in for a ``fetchers/*.py`` module."""
+def _mod(line, tier=1, direction="down", crash=False, bad=False, raw: object = 1.0,
+         note="stub", target=None, tol=1.5, components=None, obs_date=None):
+    """A minimal stand-in for a ``fetchers/*.py`` module.
+
+    ``raw`` is typed ``object`` because a stub legitimately hands the collector
+    shapes a real fetcher must never return (a bool, ``"banana"``, nan) — that
+    is exactly what the boundary guards are tested against.
+    """
     m = types.SimpleNamespace(LINE=line, LABEL=line, UNIT="u", TIER=tier,
                               ANOMALY_DIRECTION=direction)
     if target is not None:
@@ -43,6 +49,8 @@ def _mod(line, tier=1, direction="down", crash=False, bad=False, raw=1.0,
         if bad:
             return "not a dict"
         result = {"raw_value": raw, "source_note": note}
+        if obs_date is not None:
+            result["obs_date"] = obs_date
         if components is not None:
             result["components"] = components
         return result
@@ -320,29 +328,118 @@ class TestCoerceFiniteDirectly(unittest.TestCase):
     def test_non_numeric_string_is_darkened(self):
         raw, reason = collect.coerce_finite("banana")
         self.assertIsNone(raw)
-        self.assertIn("banana", reason)
+        self.assertIn("banana", reason or "")
 
     def test_bool_is_darkened_even_though_float_of_it_is_finite(self):
         # float(True) == 1.0, finite -- but score_row would then re-render it
         # through _fmt as the string "True", which float() cannot parse.
         raw, reason = collect.coerce_finite(True)
         self.assertIsNone(raw)
-        self.assertIn("True", reason)
+        self.assertIn("True", reason or "")
 
     def test_nan_is_darkened(self):
         raw, reason = collect.coerce_finite(float("nan"))
         self.assertIsNone(raw)
-        self.assertIn("nan", reason)
+        self.assertIn("nan", reason or "")
 
     def test_inf_is_darkened(self):
         raw, reason = collect.coerce_finite(float("inf"))
         self.assertIsNone(raw)
-        self.assertIn("inf", reason)
+        self.assertIn("inf", reason or "")
 
     def test_negative_inf_is_darkened(self):
         raw, reason = collect.coerce_finite(float("-inf"))
         self.assertIsNone(raw)
-        self.assertIn("-inf", reason)
+        self.assertIn("-inf", reason or "")
+
+
+class TestUnusableObsDateIsDarkened(_CollectCase):
+    """The FRED incident's shape: a source can hand back a well-shaped result
+    whose ``obs_date`` is not a date at all (an HTML error page's first
+    comma-field) or a date LATER than the row it lands on (a source stamping
+    its own clock ahead of the collection date). Either way the reading does
+    not say which day it describes, so it must be darkened at collection time
+    with the reason stated — never scored, never stored with a phantom
+    observation date."""
+
+    PREFIX = ("no reading: source returned an unusable observation date "
+              "- not scored :: ")
+
+    def test_malformed_obs_date_is_darkened_and_the_run_continues(self):
+        for bad in ('    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300',
+                    "20261022",          # basic format: date.fromisoformat accepts it
+                    "2026-02-31",        # right shape, impossible day
+                    "2026-13-01",        # right shape, impossible month
+                    "2026-10-22T00:00:00Z",  # timestamp suffix
+                    "22/10/2026"):
+            with self.subTest(obs_date=bad):
+                broken = _mod("lagged_line", raw=400.0, obs_date=bad)
+                healthy = _mod("healthy_line", raw=1.0)
+                lines, _, _ = self._run([broken, healthy])
+
+                (row,) = lines["lagged_line"]
+                self.assertEqual(row["status"], normalize.STATUS_DARK)
+                self.assertEqual(row["raw_value"], "")
+                self.assertEqual(row["z_score"], "")
+                self.assertEqual(row["obs_date"], "")
+                self.assertTrue(row["source_note"].startswith(self.PREFIX),
+                                row["source_note"])
+
+                (healthy_row,) = lines["healthy_line"]
+                self.assertEqual(healthy_row["raw_value"], "1")
+
+    def test_obs_date_later_than_the_row_date_is_darkened(self):
+        today = collect.clock.china_today()
+        future = (datetime.date.fromisoformat(today)
+                  + datetime.timedelta(days=1)).isoformat()
+        broken = _mod("lagged_line", raw=400.0, obs_date=future)
+        lines, _, _ = self._run([broken])
+
+        (row,) = lines["lagged_line"]
+        self.assertEqual(row["status"], normalize.STATUS_DARK)
+        self.assertEqual(row["raw_value"], "")
+        self.assertEqual(row["obs_date"], "")
+        self.assertTrue(row["source_note"].startswith(self.PREFIX),
+                        row["source_note"])
+        self.assertIn(future, row["source_note"])
+
+    def test_usable_obs_date_is_stored_verbatim(self):
+        today = collect.clock.china_today()
+        good = (datetime.date.fromisoformat(today)
+                - datetime.timedelta(days=2)).isoformat()
+        for obs in (good, today):
+            with self.subTest(obs_date=obs):
+                lines, _, _ = self._run([_mod("lagged_line", raw=1.0, obs_date=obs)])
+                (row,) = lines["lagged_line"]
+                self.assertEqual(row["obs_date"], obs)
+                self.assertEqual(row["raw_value"], "1")
+                self.assertNotIn(self.PREFIX, row["source_note"])
+                self.assertNotEqual(row["status"], normalize.STATUS_DARK)
+
+
+class TestObsDateProblemDirectly(unittest.TestCase):
+    """``obs_date_problem`` is the pure predicate ``collect()`` darkens an
+    unusable observation date through; each branch gets its own assertion so
+    the rule is pinned without running the whole loop."""
+
+    TODAY = "2026-10-31"
+
+    def test_empty_obs_date_is_not_a_problem(self):
+        self.assertIsNone(collect.obs_date_problem("", self.TODAY))
+        self.assertIsNone(collect.obs_date_problem(None, self.TODAY))
+
+    def test_row_date_and_earlier_are_not_a_problem(self):
+        self.assertIsNone(collect.obs_date_problem(self.TODAY, self.TODAY))
+        self.assertIsNone(collect.obs_date_problem("2026-10-30", self.TODAY))
+
+    def test_malformed_shapes_are_a_problem(self):
+        for bad in ("20261022", "2026-02-31", "2026-13-01", "2026-10-22T00:00:00Z",
+                    " 2026-10-22", "2026-10-22 "):
+            with self.subTest(obs_date=bad):
+                self.assertIsNotNone(collect.obs_date_problem(bad, self.TODAY))
+
+    def test_a_later_date_is_a_problem(self):
+        self.assertIsNotNone(collect.obs_date_problem("2026-11-01", self.TODAY))
 
 
 class TestWriteComponentsSkipsBadValuesWithoutCrashing(_CollectCase):

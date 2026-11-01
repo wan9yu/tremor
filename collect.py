@@ -17,8 +17,11 @@ Fetcher contract — each module in ``fetchers/`` provides:
     ``collect()`` darkens any value coerce_finite rejects before it reaches a
     baseline or the forward-only CSV (see ``coerce_finite``), so a fetcher
     returning a bad number loses only its own day, the same as one that raises.
-    ``obs_date`` shape validation is OUT OF SCOPE here — this contract covers
-    ``raw_value`` only.
+    ``obs_date`` is validated here, at collection time: a NON-empty one must be
+    a real ``YYYY-MM-DD`` calendar date and must not be later than the row it
+    lands on; a violation darkens the day with the reason stated (see
+    ``obs_date_problem``). An empty ``obs_date`` is legitimate — a snapshot
+    line describes the collection day — and the row keeps its own date.
     A fetcher MAY also return ``components``: ``{name: value}``, the breakdown
     the reading was aggregated from (per-strait, per-region, per-provider).
     These are written to ``data/components/<line>.csv`` and are DIAGNOSTIC ONLY —
@@ -55,6 +58,7 @@ trembling count; the lines are never multiplied into a single doom score.
 import csv
 import math
 import os
+import re
 import shutil
 from datetime import datetime, timezone
 
@@ -168,6 +172,55 @@ def _stored_float(raw):
     collection-time guard (``coerce_finite``) can test it with no risk of the
     two drifting apart."""
     return float(_fmt(raw))
+
+
+_DATE_SHAPE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}\Z")
+
+
+def is_strict_date(value):
+    """True when ``value`` is a calendar date written exactly ``YYYY-MM-DD``.
+
+    Deliberately NOT ``date.fromisoformat``: from Python 3.11 that also accepts
+    the basic form ``20261022``, which is not the shape this record writes and
+    not a shape a parser can safely hand on. Same predicate as
+    ``tools/drift_layer.is_strict_date`` and ``core.fred._is_iso_date``; the
+    three live in different layers (a derive tool, a fetch parser, the
+    collector) and sharing one module is a wider change than the guard itself.
+    """
+    if not isinstance(value, str) or not _DATE_SHAPE.match(value):
+        return False
+    try:
+        datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        return False
+    return True
+
+
+def obs_date_problem(obs_date, date):
+    """``None`` when ``obs_date`` may be scored against ``date``, else the reason
+    it must be darkened first.
+
+    ``obs_date`` names the OBSERVATION's own day, which is why a lagged source
+    stores it: the same reading republished until it updates must not shrink the
+    robust-scale baseline twice. An EMPTY ``obs_date`` is legitimate (a snapshot
+    line describes the collection day and keeps the row date), but a non-empty
+    one has to be a real calendar date and cannot be LATER than the row it lands
+    on. A source stamping its own clock ahead of ours names no day this record
+    can defend; neither does a body that is not a CSV at all — an HTML error
+    page's first comma-field once became five scored readings. Same rule as
+    ``coerce_finite``: lose the one day, keep the run and the record honest.
+
+    COLLECTION-TIME ONLY, like ``apply_sample_guard``: the refusal is frozen
+    into the stored row as dark, so it replays deterministically and no
+    scoring rule or ``STABLE_SINCE`` is touched.
+    """
+    if not obs_date:
+        return None
+    if not is_strict_date(obs_date):
+        return f"obs_date {obs_date!r} is not a YYYY-MM-DD date"
+    if obs_date > date:
+        return f"obs_date {obs_date!r} is later than the row date {date!r}"
+    return None
 
 
 def coerce_finite(raw):
@@ -447,6 +500,16 @@ def collect():
         if reason:
             obs_date = ""
             note = f"no reading: fetcher returned a {reason} — not scored :: {note}"
+        # A well-shaped result can still name no usable observation day: an HTML
+        # error page's first comma-field was scored as five readings before this
+        # check existed. Darken it here, before it can reach a baseline or the
+        # forward-only CSV — see obs_date_problem.
+        problem = obs_date_problem(obs_date, today)
+        if problem:
+            raw = None
+            obs_date = ""
+            note = (f"no reading: source returned an unusable observation date "
+                    f"- not scored :: {problem} :: {note}")
         # Any line declaring SAMPLE_TARGET_UTC_H (today flights and cnh_cny) refuses
         # a reading sampled too far from its fixed hour — read the target off the
         # module here, never in scoring_attrs (a collection-time input, not a
