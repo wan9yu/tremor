@@ -1081,3 +1081,55 @@ remains a human decision. The components seam now has a test on each half
 edit to either invariant must move the named test with it. The PortWatch dark run is the only
 open operational gap: it is stated in the record and now in Known limits, and it resolves when
 the source serves usable daily rows again.
+
+## Iteration 12 — merge into `main` (operator-authorized) and branch cleanup
+
+**Authorization.** The operator explicitly asked for the branch to be merged back to `main`
+and the other branches removed; AGENTS.md's "no push to `main` without explicit human
+consent" is satisfied by that instruction.
+
+**Entry state.** `origin/main` had advanced 4 commits since the branch point (`0b12b49`):
+`data: 2026-11-01` (`2c6283e`) and three intraday commits, touching only `data/` and
+`docs/data/` CSVs — no code or registry change. Local `main` was 4 behind. The daily
+workflow on `main` is failing at "Derive levels and drifts, render charts, commit" (runs
+41242625675 and 41135716406) — the `drift_layer` crash this branch fixes.
+
+**PortWatch recovery, measured before the merge.** Main's 2026-11-01 collection wrote 28
+chokepoint components for observation 2026-10-22, ending the 10-28..10-31 dark run;
+observations 2026-10-18..2026-10-21 were never served. `chokepoint_breadth` 2026-11-01 is
+`scoring`, z −3.851, down (tier 2, not counted).
+
+**Merge shape.** `git merge --no-ff origin/main` into the branch: 6 conflicts, all mechanical
+trailing-line overlaps (`data/{em_corp_oas,sofr_iorb_spread,vix}.csv` and their `docs/data/`
+mirrors) — the repaired 2026-10-31 row on one side, the appended 2026-11-01 row on the other.
+Resolution: take the branch's repaired file and append `origin/main`'s 2026-11-01 line
+verbatim, the exact overlay that had been verified replay-clean before the merge. Asserted
+after writing: one 11-01 line, date-sorted, no duplicate dates, last two dates 10-31 then
+11-01. The other six files (the two other repaired lines, `summary`, and their docs mirrors)
+auto-merged; verified to carry both the repaired 10-22 row and the new day, and all 26
+`MIRRORED` files compare byte-equal. Merge commit `9764e33` (parents `6de77a1`, `e1eae4d`).
+
+**Post-merge record checks, before accepting the merge commit.** The five repaired lines keep
+10-22 `dark` with an empty raw and carry main's 11-01 row byte-identically; `summary.csv`
+10-22 = 0/1/0 and 11-01 = 0/0/0; `python tools/replay.py --check` = 1295 rows, 0 divergent —
+the pre-merge overlay predicted this, because the new day's verdicts do not depend on any
+value the repair changed.
+
+**Derive refresh.** The daily block was run verbatim on the merged record: `levels` 285 rows
+(4 events), `drifts` 134 rows with 0 observations dropped, `stuck` 284 rows, `leans` 25 rows
+on 2026-10-31, `episodes` + `pending` markdown, `render`. The derived layers now end
+2026-10-22 (levels, stuck) against a record ending 2026-11-01 — the component capture's own
+end, with the 10-18..10-21 gap. `radar.md`'s Known-limit paragraph was rewritten from the
+outage statement to the recovery statement so the prose matches the record.
+
+**Gates after the merge and derive.** Gate 343 passed / 34 subtests; lint 61 OK; forbidden
+literal 3 OK; replay 1295 rows 0 divergent; pending 6 tagged 0 overdue; render exit 0; audit
+28 OK.
+
+**Files.** Merge commit: main's 55 data/docs changes plus the branch's code, registry and
+ledger. Follow-up commits: `radar.md` (recovery statement) and this ledger; then
+`charts/{overview,credit_spread,flights,fed_srf_takeup}.png`, `data/levels.csv`,
+`docs/data/stuck.csv`, `radar-metrics.md`.
+
+**Branch cleanup.** After `main` is fast-forwarded to the merge and pushed,
+`ralph/zero-debt-close-out` is deleted locally and on `origin`; `main` is the only branch left.

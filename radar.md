@@ -335,13 +335,14 @@ Written down because they are structural, not bugs, and a reader deserves them u
    **Truncation at the input, not staleness** (2026-11-01, zero-debt close-out): a
    derived layer stops at its last INPUT, so it is current through the newest captured
    component day, never through the newest scored day. The chokepoint capture
-   (`data/components/chokepoint_breadth.csv`) has recorded no usable daily row since
-   collection 2026-10-28 (PortWatch returned nothing; last observation 2026-10-17), so
-   `data/levels.csv` and the served `docs/data/stuck.csv` end 2026-10-17 while the scored
-   record reaches 2026-10-31. The dark rows are the record's own statement of the outage,
-   nothing is extrapolated across the gap, and `tests/audit_record.py` binds the level and
-   stuck layers to that last captured day, so truncation cannot read as a silent freeze.
-   Closing it needs the source back, not a derived-layer edit.
+   (`data/components/chokepoint_breadth.csv`) lost collection days 2026-10-28..2026-10-31
+   to a source outage ("PortWatch returned no usable daily rows"), then resumed on the
+   2026-11-01 collection with observation 2026-10-22; the 2026-10-18..2026-10-21
+   observations were never served and are absent from the record. `data/levels.csv` and
+   the served `docs/data/stuck.csv` therefore end 2026-10-22 while the scored record
+   reaches 2026-11-01. The dark rows are the record's own statement of the outage, nothing
+   is extrapolated across the gap, and `tests/audit_record.py` binds the level and stuck
+   layers to that last captured day, so truncation cannot read as a silent freeze.
 2. **The tremble bar is not one number — it depends on how much evidence built the
    verdict.** A robust z measures today against an ESTIMATED median in units of an
    ESTIMATED scale, and estimates from ten readings wobble in a way estimates from ninety
