@@ -42,6 +42,7 @@ changes no verdict, and it is recomputed from scratch on every run.
     python tools/drift_layer.py --report   # print the states currently open
 """
 import os
+import re
 import statistics
 import sys
 from bisect import bisect_left
@@ -67,6 +68,24 @@ CLEAR_BAND = 0.2         # clear when back within this fraction of PINNED
 
 OUT = os.path.join(collect.DATA, "drifts.csv")
 HEADER = ["date", "line", "event", "direction", "trail_median", "reference", "ratio"]
+
+# The record's date column is YYYY-MM-DD and nothing else. The predicate is
+# spelled once, as a shape PLUS a calendar check: ``date.fromisoformat`` alone
+# is not it, because from 3.11 that function also accepts the basic form
+# ``20261022``, which would sort as a distinct key and then be written into the
+# file's date column.
+_DATE_SHAPE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}\Z")
+
+
+def is_strict_date(value):
+    """True only for a ``YYYY-MM-DD`` string that names a real calendar day."""
+    if not isinstance(value, str) or not _DATE_SHAPE.match(value):
+        return False
+    try:
+        _date(int(value[0:4]), int(value[5:7]), int(value[8:10]))
+    except ValueError:
+        return False
+    return True
 
 
 def walk(series):
@@ -117,21 +136,54 @@ def walk(series):
     return out
 
 
-def series_for(line):
-    """[(obs_date, value)] for a scored line, oldest first, deduplicated."""
-    rows = seedlib.read_line(line)
+def series_from_rows(rows):
+    """``([(obs_date, value)], skipped)`` from a line's committed rows.
+
+    Three rules, each load-bearing:
+
+    * an EMPTY ``obs_date`` keeps the row's own ``date`` — the live lines
+      (flights, capital_premium) score rows with no observation date, and
+      dropping those would delete whole series without a crash;
+    * a NON-EMPTY ``obs_date`` that fails ``is_strict_date`` drops that
+      observation, with no fallback: a date the source mangled is not evidence
+      the reading belongs to the collection day. One FRED HTML error page in
+      that column crashed the whole derive step, so ``skipped`` is counted and
+      reported rather than swallowed;
+    * ``obs_date`` is the key, so a re-published value dedups onto its own day.
+
+    The guard lives here, not in ``walk``: ``walk`` knows no line name, and a
+    filter applied after its ``ords`` parse would misalign ``ords``/``values``
+    and could write the bad string into ``drifts.csv``'s date column.
+    """
     seen = {}
+    skipped = 0
     for r in rows:
         if not r["raw_value"]:
             continue
-        seen.setdefault(r["obs_date"] or r["date"], float(r["raw_value"]))
-    return sorted(seen.items())
+        obs = r["obs_date"]
+        if obs:
+            if not is_strict_date(obs):
+                skipped += 1
+                continue
+            day = obs
+        else:
+            day = r["date"]
+        seen.setdefault(day, float(r["raw_value"]))
+    return sorted(seen.items()), skipped
+
+
+def series_for(line):
+    """``(series, skipped)`` for a scored line, oldest first, deduplicated."""
+    return series_from_rows(seedlib.read_line(line))
 
 
 def compute():
+    """``(rows, skipped)`` — the drift rows, and the observations the guard dropped."""
     rows = []
+    skipped = 0
     for mod in collect.LINES:
-        series = series_for(mod.LINE)
+        series, dropped = series_for(mod.LINE)
+        skipped += dropped
         if len(series) < REF_MIN_OBS:
             continue
         for date, event, direction, trail, ref, ratio in walk(series):
@@ -139,11 +191,11 @@ def compute():
                          "direction": direction, "trail_median": f"{trail:g}",
                          "reference": f"{ref:g}", "ratio": f"{ratio:.3f}"})
     rows.sort(key=lambda r: (r["date"], r["line"]))
-    return rows
+    return rows, skipped
 
 
 def main(argv):
-    rows = compute()
+    rows, skipped = compute()
     if "--report" in argv:
         open_now, opened = level_layer.open_states(rows, "line")
         # The same disclosure the level layer carries: a drifted state whose
@@ -152,7 +204,7 @@ def main(argv):
         newest = max((r["date"] for r in rows), default="")
         last = {}
         for mod in collect.LINES:
-            series = series_for(mod.LINE)
+            series, _ = series_for(mod.LINE)
             if series:
                 last[mod.LINE] = series[-1][0]
         if not open_now:
@@ -172,7 +224,8 @@ def main(argv):
         return 0
     collect._write_rows(OUT, HEADER, rows)
     events = sum(1 for r in rows if r["event"] != "hold")
-    print(f"drifts: {len(rows)} rows ({events} open/clear events) -> {OUT}")
+    print(f"drifts: {len(rows)} rows ({events} open/clear events) -> {OUT}"
+          f"; {skipped} observation(s) dropped (unusable obs_date)")
     return 0
 
 

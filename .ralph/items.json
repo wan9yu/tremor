@@ -40,8 +40,8 @@
         "Add a gate-tier test that feeds synthetic row dictionaries through the pure validation helper, using support.stub_attr for stubbing and no reads of data/.",
         "Re-run python tools/drift_layer.py --report and python tools/drift_layer.py against the committed record and confirm exit 0."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 2. Pre-fix reproduction: python tools/drift_layer.py --report raised ValueError: Invalid isoformat string: '    <link href=...' at walk's ords parse (drift_layer.py:78). Guard added as is_strict_date (strict YYYY-MM-DD shape plus a real calendar check; date.fromisoformat alone is not the predicate because it accepts 20261022) and series_from_rows (empty obs_date keeps the row date; a non-empty bad obs_date drops the observation and is counted). series_for delegates; compute returns the skip tally; the summary line now prints '5 observation(s) dropped (unusable obs_date)' against the committed record. Three gate tests added to tests/test_level.py (red against the pre-fix module: 3 failed with AttributeError on is_strict_date/series_from_rows; green after). Both tool invocations exit 0 and data/drifts.csv re-derives byte-identically. Gates: pytest 321 passed; lint 56 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK. Audit tier: 23 tests, 1 failure, the pre-existing control-line astronomy assertion owned by item 7 — no new failure."
     },
     {
       "category": "bug",

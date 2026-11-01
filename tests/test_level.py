@@ -12,8 +12,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
 
-import drift_layer
-import level_layer
+import support  # noqa: E402  (needs the sys.path insert above)
+
+from tools import drift_layer, level_layer  # noqa: E402
 
 
 def _series(values, start="2025-01-01"):
@@ -106,6 +107,55 @@ class TestDriftRule(unittest.TestCase):
     def test_a_series_crossing_zero_is_refused(self):
         """A ratio to a median is meaningless there; say nothing rather than lie."""
         self.assertEqual(drift_layer.walk(_series([-1.0, 0.0, 1.0] * 200)), [])
+
+
+class TestDriftDateGuard(unittest.TestCase):
+    """A malformed obs_date is dropped at series_for, never handed to walk.
+
+    walk parses every key it is given, so one bad row in one line crashed the
+    whole derive step on that line's own record. The guard sits in series_for
+    rather than walk because walk knows no line name, and a filter applied
+    after ``ords = [...]`` would misalign ``ords``/``values`` and could write
+    the bad string into drifts.csv's date column.
+    """
+
+    def test_the_predicate_is_strict_iso_shape_and_a_real_calendar_day(self):
+        for good in ("2026-10-22", "2026-02-28", "2024-02-29"):
+            self.assertTrue(drift_layer.is_strict_date(good), good)
+        # basic format is what date.fromisoformat alone would accept
+        for bad in ("20261022", "", "2026-1-22", " 2026-10-22", "2026-10-22T00:00:00",
+                    "2026-02-31", "2026-13-01", "not a date", None):
+            self.assertFalse(drift_layer.is_strict_date(bad), repr(bad))
+
+    def test_a_blank_obs_date_keeps_the_row_date_and_a_bad_one_is_dropped(self):
+        rows = [
+            # live lines (flights, capital_premium) score rows with no obs_date
+            {"date": "2026-08-01", "obs_date": "", "raw_value": "1.5"},
+            {"date": "2026-08-03", "obs_date": "2026-08-02", "raw_value": "1.6"},
+            # the incident: an HTML error page arrived in the obs_date column
+            {"date": "2026-10-22",
+             "obs_date": '<link href="https://fonts.googleapis.com/css?family=Open+Sans:300',
+             "raw_value": "0.9"},
+            {"date": "2026-08-04", "obs_date": "20260803", "raw_value": "1.7"},
+            # a dark row carries no reading, so nothing is being dropped
+            {"date": "2026-08-05", "obs_date": "garbage", "raw_value": ""},
+        ]
+        series, skipped = drift_layer.series_from_rows(rows)
+        self.assertEqual(series, [("2026-08-01", 1.5), ("2026-08-02", 1.6)])
+        self.assertEqual(skipped, 2)
+        # the point of the guard: the surviving series is safe to walk
+        self.assertEqual(drift_layer.walk(series), [])
+
+    def test_series_for_reports_what_it_dropped(self):
+        rows = [
+            {"date": "2026-08-01", "obs_date": "", "raw_value": "2"},
+            {"date": "2026-08-02", "obs_date": "<link href=\"https://example.invalid\">",
+             "raw_value": "3"},
+        ]
+        with support.stub_attr(drift_layer.seedlib, "read_line", lambda line: rows):
+            series, skipped = drift_layer.series_for("stub")
+        self.assertEqual(series, [("2026-08-01", 2.0)])
+        self.assertEqual(skipped, 1)
 
 
 if __name__ == "__main__":

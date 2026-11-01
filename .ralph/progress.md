@@ -104,3 +104,87 @@ current committed data and must be regenerated again if a later item changes a l
 or a pending bullet. Item 2 (the `drift_layer.py` derive guard) is next in the plan's
 order; item 8 (the five-row FRED repair) explicitly depends on items 2 and 4 landing
 first.
+
+## Iteration 2 — item 2 (bug): drift_layer stops crashing on a malformed obs_date
+
+**Chosen because** `.ralph/plan.md` puts it second: item 1 cleared the pending gate, and
+this is the first damage-stopping item (the nightly derive step crashed, so the level,
+drift, stuck and leans layers were frozen). No item was hard-blocked.
+
+**Entry state measured.** `python tools/drift_layer.py --report` exited 1 with
+`ValueError: Invalid isoformat string: '    <link href="https://fonts.googleapis.com/...'`
+raised at `walk`'s `ords = [_date.fromisoformat(d) ...]` (drift_layer.py:78), reached from
+`main` → `compute` → `walk`. The bad key enters through `series_for`, which keyed on
+`r["obs_date"] or r["date"]`. Five committed rows carry an HTML error page in the obs_date
+column (credit_spread, em_corp_oas, euro_hy_spread, sofr_iorb_spread, vix, all dated
+2026-10-22) — the FRED incident item 8 repairs.
+
+**Fix.** `tools/drift_layer.py`:
+- `is_strict_date(value)` — one shared predicate: a `[0-9]{4}-[0-9]{2}-[0-9]{2}` shape
+  match (ASCII digits, `\Z` end) plus a real calendar check via `date(y, m, d)`. It is
+  deliberately not `date.fromisoformat`, which from 3.11 also accepts the basic form
+  `20261022`. It rejects non-strings, empty strings, `2026-02-31`, `2026-13-01`, and a
+  timestamp suffix, so `walk`'s own `fromisoformat` cannot still raise on a key it is
+  handed.
+- `series_from_rows(rows)` — pure row-level helper returning `(series, skipped)`. An empty
+  `obs_date` keeps the row's own `date` (flights and capital_premium score rows with no
+  observation date; dropping them would delete whole series without a crash). A non-empty
+  `obs_date` that fails the predicate drops that observation with no fallback. A dark row
+  (empty `raw_value`) is skipped before the date check, so it is not counted as dropped.
+- `series_for(line)` delegates to that helper and returns `(series, skipped)`; `compute()`
+  sums the skip tally and returns `(rows, skipped)`; `main` prints it on the existing
+  summary line: `... ; 5 observation(s) dropped (unusable obs_date)`. The `--report` path
+  unpacks the new tuple and is unchanged otherwise.
+
+**Assumption recorded (ordinary ambiguity).** The item's rule set guards `obs_date` only.
+The empty-`obs_date` fallback is the row's own `date`, which is still not validated; that
+is what step 2 asks for ("keeps the existing fallback"), and the row date is written by
+`collect.py` from its own clock. Left unguarded rather than widening the item.
+
+**Failing test first.** Three gate tests were written in `tests/test_level.py`
+(`TestDriftDateGuard`) before the implementation: predicate acceptance/rejection, the
+row-level drop/keep/dedup rules with `walk` over the surviving series, and the same rules
+through `series_for` with `support.stub_attr(drift_layer.seedlib, "read_line", ...)` (no
+`data/` read). Red evidence: with only `tools/drift_layer.py` stashed back to HEAD,
+`python -m pytest tests/test_level.py -q` gave `3 failed, 11 passed`, each failing with
+`AttributeError: module 'tools.drift_layer' has no attribute 'is_strict_date'` /
+`series_from_rows`. Green after the implementation.
+
+**Test-file import change.** `tests/test_level.py` switched from the bare
+`import drift_layer` / `import level_layer` (resolvable only through the file's runtime
+`sys.path` insertion) to `import support` plus `from tools import drift_layer,
+level_layer`, the idiom already used by `tests/lint_pending.py` and
+`tests/test_reconcile_common_mode.py`. Same module object graph at runtime; the static
+analyzer no longer reports the two imports unresolved. `tools/` is a namespace package
+(no `__init__.py`), importable because the test inserts the repo root first.
+
+**Files changed.** `tools/drift_layer.py`, `tests/test_level.py`,
+`.ralph/items.json`, `.ralph/progress.md`. `data/drifts.csv` was rewritten by the tool and
+re-derived byte-identically (no diff, nothing staged).
+
+**Verification (all commands run at the commit that closed this item).**
+
+- `python tools/drift_layer.py --report` — exit 0 (was exit 1 with the ValueError);
+  prints the single historical gnss_interference open/clear pair, no state open now.
+- `python tools/drift_layer.py` — exit 0; `drifts: 134 rows (2 open/clear events) -> ...
+  ; 5 observation(s) dropped (unusable obs_date)`.
+- `python -m pytest tests/ -q` — 321 passed, 20 subtests passed (exit 0; 318 before, the
+  three new tests).
+- `python -m unittest discover tests -p "lint_*.py"` — Ran 56 tests, OK (exit 0).
+- `python tests/lint_no_forbidden_literal.py` — Ran 3 tests, OK (exit 0).
+- `python tools/replay.py --check` — exit 0; TOTAL 1271 rows, 0 divergent.
+- `python tools/pending.py --check` — exit 0; 6 tagged, 0 overdue, 0 unparseable.
+- `node tests/render_smoke.js` — exit 0, render OK in both languages.
+- `python -m unittest discover tests -p "audit_*.py"` — Ran 23 tests, 1 failure:
+  `audit_record.TestControlLineRecord.test_every_row_matches_the_astronomy_for_the_day_it_claims`
+  (2026-10-22 recorded 10.3419h vs 10.3976h implied by obs_date 2026-10-21). That is the
+  pre-existing failure item 7 owns; no new audit failure. The audit tier is not a global
+  gate for this bundle.
+
+**Next iteration should know.** The derive step runs again; `data/drifts.csv` was verified
+byte-identical, so no derived-file churn from this item. The guard is at
+`series_from_rows`/`series_for`, so any future derive tool that parses `obs_date` from a
+line record still needs its own shape check (item 4 adds the collection-time check in
+`collect.py`; item 8 repairs the five bad rows and re-derives the tail). Item 3
+(`core/fred.py` shape validation) is next in the plan's order, then item 4; item 8 requires
+both of them plus this item.
