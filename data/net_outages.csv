@@ -1736,3 +1736,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-10-31,2,-0.469,0,down,"IODA 2 countries with ping-slash24 outages (24h to 2026-10-29 22:00Z) [Cameroon, Guam] [sampled 22:30:06Z]",2026-10-29,scoring
 2026-11-01,3,0.000,0,flat,"IODA 3 countries with ping-slash24 outages (24h to 2026-10-30 22:00Z) [Guam, Guyana, Mongolia] [sampled 22:30:07Z]",2026-10-30,scoring
 2026-11-02,1,-0.938,0,down,IODA 1 countries with ping-slash24 outages (24h to 2026-10-31 22:00Z) [Guam] [sampled 22:30:09Z],2026-10-31,scoring
+2026-11-03,0,-1.407,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-01 22:00Z) [sampled 00:47:01Z],2026-11-01,scoring
