@@ -1739,3 +1739,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-03,0,-1.407,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-01 22:00Z) [sampled 00:47:01Z],2026-11-01,scoring
 2026-11-04,0,-1.407,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-02 22:00Z) [sampled 23:02:33Z],2026-11-02,scoring
 2026-11-05,0,-1.407,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-03 22:00Z) [sampled 23:26:34Z],2026-11-03,scoring
+2026-11-06,0,-1.407,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-04 22:00Z) [sampled 23:28:13Z],2026-11-04,scoring
