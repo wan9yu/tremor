@@ -1562,3 +1562,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-04,3,,0,,NOAA SWPC planetary Kp daily max 3 on 2026-11-02 [sampled 23:03:58Z] [stale: observation already recorded],2026-11-02,stale
 2026-11-05,2,-0.707,0,down,NOAA SWPC planetary Kp daily max 2 on 2026-11-03 [sampled 23:27:47Z],2026-11-03,scoring
 2026-11-06,3.33,0.233,0,up,NOAA SWPC planetary Kp daily max 3.33 on 2026-11-04 [sampled 23:29:13Z],2026-11-04,scoring
+2026-11-07,2.33,-0.476,0,down,NOAA SWPC planetary Kp daily max 2.33 on 2026-11-05 [sampled 22:54:29Z],2026-11-05,scoring
