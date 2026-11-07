@@ -573,6 +573,7 @@ function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;"
 // Routing every write through one function is what makes that reviewable: a lint
 // test asserts this file contains exactly one innerHTML, inside setMarkup, so a
 // future `el.innerHTML = someRow.source_note` cannot be added quietly.
+// pi-lens-ignore: ast-grep:no-inner-html-js
 function setMarkup(el,html){ el.innerHTML=String(html==null?"":html); }
 function countColor(n){ return n>=3?"var(--alarm)":n===2?"var(--orange)":n===1?"var(--amber)":"var(--calm)"; }
 function utcMidnight(d){ const p=d.split("-").map(Number); return Date.UTC(p[0],p[1]-1,p[2]); }
