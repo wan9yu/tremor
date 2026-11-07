@@ -106,8 +106,8 @@
         "Include the measured flights sampling-weight fact from the design deck as one sentence in the same section.",
         "Run every verification gate and record the output."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 5. The limits copy is visible page text: a static <section class=\"panel limits\" id=\"limits\"> sits between #watchlist and #footer, and render() fills it with the watches-derived region list, limitsTitle, the full limitsBody (all four limitations: a rolling reference absorbs long-running change; the roster is selected under written assumptions; other daily records are never counted; there is no communications domain so worldwide connectivity reads zero) and limitsFlights (the measured 22:30 UTC regional shares and z figures). covModal and its openModal wiring are deleted; #covmore now scrolls to #limits. tests/render_smoke.js T30 binds the section's place in the page body (watchlist < limits < footer, before the modal), its visible state after a plain render, the title, one marker sentence per limitation and the flights fact in both languages, and that no panel had to open. T29's old assertion that #covmore opens the limits modal is rebound to the inline section plus 'the click leaves the modal closed'; the harness gained a scrollIntoView() stub on its node and dropped covModal from its exports and modal loops. Gates: gate 415 passed; lint 69 OK; forbidden literal 3 OK; audit 28 OK; replay exit 0 (1439 rows since STABLE_SINCE, divergence 0); pending 6 tagged / 0 overdue; render smoke OK; annotations cmp identical."
     },
     {
       "category": "functional",

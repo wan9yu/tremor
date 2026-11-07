@@ -427,3 +427,108 @@ added.
   `panelTitle`/`panelHint` remain the unclaimed deck keys.
 - The reference count head uses `levelHead` with the number kept in `#level-n`, matching the
   daily count block; the deck has no head template for that block.
+
+## Iteration 5 — item 5 (functional): the four limitations are visible page text
+
+**Chosen because** item 5 is the last unfinished copy-and-structure item, and
+`.ralph/plan.md` ranks copy and structure before style (item 6) and the guard (item 8).
+It also finishes the placement that item 4 left open: `limitsTitle`/`limitsBody`/
+`limitsFlights` existed only inside the panel opened by `covMore`, so the four
+limitations were not visible page text. No item is hard-blocked; the ledger held
+iterations 1–4, all green.
+
+**Entry state measured.** Gate 415 passed; lint 69 OK; forbidden-literal 3 OK; audit 28 OK;
+`replay --check` exit 0 (1439 rows since `STABLE_SINCE`, divergence 0); `pending --check`
+6 tagged / 0 overdue; render smoke OK; annotations mirror identical.
+
+**Test-first, failures recorded.** Two existing surfaces were rebound and one block was
+added before any page copy moved:
+
+- `tests/render_smoke.js` (new T30 block): the inline limits section must sit in the page
+  body between `#watchlist` and `#footer` (and before the modal markup), must not be
+  hidden after a plain `render()`, and its rendered text must carry the deck's title, one
+  marker sentence per limitation (rolling reference absorbs long-running change; roster
+  selected under written assumptions; other daily records never counted; no communications
+  domain so worldwide connectivity reads zero) and the measured flights sampling fact, in
+  both languages, with no panel opened. Run on the unmodified page: 20 failures, including
+  `limits: the inline section is not in the page body between the collected records (9660)
+  and the footer (9698), before the modal (9728): -1`, `limits(en): limitation 1 is not
+  visible page text ("The rolling comparison looks to recent history; …")` through
+  limitation 4, `limits(en): the inline section does not carry the measured flights sampling
+  fact …`, and the ZH counterparts.
+- `tests/render_smoke.js` T29 rebound: its `#covmore` assertion previously clicked the link
+  and read the limits copy out of `#modal-body`. It now sets `#modal.hidden = true`, clicks
+  the link, requires the modal to stay closed, and reads the copy out of `#limits`. Run
+  before the page change: `structure(en): the scope link opened a panel instead of scrolling
+  to the inline limits section` plus the three missing inline copies, repeated in ZH (8
+  failures).
+- `tests/render_smoke.js` harness: `covModal` was removed from the eval export, the
+  destructure, the two modal exercise loops and T29's reader-surface scan, because the
+  builder is deleted below; the fake node gained a `scrollIntoView() {}` stub so the real
+  scroll call the page makes is legal in the harness.
+
+**Decisions (conservative, reversible).**
+
+- The limits copy is rendered by `render()` into a static `<section class="panel limits"
+  id="limits">` placed after `#watchlist` and before `#footer`, matching the deck's reading
+  order (scope and limits after the other records) and item 5's "below the collected
+  records". `hidden` is cleared unconditionally, so the section does not depend on the
+  watchlist existing.
+- The section renders the deck's `limitsBody` verbatim as one paragraph — it already
+  carries the four limitations as four sentences, which is how the deck specifies them —
+  and `limitsFlights` as its own paragraph in the same section. No copy was reworded or
+  split, so `tests/audit_record.py`'s per-region share and z bindings still match.
+- The region list that used to live only in the panel is kept, in the same section,
+  derived from each tier-1 line's `watches` field. Without it the "Scope" half of the
+  `covMore` label would name nothing; it is derived, so a tier swap cannot make it stale
+  (the comment above `LINES` was updated to say so).
+- `covModal` and its `openModal` wiring are deleted. The deck's architecture says the scope
+  link scrolls to the always-visible section, so keeping a second, hidden copy of the same
+  prose would be dead code. `#covmore` now calls `scrollIntoView` on the section and opens
+  no panel; T29 asserts the modal stays closed.
+- The section reuses the existing `.panel` card style with four small `.limits` rules, so
+  it reads as body content, not a modal. No colour was introduced.
+
+**Files changed.**
+
+- `docs/index.html` — new `<section class="panel limits" id="limits">` between `#watchlist`
+  and `#footer`; `.limits` CSS rules (margins, list and paragraph treatment); `covModal`
+  deleted; `#covmore` handler scrolls to the section; `render()` fills the section with
+  the watches-derived region list, `limitsTitle`, `limitsBody` and `limitsFlights`; the
+  comment above `LINES` now names the section. One `innerHTML` remains, inside `setMarkup`.
+- `tests/render_smoke.js` — new T30 block (placement, visibility, title, four limitation
+  markers, flights fact, no-panel); T29's `#covmore` assertion rebound to the inline section
+  and the closed-modal check; `covModal` removed from the export/loops/surface scan; a
+  `scrollIntoView()` stub added to the fake node.
+
+**Verification results (after implementation).** Gates run with
+`PATH=/Users/wangyu/.pyenv/shims:$PATH` (pytest 9.0.2), the interpreter iterations 1–4 used.
+
+- gate tier `python -m pytest tests/ -q` — `415 passed, 126 subtests passed in 0.98s`
+- lint tier `python -m unittest discover tests -p "lint_*.py"` — `Ran 69 tests … OK`
+- forbidden literal `python tests/lint_no_forbidden_literal.py` — `Ran 3 tests … OK`
+- audit tier `python -m unittest discover tests -p "audit_*.py"` — `Ran 28 tests … OK`
+- replay `python tools/replay.py --check` — exit 0, `TOTAL 1439 0 0`, divergence 0 since
+  `STABLE_SINCE` 2026-09-09
+- pending `python tools/pending.py --check` — `OK — 6 tagged pending item(s), 0 overdue, 0 unparseable`
+- render smoke `node tests/render_smoke.js` — `render OK in both languages; no runtime
+  errors, no undefined/NaN`; coverage line unchanged and still ends with `范围与限度 ↓`
+- annotations mirror `cmp data/annotations.csv docs/data/annotations.csv` — `cmp: identical`
+
+`grep` over `docs/index.html` finds no `covModal` left, one `innerHTML` (the `setMarkup`
+line), and no `①`/`②`/`③` or `probe`/`探针`. The section's four limitation sentences are
+the deck's `limitsBody` verbatim in both languages, and T30 reads them from the rendered
+`#limits` node after a plain `render()` with no modal click.
+
+**Notes for the next iteration.**
+
+- Item 6 owns `countColor`, the four-way status/marker colouring and the inline
+  `trembling`/`颤抖` pill text; the new `.limits` block introduces no colour, so nothing
+  there is left for it.
+- Item 7 owns the `alarm:` field, `alarmTag`/`alarmingWhen` and `render.py`'s chart title.
+- Item 8's guard will still find `alarm` in `alarmTag`/`alarmingWhen` and the status
+  banner keys, `calm`/`平静` in `feelHint`/`feelGapNote`, and layer wording in nothing
+  migrated here. The `footer` and `panelTitle`/`panelHint` deck keys remain unclaimed by
+  any item in this bundle.
+- The smoke harness now depends on `scrollIntoView` existing on a node; any future handler
+  that calls another real-DOM method needs the stub extended the same way.

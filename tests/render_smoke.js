@@ -31,7 +31,7 @@ function el(id) {
     id, _html: "", _text: "", hidden: false, className: "", dataset: {},
     style: { setProperty() {}, removeProperty() {}, getPropertyValue: () => "" }, classList: { add() {}, remove() {}, toggle() {} },
     appendChild(child) { appendedNodes.push(child); return child; },
-    setAttribute() {}, removeAttribute() {},
+    setAttribute() {}, removeAttribute() {}, scrollIntoView() {},
     addEventListener() {}, getContext: () => ({}),
     set innerHTML(v) { this._html = String(v); }, get innerHTML() { return this._html; },
     set textContent(v) { this._text = String(v); }, get textContent() { return this._text; },
@@ -73,8 +73,8 @@ process.on("unhandledRejection", e => errors.push("unhandledRejection: " + (e &&
 // reassigned by load(). Synthesize a setter in this same eval scope (it closes
 // over the real `DATA` binding) and export it on globalThis.__P so T21's
 // fixtures below can inject DATA directly, bypassing fetch/load().
-(0, eval)(js + "\n;globalThis.__P={LINES,T,covModal,countModal,lineModal,levelModal,openTier2Modal,render,load,setDATA:function(v){DATA=v;}};");
-const {LINES,T,covModal,countModal,lineModal,levelModal,openTier2Modal,render,load,setDATA}=globalThis.__P;
+(0, eval)(js + "\n;globalThis.__P={LINES,T,countModal,lineModal,levelModal,openTier2Modal,render,load,setDATA:function(v){DATA=v;}};");
+const {LINES,T,countModal,lineModal,levelModal,openTier2Modal,render,load,setDATA}=globalThis.__P;
 
 // Rendered text lives in two places: nodes looked up by id (`made`, mutated in
 // place on every render -- so at sweep time, right after render(), they hold
@@ -332,7 +332,7 @@ function buildHeadlineFixtureData() {
   }
   // exercise every modal builder, in both languages
   for (const lang of ["en", "zh"]) {
-    try { covModal(lang); countModal(lang); levelModal(lang); } catch (e) { errors.push(`modal(${lang}): ${e.stack || e}`); }
+    try { countModal(lang); levelModal(lang); } catch (e) { errors.push(`modal(${lang}): ${e.stack || e}`); }
     for (const L of LINES) {
       try { lineModal(L, lang); } catch (e) { errors.push(`lineModal(${L.id},${lang}): ${e.stack || e}`); }
       // openTier2Modal is only ever invoked (in docs/index.html) for tier-2
@@ -386,7 +386,7 @@ function buildHeadlineFixtureData() {
     } catch (e) { errors.push(`fixture render(${lang}): ${e.stack || e}`); }
     errors.push(...xssErrors("fixture-" + lang));
     // exercise the modal builders against the fixture too, tier-1 and tier-2.
-    try { covModal(lang); countModal(lang); levelModal(lang); } catch (e) { errors.push(`fixture modal(${lang}): ${e.stack || e}`); }
+    try { countModal(lang); levelModal(lang); } catch (e) { errors.push(`fixture modal(${lang}): ${e.stack || e}`); }
     for (const id of Object.keys(fixture.lines)) {
       const L = LINES.find(x => x.id === id);
       if (!L) continue;
@@ -895,15 +895,20 @@ function buildHeadlineFixtureData() {
             + `${JSON.stringify(d.more)}`);
         }
       }
-      // The coverage link opens the limits block: all four limitations plus the
-      // measured flights sampling fact, in the page's own words.
+      // The scope link scrolls to the always-visible limits section and opens no
+      // panel; T30 binds the four limitations and the measured flights fact.
+      el("modal").hidden = true;
       el("covmore").onclick();
-      const limits = plainText(el("modal-body").innerHTML);
+      if (el("modal").hidden !== true) {
+        errors.push(`structure(${lang}): the scope link opened a panel instead of scrolling `
+          + `to the inline limits section`);
+      }
+      const limits = plainText(el("limits").innerHTML);
       for (const [name, want] of [["limitsTitle", d.limitsTitle],
                                   ["limitsBody", d.limitsBody],
                                   ["limitsFlights", d.limitsFlights]]) {
         if (!limits.includes(want)) {
-          errors.push(`structure(${lang}): the coverage panel does not carry the deck's `
+          errors.push(`structure(${lang}): the inline limits section does not carry the deck's `
             + `${name} ${JSON.stringify(want)}`);
         }
       }
@@ -938,7 +943,7 @@ function buildHeadlineFixtureData() {
         el("panel-title").textContent, el("panel-hint").textContent, el("footer").innerHTML,
         ...Object.values(made).flatMap(n => [n._text, n._html]),
         ...appendedNodes.flatMap(n => [n._text, n._html]),
-        covModal(lang), countModal(lang), levelModal(lang),
+        countModal(lang), levelModal(lang),
         ...LINES.map(L => lineModal(L, lang)),
       ].join("\n");
       for (const word of PROBE_WORDS) {
@@ -964,6 +969,78 @@ function buildHeadlineFixtureData() {
         }
       }
     } catch (e) { errors.push(`structure dark render(${lang}): ${e.stack || e}`); }
+  }
+
+  // T30 (public-surface migration, item 5): the page states its four
+  // limitations as visible body text, plus the measured flights sampling
+  // weight, in an inline section below the collected records. Each marker is
+  // one deck sentence; all four must be readable on the rendered page in both
+  // languages, with no panel opened.
+  const DECK_LIMITS = {
+    en: {
+      title: "Limits of this record",
+      points: [
+        "The rolling comparison looks to recent history; a change that lasts can become part of a series' reference.",
+        "The displayed roster is selected under written measurement assumptions",
+        "Other daily records are collected but never enter this count.",
+        "No communications-domain reading is included, so a worldwide connectivity event reads zero in this count.",
+      ],
+      flights: "Flights samples four regions at 22:30 UTC, with uneven shares:",
+    },
+    zh: {
+      title: "这份记录的限度",
+      points: [
+        "滚动比较照见近期记录；延续很久的变化，可能渐渐进入一条序列的参照。",
+        "页面展示哪些线，依据书面观测假设选定",
+        "其他每日记录会继续采集，却永不进入这个计数。",
+        "这里没有通信域的读数，所以全球性的连通事件在这个计数里读作零。",
+      ],
+      flights: "Flights 每日 22:30 UTC 采样四个区域",
+    },
+  };
+  // Placement is part of the requirement: the section sits in the page body
+  // below the collected records, before the footer, and never inside the modal.
+  {
+    const wl = html.indexOf('id="watchlist"');
+    const lim = html.indexOf('id="limits"');
+    const foot = html.indexOf('id="footer"');
+    const modal = html.indexOf('<div class="modal"');
+    if (!(wl > -1 && lim > wl && foot > lim && modal > lim)) {
+      errors.push(`limits: the inline section is not in the page body between the collected `
+        + `records (${wl}) and the footer (${foot}), before the modal (${modal}): ${lim}`);
+    }
+  }
+  for (const lang of ["en", "zh"]) {
+    const d = DECK_LIMITS[lang];
+    global.document.cookie = "tremor_lang=" + lang;
+    setDATA(buildFixtureData());
+    appendedNodes = [];
+    el("modal").hidden = true;
+    try {
+      render();
+      if (el("limits").hidden) {
+        errors.push(`limits(${lang}): the restrictions section is hidden on the rendered page`);
+      }
+      const text = plainText(el("limits").innerHTML);
+      if (!text.includes(d.title)) {
+        errors.push(`limits(${lang}): the inline section does not carry the deck's title `
+          + `${JSON.stringify(d.title)}`);
+      }
+      d.points.forEach((want, i) => {
+        if (!text.includes(want)) {
+          errors.push(`limits(${lang}): limitation ${i + 1} is not visible page text `
+            + `(${JSON.stringify(want)})`);
+        }
+      });
+      if (!text.includes(d.flights)) {
+        errors.push(`limits(${lang}): the inline section does not carry the measured flights `
+          + `sampling fact ${JSON.stringify(d.flights)}`);
+      }
+      // Visible means visible: none of it was read out of an opened panel.
+      if (el("modal").hidden !== true) {
+        errors.push(`limits(${lang}): reading the limitations required opening a panel`);
+      }
+    } catch (e) { errors.push(`limits render(${lang}): ${e.stack || e}`); }
   }
 
   await new Promise(r => setTimeout(r, 50));

@@ -94,6 +94,10 @@
   .coverage{color:var(--muted);font-size:12px;margin:-6px 2px 18px;line-height:1.6}
   .coverage .cmore{color:#9aa1ad;cursor:pointer;margin-left:4px}
   .coverage .cmore:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+  .limits{margin-top:16px}
+  .limits ul.cov{margin:8px 0 12px;padding-left:18px;font-size:13px;line-height:1.62;color:var(--muted)}
+  .limits ul.cov li{margin:0 0 5px}
+  .limits p{color:var(--muted);font-size:13px;line-height:1.62;margin:0 0 10px;max-width:82ch}
   .modal-card ul.cov{margin:0 0 12px;padding-left:18px;font-size:14.5px;line-height:1.62;color:#c7ccd6}
   .modal-card ul.cov li{margin:0 0 5px}
   .wl-item:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
@@ -176,6 +180,8 @@
 
   <p class="watchlist" id="watchlist" hidden></p>
 
+  <section class="panel limits" id="limits" hidden></section>
+
   <footer id="footer"></footer>
 </div>
 
@@ -197,10 +203,10 @@ function setRange(r){ document.cookie="tremor_range="+r+";path=/;max-age="+(3600
 
 // ---------- per-line metadata (bilingual) ----------
 // `watches` states each tier-1 line's actual field of view. The coverage line
-// and its modal are both DERIVED from it, so they cannot go stale on a tier
-// swap. Only `limitsBody` / `limitsFlights` — the prose about what this record
-// cannot see — are written by hand and must be revisited when coverage
-// genuinely changes.
+// and the scope-and-limits section are both DERIVED from it, so they cannot go
+// stale on a tier swap. Only `limitsBody` / `limitsFlights` — the prose about
+// what this record cannot see — are written by hand and must be revisited when
+// coverage genuinely changes.
 const LINES = [
   { id:"flights", color:"#5aa9e6", alarm:"down",
     watches:{en:"W/C Europe · US East · US West · Japan/E Asia",zh:"西/中欧 · 美东 · 美西 · 日本/东亚"},
@@ -613,14 +619,6 @@ function countModal(lang){
   return `<h3>${T[lang].countModalTitle}</h3><p>${T[lang].countModalBody(m)}</p>`;
 }
 function levelModal(lang){ return `<h3>${T[lang].referenceTitle}</h3><p>${T[lang].referenceBody}</p>`; }
-// Built FROM each tier-1 line's own `watches` field, so the disclosure cannot go
-// stale independently of the instruments it describes.
-function covModal(lang){
-  const t1=LINES.filter(L=>(L.tier||1)===1);
-  const items=t1.map(L=>`<li><b>${L.domain[lang]}</b> — ${L.watches[lang]}</li>`).join("");
-  return `<h3>${T[lang].limitsTitle}</h3><ul class="cov">${items}</ul>
-    <p>${T[lang].limitsBody}</p><p>${T[lang].limitsFlights}</p>`;
-}
 
 // ---------- data + render ----------
 let DATA=null, chart=null, feelChart=null;
@@ -943,7 +941,9 @@ function render(){
   // never leave this sentence describing instruments that are no longer here.
   setMarkup(cov,`${T[lang].coverage(TIER1.map(L=>L.watches[lang]).join(" · "))}`
     +`<span class="cmore" id="covmore">${T[lang].covMore}</span>`);
-  document.getElementById("covmore").onclick=()=>openModal(covModal(lang));
+  document.getElementById("covmore").onclick=()=>{
+    document.getElementById("limits").scrollIntoView({behavior:"smooth",block:"start"});
+  };
 
   // system status banner
   const st=document.getElementById("sysstatus"); st.hidden=false;
@@ -1047,6 +1047,14 @@ function render(){
       wl.appendChild(item);
     }
   }
+
+  // Scope and limits: always-visible body text, never a panel. The region list is
+  // derived from the same `watches` metadata the coverage line uses; the four
+  // limitations and the measured flights sampling fact are the deck's copy.
+  const lim=document.getElementById("limits"); lim.hidden=false;
+  setMarkup(lim,`<h2>${T[lang].limitsTitle}</h2>`
+    +`<ul class="cov">${TIER1.map(L=>`<li><b>${L.domain[lang]}</b> — ${L.watches[lang]}</li>`).join("")}</ul>`
+    +`<p>${T[lang].limitsBody}</p><p>${T[lang].limitsFlights}</p>`);
 }
 
 // tier-2 detail: explanation + latest reading + mini history chart + attributions.
