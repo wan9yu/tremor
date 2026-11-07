@@ -204,198 +204,198 @@ const LINES = [
     domain:{en:"Airspace",zh:"空域"},
     label:{en:"Aircraft airborne",zh:"在飞航班量"},
     source:{en:"Community ADS-B, 4 busy regions",zh:"社区 ADS-B，4 个繁忙空域"},
-    explain:{
-      en:"Airlines fight to keep planes on schedule — delays and cancellations cost them money — so the number of aircraft in the air is normally held up by a powerful profit motive. When it drops sharply, a bigger force has overpowered that motive: closed airspace, severe weather, a pandemic, a security lockdown. Military airspace closures are never announced; they leave a shadow only in how many planes are actually flying. That makes flights a side channel for the otherwise invisible. Counted across several busy regions from public ADS-B data.",
-      zh:"航空公司拼命让航班准点——延误和取消都在烧钱——所以「在飞的飞机数量」平时被强大的盈利动机顶在高位。一旦骤降，说明有更大的力量压垮了这股动机：空域关闭、极端天气、瘟疫、安全管制。军方封锁空域从不公告，只在「实际有多少飞机在飞」上留下影子。于是航班成了不可见之事的侧信道。数据来自多个繁忙空域的公开 ADS-B。"} },
+    measures:{
+      en:"Aircraft reported airborne across W/C Europe, US East, US West, and Japan/E Asia, summed from one ADS-B snapshot at 22:30 UTC each day; unit: aircraft.",
+      zh:"每日 22:30 UTC 对西/中欧、美东、美西及日本/东亚各取一次 ADS-B 快照，合计当时报告在空的飞机数；单位：架。"} },
   { id:"credit_spread", color:"#e0a83d", alarm:"up",
     watches:{en:"the US high-yield bond market",zh:"美国高收益债市场"},
     unit:{en:"pp",zh:"个百分点"},
     domain:{en:"Financial system",zh:"金融系统"},
     label:{en:"US HY credit spread (OAS)",zh:"美国高收益债信用利差 (OAS)"},
     source:{en:"FRED — ICE BofA US High-Yield OAS",zh:"FRED — ICE BofA 美国高收益债 OAS"},
-    explain:{
-      en:"Banks want to lend to each other to earn, and central banks press credit spreads down — so this spread is normally held low. When it spikes, fear has overpowered greed: banks suddenly don't trust each other. This is the fuse that lit 2008. The source is one number — the ICE BofA US High-Yield option-adjusted spread — that compresses the whole high-yield market's fear into a single daily reading.",
-      zh:"银行天生想互相拆借赚钱，央行也在压低信用利差——所以这个利差平时被按得很低。一旦飙升，就是恐惧压倒了贪婪：银行突然不敢相信彼此。这正是 2008 年的引信。数据是一个数——ICE BofA 美国高收益债 OAS——把整个高收益市场的恐惧压缩成每日一个读数。"} },
+    measures:{
+      en:"Daily ICE BofA US High Yield option-adjusted spread for US high-yield bonds, on the latest available business date; unit: percentage points (pp).",
+      zh:"美国高收益债的 ICE BofA US High Yield 期权调整利差，按最新可得的交易日记录；单位：百分点（pp）。"} },
   { id:"capital_premium", color:"#c678dd", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Capital controls",zh:"资本管制"},
     label:{en:"Korea BTC premium",zh:"韩国比特币溢价"},
     source:{en:"Upbit (KRW) vs Coinbase (USD)",zh:"Upbit（韩元）对比 Coinbase（美元）"},
-    explain:{
-      en:"The same Bitcoin should cost the same everywhere — arbitrage erases price gaps — so a local premium should sit near zero. When Korea's BTC price stays persistently above the global price, capital is trapped inside the country: tightening controls, capital flight, a devaluation brewing. The 'kimchi premium' is the classic case. Computed from Upbit (Korean won) against Coinbase (US dollar) at the official exchange rate.",
-      zh:"同一枚比特币在哪都该是一个价——套利会抹平价差——所以本地溢价本应接近零。当韩国的 BTC 价格持续高于全球价，说明资本被困在国内：管制收紧、资本外逃、贬值在酝酿。「泡菜溢价」是经典案例。用 Upbit（韩元）对比 Coinbase（美元），按官方汇率折算。"} },
+    measures:{
+      en:"Once-daily snapshot: the Korean BTC price in KRW converted at the USD/KRW reference rate, divided by Coinbase BTC/USD, minus one; unit: percent.",
+      zh:"每日一次快照：韩国市场的韩元 BTC 价格按 USD/KRW 参考汇率折成美元，再除以 Coinbase BTC/USD 并减一；单位：百分比。"} },
   { id:"grid_frequency", color:"#3fb27f", alarm:"up", tier:2,
     unit:{en:"mHz",zh:"mHz"},
     domain:{en:"Infrastructure",zh:"基础设施"},
     label:{en:"Grid freq. max |dev|",zh:"电网频率最大偏离"},
     source:{en:"Fingrid, Statnett fallback (Nordic grid)",zh:"Fingrid，Statnett 备份（北欧电网）"},
-    explain:{
-      en:"Grid operators defend 50 Hz second by second — one of the most fiercely guarded balances humans maintain. The Nordic frequency routinely wanders inside a ±100 mHz normal band — Fingrid's own bar for a LARGE deviation is 300 mHz, of which there were eleven in all of 2024 — and only a large one means supply and demand were overwhelmed: a blackout precursor, a fuel shortage, a system under shock. We track the largest deviation from 50 Hz over the day. Source is Fingrid (Finland), with a keyless Statnett (Norway) fallback — both read the same Nordic synchronous grid.",
-      zh:"电网运营商以秒为单位死守 50 赫兹——这是人类守得最凶的平衡之一。北欧频率在 ±100 mHz 的正常带内本就常态游走——Fingrid 自己把「大偏差」定在 300 mHz，2024 全年只有 11 次——只有大幅偏离才意味着供需被压垮：停电前兆、燃料短缺、系统受冲击。我们记录当天对 50 赫兹的最大偏离。数据来自芬兰 Fingrid，并以挪威 Statnett（无需密钥）作为备份——两者读的是同一张北欧同步电网。"} },
+    measures:{
+      en:"Maximum absolute deviation from 50 Hz in Fingrid measurements of the Nordic grid over a 24-hour window, collected daily; unit: millihertz (mHz).",
+      zh:"每日记录 Fingrid 对北欧电网 24 小时观测窗内相对 50 Hz 的最大绝对偏差；单位：毫赫兹（mHz）。"} },
   { id:"cnh_cny", color:"#e0617d", alarm:"up", tier:1,
     watches:{en:"the onshore/offshore yuan spread",zh:"在岸/离岸人民币价差"},
     unit:{en:"pips",zh:"点"},
     domain:{en:"Capital controls (China)",zh:"资本管制（中国）"},
     label:{en:"Offshore−onshore yuan spread",zh:"离岸−在岸人民币价差"},
     source:{en:"Yahoo Finance — USDCNH vs USDCNY",zh:"Yahoo Finance — USDCNH 对比 USDCNY"},
-    explain:{
-      en:"China's central bank manages the onshore yuan (CNY) inside a tight daily band, spending FX reserves to defend it; the offshore yuan (CNH) trades freely with no such guard. When CNH stays weaker than CNY, the market is pricing a depreciation the managed onshore rate won't yet admit — capital-flight pressure, tightening controls, a managed devaluation building. Measured as the CNH − CNY spread in pips (1 pip = 0.0001 yuan/USD) from Yahoo Finance.",
-      zh:"中国央行把在岸人民币（CNY）管在很窄的每日波动区间内，烧外汇储备死守；离岸人民币（CNH）自由交易，没有这层守护。当 CNH 持续弱于 CNY，市场就在给在岸还不肯承认的贬值定价——资本外逃压力、管制收紧、一场有管理的贬值在酝酿。用 Yahoo Finance 的 CNH−CNY 价差（pips，1 pip = 0.0001 元/美元）衡量。"} },
+    measures:{
+      en:"Daily simultaneous USDCNH and USDCNY quotes near 22:30 UTC; offshore minus onshore yuan spread; unit: pips (0.0001 yuan per USD).",
+      zh:"每日约 22:30 UTC 同时读取 USDCNH 与 USDCNY 报价；离岸减在岸人民币价差；单位：点（每美元 0.0001 元）。"} },
   { id:"gdelt", color:"#6f7686", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Conflict events (global)",zh:"冲突事件（全球）"},
     label:{en:"Global conflict-event share",zh:"全球冲突事件占比"},
     source:{en:"GDELT 2.0 — full previous day, ~96 files",zh:"GDELT 2.0 — 前一整天约 96 个文件聚合"},
-    explain:{
-      en:"The share of the world's news-coded events that are MATERIAL CONFLICT — assault, fight, mass violence (GDELT's QuadClass 4). Deliberately NOT a tension indicator and never counted: event tallies have no guard and inflate as media coverage densifies. It rides the watchlist as the 'felt vs real' contrast — how much conflict the world is reporting, set against the measured lines. When the two diverge, the gap is the point — this instrument shows it without deciding in advance whether it is excess feeling or missing coverage. Aggregated over the entire previous day's ~96 raw event files (~100k events), so the daily value is no longer single-file noise.",
-      zh:"全球被编码的新闻事件里，属于「物质性冲突」（袭击、交火、大规模暴力，GDELT 的 QuadClass 4）的占比。它刻意不是张力指标、永不计数：事件计数没有守护力，且随媒体覆盖逐年通胀。它待在观察名单上，是「真实 vs 感觉」对照——世界在报道多少冲突，与客观线对比，二者背离时，那个缺口正是重点——这台仪器把它显示出来，但不预先判定那是感觉过头，还是覆盖不足。聚合前一整天约 96 个原始事件文件（约 10 万事件），日值不再是单文件噪声。"} },
+    measures:{
+      en:"Share of GDELT QuadClass 4 events among event-coded items across the full previous UTC day, aggregated from about 96 quarter-hour files; unit: percent.",
+      zh:"前一完整 UTC 日的 GDELT 事件编码条目中，QuadClass 4 所占比例；汇总约 96 个 15 分钟文件；单位：百分比。"} },
   { id:"gdelt_tone", color:"#9b8ec4", alarm:"down", tier:2,
     unit:{en:"tone",zh:"tone"},
     domain:{en:"Feel (news tone)",zh:"感觉（新闻情绪）"},
     label:{en:"Global news tone",zh:"全球新闻情绪"},
     source:{en:"GDELT 2.0 — full-day average tone",zh:"GDELT 2.0 — 全天平均情绪"},
-    explain:{
-      en:"The average emotional tone of the entire previous day's global news-coded events (GDELT AvgTone). More negative = the world's coverage reads grimmer. This is the feel side's news-valence channel: where the conflict share measures WHAT is reported, tone measures HOW it is told. Not a tension indicator (no guard) — contrast only, never counted.",
-      zh:"前一整天全球新闻事件的平均情绪值（GDELT AvgTone）。越负 = 报道读起来越阴沉。这是「感觉」侧的新闻情绪通道：冲突占比测的是报道了什么，情绪测的是怎么讲的。不是张力指标（无守护力）——仅作对照，永不计数。"} },
+    measures:{
+      en:"Mean GDELT AvgTone across news-coded events for the full previous UTC day; unit: GDELT tone units.",
+      zh:"前一完整 UTC 日新闻编码事件的 GDELT AvgTone 均值；单位：GDELT 情绪值。"} },
   { id:"vix", color:"#d98fb0", alarm:"up", tier:2,
     unit:{en:"index",zh:"点"},
     domain:{en:"Feel (priced fear)",zh:"感觉（恐惧定价）"},
     label:{en:"VIX (fear priced)",zh:"VIX（恐惧定价）"},
     source:{en:"FRED — VIXCLS (keyless), seeded from archive",zh:"FRED — VIXCLS（无需密钥），由历史存档播种"},
-    explain:{
-      en:"Implied equity volatility — the cleanest daily price on collective fear. The spec excluded VIX as a tension indicator (a passive read, no guard) and that stands; the contrast line is exempt because its whole job is measuring how disordered the world FEELS. Together with the GDELT lines the feel side has two independent modalities: what the news reports, and what hedgers pay. Seeded with 180 days of archive so its baseline needed no warm-up.",
-      zh:"股指期权隐含波动率——给集体恐惧标价最干净的日频数。spec 把 VIX 排除在张力指标外（被动读数、无守护力），这仍然成立；但对照线豁免于守护闸门——它的职责就是测世界「感觉」有多乱。与 GDELT 两条线一起，感觉侧有了两个独立通道：新闻在报什么，对冲者在付什么。创建时用 180 天历史存档播种，基线无需预热。"} },
+    measures:{
+      en:"CBOE VIX daily closing index, as published by FRED for the latest available business date; unit: index points.",
+      zh:"FRED 发布的最新交易日 CBOE VIX 收盘指数；单位：指数点。"} },
   { id:"chokepoint_breadth", color:"#d98a5b", alarm:"down", tier:2,
     unit:{en:"vessels",zh:"艘"},
     domain:{en:"Trade (global)",zh:"贸易（全球）"},
     label:{en:"Chokepoint vessel transits",zh:"海上咽喉点航运量"},
     source:{en:"IMF PortWatch — 28 chokepoints",zh:"IMF PortWatch — 28 个咽喉点"},
-    explain:{
-      en:"Trade economics and the littoral states keep ships flowing through each of 28 maritime chokepoints — Suez, Hormuz, Bab-el-Mandeb, the Bosporus, Malacca, Panama, the Taiwan Strait. A drop in total transits leaks a blockade, war, drought, or attack at one of them. Two honest limits: the scored line is the 28-point TOTAL, so a single strait closing moves it only a couple of percent and can be lost in the sum — the per-strait breakdown is captured alongside precisely because the sum once hid a 95% collapse at Hormuz; and PortWatch publishes in weekly batches, so the line reads at a fixed ~10-day lag — permanently honest, permanently late. Like the flights line, but for sea trade — and the slowest eye tremor has.",
-      zh:"贸易经济和沿岸国家让船流持续通过 28 个海上咽喉点——苏伊士、霍尔木兹、曼德海峡、博斯普鲁斯、马六甲、巴拿马、台湾海峡。总航运量骤降，就泄露其中某处的封锁、战争、干旱或袭击。两个必须说明的局限：计分的是 28 点总量，单独一条海峡关闭只让它动几个百分点、可能被总量淹没——正因为这个总量曾把霍尔木兹 95% 的坍塌藏进 2% 的波动里，现在每天的分海峡明细也被同步存档；而 PortWatch 按周批量发布，这根线固定滞后约 10 天——永远诚实，也永远迟到。像航班线，但测的是海上贸易——也是 tremor 最慢的一只眼。"} },
+    measures:{
+      en:"Daily total vessel transits across IMF PortWatch's 28 maritime chokepoints, for the latest available observation (about 10 days behind publication); unit: vessels.",
+      zh:"IMF PortWatch 记录的 28 个海上咽喉点每日船舶通行总数，取最新可得观测（发布约滞后 10 天）；单位：艘。"} },
   { id:"gnss_interference", color:"#56b6c2", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Navigation (global)",zh:"导航（全球）"},
     label:{en:"GPS interference",zh:"GPS 干扰"},
     source:{en:"GPSJam (ADS-B Exchange)",zh:"GPSJam（基于 ADS-B Exchange）"},
-    explain:{
-      en:"Aviation and military authorities guard usable, jam-free GPS as a public good the whole air-traffic and timing system leans on. A rise in the share of aircraft reporting bad GPS leaks deliberate jamming or spoofing — electronic warfare, war fronts, border conflict (the Black Sea, Baltic and Eastern Mediterranean have run hot for a while). One honest limit, and it is a large one: this is ONE WORLDWIDE RATIO, so interference confined to a single region is diluted by global traffic. In July 2026 the airspace over Iran and the Hormuz approaches was heavily jammed while this line read only 0.47% — re-scored against a full four-year baseline, that window actually peaks at z=+2.87, still short of the alarm bar. Read it as a global floor, not as a conflict detector.",
-      zh:"民航和军方把「可用、不被干扰的 GPS」当作整个空管与授时系统都依赖的公共品来守护。报告 GPS 异常的飞机占比上升，就泄露蓄意干扰或欺骗——电子战、战争前线、边境冲突（黑海、波罗的海、东地中海已热了一阵）。必须说明一个很大的局限：这是一个全球比值，所以局限在单一地区的干扰会被全球流量稀释。2026 年 7 月伊朗与霍尔木兹进近空域被大量干扰时，这根线只读到 0.47%——事后用四年基线重新评分，7 月窗口峰值达 z=+2.87，仍未过警报线。请把它读作全球底噪，而不是冲突探测器。"} },
+    measures:{
+      en:"Aircraft reporting bad GPS among tracked aircraft in all cells of the latest available GPSJam daily file; unit: percent.",
+      zh:"最新可得 GPSJam 日文件中，所有网格内报告 GPS 异常的飞机占被追踪飞机的比例；单位：百分比。"} },
   { id:"sofr_iorb_spread", color:"#c9a227", alarm:"up", tier:2,
     unit:{en:"bps",zh:"基点"},
     domain:{en:"Financial plumbing (US→global)",zh:"金融管道（美国→全球）"},
     label:{en:"SOFR − IORB spread",zh:"SOFR−IORB 利差"},
     source:{en:"FRED (keyless)",zh:"FRED（无需密钥）"},
-    explain:{
-      en:"The Fed pins overnight secured rates inside its administered corridor — the IORB ceiling, the reverse-repo floor, the standing repo backstop. When SOFR pushes above the IORB ceiling the Fed defends, bank reserves have grown scarce and the repo market is seizing — dollar-funding stress the guardrails can no longer absorb (the Sept-2019 repo spike forced the Fed back into balance-sheet expansion). Differencing against the defended ceiling isolates the guard deviation, not the rate level.",
-      zh:"美联储把隔夜有担保利率按在它设定的走廊里——IORB 上限、逆回购下限、常备回购后盾。当 SOFR 顶破美联储死守的 IORB 上限，说明银行准备金变稀缺、回购市场在卡死——这是护栏再也吸收不住的美元融资压力（2019 年 9 月的回购飙升逼得美联储重新扩表）。用它减去被守护的上限，隔离出的正是守护偏离，而不是利率水平本身。"} },
+    measures:{
+      en:"SOFR minus IORB on the latest date both FRED series report, recorded on business days; unit: basis points (bps).",
+      zh:"FRED 的 SOFR 与 IORB 两个序列在同一最新报告日的差值，按交易日记录；单位：基点（bps）。"} },
   { id:"em_corp_oas", color:"#b5651d", alarm:"up", tier:2,
     unit:{en:"pp",zh:"个百分点"},
     domain:{en:"EM financial (global)",zh:"新兴市场金融（全球）"},
     label:{en:"EM corporate credit spread",zh:"新兴市场企业债利差"},
     source:{en:"FRED — ICE BofA EM corp OAS",zh:"FRED — ICE BofA 新兴市场企业债 OAS"},
-    explain:{
-      en:"Emerging-market sovereigns defend access to dollar funding — reserves, IMF lines, rate hikes to keep capital home. A spike in the EM corporate option-adjusted spread leaks a systemic loss of dollar access across the developing world: capital flight and dollar shortage the local guards cannot offset. It watches a different population of borrowers than the US high-yield line, but measured co-movement says the two do not move independently: |max corr| = +0.80 against the US high-yield spread (credit_spread, n=789) — em_corp_oas rides the same global credit factor, not an orthogonal domain. It stays tier-2 for breadth and confirmation, never a candidate for tier-1 promotion: a second line from that factor there would break the headline count's independence assumption.",
-      zh:"新兴市场主权国家死守美元融资的通道——外汇储备、IMF 额度、加息留住资本。新兴市场企业债 OAS 飙升，就泄露整个发展中世界系统性地失去美元通道：本地守护力抵不住的资本外逃与美元荒。它盯的是与美国高收益线不同的一批借款人，但实测的联动说明二者并非独立异动：与美国高收益利差（credit_spread，n=789）的 |最大相关系数| 达 +0.80——em_corp_oas 随的是同一个全球信用因子，而不是一个正交的领域。它留在二级：用于广度与确认，绝不是晋升一级的候选——同一信用因子的第二条线晋升一级，会破坏头条计数的独立性假设。"} },
+    measures:{
+      en:"ICE BofA Emerging Markets Corporate option-adjusted spread for emerging-market corporate bonds, latest available business date; unit: percentage points (pp).",
+      zh:"新兴市场企业债的 ICE BofA Emerging Markets Corporate 期权调整利差，取最新可得交易日；单位：百分点（pp）。"} },
   { id:"port_throughput", color:"#cd853f", alarm:"down", tier:2,
     unit:{en:"port calls",zh:"靠港次数"},
     domain:{en:"Trade (global)",zh:"贸易（全球）"},
     label:{en:"Global port calls",zh:"全球港口靠港量"},
     source:{en:"IMF PortWatch — 2065 ports",zh:"IMF PortWatch — 2065 个港口"},
-    explain:{
-      en:"Ports, shippers, and the economies behind them keep cargo moving — idle berths and unworked cargo burn money. A sustained drop in global port calls leaks a strike, lockdown, blockade, war damage, sanctions, or a demand collapse. This is the PORT side of PortWatch (2065 ports from satellite AIS), distinct from the chokepoint line; watch a single strategically-sensitive port for a sudden silence, or the global total for a broad trade shock.",
-      zh:"港口、船东和背后的经济体让货物持续流动——空泊位和压港货物都在烧钱。全球靠港量持续下滑，就泄露罢工、封锁、战争破坏、制裁或需求崩塌。这是 PortWatch 的港口侧（卫星 AIS 覆盖 2065 个港口），与咽喉点线互补；可盯单个战略敏感港口的突然沉默，或看全球总量的大面积贸易冲击。"} },
+    measures:{
+      en:"Daily PortWatch port calls across 2,065 ports worldwide, for the latest available observation; unit: port calls.",
+      zh:"PortWatch 覆盖全球 2,065 个港口的每日靠港次数，取最新可得观测；单位：次。"} },
   { id:"net_outages", color:"#8fbf6f", alarm:"up", tier:2,
     watches:{en:"country-level internet reachability, worldwide",zh:"全球范围的国家级互联网可达性"},
     unit:{en:"countries",zh:"国"},
     domain:{en:"Communications (global)",zh:"通信（全球）"},
     label:{en:"Countries with internet outages",zh:"断网国家数"},
     source:{en:"IODA (Georgia Tech) — ping-slash24 only",zh:"IODA（佐治亚理工）— 仅 ping-slash24 源"},
-    explain:{
-      en:"ISPs and states defend a country's internet connectivity as critical infrastructure. When a country goes dark, a larger force overwhelmed that — a censorship shutdown, a war, a major cable cut, a grid failure. Counting how many countries are in outage at once turns local incidents into a global breadth-of-disruption signal. Outages persist hours–days, so daily sampling is honest.",
-      zh:"运营商和政府把一国的互联网连通性当作关键基础设施来守护。当一个国家陷入黑暗，就是有更大的力量压垮了它——审查式断网、战争、大型海缆断裂、电网崩溃。数有多少国家同时断网，就把局部事件变成了全球的「失序广度」信号。断网持续数小时到数天，所以日频采样是诚实的。"} },
+    measures:{
+      en:"Countries with an IODA ping-slash24 outage detection in the completed 24-hour window ending at 22:00 UTC, recorded once daily with about a one-day settle lag; unit: countries.",
+      zh:"IODA ping-slash24 在截至 22:00 UTC 的完整 24 小时观测窗内检出的国家数，每日记录一次，结算约滞后一天；单位：个国家。"} },
   { id:"net_bgp_withdrawal", color:"#4fb0a5", alarm:"down", tier:2,
     watches:{en:"country-level BGP route announcement, worldwide",zh:"全球范围的国家级 BGP 路由通告"},
     unit:{en:"fraction",zh:"比值"},
     domain:{en:"Communications (global) — route withdrawal",zh:"通信（全球）— 路由撤回"},
     label:{en:"Worst-of country BGP route visibility",zh:"最差国家 BGP 路由可见度"},
     source:{en:"IODA (Georgia Tech) — passive BGP (RIPE RIS + RouteViews)",zh:"IODA（佐治亚理工）— 被动 BGP（RIPE RIS + RouteViews）"},
-    explain:{
-      en:"States, ISPs and transit providers defend a country's place in the global routing table — a network fights to keep its prefixes announced. When a country's announced routes fall away, a larger force withdrew them: a censorship shutdown pulling prefixes, a war or cable cut severing the backbone, a transit failure. For each of 153 large countries the day's minimum announced route count is divided by that country's own 28-day baseline, and the worst (deepest) fraction across the list is read — a drop is the alarm. Passive BGP, not the active probing that demoted net_outages, so it carries none of that line's synchronized common-mode. THE HONEST LIMIT: BGP measures route ANNOUNCEMENT, not reachability — it detects route WITHDRAWAL (shutdowns, cable cuts, transit failures) but MISSES access-layer blackouts where routes stay announced. Through Gaza's 2023-10 total blackout, Palestine's BGP visibility never fell below ~96% — the routes kept being announced into the dark. Read it as a route-withdrawal detector, not a reachability gauge.",
-      zh:"政府、运营商和中转商守护一国在全球路由表里的位置——网络拼命让自己的前缀保持通告。当一个国家的已通告路由消失，就是有更大的力量把它们撤回了：审查式断网抽走前缀、战争或海缆断裂切断骨干、中转失效。对 153 个大国，取当天最低的已通告路由数，除以该国自己 28 天的基线，再取全表最差（最深）的那个比值——骤降就是警报。这是被动 BGP，而非拖垮 net_outages 的主动探测，因此不带那条线的同步共模。诚实的局限：BGP 测的是路由「通告」，不是可达性——它探测路由撤回（断网、海缆断裂、中转失效），却漏掉路由仍在通告、但接入层已黑的封锁。2023 年 10 月加沙全境断网期间，巴勒斯坦的 BGP 可见度从未跌破约 96%——路由一直在向黑暗中通告。请把它读作路由撤回探测器，而不是可达性表。"} },
+    measures:{
+      en:"For each of 153 countries, the day's minimum visible-/24 route count divided by that country's preceding 28-day rolling-median baseline; the lowest fraction is recorded daily for a completed UTC day; unit: fraction.",
+      zh:"对 153 个国家，分别以当天最低可见 /24 路由数除以该国此前 28 天滚动中位基线；每日记录完整 UTC 日中最低的比值；单位：比值。"} },
   { id:"euro_hy_spread", color:"#a3be8c", alarm:"up", tier:2,
     unit:{en:"pp",zh:"个百分点"},
     domain:{en:"European financial",zh:"欧洲金融"},
     label:{en:"Euro HY credit spread (OAS)",zh:"欧元高收益债信用利差 (OAS)"},
     source:{en:"FRED — ICE BofA Euro HY OAS",zh:"FRED — ICE BofA 欧元高收益债 OAS"},
-    explain:{
-      en:"The euro area's banks, the ECB, and the yield-hungry keep European high-yield spreads compressed, exactly as their US counterparts do — and measured co-movement says that resemblance is not coincidence: |max corr| = +0.74 against the US high-yield spread (credit_spread, n=783) and +0.86 against the EM corporate line (em_corp_oas). US HY, EM corp, and Euro HY move as one global credit factor at daily z, not three independent guards. It stays tier-2 for breadth, never a tier-1 candidate — a second line from the same credit factor would be redundant with the slot credit_spread already holds. The three firing together is still a real signal: that three-way resonance has marked every real credit episode in the seeded record — 2023-10, 2024-08, 2025-04, 2026-03.",
-      zh:"欧元区的银行、欧央行和追逐收益的资金把欧洲高收益利差压得很低，机制和美国同行一样——实测的联动说明这种相似并非巧合：与美国高收益利差（credit_spread，n=783）的 |最大相关系数| 为 +0.74，与新兴市场企业债线（em_corp_oas）为 +0.86。美国高收益、新兴市场企业债、欧元高收益三者在日频 z 上同属一个全球信用因子，而不是三个独立的守护力。它留在二级：用于广度，绝不是一级候选——同一信用因子的第二条线，会与 credit_spread 已占据的席位重复。三线同时开火依然是真实信号：这种三线共振在播种的历史里标出了每一次真实的信用事件——2023-10、2024-08、2025-04、2026-03。"} },
+    measures:{
+      en:"ICE BofA Euro High Yield option-adjusted spread for European high-yield bonds, latest available business date; unit: percentage points (pp).",
+      zh:"欧洲高收益债的 ICE BofA Euro High Yield 期权调整利差，取最新可得交易日；单位：百分点（pp）。"} },
   { id:"fx_parallel_premium", color:"#d08770", alarm:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Capital controls (Argentina)",zh:"资本管制（阿根廷）"},
     label:{en:"Argentina blue-vs-official premium",zh:"阿根廷平行汇率溢价"},
     source:{en:"dolarapi — blue vs oficial",zh:"dolarapi — 黑市对官方汇率"},
-    explain:{
-      en:"Argentina's central bank defends an official peso rate with reserves and capital controls; the street ('blue') rate is what people actually pay for dollars. The premium between them is the price of getting money OUT — the same mechanism as the Korea premium, but for a chronically hard-controlled currency where it runs in the tens of percent. A blowout leaks accelerating flight or a devaluation the official rate has not admitted yet.",
-      zh:"阿根廷央行用储备和资本管制守一个官方比索汇率；街头「蓝价」才是人们实际换美元付的价。两者之间的溢价，就是「把钱弄出去」的价格——机制和韩国溢价相同，但这是一个长期硬管制的货币，溢价动辄几十个百分点。溢价崩出去，泄露的是加速外逃、或官方汇率还不肯承认的贬值。"} },
+    measures:{
+      en:"Once-daily Argentine blue-market sell rate divided by the official sell rate, minus one; weekend quote dates map to the Friday session; unit: percent.",
+      zh:"每日一次记录阿根廷平行市场卖出价除以官方卖出价再减一；周末报价日期归回周五交易日；单位：百分比。"} },
   { id:"hkma_aggr_balance", color:"#5e81ac", alarm:"down", tier:2,
     unit:{en:"HK$m",zh:"百万港元"},
     domain:{en:"Currency peg (Hong Kong)",zh:"联系汇率（香港）"},
     label:{en:"HKMA aggregate balance",zh:"香港金管局总结余"},
     source:{en:"HKMA API — interbank aggregate balance",zh:"香港金管局 API — 银行体系总结余"},
-    explain:{
-      en:"The HKMA defends the HKD peg by buying and selling dollars at the band's edges, and every defense drains or fills one visible number: the interbank aggregate balance. A draining balance IS the peg being defended — capital leaving the Hong Kong dollar at scale. The guard is explicit, the leak is a single official daily figure, and the 2022-23 defense drained it from HK$300bn+ to under HK$50bn in plain sight.",
-      zh:"香港金管局在联系汇率区间的边缘买卖美元来守 7.75–7.85 的挂钩，而每一次防守都会抽干或注满一个公开数字：银行体系总结余。总结余被抽干，就是联系汇率正在被防守——资本在成规模地离开港元。守护力是明写的，泄露口是每天一个官方数字，2022–23 年那轮防守把它从 3000 多亿抽到不足 500 亿，全程可见。"} },
+    measures:{
+      en:"Hong Kong banking system closing aggregate balance from the HKMA daily interbank-liquidity figures, published about one business day later; unit: HK$ millions.",
+      zh:"香港金管局每日银行间流动性数据中的银行体系收盘总结余，约滞后一个交易日发布；单位：百万港元。"} },
   { id:"polar_temp", color:"#88c0d0", alarm:"up", tier:2,
     unit:{en:"°C",zh:"°C"},
     domain:{en:"Planetary context",zh:"行星背景"},
     label:{en:"Arctic 80N temp anomaly",zh:"北极 80N 温度距平"},
     source:{en:"DMI +80N vs 1958-2002 normal, seeded to 2019",zh:"DMI +80N 对 1958-2002 常值，播种至 2019"},
-    explain:{
-      en:"Not a tension indicator — nobody defends the Arctic's temperature at a set point, so this can never be counted. It is the slowest context line: today's mean temperature north of 80N against the fixed 1958-2002 normal, a direct LEVEL reading of how far the planet's coldest baseline has drifted. Seeded with seven years of the same DMI product; in that record the anomaly trembles warm 384 times and cold 4 — that asymmetry is the warming itself, visible without a model.",
-      zh:"不是张力指标——没有谁把北极温度守在某个设定值上，所以它永不计数。它是最慢的背景线：80N 以北今日均温对固定的 1958-2002 气候常值，直接读出行星最冷基线漂了多远。用同一 DMI 产品播种了七年历史；这段记录里距平向暖颤动 384 次、向冷只有 4 次——这个不对称本身就是变暖，不需要模型也看得见。"} },
+    measures:{
+      en:"DMI daily mean air temperature north of 80°N minus the 1958–2002 day-of-year normal; unit: degrees Celsius.",
+      zh:"DMI 每日记录的北纬 80° 以北平均气温，减去 1958–2002 年同日序常值；单位：摄氏度。"} },
   { id:"space_weather", color:"#ebcb8b", alarm:"up", tier:2,
     unit:{en:"Kp",zh:"Kp"},
     domain:{en:"Space weather (confounder)",zh:"太空天气（混淆项）"},
     label:{en:"Geomagnetic storm — daily max Kp",zh:"地磁暴 —— 当日最大 Kp"},
     source:{en:"NOAA SWPC live + GFZ Potsdam archive, keyless, seeded to 2022",zh:"NOAA SWPC 实时 + GFZ Potsdam 档案，无需密钥，播种至 2022"},
-    explain:{
-      en:"Not a tension indicator — the Sun defends no equilibrium a hidden hand overpowers; it IS the force. So this can never be counted. Its job is to subtract a confounder from two lines that CAN be: GNSS interference and grid frequency. A severe geomagnetic storm degrades satellite navigation worldwide and induces currents that stress power grids — the same signatures a human hand (jamming, a grid attack) would leave. Read beside this line the ambiguity resolves: those lines trembling while Kp is calm is a real terrestrial disturbance; trembling together with a storm is just the Sun. This reads the day's maximum planetary Kp (the global geomagnetic-disturbance index, 0–9), scored against the last ~90 days. Its seeded record fires on the real storms — the May-2024 Gannon superstorm (Kp 9, the strongest in two decades) trembles on both peak days, as do the October-2024 and March-2024 storms.",
-      zh:"不是张力指标——太阳不守护任何会被隐藏之手压过的均衡，它本身就是那股力量，所以永不计数。它的职责是替另外两条能计数的线扣掉一个混淆项：GNSS 干扰与电网频率。一场强地磁暴会在全球范围内劣化卫星导航、并感应出冲击电网的电流——这与人为之手（干扰、攻击电网）留下的痕迹如出一辙。把这条线并排来看，歧义就消解了：那两条线颤动而 Kp 平静，是真实的地面扰动；与地磁暴一同颤动，那只是太阳。它读的是当天最大的行星 Kp 指数（全球地磁扰动指数，0–9），对最近约 90 天计分。种子记录会在真实的暴发上触发——2024 年 5 月的 Gannon 超级地磁暴（Kp 9，二十年来最强）在两个峰值日都颤动，2024 年 10 月与 2024 年 3 月的风暴亦然。"} },
+    measures:{
+      en:"Maximum planetary Kp across the 3-hour readings of the latest complete UTC day; unit: Kp index points, reported in thirds.",
+      zh:"最新完整 UTC 日内每 3 小时 Kp 观测值的最大值；单位：Kp 指数点，按三分之一刻度报告。"} },
   { id:"tga_days_cash", color:"#bf616a", alarm:"down", tier:2,
     unit:{en:"days",zh:"天"},
     domain:{en:"Fiscal plumbing (US)",zh:"财政管道（美国）"},
     label:{en:"US Treasury cash buffer",zh:"美国财政部现金缓冲"},
     source:{en:"Treasury Fiscal Data — Daily Treasury Statement",zh:"美国财政部 Fiscal Data — 每日财政报表"},
-    explain:{
-      en:"The Treasury keeps an operating cash balance at the Fed and defends it on purpose — it has said publicly it aims to hold about a week of outflows, and the data agrees: measured across Treasury's full published history when this line was built, the median is 5.3 business days. When the buffer falls anyway, Treasury has lost the ability to refill it: a debt limit binding, an auction that did not clear, a funding market that will not take the paper. At the June-2023 debt-limit X-date the same measure read 0.21 days. It is measured as the closing balance divided by the recent average daily withdrawal, because a cash pile is only large or small relative to what is being spent — when outflows spike, the buffer really is shorter, and this line falls without the balance moving at all.",
-      zh:"财政部在美联储存有一笔运营现金，并且是有意守着它的——官方口径是保持约「一周的流出量」，数据也确实如此：建线时对财政部全部已公布历史的测量显示，中位数是 5.3 个工作日。当缓冲仍然下滑，说明财政部失去了补充它的能力：债务上限卡住、国债拍卖没卖掉、融资市场不肯接货。2023 年 6 月债务上限逼近 X 日时，同一口径的读数触及 0.21 天。它用「期末余额 ÷ 近期日均支出」来衡量，因为一笔现金是多是少，只相对于花钱的速度才有意义——当支出激增，缓冲是真的变短了，这条线会在余额纹丝不动的情况下下跌。"} },
+    measures:{
+      en:"Daily closing US Treasury General Account balance divided by mean daily withdrawals over the preceding 20 business days; unit: days of withdrawals.",
+      zh:"每日美国财政部一般账户收盘余额除以前 20 个交易日的日均提款额；单位：可支应提款的天数。"} },
   { id:"stablecoin_peg", color:"#8fbcbb", alarm:"up", tier:2,
     unit:{en:"bp",zh:"个基点"},
     domain:{en:"Crypto dollar peg (global)",zh:"加密美元锚（全球）"},
     label:{en:"Stablecoin depeg — worst of USDC/USDT",zh:"稳定币脱锚 —— USDC/USDT 取其重"},
     source:{en:"Bitstamp — settled daily close, keyless",zh:"Bitstamp —— 结算日收盘价，无需密钥"},
-    explain:{
-      en:"A fiat stablecoin issuer promises to redeem at $1 and defends that peg with reserves and arbitrage; a break leaks reserve stress or a redemption panic. This reads the day's deviation from $1, in basis points, for whichever of the two largest stablecoins (USDC, USDT) is furthest off — from the settled daily close, so a sustained depeg counts and a flash-wick that recovers by day's end does not. In calm a stablecoin sits a stable ~10bp off par, which a rolling score mistakes for signal — so this line is scored against the peg itself: a declared anchor of $1 with a 25bp materiality, alarm at 75bp. Ordinary venue fuzz reads near zero; only a real depeg fires. Its record holds the real ones: USDC's close fell to $0.9685 over the March-2023 SVB weekend (315bp — z 12.6 under the declared scale), with the FTX and 2022 UST episodes visible as sub-alarm bumps.",
-      zh:"法币稳定币的发行方承诺按 $1 赎回，并用储备与套利守住这个锚；一旦破锚，就漏出储备承压或赎回挤兑。这条线读的是当天偏离 $1 的幅度（基点），取 USDC、USDT 两大稳定币里偏得最远的那个——用结算日收盘价，所以持续脱锚算数、当天就回锚的瞬时插针不算。平静时稳定币会稳定地偏锚约 10 个基点，滚动计分会把这当成信号——所以这条线直接对锚本身计分：声明锚点 $1、重要性 25 个基点，报警线在 75 个基点。日常场内噪声读数近零，只有真脱锚才会触发。记录里有真事件：2023 年 3 月 SVB 那个周末 USDC 收盘跌到 $0.9685（315 基点——按声明尺度 z 为 12.6），FTX 与 2022 年 UST 两次则是报警线之下的可见隆起。"} },
+    measures:{
+      en:"The larger absolute distance from $1 among the settled daily USDC/USD and USDT/USD closes; unit: basis points (bp).",
+      zh:"USDC/USD 与 USDT/USD 已结算日收盘价中，偏离 $1 较大的绝对距离；单位：基点（bp）。"} },
   { id:"fed_srf_takeup", color:"#86a5d9", alarm:"up", tier:1,
     watches:{en:"daily Fed Standing Repo Facility take-up",zh:"美联储常备回购便利每日动用量"},
     unit:{en:"$m",zh:"百万美元"},
     domain:{en:"Financial plumbing (US→global)",zh:"金融管道（美国→全球）"},
     label:{en:"Fed SRF take-up",zh:"美联储常备回购动用量"},
     source:{en:"NY Fed markets API — repo operation results, keyless",zh:"纽约联储 markets API —— 回购操作结果，无需密钥"},
-    explain:{
-      en:"The Fed's Standing Repo Facility is a ceiling defended twice every business day: unlimited cash against good collateral at a fixed rate, so that no one ever has to pay more. Nobody borrows from a backstop in calm — 61% of days since 2021 read exactly $0, and that zero is the guard holding. Take-up is the leak itself: dealers borrowing from the ceiling means reserves or collateral have turned scarce (the facility exists because September 2019 proved what happens without one). Scored against a declared anchor of $0 with a $10bn materiality, so the alarm sits at $30bn — above the routine month-end friction band ($20–26bn reads as a visible bump, not a tremble). Its seeded record fires on exactly three days, all genuine: year-end 2025 ($74.6bn), the October-2025 month-end ($50.4bn), and a mid-month February-2026 spike no calendar explains.",
-      zh:"美联储的常备回购便利（SRF）是每个交易日守护两次的天花板：按固定利率、以合格抵押品无限量供给现金，让任何人都不必付更高的价。平静时没人向后盾借钱——2021 年以来 61% 的日子读数恰好是 $0，这个零本身就是守护力在起作用。动用量就是泄露口：交易商向天花板借钱，说明储备或抵押品变得稀缺（这个设施的存在，正因为 2019 年 9 月证明了没有它会发生什么）。它按声明锚点 $0、重要性 $100 亿计分，报警线在 $300 亿——高于常规的月末摩擦带（$200–260 亿只读作可见的隆起，不算颤抖）。种子记录里恰好三天触发，全是真事件：2025 年年末（$746 亿）、2025 年 10 月末（$504 亿），以及一次没有日历能解释的 2026 年 2 月月中尖峰。"} },
+    measures:{
+      en:"Total amount accepted across the day's completed Fed Standing Repo Facility operations, latest completed operation date; unit: $ millions.",
+      zh:"美联储常备回购便利在最近一个完整操作日各次操作的接受总额；单位：百万美元。"} },
   { id:"control_daylength", color:"#4c566a", alarm:"up", tier:2,
     unit:{en:"s",zh:"秒"},
     domain:{en:"Control (no world in it)",zh:"对照（不含世界）"},
     label:{en:"Day length at Greenwich",zh:"格林尼治昼长"},
     source:{en:"sunrise-sunset.org — 51.4779N, 0.0E",zh:"sunrise-sunset.org — 51.4779N, 0.0E"},
-    explain:{
-      en:"The control line: the length of the day at Greenwich, a quantity set by orbital mechanics that no event on Earth can move. It exists to test the instrument, not the world — if this line ever trembles outside its predictable seasonal inflections, the pipeline is wrong, full stop. A canary with no world in it: any signal here is measurement error by definition.",
-      zh:"对照线：格林尼治的昼长，由轨道力学决定，地球上任何事件都动不了它。它测的不是世界，而是仪器本身——如果这根线在可预测的季节拐点之外颤动，那一定是管线错了，没有第二种解释。一只体内不含世界的金丝雀：这里出现任何信号，按定义都是测量误差。"} },
+    measures:{
+      en:"Daily day length at 51.4779°N, 0°E (Greenwich), for the explicit UTC observation date; unit: seconds.",
+      zh:"格林尼治 51.4779°N、0°E 位置在指定 UTC 观测日的昼长；单位：秒。"} },
 ];
 
 const T = {
@@ -464,7 +464,7 @@ const T = {
     feelBars:"trembling count (real)",
     alarmingWhen:dir=>"alarming when "+dir, dirUp:"up", dirDown:"down",
     last:(v,u,d)=>" · last: "+v+" "+u+" on "+d, noCollect:"no collection this day",
-    source:"Source", alarmTag:dir=>"alarming when "+dir,
+    source:"Source", measuresLabel:"Measures", alarmTag:dir=>"alarming when "+dir,
     resoTitle:"Resonance — the only number that matters",
     resoBody:"Each line is normalized on its own, then we count how many crossed the trembling threshold today (|z| > 3 for a line with a full 90-observation baseline; the bar is calibrated higher for younger lines so every line has the same false-alarm odds) IN THAT LINE'S OWN ALARMING DIRECTION. A line crossing the other way — a guard visibly reasserting itself, a closed strait reopening — is recorded as a benign shift and is not counted as disorder. A republished reading scores nothing: only the first occurrence of an observation ever enters a baseline. The lines are never multiplied into a single doom score. One line moving alone is usually a local event. Several independent instruments — airspace, finance, capital — trembling at once is what “the world is actually more disordered” looks like. Trembling is measured against each line's own recent baseline (~90 observations, capped at 180 days), so the count reads short-horizon shifts, not slow decades-long drift — a disorder that has already been running for weeks sits inside its own baseline and reads calm. The count is also bounded by where the instruments look: see the field of view under the strip.",
     footer:"tremor doesn't predict the end — nobody can. It only makes <b>now</b> readable: a seismograph, not a prophet, blind to instantaneous shocks and listening for the slow, systemic, trace-leaving kind of disorder. Data is collected daily by a GitHub Actions cron and committed back to the repo (<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>); this dashboard reads the CSVs directly — no backend.",
@@ -526,7 +526,7 @@ const T = {
     feelBars:"颤抖根数（真实）",
     alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下跌",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
-    source:"数据来源", alarmTag:dir=>dir+"时为异常",
+    source:"数据来源", measuresLabel:"测量内容", alarmTag:dir=>dir+"时为异常",
     resoTitle:"共振——唯一重要的数字",
     resoBody:"每根线各自归一化，然后我们数今天有几根在自己的报警方向上越过了颤抖阈值（基线满 90 个观测时为 |z| > 3；更年轻的线阈值按历史长度校准得更高，让每根线的误报几率相同）。反方向越过——守护力重新压住场面，比如封锁的海峡重开——记为良性异动，不算失序。重复发布的读数不计分：每个观测只有第一次出现才进入基线。这些线绝不相乘成一个末日总分。单独一根线动，通常只是局部事件。几台互相独立的仪器——空域、金融、资本——同时颤抖，才是「世界真的更乱了」的样子。颤抖是相对每根线自己最近的基线（约 90 个观测、上限 180 天）测的，所以这个数读的是短期突变，不是数十年的缓慢漂移——一场已经持续数周的失序，会落在自己的基线之内、读作平静。这个数还受限于仪器看向哪里：见仪器条下方的视野范围。",
     footer:"tremor 不预言末日——没人能。它只让<b>此刻</b>变得可读：是地震仪，不是先知；对瞬时灾难无能为力，只倾听那种缓慢的、系统性的、会留下痕迹的失序。数据由 GitHub Actions 每日定时采集并提交回仓库（<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>），仪表盘直接读取 CSV——无需后端。",
@@ -598,7 +598,7 @@ function lineModal(L,lang){
   return `<div class="mdomain">${L.domain[lang]}</div>
     <h3>${L.label[lang]}</h3>
     <div class="tags"><span class="tag2">${T[lang].alarmTag(dir)}</span><span class="tag2">${T[lang].source}: ${L.source[lang]}</span></div>
-    <p>${L.explain[lang]}</p>${annoHtml}`;
+    <h4 class="annoh">${T[lang].measuresLabel}</h4><p>${L.measures[lang]}</p>${annoHtml}`;
 }
 function resoModal(lang){ return `<h3>${T[lang].resoTitle}</h3><p>${T[lang].resoBody}</p>`; }
 function levelModal(lang){ return `<h3>${T[lang].levelTitle}</h3><p>${T[lang].levelBody}</p>`; }
@@ -1037,7 +1037,7 @@ function openTier2Modal(L,lang){
   openModal(`<div class="mdomain">${L.domain[lang]}</div>
     <h3>${L.label[lang]}</h3>
     <div class="tags"><span class="tag2">${T[lang].notCounted}</span><span class="tag2">${T[lang].alarmTag(dir)}</span><span class="tag2">${T[lang].source}: ${L.source[lang]}</span></div>
-    <p>${L.explain[lang]}</p>
+    <h4 class="annoh">${T[lang].measuresLabel}</h4><p>${L.measures[lang]}</p>
     ${cur?`<p class="mnow"><b>${fmt(cur.raw_value)}</b> ${L.unit[lang]} <span class="days">(${cur.date}${cur.z_score?` · z=${cur.z_score}`:""})</span></p>`:""}
     <canvas class="mchart" height="110"></canvas>
     ${annoHtml}`);

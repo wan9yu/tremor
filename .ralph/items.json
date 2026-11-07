@@ -1,14 +1,43 @@
 {
   "version": 1,
   "runtime_contract": {
-    "source_docs": [],
+    "source_docs": [
+      "internal/plans/2026-11-07-public-surface-design.md",
+      "internal/plans/2026-11-07-three-layers-plan.md"
+    ],
     "verification_gates": [
-      { "name": "test gate tier", "command": "python -m pytest tests/ -q" },
-      { "name": "lint tier", "command": "python -m unittest discover tests -p \"lint_*.py\"" },
-      { "name": "forbidden literal lint", "command": "python tests/lint_no_forbidden_literal.py" },
-      { "name": "replay point-in-time check", "command": "python tools/replay.py --check" },
-      { "name": "pending tripwires", "command": "python tools/pending.py --check" },
-      { "name": "dashboard render smoke", "command": "node tests/render_smoke.js" }
+      {
+        "name": "gate tier",
+        "command": "python -m pytest tests/ -q"
+      },
+      {
+        "name": "lint tier",
+        "command": "python -m unittest discover tests -p \"lint_*.py\""
+      },
+      {
+        "name": "forbidden literal",
+        "command": "python tests/lint_no_forbidden_literal.py"
+      },
+      {
+        "name": "audit tier",
+        "command": "python -m unittest discover tests -p \"audit_*.py\""
+      },
+      {
+        "name": "replay integrity",
+        "command": "python tools/replay.py --check"
+      },
+      {
+        "name": "pending tripwires",
+        "command": "python tools/pending.py --check"
+      },
+      {
+        "name": "render smoke",
+        "command": "node tests/render_smoke.js"
+      },
+      {
+        "name": "annotations mirror",
+        "command": "cmp data/annotations.csv docs/data/annotations.csv"
+      }
     ],
     "require_progress_append": true,
     "require_one_item_per_iteration": true,
@@ -17,127 +46,107 @@
   "items": [
     {
       "category": "functional",
-      "description": "The pending-reviews block carries no untagged promise, no overdue tripwire, and no reference to a nonexistent item. python tools/pending.py --check exits 0.",
+      "description": "The line detail shows a non-causal definition instead of the causal explain text, for all 24 lines.",
       "steps": [
-        "Run python tools/pending.py --check and python tools/pending.py; confirm the only overdue entry is 'level-layer -> flights' and record the current bullet list.",
-        "In radar.md delete the four closed bullets, each closed by the block's own rule: the flights sample-hour SHIPPED bullet, the cnh_cny maturity refresh bullet, the net_outages CLOSED bullet, and the cnh_cny reachability reference-regime bullet whose trailing line carries the phantom 'n>=250' reference.",
-        "Add the word standing to the calendar de-cycling bullet so it is marked as a standing rule.",
-        "Retag the level-layer -> flights bullet with [opened R23.1 · owner R40 · fires: date >= 2027-08-02] and retag the flights sample-hour bullet with [opened R26 · owner R40 · fires: rows_since(flights, 2026-09-02) >= 90]; retag the SOFR deferral sentence with [opened R29 · owner R40 · fires: date >= 2026-11-30].",
-        "Add one assertion to tests/lint_pending.py that every bullet paragraph in the block ends in one of three legal forms: a parseable tag with a fires predicate, the word standing, or a round-referenced closure marker.",
-        "Regenerate radar-metrics.md with python tools/episodes.py --markdown > radar-metrics.md followed by python tools/pending.py --markdown >> radar-metrics.md, then run python -m unittest discover tests -p \"audit_*.py\" and confirm the registry freshness test is the only remaining audit failure.",
-        "Run python tools/pending.py --check and confirm exit 0."
+        "Add a render_smoke assertion that lineModal output for flights and credit_spread contains none of the old causal explain wording (sample two EN sentences and one ZH sentence from the current explain fields); run node tests/render_smoke.js and record the failure.",
+        "Replace LINES[].explain with LINES[].measures for all 24 entries in docs/index.html, using the EN and ZH definitions from the design deck's measures table (quantity, population, sampling, unit, no causal connectives).",
+        "Update lineModal and every other reader of .explain so the detail renders measures, source, and the recorded comparison direction, and nothing else explanatory.",
+        "Add a lint assertion in tests/lint_public_surface.py that no measures string in docs/index.html contains a causal connective from a fixed word list (because, causes, caused by, means that, 说明, 意味着, 导致, 正是因为).",
+        "Run every verification gate and record the output."
       ],
       "passes": true,
-      "regression_notes": "Iteration 1. python tools/pending.py --check exits 0 (6 tagged items, 0 overdue); python -m unittest discover tests -p \"audit_*.py\" leaves exactly one failure (audit_record control-line astronomy, owned by item 7 — the radar-metrics freshness failure is cleared by the regeneration); gate tier 318 passed; lint tier 56 OK; lint_no_forbidden_literal OK; replay --check 0 divergence; render_smoke OK."
-    },
-    {
-      "category": "bug",
-      "description": "tools/drift_layer.py stops crashing on a malformed obs_date and reports how many observations it skipped, so the nightly derive step completes again.",
-      "steps": [
-        "Reproduce the failure: run python tools/drift_layer.py --report and record the ValueError about an invalid isoformat string.",
-        "In tools/drift_layer.py validate dates in series_for, not in walk: an empty obs_date keeps the existing fallback to the row date, a non-empty obs_date that fails a strict YYYY-MM-DD predicate drops that observation, and one shared predicate is used instead of date.fromisoformat because that function accepts basic-format dates.",
-        "Add the skip count to the tool's existing printed summary line.",
-        "Add a gate-tier test that feeds synthetic row dictionaries through the pure validation helper, using support.stub_attr for stubbing and no reads of data/.",
-        "Re-run python tools/drift_layer.py --report and python tools/drift_layer.py against the committed record and confirm exit 0."
-      ],
-      "passes": true,
-      "regression_notes": "Iteration 2. Pre-fix reproduction: python tools/drift_layer.py --report raised ValueError: Invalid isoformat string: '    <link href=...' at walk's ords parse (drift_layer.py:78). Guard added as is_strict_date (strict YYYY-MM-DD shape plus a real calendar check; date.fromisoformat alone is not the predicate because it accepts 20261022) and series_from_rows (empty obs_date keeps the row date; a non-empty bad obs_date drops the observation and is counted). series_for delegates; compute returns the skip tally; the summary line now prints '5 observation(s) dropped (unusable obs_date)' against the committed record. Three gate tests added to tests/test_level.py (red against the pre-fix module: 3 failed with AttributeError on is_strict_date/series_from_rows; green after). Both tool invocations exit 0 and data/drifts.csv re-derives byte-identically. Gates: pytest 321 passed; lint 56 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK. Audit tier: 23 tests, 1 failure, the pre-existing control-line astronomy assertion owned by item 7 — no new failure."
-    },
-    {
-      "category": "bug",
-      "description": "core/fred.py refuses a response whose first column is not a date, so a keyless FRED error page can no longer become a reading, and the two causes in sofr_iorb_spread's unavailable note are distinguished.",
-      "steps": [
-        "In core/fred.py series() require the first comma-separated field of each row to match a strict YYYY-MM-DD predicate; skip rows that fail; return None when no row survives, which the existing callers already handle as unavailable.",
-        "Add a gate-tier test that feeds the HTML fragment recorded in the incident evidence and asserts the result is None, with no network access.",
-        "In fetchers/sofr_iorb.py separate the message for one leg unavailable from the message for no shared reported date.",
-        "Run the test gate tier."
-      ],
-      "passes": true,
-      "regression_notes": "Iteration 3. Pre-fix red evidence: with core/fred.py and fetchers/sofr_iorb.py restored to HEAD, pytest on tests/test_fred_shape.py + tests/test_seedlib.py gave 5 failed, 17 passed (the HTML page parsed to ('    <link href=...Open+Sans:300', 400.0), so series() returned a reading and reading() returned raw_value 400.0 on a non-date; the sofr note said 'share no reported date' for a single dark leg and for two dark legs). Green after. series() drops any row whose first field fails a strict YYYY-MM-DD predicate ([0-9]{4}-[0-9]{2}-[0-9]{2} plus a real calendar check, and not date.fromisoformat because 3.11+ accepts 20261022) and returns None when no row survives, which every caller already reads as unavailable; field count is not asserted, per the source-shape plan. common_pair() returns (date, a, b, missing) and latest_common() delegates, keeping its 3-tuple contract. sofr_iorb emits 'FRED <leg> unavailable' for a dark leg and 'FRED SOFR/IORB share no reported date' only for a shared-date gap. Gates: pytest 329 passed; lint 56 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK. Audit tier: 23 tests, 1 failure, the pre-existing control-line astronomy assertion owned by item 7 — no new failure."
-    },
-    {
-      "category": "bug",
-      "description": "collect.py rejects an unusable observation date at collection time, so a malformed or future-dated obs_date becomes a stated dark row instead of a scored reading.",
-      "steps": [
-        "In collect.py add a check beside the existing coerce_finite and apply_sample_guard steps: a non-empty obs_date must match a strict YYYY-MM-DD predicate and must not be later than the row's own date; on violation clear raw_value and obs_date and prefix the note with 'no reading: source returned an unusable observation date - not scored :: '.",
-        "Amend the module docstring sentence that currently declares obs_date shape validation out of scope for this contract.",
-        "Add gate-tier tests for a malformed obs_date and for an obs_date later than the row date, asserting a dark row with the stated reason.",
-        "Run the test gate tier."
-      ],
-      "passes": true,
-      "regression_notes": "Iteration 4. Pre-fix red evidence: with collect.py restored to HEAD, python -m pytest tests/test_collect_loop.py -k \"UnusableObsDate or ObsDateProblem\" gave 16 failed, 3 passed (AttributeError on obs_date_problem, and a malformed obs_date scored as a reading); green after. collect.py gained is_strict_date (strict [0-9]{4}-[0-9]{2}-[0-9]{2} shape plus a real calendar check; not date.fromisoformat, which accepts 20261022) and obs_date_problem(obs_date, date); collect() darkens a row whose non-empty obs_date fails either rule with the note prefix 'no reading: source returned an unusable observation date - not scored :: '; an empty obs_date is unchanged (snapshot lines keep the collection date). The module docstring's out-of-scope sentence is replaced by the contract. A scan of every committed data/*.csv shows exactly the five known 2026-10-22 HTML obs_date rows refused and no other row affected. Gates: pytest 336 passed; lint 56 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK. Audit tier: 23 tests, 1 failure, the pre-existing control-line astronomy assertion owned by item 7 — no new failure."
-    },
-    {
-      "category": "bug",
-      "description": "The failure alarm body states something true about a run whose collection step succeeded, and a lint test pins the new sentence.",
-      "steps": [
-        "In .github/workflows/daily.yml replace only the false clause in the alarm body, keeping the schedule-expiry sentence, and add no new command substitution or backtick to the body.",
-        "Add a presence test to tests/lint_workflows.py that extracts the alarm run block through support.workflow_run_steps and asserts the new sentence, plus an absence test for the removed clause.",
-        "Run the lint tier."
-      ],
-      "passes": true,
-      "regression_notes": "Iteration 5. Pre-fix red evidence: five new lint assertions in tests/lint_workflows.py::TestFailureAlarmBodyMatchesTheStepOrder failed against HEAD's daily.yml (5 failed), each quoting the old body 'The instrument writes no row for a failed run, and the schedule itself expires after 60 days without a commit.'; green after the body edit. The alarm body now states the step order the workflow actually runs (the day is committed before the derive/render/audit steps): a run that fails before the commit step leaves the day unrecorded, a run that fails after it has already pushed the day has not lost the day and the failure lies in a later step; the schedule-expiry sentence is kept verbatim and no command substitution or backtick was added (still exactly the two pre-existing $(date -u +%F) and $(gh issue list ...), pinned by assertion). tests/lint_workflows.py also carries a behaviour-neutral type-narrowing pass over pre-existing code (the five step-index lookups and the two ci.yml job-block lookups now fail through self.fail and return a non-optional value; identical assertions and identical failure messages) to clear 10 analyzer diagnostics that were byte-identical at HEAD. Gates: pytest 336 passed; lint 61 OK (56 before, the 5 new tests); forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK. Audit tier: 23 tests, 1 failure, the pre-existing control-line astronomy assertion owned by item 7 — no new failure."
-    },
-    {
-      "category": "docs",
-      "description": "Two prose statements that contradict the repository are corrected, one of which names the alarm issue as the day-length canary.",
-      "steps": [
-        "In tests/test_control.py replace the source-redefinition identification band with wording that does not state a sign or a magnitude, since the committed offset is negative and outside the quoted band.",
-        "In radar.md correct the reference that ties the equinox false positive to issue number 3 so that it points at the Round 28 fix instead of the alarm issue, and make the same correction in tests/test_control.py.",
-        "Run the test gate tier and the lint tier."
-      ],
-      "passes": true,
-      "regression_notes": "Iteration 9. Entry: all six gates green at HEAD (pytest 342 passed; lint 61 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK) and the audit tier 28 tests OK. Prose-only item, so there is no failing-test-first step (nothing behavioural changes and the steps ask for no test). Correction 1: tests/test_control.py's astronomical_day_length_h docstring carried the source-redefinition identification band 'a UNIFORM +3.5-4.5 minute offset', which contradicts the record in both sign and magnitude. Iteration 6 measured the change as NEGATIVE — every 2026-10-22..10-31 row records a day 200.3-206.5 s (3.34-3.44 min) SHORTER than the first-generation model for its obs_date — so the '+' and the 3.5-4.5 band are both wrong. The paragraph now names the shape (a uniform offset, one direction and size on every row from one date onward) and states that the direction and size belong to the particular shift and are measured from the record, so no band is quoted; the consecutive-jump and recovery sentences are unchanged. Correction 2: the equinox false positive was tied to 'issue #3' in radar.md (Round 27 trailing separator and Round 28 item 1) and in tests/test_control.py's TestReproducesTheSourcesPublishedModel docstring. `gh issue view 3` confirms GitHub issue #3 is 'tremor: the daily collection is failing' (state OPEN), the alarm issue, not a canary item. radar.md now reads 'Separate/open at this round: control_daylength canary false positive near the equinox — CLOSED by the R28 canary fix below' (Round 27) and 'the equinox false positive (the R27 separate item) is CLOSED' (Round 28); the test docstring reads 'the test the R28 canary fix added'. Not extended, recorded: radar-log.md's Round 27/28 narrative (lines 740, 746) still carries 'issue #3'; that file is the published per-round ledger, and the item names only radar.md and tests/test_control.py, so the historical narrative was left forward-only rather than rewritten. Gates after: pytest 342 passed, 34 subtests; lint 61 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent and 0 summary days bad; pending 6 tagged 0 overdue; render smoke OK; audit tier 28 tests OK. No data/, derived-layer, annotation or radar-metrics.md change: cmp data/annotations.csv docs/data/annotations.csv exit 0 and the freshness audit stays green."
-    },
-    {
-      "category": "bug",
-      "description": "The control-line label offset from 2026-10-22 onward is measured, dispositioned, archived and annotated, and the audit tier's astronomy assertion stops failing.",
-      "steps": [
-        "Compute offline, for every committed row from 2026-10-22 onward, the residual of the recorded day length against test_control.astronomical_day_length_h for the claimed obs_date and for the following day; record the table in the annotation work.",
-        "Issue one dated request to the source for one date before 2026-10-22 and one after, and record the residual of the source value against the same model.",
-        "Apply the branch the measurement supports: a source-model change becomes a dated correction applied at the comparison site for obs_date on or after 2026-10-21, leaving astronomical_day_length_h unchanged; a label slip becomes a relabel of the affected rows to their own date plus a forward fix in the fetcher; an inconclusive measurement leaves the rows untouched and is recorded with a trigger.",
-        "Archive data/control_daylength.csv before any edit and refuse to start if the archive already exists.",
-        "Add one annotation row describing the measurement, the branch taken, and the rows touched, then make data/annotations.csv and docs/data/annotations.csv byte-equal.",
-        "Run python -m unittest discover tests -p \"audit_*.py\" and confirm the astronomy assertion passes."
-      ],
-      "passes": true,
-      "regression_notes": "Iteration 6. Entry red evidence: python -m unittest discover tests -p \"audit_record.py\" -k test_every_row_matches_the_astronomy_for_the_day_it_claims failed on the 2026-10-22 row at 0.0556 h against the 0.017 h bar; the audit tier was 23 tests, 1 failure. Measurement (offline, from the committed record): the ten rows dated 2026-10-22..2026-10-31 sit 200.3-206.5 s BELOW the first-generation model for their claimed obs_date and only +25.1..+9.1 s from the FOLLOWING day, while the four rows before them sit within 0.9 s. Source requests 2026-11-01: 2026-10-15 -> 38601 s vs 38799 s pinned on 2026-09-08 (-198 s); 2026-11-03 -> 34376 s vs 34586 s (-210 s); the source's current value for each of the ten claimed obs_dates equals the recorded value exactly, and 19 vendor samples spanning a year fit one flat effective depression (-0.84984 deg) to within 4.44 s. Branch one (published-model change), not a label slip. Fix: tests/test_control.py gained astronomical_day_length_h_v2 (pinned to those 19 vendor samples within 10 s), source_model_for + source_day_length_h (dated dispatch for obs_date >= 2026-10-21), and closest_day_margin now models all seven candidate days with the generation in force for the ROW; the shared solar-position geometry moved into a private _day_length_h verified bit-identical to the committed function over 1,200 dates from 2024-01-01, so astronomical_day_length_h keeps its numbers and its 2026-09-08 pin table. tests/audit_record.py compares against source_day_length_h. Failing test first: 6 new gate tests were red before the implementation (NameError on the new names) and green after; the margin-helper test was additionally red against the pre-fix per-candidate-day dispatch (0.0 not greater than 1.0). No committed value edited or relabelled; data/control_daylength.csv archived byte-identically as data/archive/control_daylength_pre_model_change_2026-11-01.csv (95 data rows) behind a refusal guard; one annotation row (2026-11-01, method) appended and mirrored byte-equal to docs/data/annotations.csv. Gates: pytest 342 passed (336 before, the 6 new tests); lint 61 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke OK; audit tier 23 tests OK — the bundle's pre-existing control-line failure is cleared and the audit tier is now green. Independent review (reviewer, opencode-go/deepseek-v4.1-flash) returned BLOCK on two P1s, both fixed before commit: the margin helper's per-candidate-day dispatch (code contradicting its own docstring and the annotation) and staging the archive the annotation names; four P2 prose points were taken into the annotation row."
-    },
-    {
-      "category": "bug",
-      "description": "The five 2026-10-22 FRED rows that recorded an HTML error page as a reading are archived, darkened with a stated reason, and the affected tail is re-derived so replay stays at zero divergence.",
-      "steps": [
-        "Confirm the derive guard and the collection-time obs_date check are already passing, because the repair removes the rows that reproduce the crash.",
-        "Archive the five line files with a capture-named suffix and refuse to start when that archive already exists.",
-        "Rebuild each of the five 2026-10-22 rows through collect.score_row with raw_value None and a note beginning 'no reading: source returned an HTML page, not a CSV - not scored :: '.",
-        "Re-derive only rows dated 2026-10-22 or later, using published prior rows as history, and strip existing verdict notes with seedlib.strip_verdict_notes before re-scoring so verdict prose is not duplicated.",
-        "Regenerate derived outputs by running the derive command block from the daily workflow, and sync every file in collect.MIRRORED.",
-        "Add an audit-tier assertion that every committed obs_date matches a strict YYYY-MM-DD predicate.",
-        "Run python tools/replay.py --check and confirm zero divergence, then run the audit tier."
-      ],
-      "passes": true,
-      "regression_notes": "Iteration 7. Entry: all six gates green at HEAD; the step-1 preconditions (tests/test_level.py -k DriftDateGuard and tests/test_collect_loop.py -k 'UnusableObsDate or ObsDateProblem') 7 passed. Failing test first: the new tests/audit_record.py::TestObservationDatesAreWellFormed failed on exactly the five 2026-10-22 rows carrying the HTML link fragment in obs_date, and passes after the repair; a second assertion (every collect.LINES file still declares the obs_date column) was added after review so a header loss cannot make the scan skip a whole file silently. Repair: new one-off tools/repair_fred_html_rows.py (offline; refuses to start when any archive exists or when the 2026-10-22 row no longer carries an unusable obs_date; a second run exits 1) archived the five line files byte-identically as data/archive/<line>_pre_html_repair_2026-11-01.csv (cmp-equal to git show HEAD), rebuilt each 2026-10-22 row through collect.score_row with raw_value None, obs_date cleared and the note prefixed 'no reading: source returned an HTML page, not a CSV - not scored :: ' (the captured note is kept after the prefix as provenance), then re-derived every row dated 2026-10-22 or later oldest-first against the published prior rows with seedlib.strip_verdict_notes first: 25 of the 50 tail rows change, the five darkened rows plus 20 z-only moves, and no scored row's trembling or direction flips. data/summary.csv 2026-10-22 corrected 1/0/0 -> 0/1/0 (the phantom reading had been the day's only counted tremble; credit_spread is tier-1); no later summary row changes. The daily derive block was re-run (level_layer, drift_layer, stuck_panel, lean_panel, episodes/pending markdown, render) and every file in collect.MIRRORED re-synced; that caught the frozen layers up to their inputs (levels and stuck 2026-10-11 -> 2026-10-17, where the chokepoint component capture ends; leans to 2026-10-31). One annotation row (2026-11-01, method) appended and mirrored byte-equal to docs/data/annotations.csv. Not a scoring change: no threshold, tier, WEEKLY_CYCLE/QUANTUM or STABLE_SINCE change. Gates after the review fixes: pytest 342 passed; lint 61 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent and 0 summary days bad; pending 6 tagged 0 overdue; render smoke exit 0; audit tier 25 tests OK. Independent review (reviewer, opencode-go/deepseek-v4.1-flash) returned OK with notes, no P0/P1; all six P2s were addressed (annotation arithmetic split so the five darkened rows are not called z-only; the line-column audit hardening; the non-recursive-glob scope documented; the derived-layer stop-after-2026-10-17 stated in the annotation; the six cited untracked artifacts staged; the tool docstring states recovery from a partial write is manual). Its suggestion to give the chokepoint component freeze a radar.md pending tripwire was left out: that is registry/round work outside this item's scope and is recorded in .ralph/progress.md."
+      "regression_notes": "Iteration 1. lines replaced with measures in all 24 LINES entries (copy verbatim from the design deck section 4); lineModal and openTier2Modal render measures under a new measuresLabel key (Measures / 测量内容) beside the existing direction and source tags; no explain field or reader remains. render_smoke asserts the retired causal sentences (two EN, one ZH) never render and each line's own measures string does. lint_public_surface binds every const LINES entry to non-empty EN and ZH measures, asserts explain is gone, and rejects the eight causal connectives. Gates: gate 415 passed; lint 69 OK; forbidden literal 3 OK; audit 28 OK; replay exit 0 (rows=2878, divergence=0); pending 6 tagged / 0 overdue; render smoke OK; annotations cmp identical."
     },
     {
       "category": "functional",
-      "description": "The audit tier notices a frozen derived layer: levels, stuck and leans outputs are checked against their own inputs so a silent ten-day freeze cannot recur.",
+      "description": "The headline states a fraction of comparable lines with an unusual reading, and the resonance wording is gone.",
       "steps": [
-        "Add an audit assertion that the newest date in data/levels.csv equals the newest date in data/components/chokepoint_breadth.csv, evaluated only when an open state exists on that newest component date, because the level layer emits no row after a state closes.",
-        "Add recency checks for docs/data/stuck.csv and docs/data/leans.csv in the same audit file.",
-        "Run python -m unittest discover tests -p \"audit_*.py\" and confirm the new assertions pass against the regenerated files."
+        "Add a render_smoke assertion that the headline label matches the design's count label pattern with a numerator and a denominator in both languages and does not contain Resonance, 共振, or the only number that matters; record the failure.",
+        "Replace the headline strings in both locales with the design's countTitle, countLabel, countQuestion, countModalTitle and countModalBody, keeping the existing comparable-line denominator rule in render().",
+        "Delete resoTitle and resoBody and the code that renders them, and move the count explanation modal to the new countModal strings.",
+        "Update every existing test that binds one of the replaced strings to the new string in the same commit, without weakening the assertion.",
+        "Run every verification gate and record the output."
       ],
-      "passes": true,
-      "regression_notes": "Iteration 8. Entry: all six gates green, audit tier 25 tests OK. Red evidence before the assertions were accepted: against the pre-repair freeze committed at 0b12b49 the new levels check failed (2026-10-11 vs 2026-10-17) and the leans check failed (2026-10-21 vs 2026-10-31); against live copies with their newest day removed each check failed on its own file (levels 2026-10-16 vs 2026-10-17, stuck 2026-10-16 vs 2026-10-17, leans 2026-10-30 vs 2026-10-31). Implementation: new audit-tier class TestDerivedLayersAreCurrent in tests/audit_record.py with three tests. Every expected date is the last date the layer's own rule can emit, computed from the layer's inputs and never from the file under test: data/levels.csv vs level_layer.walk replayed over data/components/chokepoint_breadth.csv; docs/data/stuck.csv vs data/levels.csv's open/hold rows; docs/data/leans.csv vs the newest data/summary.csv day on which a tier-1 line (TIER absent = 1) trembles in its own alarm direction per collect.counts_as_tremble. Independent review (reviewer, opencode-go/deepseek-v4.1-flash) returned OK with five P2s; four taken: the item's 'open state on the newest input date' gate is replaced by the exact last-emitted date, which removes the two skip holes the review identified (every open state stale-unserved; the newest input day closing the only state) and still cannot false-red on a healthy pipeline; data/drifts.csv is documented as out of scope (no event since 2023-11-19, and tools/drift_layer.py exits non-zero on a crash); the leans message now names rule drift as well as a stale file; docs/data/leans.csv's stale 'nothing else checks it' sentence in tests/audit_public_surface.py is corrected (its absence skip is kept; its recency is now owned by this class, which requires the tracked file). The fifth P2 (restating the reporter's rule instead of calling lean_panel.build_panel) is left as the deliberate independent restatement, now stated in the docstring as one invariant that must move with the reporter. Behaviour-neutral analyzer cleanup in tests/audit_public_surface.py: the bare `import lean_panel` became a test-local `from tools import lean_panel` (clears its unresolved-import diagnostic) and both edited files gained ruff's one blank line in the import block. No data file, no derived file and no radar-metrics change. Gates: pytest 342 passed; lint 61 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke exit 0; audit tier 28 tests OK (25 before, the three new tests run rather than skip); annotations mirror byte-equal."
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "functional",
+      "description": "Zero readings and every row status are described without a calm or alarm word, and each of the six statuses has page copy.",
+      "steps": [
+        "Add a render_smoke assertion that the zero-reading copy in both languages does not contain calm or 平静, and that statusLabel carries an entry for scoring; record the failure.",
+        "Replace the zero-state strings with the design's wording that a reading being absent or inside its recent range says nothing about the world.",
+        "Add the missing scoring entry to statusLabel and migrate the status words for warming-up, no-spread, stale, dark and closed to the design deck.",
+        "Migrate the headline qualifiers darkNote, closedNote, blindNote, calibNote, whichNote and runNote to the design deck in both locales.",
+        "Run every verification gate and record the output."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "functional",
+      "description": "The numbered two-probe framing is deleted and the structural copy describes a record rather than probes.",
+      "steps": [
+        "Add a render_smoke or lint assertion that the page text contains no circled-probe kicker and no change probe wording; record the failure.",
+        "Delete the changeKicker key and its DOM assignment in docs/index.html.",
+        "Migrate title, promise, asOf, countQ, nodata, more, dirUp, dirDown, last, noCollect, source, every range_ string, covTitle, covLead, covLead2, covTail, covMore, covBlind and notCounted to the design deck in both locales.",
+        "Keep notCounted visible in the watchlist wording so a reader can tell which collected lines never enter the count.",
+        "Run every verification gate and record the output."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "functional",
+      "description": "The page states its four limitations in visible body text, plus the measured flights sampling-weight fact.",
+      "steps": [
+        "Add a render_smoke assertion that the rendered page text contains a marker phrase for each of the four limitations in both languages; record the failure.",
+        "Add an inline scope and limits section below the collected records in docs/index.html, with the EN and ZH wording from the design deck.",
+        "Include all four limitations as visible text: a rolling comparison cannot see a long-running state; the panel is selected under written assumptions; some lines are collected and never counted; no line watches communications so a worldwide connectivity failure reads zero.",
+        "Include the measured flights sampling-weight fact from the design deck as one sentence in the same section.",
+        "Run every verification gate and record the output."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "functional",
+      "description": "The headline, markers and status labels use one neutral treatment instead of a green to red severity ramp.",
+      "steps": [
+        "Add a lint assertion that docs/index.html defines no countColor function and that the headline element does not reference a hue variable; record the failure.",
+        "Remove countColor and every call to it; render the count and the reference count in one neutral ink tone with emphasis carried by size and weight.",
+        "Replace the four-way status and marker colouring with one neutral treatment for the count marker, the line cards, the system status line and the unusual marker, keeping series hues only for chart traces.",
+        "Remove the adjudicated hatch rule and its class from the trembling pill.",
+        "Update every existing test that asserts on the removed classes or colours to assert the neutral treatment instead.",
+        "Run every verification gate and record the output."
+      ],
+      "passes": false,
+      "regression_notes": ""
+    },
+    {
+      "category": "functional",
+      "description": "The per-line direction is labelled as a recorded hypothesis under a neutral field name.",
+      "steps": [
+        "Add a lint assertion in tests/lint_registry.py that docs/index.html declares declared_dir for every line instead of alarm; record the failure.",
+        "Rename the alarm field to declared_dir in all 24 LINES entries in docs/index.html and update the legend and tooltip wording to describe it as the comparison direction recorded when the line was built, not a verdict.",
+        "Change the chart title in render.py from alarming when to the recorded comparison direction wording.",
+        "Update the docs-side parser regex and test name in tests/lint_registry.py in the same commit so the agreement test still compares the field to each fetcher's ANOMALY_DIRECTION.",
+        "Run every verification gate and record the output."
+      ],
+      "passes": false,
+      "regression_notes": ""
     },
     {
       "category": "docs",
-      "description": "The operating contract names the seam that actually enforces the components rule, instead of a sentence that is literally false.",
+      "description": "README and the public copy pass the vocabulary guard, and the guard exists as a test.",
       "steps": [
-        "In AGENTS.md section 4 replace the claim that the scoring path must never read components with a statement that the scoring decision, meaning score_row, normalize.judge and replay, never reads them, and that tests/test_side_channel.py binds that seam.",
-        "Run the lint tier and confirm the public-surface and side-channel tests still pass."
+        "Rewrite the README opening so it describes a daily record of readings compared with their own recent history, without the world-disorder question and without alarm or resonance.",
+        "Add lint assertions that scan user-visible strings only (the T locale objects, LINES label, source, measures, watches, domain, and README prose) for alarm, 报警, resonance, 共振, calm or 平静 as a zero-state word, and the layer vocabulary (第一层, 第二层, 第三层, Layer 1/2/3, L1/L2/L3, tier of analysis); record the failure, then fix the residual strings.",
+        "Confirm the guard does not scan CSS class names or internal identifiers, and add a test comment stating that scope.",
+        "Run every verification gate; every gate must pass with the guard in place."
       ],
-      "passes": true,
-      "regression_notes": "Iteration 10. Entry: all six gates green at HEAD (pytest 342 passed; lint 61 OK; forbidden literal 3 OK; replay 1271 rows 0 divergent; pending 6 tagged 0 overdue; render smoke exit 0), audit tier 28 tests OK, and the item-named tests green (test_side_channel 6 OK, audit_public_surface 3 OK, test_components 3 OK). The false claim measured: collect.py:452 reads data/components/<line>.csv inside write_components (the only component-file read in collect.py; the other two _read_rows call sites are a line CSV at :468 and the summary at :558), so 'the scoring path (collect.py, core/normalize.py) must never read them' was literally false about collect.py; and tests/test_side_channel.py asserts only read_intraday/sample_intraday, so it does not bind the components rule at all - the components seam is bound by tests/test_components.py (core/normalize.py may not name 'components'; write_components' body may not name score_row/LINE_HEADER). The AGENTS.md section 4 replacement names the scoring DECISION (score_row, normalize.judge, tools/replay.py - score_row takes no components argument, and grep -c 'components' is 0 in core/normalize.py and tools/replay.py), states the single collect.py read and that no component value reaches score_row, names tools/level_layer.py as the intended consumer (its SOURCE is data/components/chokepoint_breadth.csv), and names which test binds which half. Deviation from the step's letter, recorded: the step says tests/test_side_channel.py binds 'that seam', which is false for components and is the exact defect being removed, so test_components.py is named for the components half and test_side_channel.py for the intraday half plus the gate/audit tier boundary. No failing test first: prose only, no behaviour change, and the steps ask for no test. No data/, derived-layer, annotation or radar-metrics.md change."
+      "passes": false,
+      "regression_notes": ""
     }
   ]
 }

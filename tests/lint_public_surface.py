@@ -1,9 +1,9 @@
-"""Binds the customer-facing surface — docs/index.html's status vocabulary and
-a small README.md claims table — to core/normalize.py so the page and the
-docs cannot silently drift from what the code actually emits.
+"""Binds the customer-facing surface — docs/index.html's per-line definitions
+and status vocabulary, and a small README.md claims table — to core/normalize.py
+so the page and the docs cannot silently drift from what the code actually
+emits.
 
-Two things are checked:
-
+Three things are checked:
   1. Status vocabulary. core/normalize.py defines six status strings a line's
      verdict can carry (STATUS_SCORING plus five others) and, of those, which
      ones are non-scoring. docs/index.html carries TWO ``statusLabel`` maps
@@ -96,6 +96,16 @@ Two things are checked:
      tier-1 line). See ``_fetcher_is_keyless``'s own docstring for the exact
      rule and its known scope limit (it reads only the fetcher module's own
      source, not transitively through the ``core/`` helpers it imports).
+
+  3. The line detail's definitions. Each ``const LINES`` entry in
+     docs/index.html carries a bilingual ``measures`` block: the quantity the
+     line measures, over what population or region, sampled how often, in
+     what unit. This lint binds every parsed entry to a non-empty EN and ZH
+     definition (against lint_registry.py's own entry parse, so a line cannot
+     ship without one), asserts the retired causal ``explain`` field is gone,
+     and asserts no definition contains one of ``CAUSAL_CONNECTIVES`` — a
+     definition that explains why a reading moved is exactly the claim the
+     migration removed from the page.
 
 core/normalize.py imports only ``statistics``, ``datetime`` and
 ``itertools`` (see tests/lint_support_stdlib.py's sibling guarantee for
@@ -605,6 +615,85 @@ def _tier1_keyless_line_count():
     """How many of collect.LINES's tier-1 fetcher modules are keyless per
     ``_fetcher_is_keyless`` above."""
     return sum(1 for _, tree in _tier1_fetcher_trees() if _fetcher_is_keyless(tree))
+
+
+# --- LINES[].measures: what a line measures, never why it moved -------------
+#
+# The public line detail renders one definition per line: the quantity, the
+# population or region, the sampling cadence and the unit. The causal `explain`
+# paragraphs it replaced asserted what a reading means about the world, which a
+# measurement cannot support. The vocabulary bound here is therefore closed by
+# assertion rather than by review: no definition may carry a causal connective,
+# and the retired field may not come back.
+
+CAUSAL_CONNECTIVES = ("because", "causes", "caused by", "means that",
+                     "说明", "意味着", "导致", "正是因为")
+
+_LINES_BLOCK = re.compile(r'const LINES = \[(.*?)\n\];', re.S)
+# The opening of one `const LINES` entry -- `{ id:"flights", color:"..."`.
+_JS_ENTRY_START = re.compile(r'\{\s*id:"([^"]+)"')
+# A `measures:{en:"...", zh:"..."}` block. No definition contains a `}` (they
+# are prose about a series), so a negated character class lands on the block's
+# own close without needing to balance braces.
+_MEASURES_BLOCK = re.compile(r'measures:\{([^}]*)\}')
+_MEASURES_VALUE = re.compile(r'(en|zh):"([^"]*)"')
+
+
+@functools.cache
+def _docs_measures():
+    """{line id: {lang: definition}} for every `measures:{...}` block inside
+    docs/index.html's `const LINES` entries. A line with no block maps to `{}`,
+    so a missing definition is reported as a missing definition rather than
+    silently left out of the mapping. Memoized (see `_status_label_key_sets`)."""
+    block = _LINES_BLOCK.search(support.read_text(DOCS_INDEX))
+    assert block, "docs/index.html: could not locate `const LINES = [ ... ];`"
+    body = block.group(1)
+    starts = list(_JS_ENTRY_START.finditer(body))
+    assert starts, "docs/index.html: no `const LINES` entry parsed"
+    out = {}
+    for i, start in enumerate(starts):
+        end = starts[i + 1].start() if i + 1 < len(starts) else len(body)
+        found = _MEASURES_BLOCK.search(body[start.start():end])
+        out[start.group(1)] = dict(_MEASURES_VALUE.findall(found.group(1))) if found else {}
+    return out
+
+
+class TestLineDetailStatesWhatIsMeasured(unittest.TestCase):
+    def test_every_line_declares_a_bilingual_measures_definition(self):
+        measures = _docs_measures()
+        registry, _ = lint_registry._docs_registry()
+        self.assertEqual(sorted(measures), sorted(registry),
+                          "docs/index.html's `const LINES` entries and the lines "
+                          "carrying a `measures` block are not the same set: "
+                          f"no definition {sorted(set(registry) - set(measures))}, "
+                          f"unknown line {sorted(set(measures) - set(registry))}")
+        incomplete = sorted(line_id for line_id, by_lang in measures.items()
+                            if set(by_lang) != {"en", "zh"}
+                            or not all(text.strip() for text in by_lang.values()))
+        self.assertEqual(incomplete, [],
+                          "line(s) with a missing or empty `measures` value in one "
+                          f"language: {incomplete}")
+
+    def test_the_causal_explain_field_is_gone(self):
+        html = support.read_text(DOCS_INDEX)
+        self.assertNotIn("explain:", html,
+                          "docs/index.html still declares an `explain` field -- the "
+                          "line detail states what a line measures, not why a value moved")
+        self.assertNotIn(".explain", html,
+                          "docs/index.html still reads an `.explain` field")
+
+    def test_no_measures_definition_carries_a_causal_connective(self):
+        hits = []
+        for line_id, by_lang in sorted(_docs_measures().items()):
+            for lang, text in sorted(by_lang.items()):
+                folded = text.lower()
+                for word in CAUSAL_CONNECTIVES:
+                    if word.lower() in folded:
+                        hits.append(f"{line_id}.{lang}: {word!r}")
+        self.assertEqual(hits, [],
+                          "`measures` definition(s) carry a causal connective, which "
+                          "puts an explanation of a reading back on the page: "
+                          f"{hits}")
 
 
 class TestReadmeClaimsBindToSource(unittest.TestCase):

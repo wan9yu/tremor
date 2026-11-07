@@ -481,6 +481,37 @@ function buildDarkAlarmFixtureData() {
     } catch (e) { errors.push(`adj2 render(${lang}): ${e.stack || e}`); }
   }
 
+  // T26 (public-surface migration, item 1): the line detail states what a line
+  // MEASURES - quantity, population, sampling, unit - and no longer explains
+  // why a value moved. These are opening sentences of the retired causal
+  // `explain` payloads (two EN, one ZH); none may survive in any line's detail
+  // in any language, and every detail must render its own `measures`
+  // definition in its place.
+  const RETIRED_CAUSAL = [
+    "Airlines fight to keep planes on schedule",
+    "fear has overpowered greed",
+    "说明有更大的力量压垮了这股动机",
+  ];
+  for (const lang of ["en", "zh"]) {
+    for (const L of LINES) {
+      const detail = lineModal(L, lang);
+      for (const phrase of RETIRED_CAUSAL) {
+        if (detail.includes(phrase)) {
+          errors.push(`measures(${lang}): lineModal(${L.id}) still renders retired causal `
+            + `wording ${JSON.stringify(phrase)} -- the detail must state what the line `
+            + `measures, not why its value moved`);
+        }
+      }
+      const measure = L.measures && L.measures[lang];
+      if (!measure) {
+        errors.push(`measures(${lang}): LINES entry ${L.id} declares no measures.${lang}`);
+      } else if (!detail.includes(measure)) {
+        errors.push(`measures(${lang}): lineModal(${L.id}) does not render its own `
+          + `measures.${lang} definition`);
+      }
+    }
+  }
+
   // T25: record text is escaped at every sink, including the builders that
   // RETURN markup (lineModal / openTier2Modal reach the DOM only through
   // openModal, so a DOM-only sweep would miss them entirely).
