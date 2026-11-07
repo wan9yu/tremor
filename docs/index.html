@@ -40,6 +40,7 @@
   .count .calibnote{color:var(--muted);font-size:13px}
   .count .pairnote{color:#e0a83d;font-size:13px}
   .count .q{margin-left:auto;color:var(--muted);font-size:13px;align-self:center}
+  .count-qualifying{color:var(--muted);font-size:12px;margin:0 2px 8px}
   .count-level{margin:0 0 8px}
   .count-level .n{font-size:44px}
   .kicker{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:22px 2px 5px}
@@ -141,6 +142,7 @@
     <span class="label" id="count-label"></span>
     <span class="q" id="count-q"></span>
   </div>
+  <p class="count-qualifying" id="count-qualifying"></p>
   <p class="asof" id="asof"></p>
   <div class="kicker level-kicker" id="level-kicker" hidden></div>
   <div class="count count-level" id="level-count" hidden>
@@ -405,8 +407,8 @@ const T = {
     countTitle:"Readings unusual today",
     levelKicker:"② the level probe · what is stuck broken now",
     countLabel:"{n} / {m} readings unusual today",
-    darkNote:n=>" · "+n+" line"+(n>1?"s":"")+" dark",
-    closedNote:names=>" · "+names+" closed (weekend market)",
+    darkNote:n=>" · "+n+" line"+(n===1?"":"s")+" "+(n===1?"has":"have")+" no reading",
+    closedNote:names=>" · market closed: "+names,
     countQuestion:"How is this count made? ›",
     asof:d=>"as of "+d+" (China time)",
     panelTitle:"Tension lines, normalized",
@@ -425,9 +427,9 @@ const T = {
     benignShift:"benign shift", calibrating:"calibrating",
     annoTitle:"Recent trembles, attributed",
     notCounted:"watchlist — not counted in the resonance",
-    calibNote:(n,m)=>" · "+n+" of "+m+" lines still calibrating",
-    whichNote:(names)=>" · "+names.join(" + "),
-    blindNote:n=>" · "+n+(n===1?" line cannot score":" lines cannot score")+" (not the same as calm)",
+    calibNote:(n,m)=>" · comparison history is still forming for "+n+" of "+m+" lines",
+    whichLines:(names)=>" · "+names.join(" + "),
+    blindNote:n=>" · "+n+" line"+(n===1?"":"s")+" cannot yet be compared",
     // What the RECORD concluded about a firing line, not an editorial gloss.
     // `real` only ever claims what every real-verdict row on file actually
     // supports -- NOT an instrument artifact -- never "attributed to a
@@ -443,9 +445,12 @@ const T = {
       mixed:"adjudicated: partly attributed",
     },
     leanNote:(tag,ev)=>" · "+tag+"machine lean: common-mode ("+ev+") — awaiting adjudication",
-    runNote:(tag,n)=>" · "+tag+"day "+n+" of a run",
-    statusLabel:{"warming-up":"cannot score yet","no-spread":"no spread to judge against",
-                 "stale":"republished — already recorded","dark":"NO DATA","closed":"market closed (weekend)"},
+    runNote:(tag,n)=>" · "+tag+"outside its recent range for "+n+" consecutive collection days",
+    statusLabel:{"scoring":"Compared with recent record",
+                 "warming-up":"Comparison history still forming",
+                 "no-spread":"Too little variation to compare",
+                 "stale":"Repeated observation; prior record retained",
+                 "dark":"No reading received","closed":"Market closed"},
     range_30:"30d", range_90:"90d", range_365:"1y", range_all:"all",
     feelTitle:"Real vs felt — where they diverge",
     feelHint:"Bars: how many primary instruments trembled that day (the measured side). Lines: how disordered the world FEELS — priced fear (VIX) and global news tone/conflict share — shown as z toward each line's alarming direction. Feel lines are contrast only, never counted. Amber columns mark a DIVERGENCE: the felt side ran hot while every primary instrument read calm. A divergence has two possible causes and this chart cannot tell them apart — the feeling outran the world (an anxiety premium), or the strain fell outside what tremor watches (a coverage gap).",
@@ -467,6 +472,7 @@ const T = {
     source:"Source", measuresLabel:"Measures", alarmTag:dir=>"alarming when "+dir,
     countModalTitle:"How the count is made",
     countModalBody:m=>"A line contributes when its scored value crosses its own threshold in either direction. The threshold varies with the amount of distinct history available. The denominator "+m+" is the number available under the daily comparison rule: the primary roster minus lines with no reading, too little history or variation to compare, or a closed market. A repeated observation does not add another score. This counts lines on a date, not events. The roster reflects written selection assumptions.",
+    countQualifying:"A statistical comparison, not a judgment of conditions.",
     footer:"tremor doesn't predict the end — nobody can. It only makes <b>now</b> readable: a seismograph, not a prophet, blind to instantaneous shocks and listening for the slow, systemic, trace-leaving kind of disorder. Data is collected daily by a GitHub Actions cron and committed back to the repo (<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>); this dashboard reads the CSVs directly — no backend.",
   },
   zh:{
@@ -474,8 +480,8 @@ const T = {
     countTitle:"今日偏离近期记录的读数",
     levelKicker:"② 水平探针 · 此刻什么卡死破锚",
     countLabel:"今天有 {n}/{m} 条读数偏离各自近期记录",
-    darkNote:n=>" · "+n+" 根线无数据",
-    closedNote:names=>" · "+names+"：周末休市",
+    darkNote:n=>" · "+n+" 条线没有读数",
+    closedNote:names=>" · 市场休市："+names,
     countQuestion:"这个计数如何得出？›",
     asof:d=>"截至 "+d+"（北京时间）",
     panelTitle:"张力线（已归一化）",
@@ -494,9 +500,9 @@ const T = {
     benignShift:"良性异动", calibrating:"校准中",
     annoTitle:"近期颤抖及归因",
     notCounted:"观察名单 — 不计入共振",
-    calibNote:(n,m)=>"（"+n+"/"+m+" 根线校准中）",
-    whichNote:(names)=>" · "+names.join(" ＋ "),
-    blindNote:n=>" · "+n+" 根线无法计分（这不等于平静）",
+    calibNote:(n,m)=>" · "+m+" 条线中有 "+n+" 条的近期参照仍在积累",
+    whichLines:(names)=>" · "+names.join(" ＋ "),
+    blindNote:n=>" · "+n+" 条线暂不可比较",
     verdictLabel:{
       artifact:"已裁定为仪器伪迹，并非真实世界事件",
       real:"已裁定为真实信号，并非仪器伪迹",
@@ -504,9 +510,12 @@ const T = {
       mixed:"已裁定：部分归因",
     },
     leanNote:(tag,ev)=>" · "+tag+"机器判读：共模（"+ev+"）——等待裁定",
-    runNote:(tag,n)=>" · "+tag+"连续颤抖第"+n+"天",
-    statusLabel:{"warming-up":"尚无法计分","no-spread":"无离散度可判",
-                 "stale":"重复发布 — 已记录","dark":"无数据","closed":"周末休市"},
+    runNote:(tag,n)=>" · "+tag+"已连续 "+n+" 个采集日偏离近期范围",
+    statusLabel:{"scoring":"已与近期记录比较",
+                 "warming-up":"近期参照仍在积累",
+                 "no-spread":"变化太少，暂无法比较",
+                 "stale":"重复观测；沿用此前记录",
+                 "dark":"尚未收到读数","closed":"市场休市"},
     range_30:"30天", range_90:"90天", range_365:"1年", range_all:"全部",
     feelTitle:"真实 vs 感觉 — 两者的背离",
     feelHint:"柱：当天一级仪器的颤抖根数（测量侧）。线：世界「感觉」有多乱——恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自报警方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 一次背离：感觉侧发烫，而所有一级仪器读数平静。背离有两种可能，这张图分不出是哪一种——要么是感觉跑在了世界前面（焦虑溢价），要么是压力落在了 tremor 的视野之外（覆盖盲区）。",
@@ -528,6 +537,7 @@ const T = {
     source:"数据来源", measuresLabel:"测量内容", alarmTag:dir=>dir+"时为异常",
     countModalTitle:"这个计数如何得出",
     countModalBody:m=>"一条线的分数向任一方向越过自身阈值时，便计入其中。阈值随可用的不同观测数量而变。分母 "+m+" 按每日比较规则计算：从主记录组中扣除没有读数、历史或变化不足以比较、以及市场休市的线。重复观测不会再添一个分数。这里数的是某日的线，不是事件。记录组依据书面观测假设选定。",
+    countQualifying:"这是统计比较，不替处境下判断。",
     footer:"tremor 不预言末日——没人能。它只让<b>此刻</b>变得可读：是地震仪，不是先知；对瞬时灾难无能为力，只倾听那种缓慢的、系统性的、会留下痕迹的失序。数据由 GitHub Actions 每日定时采集并提交回仓库（<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>），仪表盘直接读取 CSV——无需后端。",
   }
 };
@@ -735,6 +745,7 @@ function render(){
   setMarkup(document.getElementById("footer"),T[lang].footer);
   document.getElementById("count-q").textContent=T[lang].countQuestion;
   document.getElementById("count-kicker").textContent=T[lang].countTitle;
+  document.getElementById("count-qualifying").textContent=T[lang].countQualifying;
   // The headline is one canonical template per language, split around its two
   // numbers so the numerator keeps its own display element and the denominator
   // keeps its own. The rendered sentence is exactly the template.
@@ -810,7 +821,7 @@ function render(){
       if(run>=2) adjBits.push(T[lang].runNote(tag,run));
     }
     setMarkup(document.getElementById("count-label"),
-      countTail + (firing.length>1?`<span class="pairnote">${T[lang].whichNote(firing)}</span>`:"")
+      countTail + (firing.length>1?`<span class="pairnote">${T[lang].whichLines(firing)}</span>`:"")
            + adjBits.map(b=>`<span class="calibnote">${b}</span>`).join("")
            + (darkCount?`<span class="darknote">${T[lang].darkNote(darkCount)}</span>`:"")
            + (blindCount?`<span class="darknote">${T[lang].blindNote(blindCount)}</span>`:"")

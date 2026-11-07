@@ -5,14 +5,14 @@ emits.
 
 Three things are checked:
   1. Status vocabulary. core/normalize.py defines six status strings a line's
-     verdict can carry (STATUS_SCORING plus five others) and, of those, which
-     ones are non-scoring. docs/index.html carries TWO ``statusLabel`` maps
-     (English ~:416, Chinese ~:470) that give a display label to every
-     non-scoring status — "scoring" is the normal state and intentionally has
-     no label. This lint asserts the EN and ZH maps declare the SAME key set,
-     and that key set is EXACTLY normalize's statuses minus "scoring": every
-     non-scoring status the code can emit has a label in both languages, and
-     no label exists for a status the code never emits.
+     verdict can carry (STATUS_SCORING plus five others). docs/index.html
+     carries TWO ``statusLabel`` maps (English ~:416, Chinese ~:470) that give
+     a display label to every one of them — including "scoring", the normal
+     state, whose label the public-surface migration added so every status a
+     row can carry has page copy. This lint asserts the EN and ZH maps declare
+     the SAME key set, and that key set is EXACTLY normalize's six statuses:
+     every status the code can emit has a label in both languages, and no
+     label exists for a status the code never emits.
      ``TestStatusLabelsBindToNormalize`` also corroborates the ``ALL_STATUSES``
      literal below directly against normalize.py's own ``STATUS_*`` constants
      (see that constant's comment), so a new status added to normalize.py is
@@ -157,7 +157,6 @@ ALL_STATUSES = {
     normalize.STATUS_CLOSED,
     normalize.STATUS_FLAT,
 }
-NON_SCORING_STATUSES = ALL_STATUSES - {normalize.STATUS_SCORING}
 
 
 # --- docs/index.html's two `statusLabel:{...}` maps -------------------------
@@ -194,16 +193,16 @@ class TestStatusLabelsBindToNormalize(unittest.TestCase):
                           f"declare different keys: EN={sorted(en_keys)} "
                           f"ZH={sorted(zh_keys)}")
 
-    def test_statusLabel_keys_equal_normalizes_non_scoring_statuses(self):
+    def test_statusLabel_keys_equal_normalizes_status_vocabulary(self):
         en_keys, _ = _status_label_key_sets()
-        missing = sorted(NON_SCORING_STATUSES - en_keys)
+        missing = sorted(ALL_STATUSES - en_keys)
         self.assertEqual(missing, [],
-                          "core/normalize.py status(es) with no dashboard "
-                          f"label in docs/index.html's statusLabel maps: {missing}")
-        extra = sorted(en_keys - NON_SCORING_STATUSES)
+                         "core/normalize.py status(es) with no dashboard "
+                         f"label in docs/index.html's statusLabel maps: {missing}")
+        extra = sorted(en_keys - ALL_STATUSES)
         self.assertEqual(extra, [],
-                          "docs/index.html's statusLabel maps carry a label "
-                          f"for status(es) core/normalize.py never emits: {extra}")
+                         "docs/index.html's statusLabel maps carry a label "
+                         f"for status(es) core/normalize.py never emits: {extra}")
 
     def test_ALL_STATUSES_matches_every_normalize_STATUS_constant(self):
         discovered = {getattr(normalize, name) for name in dir(normalize)

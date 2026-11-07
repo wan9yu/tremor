@@ -181,3 +181,122 @@ not a builder left unconnected. `grep` finds no remaining `reso`, `countQ`, `cal
   title; the overview title is claimed by no item in this bundle and was left alone.
 - `tag`, `<title>`, `levelKicker`, `nodata`, `more`, the `verdictLabel` map and the feel
   chart remain untouched (items 3–8).
+
+## Iteration 3 — item 3 (functional): zero readings and every row status in instrument words
+
+**Chosen because** `.ralph/plan.md` ranks copy and structure before style, and items 1 and 2
+are now passing. Item 3 finishes the copy item that item 2 partly pre-empted (`calm` /
+`tremblingOne` / `tremblingMany` are already gone; the remaining anchors were the six
+`statusLabel` entries and the count qualifiers). No item is hard-blocked; the ledger held
+iterations 1 and 2 only, both green.
+
+**Entry state measured.** Gate 415 passed; lint 69 OK; forbidden-literal 3 OK; audit 28 OK;
+`replay --check` exit 0 (2878 rows seen, 1439 since `STABLE_SINCE`, divergence 0);
+`pending --check` 6 tagged / 0 overdue; render smoke OK; annotations mirror identical.
+
+**Test-first, failures recorded.** Three assertions were added or rebound before any copy
+changed:
+
+- `tests/render_smoke.js` (new T28 block): `statusLabel` must carry the deck's six labels
+  in both languages; `darkNote`, `closedNote`, `blindNote`, `calibNote`, `runNote` and
+  the renamed `whichLines` must render the deck's sentences; `whichNote` must be gone; the
+  rendered zero-count block must contain neither `calm` nor `平静`; and the count block
+  must carry the deck's `countQualifying` line. Run on the unmodified page: 34 failures
+  across both languages, including `statusLabel."scoring" is undefined`,
+  `statusLabel."dark" is "NO DATA"`, `blindNote(2) renders " · 2 lines cannot score (not
+  the same as calm)"`, `whichLines renders undefined`, `the retired whichNote key is still
+  declared`, and `the count block's qualifying line is ""`.
+- `tests/render_smoke.js` T21 rebound the gap-chip assertion from `/NO DATA|无数据/` to
+  `/No reading received|尚未收到读数/` — the one existing test that bound a status label
+  this item replaces. Run before the copy change: FAIL in both languages, e.g. `gap chip
+  did not carry the "dark" statusLabel text: … <span class="wl-gap">NO DATA</span>`.
+- `tests/lint_public_surface.py`: `test_statusLabel_keys_equal_normalizes_non_scoring_statuses`
+  became `test_statusLabel_keys_equal_normalizes_status_vocabulary`, asserting the map key
+  set equals all six `core/normalize.py` statuses instead of the five non-scoring ones.
+  Run before the copy change: FAIL, `core/normalize.py status(es) with no dashboard label
+  in docs/index.html's statusLabel maps: ['scoring']`. This strengthens rather than weakens
+  the binding: the old assertion encoded the pre-migration state in which `scoring`
+  intentionally had no label.
+
+**Decisions (conservative, reversible).**
+
+- `statusLabel` now holds all six statuses. The `scoring` entry has no render site today:
+  the tier-2 watchlist reads `statusLabel` only for the blind and gap states, and a
+  positive card label would be a card-treatment change owned by item 6. The deck's
+  inventory calls the new entry page copy, and the lint binds it.
+- The English `{n} line(s)` template is resolved to grammatical number: `1 line has no
+  reading` / `2 lines have no reading`, `1 line cannot yet be compared` / `2 lines cannot
+  yet be compared`. The deck's `(s)` is a pluralization hint, not literal text.
+- `whichNote` is renamed `whichLines` per the deck's migration row; it keeps the existing
+  join separators (` + ` EN, ` ＋ ` ZH) because the deck template is ` · {names}` in both
+  languages and leaves the join to the substitution.
+- `runNote` keeps its `(tag, n)` signature. With an empty tag — the single-firing-line case
+  — it renders the deck sentence verbatim (` · outside its recent range for 2 consecutive
+  collection days`); on a multiple-firing day the line label prefixes it, the same tag
+  mechanism the deck's own `leanNote` template uses. The T22 assertion therefore still
+  exercises the real call shape, unchanged.
+- `countQualifying` is added as visible page text in a new `#count-qualifying` paragraph
+  directly under the count block, with one muted CSS rule (`.count-qualifying`). Item 3's
+  step 2 asks for the deck's wording that a reading being absent or inside its recent range
+  is not a statement about the world; `countQualifying` (`A statistical comparison, not a
+  judgment of conditions.` / `这是统计比较，不替处境下判断。`) is the deck's only string
+  that says so, and no other item claims it. Rendering it next to the count also keeps the
+  zero case honest, which is item 3's own subject.
+- `nodata` (`NO DATA` / `无数据`), the `statusOk`/`warnH`/`warnB`/`alarmDarkH`/`alarmDarkB`/
+  `disruptH`/`disruptB` status-banner strings, `feelHint`/`feelGapNote`/`levelBody`, the
+  `cov*` block, `notCounted`, `alarmTag`/`alarmingWhen`, `benignShift`/`calibrating`, the
+  inline `trembling`/`颤抖` pill text and the `②`/`changeKicker`-adjacent kickers are left
+  untouched: they are owned by items 4, 6, 7 and 8, and changing them here would pre-empt
+  those items.
+
+**Files changed.**
+
+- `docs/index.html` — `statusLabel` in both locales is the deck's six-state table;
+  `darkNote`, `closedNote`, `blindNote`, `calibNote`, `whichNote` → `whichLines` and
+  `runNote` carry the deck's sentences; `countQualifying` added to both locales and
+  rendered into a new `#count-qualifying` element under the count block; one new
+  `.count-qualifying` CSS rule; the render call site uses `whichLines`. No scoring value,
+  record column or tier membership moved.
+- `tests/render_smoke.js` — new T28 block (six status labels, seven qualifier sentences,
+  `whichNote` removal, the calm-word scan over the rendered zero-count block, the
+  qualifying copy) and the T21 gap-chip rebound to the new `dark` label.
+- `tests/lint_public_surface.py` — the `statusLabel` key set is bound to all six normalize
+  statuses; the unused `NON_SCORING_STATUSES` constant is removed; the module docstring's
+  status paragraph now describes the six-label contract.
+
+**Verification results (after implementation).** Gates run with
+`PATH=/Users/wangyu/.pyenv/shims:$PATH` (pytest 9.0.2), the interpreter iterations 1–2
+used.
+
+- gate tier `python -m pytest tests/ -q` — `415 passed, 126 subtests passed in 1.04s`
+- lint tier `python -m unittest discover tests -p "lint_*.py"` — `Ran 69 tests … OK`
+- forbidden literal `python tests/lint_no_forbidden_literal.py` — `Ran 3 tests … OK`
+- audit tier `python -m unittest discover tests -p "audit_*.py"` — `Ran 28 tests … OK`
+- replay `python tools/replay.py --check` — exit 0, `TOTAL 1439 0`, divergence 0 since
+  `STABLE_SINCE` 2026-09-09
+- pending `python tools/pending.py --check` — `OK — 6 tagged pending item(s), 0 overdue, 0 unparseable`
+- render smoke `node tests/render_smoke.js` — `render OK in both languages; no runtime errors,
+  no undefined/NaN`; label tail `条读数偏离各自近期记录 · 3 条线没有读数 · 4 条线中有 4 条的近期参照仍在积累`
+- annotations mirror `cmp data/annotations.csv docs/data/annotations.csv` — `cmp: identical`
+
+The zero-count scan reads the real rendered block (kicker, prefix, numerator, separator,
+denominator, label and every qualifier span) for the four-line three-dark fixture in both
+languages, not the `T` object in isolation. `docs/index.html` still has exactly one
+`innerHTML`, inside `setMarkup` (lint `TestMarkupHasOneAuditedSink` passes), and no new
+first-person prose was added.
+
+**Notes for the next iteration.**
+
+- Item 4's step "delete the `changeKicker` key and its DOM assignment" was already done by
+  item 2; `#count-kicker` must keep rendering `countTitle`. The `②` `levelKicker` and
+  `levelKicker`'s `#level-kicker` assignment are still present and are item 4 material.
+- Item 4 still owns `title`/`tag`, `promise`, `asOf`/`asof`, `nodata`, `more`, `dirUp`/
+  `dirDown`, `last`, `noCollect`, `source`, the `range_*` keys, `covTitle`/`covLead`/
+  `covLead2`/`covTail`/`covMore`/`covBlind`, `notCounted` and the whole limits section.
+- Item 6 owns `countColor`, the four-way status/marker colouring, and the inline
+  `trembling`/`颤抖` pill text; item 7 owns the `alarm:` field plus `alarmTag`/
+  `alarmingWhen` and `render.py`'s chart title; item 8's guard will still find `alarm`,
+  `共振`, `平静` and layer wording in `feelHint`, `feelGapNote`, `levelTitle`/`levelBody`,
+  `covLead`/`covBlind`, `notCounted`, `footer`'s neighbours and the `②` kickers.
+- `statusLabel.scoring` will render nowhere until a card treatment claims it (item 6 or
+  later); the lint binding is what keeps it from silently disappearing.

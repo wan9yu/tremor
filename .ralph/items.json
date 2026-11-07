@@ -80,8 +80,8 @@
         "Migrate the headline qualifiers darkNote, closedNote, blindNote, calibNote, whichNote and runNote to the design deck in both locales.",
         "Run every verification gate and record the output."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 3. statusLabel now carries the deck's copy for all six statuses: scoring 'Compared with recent record' / '已与近期记录比较' added; warming-up, no-spread, stale, dark, closed migrated. Count qualifiers migrated: darkNote, closedNote, blindNote, calibNote, whichNote renamed whichLines, runNote. The zero case uses countLabel alone and blindNote no longer contrasts a reading with calm. New countQualifying ('A statistical comparison, not a judgment of conditions.' / '这是统计比较，不替处境下判断。') renders in a #count-qualifying <p> under the count block, with one new muted CSS rule. render_smoke T28 binds the six labels and seven qualifier sentences in both languages, asserts no calm/平静 word in the rendered zero-count block, and asserts the qualifying copy; T21's gap-chip text was rebound from NO DATA/无数据 to the new dark label. lint_public_surface's statusLabel key assertion now requires exactly the six normalize statuses (was the five non-scoring ones), so a missing scoring label is red. Gates: gate 415 passed; lint 69 OK; forbidden literal 3 OK; audit 28 OK; replay exit 0 (1439 rows since STABLE_SINCE, divergence 0); pending 6 tagged / 0 overdue; render smoke OK; annotations cmp identical."
     },
     {
       "category": "functional",

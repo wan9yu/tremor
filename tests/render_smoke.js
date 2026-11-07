@@ -98,8 +98,9 @@ function sweepForBadValues(lang) {
 // a row (scoring, warming-up, stale, dark, closed, no-spread) PLUS the new
 // tier-2 gap-chip state docs/index.html:GAP_STATUSES/GAP_RUN_LOUD introduces
 // -- a tier-2 line dark for >= GAP_RUN_LOUD consecutive collections must
-// render a "NO DATA" gap chip, and (the boundary case) a tier-2 line dark for
-// only ONE collection must NOT. Exercised via setDATA(), bypassing
+// render the statusLabel.dark gap chip ("No reading received" / "尚未收到读数"
+// since the public-surface migration), and (the boundary case) a tier-2 line
+// dark for only ONE collection must NOT. Exercised via setDATA(), bypassing
 // fetch/load() entirely, so this needs no network and no real CSVs.
 //
 // Every field a real parseCSV() row would carry is filled in explicitly
@@ -370,7 +371,7 @@ function buildHeadlineFixtureData() {
       if (gapItems.length !== 1) {
         errors.push(`fixture(${lang}): expected exactly 1 tier-2 gap chip `
           + `(hkma_aggr_balance's dark run), found ${gapItems.length}`);
-      } else if (!/NO DATA|无数据/.test(gapItems[0]._html)) {
+      } else if (!/No reading received|尚未收到读数/.test(gapItems[0]._html)) {
         errors.push(`fixture(${lang}): gap chip did not carry the "dark" statusLabel text: ${gapItems[0]._html}`);
       }
       // blind chip: warming-up (capital_premium) and no-spread (grid_frequency).
@@ -613,6 +614,114 @@ function buildHeadlineFixtureData() {
         }
       } catch (e) { errors.push(`headline render(${name}-${lang}): ${e.stack || e}`); }
     }
+  }
+
+  // T28 (public-surface migration, item 3): a zero reading and every row
+  // status are described without a calm/平静 word, and statusLabel carries the
+  // deck's copy for all six statuses core/normalize.py can emit -- including
+  // `scoring`, which the page had no label for at all. The count block's new
+  // qualifying line states that the count is a statistical comparison, not a
+  // judgment of conditions, and the migrated count qualifiers read as the
+  // deck's sentences in both languages.
+  const DECK_STATUS_LABEL = {
+    en: {
+      "scoring": "Compared with recent record",
+      "warming-up": "Comparison history still forming",
+      "no-spread": "Too little variation to compare",
+      "stale": "Repeated observation; prior record retained",
+      "dark": "No reading received",
+      "closed": "Market closed",
+    },
+    zh: {
+      "scoring": "已与近期记录比较",
+      "warming-up": "近期参照仍在积累",
+      "no-spread": "变化太少，暂无法比较",
+      "stale": "重复观测；沿用此前记录",
+      "dark": "尚未收到读数",
+      "closed": "市场休市",
+    },
+  };
+  const DECK_COUNT_QUALIFYING = {
+    en: "A statistical comparison, not a judgment of conditions.",
+    zh: "这是统计比较，不替处境下判断。",
+  };
+  const CALM_WORDS = ["calm", "平静"];
+  const DECK_QUALIFIERS = {
+    en: [
+      ["darkNote(2)", Tl2 => Tl2.darkNote(2), " · 2 lines have no reading"],
+      ["darkNote(1)", Tl2 => Tl2.darkNote(1), " · 1 line has no reading"],
+      ["closedNote", Tl2 => Tl2.closedNote(["cnh_cny"]), " · market closed: cnh_cny"],
+      ["blindNote(2)", Tl2 => Tl2.blindNote(2), " · 2 lines cannot yet be compared"],
+      ["blindNote(1)", Tl2 => Tl2.blindNote(1), " · 1 line cannot yet be compared"],
+      ["calibNote(1,4)", Tl2 => Tl2.calibNote(1, 4),
+        " · comparison history is still forming for 1 of 4 lines"],
+      ["runNote(_,2)", Tl2 => Tl2.runNote("", 2),
+        " · outside its recent range for 2 consecutive collection days"],
+      ["whichLines", Tl2 => (typeof Tl2.whichLines === "function" ? Tl2.whichLines(["a", "b"]) : undefined),
+        " · a + b"],
+    ],
+    zh: [
+      ["darkNote(2)", Tl2 => Tl2.darkNote(2), " · 2 条线没有读数"],
+      ["darkNote(1)", Tl2 => Tl2.darkNote(1), " · 1 条线没有读数"],
+      ["closedNote", Tl2 => Tl2.closedNote(["cnh_cny"]), " · 市场休市：cnh_cny"],
+      ["blindNote(2)", Tl2 => Tl2.blindNote(2), " · 2 条线暂不可比较"],
+      ["blindNote(1)", Tl2 => Tl2.blindNote(1), " · 1 条线暂不可比较"],
+      ["calibNote(1,4)", Tl2 => Tl2.calibNote(1, 4), " · 4 条线中有 1 条的近期参照仍在积累"],
+      ["runNote(_,2)", Tl2 => Tl2.runNote("", 2), " · 已连续 2 个采集日偏离近期范围"],
+      ["whichLines", Tl2 => (typeof Tl2.whichLines === "function" ? Tl2.whichLines(["a", "b"]) : undefined),
+        " · a ＋ b"],
+    ],
+  };
+  for (const lang of ["en", "zh"]) {
+    const Tl = T[lang] || {};
+    const labels = Tl.statusLabel || {};
+    for (const code of Object.keys(DECK_STATUS_LABEL[lang])) {
+      const got = labels[code];
+      if (got !== DECK_STATUS_LABEL[lang][code]) {
+        errors.push(`status(${lang}): statusLabel.${JSON.stringify(code)} is `
+          + `${JSON.stringify(got)}, expected the deck copy `
+          + `${JSON.stringify(DECK_STATUS_LABEL[lang][code])}`);
+      }
+    }
+    if (typeof Tl.whichNote === "function") {
+      errors.push(`status(${lang}): the retired whichNote key is still declared -- `
+        + `the deck renames it to whichLines`);
+    }
+    for (const [name, call, expected] of DECK_QUALIFIERS[lang]) {
+      const got = call(Tl);
+      if (got !== expected) {
+        errors.push(`status(${lang}): ${name} renders ${JSON.stringify(got)}, `
+          + `expected the deck's copy ${JSON.stringify(expected)}`);
+      }
+    }
+    // The zero case is described in the count block: a day with no unusual
+    // readings (three of four lines dark) must carry no calm word there.
+    global.document.cookie = "tremor_lang=" + lang;
+    setDATA(buildDarkAlarmFixtureData());
+    appendedNodes = [];
+    try {
+      render();
+      sweepForBadValues("zero-" + lang);
+      const zeroBlock = plainText(el("count-kicker").textContent)
+        + " " + plainText(el("count-prefix").textContent)
+        + " " + plainText(el("count-n").textContent)
+        + " " + plainText(el("count-sep").textContent)
+        + " " + plainText(el("count-of").textContent)
+        + " " + plainText(el("count-label").innerHTML)
+        + " " + plainText(el("count-qualifying").textContent);
+      for (const word of CALM_WORDS) {
+        if (zeroBlock.toLowerCase().includes(word.toLowerCase())) {
+          errors.push(`zero(${lang}): the zero-reading count block still uses the `
+            + `calm word ${JSON.stringify(word)}: ${JSON.stringify(zeroBlock)}`);
+        }
+      }
+      const qualifying = plainText(el("count-qualifying").textContent);
+      if (qualifying !== DECK_COUNT_QUALIFYING[lang]) {
+        errors.push(`zero(${lang}): the count block's qualifying line is `
+          + `${JSON.stringify(qualifying)}, expected the deck's copy `
+          + `${JSON.stringify(DECK_COUNT_QUALIFYING[lang])}`);
+      }
+    } catch (e) { errors.push(`zero render(${lang}): ${e.stack || e}`); }
   }
 
   // T25: record text is escaped at every sink, including the builders that
