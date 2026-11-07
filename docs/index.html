@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>tremor — is the world actually more disordered?</title>
+<title>tremor — readings, kept in view</title>
 <!-- Chart.js is vendored, not loaded from a CDN: jsdelivr is blocked in China, so
      the operator could not reliably see their own dashboard. The CDN stays as a
      fallback only if the local copy is ever missing. -->
@@ -198,8 +198,9 @@ function setRange(r){ document.cookie="tremor_range="+r+";path=/;max-age="+(3600
 // ---------- per-line metadata (bilingual) ----------
 // `watches` states each tier-1 line's actual field of view. The coverage line
 // and its modal are both DERIVED from it, so they cannot go stale on a tier
-// swap. Only `covBlind` — the prose about what tremor cannot see — is written
-// by hand and must be revisited when coverage genuinely changes.
+// swap. Only `limitsBody` / `limitsFlights` — the prose about what this record
+// cannot see — are written by hand and must be revisited when coverage
+// genuinely changes.
 const LINES = [
   { id:"flights", color:"#5aa9e6", alarm:"down",
     watches:{en:"W/C Europe · US East · US West · Japan/E Asia",zh:"西/中欧 · 美东 · 美西 · 日本/东亚"},
@@ -403,14 +404,14 @@ const LINES = [
 
 const T = {
   en:{
-    tag:"An honest, long-running instrument for one question — is the world actually more disordered, or does it only feel that way? It reads with two probes: what suddenly moved, and what is stuck broken.",
+    title:"tremor — readings, kept in view",
+    promise:"A daily record of what each series measures and how today’s readings differ from their own recent records; the meaning stays open.",
     countTitle:"Readings unusual today",
-    levelKicker:"② the level probe · what is stuck broken now",
     countLabel:"{n} / {m} readings unusual today",
     darkNote:n=>" · "+n+" line"+(n===1?"":"s")+" "+(n===1?"has":"have")+" no reading",
     closedNote:names=>" · market closed: "+names,
     countQuestion:"How is this count made? ›",
-    asof:d=>"as of "+d+" (China time)",
+    asOf:d=>"Record through "+d+" (China time)",
     panelTitle:"Tension lines, normalized",
     panelHint:"Each line's recorded robust z-score, so different units share one axis. Dashed band = the ±3 trembling threshold; gaps = warming up or no new observation.",
     statusOk:"All instruments reporting.",
@@ -418,15 +419,15 @@ const T = {
     warnH:n=>n+" instrument"+(n>1?"s":"")+" dark today.",
     warnB:names=>" No reading from "+names+". Recorded as a gap, never filled in.",
     alarmDarkH:(n,m)=>n+" of "+m+" instruments dark.",
-    watchTitle:"On the radar — collected daily, not displayed or counted:",
-    watchDays:n=>n+(n===1?" day":" days"),
+    watchTitle:"Other daily records",
+    watchDays:n=>n+(n===1?" recorded day":" recorded days"),
     alarmDarkB:names=>" No reading today from "+names+". Widespread source failure is itself a signal, not just an absence.",
     disruptH:"System disruption.",
     disruptB:(d,g)=>" No successful collection since "+d+" ("+g+" days ago). The recording apparatus itself may be down — and a prolonged silence is its own kind of tremor.",
-    nodata:"NO DATA", more:"tap to learn what it measures ›",
+    nodata:"NO READING", more:"Open reading details ›",
     benignShift:"benign shift", calibrating:"calibrating",
     annoTitle:"Recent trembles, attributed",
-    notCounted:"watchlist — not counted in the resonance",
+    notCounted:"Collected daily; never included in this count.",
     calibNote:(n,m)=>" · comparison history is still forming for "+n+" of "+m+" lines",
     whichLines:(names)=>" · "+names.join(" + "),
     blindNote:n=>" · "+n+" line"+(n===1?"":"s")+" cannot yet be compared",
@@ -451,24 +452,23 @@ const T = {
                  "no-spread":"Too little variation to compare",
                  "stale":"Repeated observation; prior record retained",
                  "dark":"No reading received","closed":"Market closed"},
-    range_30:"30d", range_90:"90d", range_365:"1y", range_all:"all",
+    range_30:"30 days", range_90:"90 days", range_365:"1 year", range_all:"All",
     feelTitle:"Real vs felt — where they diverge",
     feelHint:"Bars: how many primary instruments trembled that day (the measured side). Lines: how disordered the world FEELS — priced fear (VIX) and global news tone/conflict share — shown as z toward each line's alarming direction. Feel lines are contrast only, never counted. Amber columns mark a DIVERGENCE: the felt side ran hot while every primary instrument read calm. A divergence has two possible causes and this chart cannot tell them apart — the feeling outran the world (an anxiety premium), or the strain fell outside what tremor watches (a coverage gap).",
     feelGapNote:"divergence — felt hot, measured calm; cause unknown (anxiety premium or coverage gap)",
-    levelHead:n=>(n===1?"guarded state broken now":"guarded states broken now"),
+    levelHead:n=>(n===1?" reading below its fixed reference":" readings below their fixed references"),
     levelWhich:names=>" · "+names.join(" + "),
-    levelAsof:d=>" · as of "+d+" (PortWatch ~10d lag)",
-    levelTitle:"The second probe — what is stuck broken now",
-    levelBody:"The count at the top asks 'what suddenly moved today' — a change detector across the four primary lines, and by design it falls quiet once a disruption has run a while (a war in its third week sits inside its own baseline and reads calm). This number asks the other half of the founding question: what guarded state is broken RIGHT NOW. A chokepoint strait counts here when its traffic has held at or below half of a PINNED pre-event normal for 14+ days — the reference is frozen the day it breaks, so a closure cannot quiet itself by becoming its own baseline. It reads the IMF PortWatch panel, which publishes ~10 days late, so it is as of the last served observation. Two probes, two questions: the sudden onset, and the stuck state.",
-    covLead2:"Field of view: ",
-    covTail:" Outside this, real strain can still read 0.",
-    covMore:"what tremor cannot see ›",
-    covTitle:"Field of view — what tremor can and cannot see",
-    covLead:"That trembling count holds only inside the primary instruments' own field of view:",
-    covBlind:"tremor has no instrument in the Middle East, South Asia or Africa, and none of the scored lines watches a single strait, border or war front — the broken-states probe above is the one exception: it pins named straits, from port data that runs ~10 days behind. A war there can be entirely real while every line here reads calm. That is a limit of the instrument, not a reading about the world. A cadence gap sits inside the field of view too: cnh_cny has no weekend trading session, so Saturday and Sunday post no fresh reading, and a collection can still repeat an already-recorded quote and read stale rather than fresh — a reader expecting ~7 points a week from that line typically sees closer to 5. A reach gap sits inside the field of view too: flights counts W/C Europe, US East, US West and Japan/E Asia, but not with equal power to alarm — at the 22:30Z sample hour, US East and US West hold about 44% and 34% of the counted total while W/C Europe holds only about 13% and Japan/E Asia only about 9%; scored the way the line actually scores (de-cycled residuals, Qn scale), a complete loss of Europe's airspace alone reaches only ~1.2z and Japan's only ~0.8z — both together only ~2.0z — under the |z|>3 alarm bar, so flights cannot alarm on a Europe- or Japan-only airspace event at this sample hour. An alarm that needs a bigger move than those two regions can produce is a decoration, not a warning; the components stay banked and visible either way — only US East or US West carries enough share to move the line past the bar alone. Since R28 no communications-domain line is counted here: net_outages rides in the watchlist below after its eight largest readings were adjudicated as artifacts (none a cited world event). R30 filled the primary roster back to four — but with a financial line (Fed SRF take-up), not a communications one — so the count still has NO communications-domain instrument, and a worldwide connectivity event reads 0 in it. net_bgp_withdrawal (passive-BGP route withdrawal) now rides the watchlist as the candidate for that coverage. The watchlist below is where new coverage is built, before it is ever counted.",
+    referenceAsOf:d=>"Latest source observation: "+d+" (about 10 days behind publication)",
+    referenceTitle:"Long-running readings below fixed references",
+    referenceBody:"A named strait is listed after its recorded daily traffic stays at or below half of its fixed reference for 14 days. The reference is set before the observed change. IMF PortWatch publishes with roughly a 10-day lag; the date shown is the latest available observation.",
+    coverage:regions=>"In view: "+regions+". This is the set of records shown here.",
+    covMore:"Scope and limits ↓",
+    limitsTitle:"Limits of this record",
+    limitsBody:"The rolling comparison looks to recent history; a change that lasts can become part of a series' reference. The displayed roster is selected under written measurement assumptions, and the count does not undo that selection. Other daily records are collected but never enter this count. No communications-domain reading is included, so a worldwide connectivity event reads zero in this count. Some sources arrive late or skip dates; missing values remain gaps.",
+    limitsFlights:"Flights samples four regions at 22:30 UTC, with uneven shares: US East about 44%, US West 34%, W/C Europe 13%, and Japan/E Asia 9%. At that sample hour, either US region alone can move the line past |z| > 3; a Europe-only drop is about 1.2z, a Japan-only drop about 0.8z, and both together about 2.0z.",
     feelBars:"trembling count (real)",
-    alarmingWhen:dir=>"alarming when "+dir, dirUp:"up", dirDown:"down",
-    last:(v,u,d)=>" · last: "+v+" "+u+" on "+d, noCollect:"no collection this day",
+    alarmingWhen:dir=>"alarming when "+dir, dirUp:"rising", dirDown:"falling",
+    last:(v,u,d)=>" · latest: "+v+" "+u+" on "+d, noCollect:"no collection this day",
     source:"Source", measuresLabel:"Measures", alarmTag:dir=>"alarming when "+dir,
     countModalTitle:"How the count is made",
     countModalBody:m=>"A line contributes when its scored value crosses its own threshold in either direction. The threshold varies with the amount of distinct history available. The denominator "+m+" is the number available under the daily comparison rule: the primary roster minus lines with no reading, too little history or variation to compare, or a closed market. A repeated observation does not add another score. This counts lines on a date, not events. The roster reflects written selection assumptions.",
@@ -476,14 +476,14 @@ const T = {
     footer:"tremor doesn't predict the end — nobody can. It only makes <b>now</b> readable: a seismograph, not a prophet, blind to instantaneous shocks and listening for the slow, systemic, trace-leaving kind of disorder. Data is collected daily by a GitHub Actions cron and committed back to the repo (<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>); this dashboard reads the CSVs directly — no backend.",
   },
   zh:{
-    tag:"一台诚实的、长期运行的仪器，只回答一个问题：这个世界是不是真的更乱了——还是只是感觉更乱了？它用两个探针来读：什么骤然异动，和什么持续卡死。",
+    title:"tremor——把读数留在眼前",
+    promise:"每日记录各条序列测量什么，以及今天的读数与各自近期记录相差多远；如何理解，仍由读者决定。",
     countTitle:"今日偏离近期记录的读数",
-    levelKicker:"② 水平探针 · 此刻什么卡死破锚",
     countLabel:"今天有 {n}/{m} 条读数偏离各自近期记录",
     darkNote:n=>" · "+n+" 条线没有读数",
     closedNote:names=>" · 市场休市："+names,
     countQuestion:"这个计数如何得出？›",
-    asof:d=>"截至 "+d+"（北京时间）",
+    asOf:d=>"记录截至 "+d+"（北京时间）",
     panelTitle:"张力线（已归一化）",
     panelHint:"画的是每根线记录在案的稳健 z 分数，不同单位因此能共用一根纵轴。虚线带 = ±3 颤抖阈值；空缺 = 校准中或无新观测。",
     statusOk:"全部仪器在正常上报。",
@@ -491,15 +491,15 @@ const T = {
     warnH:n=>"今天有 "+n+" 台仪器无数据。",
     warnB:names=>"以下来源无读数："+names+"。记为缺口，绝不填补。",
     alarmDarkH:(n,m)=>m+" 台中有 "+n+" 台仪器无数据。",
-    watchTitle:"雷达观察中 — 每天采集，不显示、不计数：",
-    watchDays:n=>n+" 天",
+    watchTitle:"其他每日记录",
+    watchDays:n=>"已有 "+n+" 天记录",
     alarmDarkB:names=>"今天以下来源无读数："+names+"。大面积的来源失效本身就是信号，而不只是缺席。",
     disruptH:"系统紊乱。",
     disruptB:(d,g)=>"自 "+d+" 起已 "+g+" 天没有成功采集。记录装置本身可能已经瘫痪——而长久的沉默，本身就是一种颤抖。",
-    nodata:"无数据", more:"点击了解它测的是什么 ›",
+    nodata:"无读数", more:"查看读数详情 ›",
     benignShift:"良性异动", calibrating:"校准中",
     annoTitle:"近期颤抖及归因",
-    notCounted:"观察名单 — 不计入共振",
+    notCounted:"每日采集，但从不进入这个计数。",
     calibNote:(n,m)=>" · "+m+" 条线中有 "+n+" 条的近期参照仍在积累",
     whichLines:(names)=>" · "+names.join(" ＋ "),
     blindNote:n=>" · "+n+" 条线暂不可比较",
@@ -516,23 +516,22 @@ const T = {
                  "no-spread":"变化太少，暂无法比较",
                  "stale":"重复观测；沿用此前记录",
                  "dark":"尚未收到读数","closed":"市场休市"},
-    range_30:"30天", range_90:"90天", range_365:"1年", range_all:"全部",
+    range_30:"30 天", range_90:"90 天", range_365:"1 年", range_all:"全部",
     feelTitle:"真实 vs 感觉 — 两者的背离",
     feelHint:"柱：当天一级仪器的颤抖根数（测量侧）。线：世界「感觉」有多乱——恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自报警方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 一次背离：感觉侧发烫，而所有一级仪器读数平静。背离有两种可能，这张图分不出是哪一种——要么是感觉跑在了世界前面（焦虑溢价），要么是压力落在了 tremor 的视野之外（覆盖盲区）。",
     feelGapNote:"背离 —— 感觉发烫，测量平静；成因未知（焦虑溢价或覆盖盲区）",
-    levelHead:n=>"个被守护的状态此刻卡死破锚",
+    levelHead:n=>n+" 条读数长期低于既定参照",
     levelWhich:names=>" · "+names.join(" ＋ "),
-    levelAsof:d=>" · 截至 "+d+"（PortWatch 约 10 天滞后）",
-    levelTitle:"第二个探针 —— 此刻有什么卡死破锚",
-    levelBody:"最上面那个数字问的是「今天什么骤然异动了」——四条主线的变化探测器，而且它按设计会在扰动持续一段之后转静（第三周的战争落在自己的基线里、读作平静）。这个数字问的是创立问题的另一半：此刻有哪个被守护的状态是破的。一条海峡计入这里，是当它的流量连续 14 天以上跌到某个「事发前正常值」的一半或以下——那个基准在它破的当天就被钉死，所以封锁无法靠把自己变成基线来自我安静。数据来自 IMF PortWatch 面板，约有 10 天发布滞后，所以这是截至最近一次可得观测。两个探针，两个问题：骤然的发作，与持续的卡死。",
-    covLead2:"视野范围：",
-    covTail:"视野之外，真实的压力照样可能读作 0。",
-    covMore:"tremor 看不见什么 ›",
-    covTitle:"视野范围 —— tremor 看得见与看不见什么",
-    covLead:"这个颤抖计数，只在这些主线仪器自己的视野之内成立：",
-    covBlind:"tremor 在中东、南亚、非洲没有任何仪器，计分的线里也没有任何一台盯着某一条海峡、某一段边境或某一条战线——上方的卡死破锚探针是唯一的例外：它钉着具名的海峡，用的是滞后约 10 天的港口数据。那里的战争可以完全真实，而这里每根线仍然读作平静。这是仪器的局限，不是关于世界的读数。视野之内也有一处节奏缺口：cnh_cny 没有周末交易时段，周六、周日不产生新读数；有时某次采集仍会重复一个已记录过的报价，读作「重复发布」而非新读数——本以为这条线一周能看到约 7 个点的读者，实际常只看到约 5 个。视野之内还有一处触达缺口：flights 计入西/中欧、美东、美西与日本/东亚，但它们触发警报的能力并不对等——在 22:30Z 采样时刻，美东与美西分别约占计入总量的 44% 与 34%，而西/中欧只占约 13%，日本/东亚只占约 9%；按这条线实际打分的方式（去周期残差、Qn 标度）计算，欧洲空域单独完全归零也只会把读数推到约 1.2z，日本单独归零约 0.8z——两者相加也只有约 2.0z，仍在 |z|>3 警报线之下，所以在这个采样时刻，flights 无法仅凭欧洲或日本的空域事件触发警报。需要比这两个区域所能产生的更大幅度的变动才会报警，那样的警报只是装饰，不是真正的预警；分量数据依然被完整记录、清晰可见——只有美东或美西单独的变动，幅度才够把这条线推过警报线。自 R28 起，这里不再计入任何通信域的线：net_outages 的八个最大读数经裁定为伪迹（无一对应有据可查的世界事件）后，已降入下方观察名单。R30 已把一级槽位补回四条——但补进的是一条金融线（美联储 SRF 动用量），而非通信线——所以这个计数里仍然没有任何通信域仪器，一场全球性的连通性事件在这里仍读作 0。net_bgp_withdrawal（被动 BGP 路由撤回）现作为这块覆盖的候选线，在下方观察名单中承担。下方的观察名单，就是新覆盖在被计数之前生长的地方。",
+    referenceAsOf:d=>"来源最新观测："+d+"（发布约滞后 10 天）",
+    referenceTitle:"长期低于既定参照的条目",
+    referenceBody:"具名海峡的每日记录流量连续 14 天处于固定参照值的一半或以下时，页面列出该项。参照值在观测变化之前设定。IMF PortWatch 约有 10 天发布滞后；页面日期为最新可得观测日期。",
+    coverage:regions=>"当前记录范围："+regions+"。本页展示的是这些记录。",
+    covMore:"范围与限度 ↓",
+    limitsTitle:"这份记录的限度",
+    limitsBody:"滚动比较照见近期记录；延续很久的变化，可能渐渐进入一条序列的参照。页面展示哪些线，依据书面观测假设选定，计数不会抹去这份选择。其他每日记录会继续采集，却永不进入这个计数。这里没有通信域的读数，所以全球性的连通事件在这个计数里读作零。有些来源发布较迟，也会漏掉日期；缺失处仍留空。",
+    limitsFlights:"Flights 每日 22:30 UTC 采样四个区域，各自占比并不相同：美东约 44%，美西 34%，西/中欧 13%，日本/东亚 9%。在这个采样时刻，单独一个美国区域的变化足以把这条线推过 |z| > 3；西/中欧单独约为 1.2z，日本/东亚约为 0.8z，两者合计约为 2.0z。",
     feelBars:"颤抖根数（真实）",
-    alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下跌",
+    alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下降",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
     source:"数据来源", measuresLabel:"测量内容", alarmTag:dir=>dir+"时为异常",
     countModalTitle:"这个计数如何得出",
@@ -613,14 +612,14 @@ function countModal(lang){
   const m=headlineDenominator==null?"":headlineDenominator;
   return `<h3>${T[lang].countModalTitle}</h3><p>${T[lang].countModalBody(m)}</p>`;
 }
-function levelModal(lang){ return `<h3>${T[lang].levelTitle}</h3><p>${T[lang].levelBody}</p>`; }
+function levelModal(lang){ return `<h3>${T[lang].referenceTitle}</h3><p>${T[lang].referenceBody}</p>`; }
 // Built FROM each tier-1 line's own `watches` field, so the disclosure cannot go
 // stale independently of the instruments it describes.
 function covModal(lang){
   const t1=LINES.filter(L=>(L.tier||1)===1);
   const items=t1.map(L=>`<li><b>${L.domain[lang]}</b> — ${L.watches[lang]}</li>`).join("");
-  return `<h3>${T[lang].covTitle}</h3><p>${T[lang].covLead}</p>
-    <ul class="cov">${items}</ul><p>${T[lang].covBlind}</p>`;
+  return `<h3>${T[lang].limitsTitle}</h3><ul class="cov">${items}</ul>
+    <p>${T[lang].limitsBody}</p><p>${T[lang].limitsFlights}</p>`;
 }
 
 // ---------- data + render ----------
@@ -739,7 +738,8 @@ function render(){
   const lang=getLang();
   document.documentElement.lang = lang==="zh"?"zh":"en";
   document.querySelectorAll("#langtoggle button").forEach(b=>b.classList.toggle("on", b.dataset.lang===lang));
-  document.getElementById("tag").textContent=T[lang].tag;
+  document.title=T[lang].title;
+  document.getElementById("tag").textContent=T[lang].promise;
   document.getElementById("panel-title").textContent=T[lang].panelTitle;
   document.getElementById("panel-hint").textContent=T[lang].panelHint;
   setMarkup(document.getElementById("footer"),T[lang].footer);
@@ -827,20 +827,21 @@ function render(){
            + (blindCount?`<span class="darknote">${T[lang].blindNote(blindCount)}</span>`:"")
            + (closedCount?`<span class="calibnote">${T[lang].closedNote(closedNames.join(", "))}</span>`:"")
            + (calibN?`<span class="calibnote">${T[lang].calibNote(calibN,TIER1.length)}</span>`:""));
-    document.getElementById("asof").textContent=T[lang].asof(last.date);
+    document.getElementById("asof").textContent=T[lang].asOf(last.date);
   }
   document.getElementById("count").onclick=()=>openModal(countModal(lang));
 
-  // ---- second headline: the LEVEL probe — guarded states broken right now ----
-  // A different question from the resonance above: not "what suddenly moved today"
-  // but "what is stuck broken". Fed by the already-served stuck.csv, which the R12
-  // firewall keeps OUT of summary.csv and the scoring path — so this count never
-  // feeds the trembling resonance; it is its own probe of the world.
+  // ---- second number: long-running readings below their fixed references ----
+  // A different measure from the daily count above: the level layer holds a
+  // named strait's state open against a pinned pre-event reference, and this
+  // block reports how many such states are open now. Fed by the already-served
+  // stuck.csv, which the R12 firewall keeps OUT of summary.csv and the scoring
+  // path, so this number never feeds the daily count.
   const lc=document.getElementById("level-count");
   const lk=document.getElementById("level-kicker");
   const stuckRows=DATA.stuck||[];
   if(stuckRows.length){
-    lc.hidden=false; lk.hidden=false; lk.textContent=T[lang].levelKicker;
+    lc.hidden=false; lk.hidden=false; lk.textContent=T[lang].referenceTitle;
     const lByDate={}; stuckRows.forEach(r=>{(lByDate[r.date]||(lByDate[r.date]=[])).push(r);});
     const lLatest=Object.keys(lByDate).sort().pop();
     const openNow=lByDate[lLatest];
@@ -850,7 +851,7 @@ function render(){
     setMarkup(document.getElementById("level-label"),
       T[lang].levelHead(cnt)
       +(cnt?`<span class="pairnote">${T[lang].levelWhich(names)}</span>`:"")
-      +`<span class="calibnote">${T[lang].levelAsof(lLatest)}</span>`);
+      +`<span class="calibnote"> · ${T[lang].referenceAsOf(lLatest)}</span>`);
     document.getElementById("level-q").textContent=T[lang].countQuestion;
     lc.onclick=()=>openModal(levelModal(lang));
   } else { lc.hidden=true; lk.hidden=true; }
@@ -940,8 +941,8 @@ function render(){
   const cov=document.getElementById("coverage"); cov.hidden=false;
   // Derived from the same `watches` metadata the modal uses, so a tier swap can
   // never leave this sentence describing instruments that are no longer here.
-  setMarkup(cov,`${T[lang].covLead2}${TIER1.map(L=>L.watches[lang]).join(" · ")}.`
-    + `${T[lang].covTail}<span class="cmore" id="covmore">${T[lang].covMore}</span>`);
+  setMarkup(cov,`${T[lang].coverage(TIER1.map(L=>L.watches[lang]).join(" · "))}`
+    +`<span class="cmore" id="covmore">${T[lang].covMore}</span>`);
   document.getElementById("covmore").onclick=()=>openModal(covModal(lang));
 
   // system status banner

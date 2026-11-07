@@ -300,3 +300,130 @@ first-person prose was added.
   `covLead`/`covBlind`, `notCounted`, `footer`'s neighbours and the `②` kickers.
 - `statusLabel.scoring` will render nowhere until a card treatment claims it (item 6 or
   later); the lint binding is what keeps it from silently disappearing.
+
+## Iteration 4 — item 4 (functional): the numbered two-probe framing is deleted and the structural copy describes a record
+
+**Chosen because** `.ralph/plan.md` ranks copy and structure before style, names the
+`declared_dir` field as the third field later items reference, and this item is the last
+unfinished copy item that other items do not depend on for field names. It also clears the
+probe vocabulary out of the blocks items 5–8 must edit. No item is hard-blocked; the
+ledger held iterations 1–3, all green.
+
+**Entry state measured.** Gate 415 passed; lint 69 OK; forbidden-literal 3 OK; audit 28 OK;
+`replay --check` exit 0 (1439 rows since `STABLE_SINCE`, divergence 0); `pending --check`
+6 tagged / 0 overdue; render smoke OK; annotations mirror identical.
+
+**Test-first, failure recorded.** `tests/render_smoke.js` gained a T29 block before any
+copy changed: it binds the deck's structural strings in both languages (title, promise,
+as-of line, gap word, detail link, direction words, four range labels, coverage sentence,
+limits title/body/flights, fixed-reference title/body/as-of, not-counted line, watchlist
+heading and day counts), requires the retired keys `tag`, `changeKicker`, `levelKicker` and
+`asof` to be absent, and scans the rendered page plus every detail panel for the circled
+kickers `①`/`②`/`③` and the words `probe`/`探针`. Run on the unmodified page: exit 1 with
+71 `structure(...)` failures, including `structure(en): the retired key "tag" is still
+declared`, `structure(en): direction words are ["up","down"], expected the deck's
+["rising","falling"]`, `structure(en): document title is undefined, expected the deck's
+"tremor — readings, kept in view"`, `structure(en): the fixed-reference heading is "② the
+level probe · what is stuck broken now"`, `structure(en): the coverage panel does not carry
+the deck's limitsTitle "Limits of this record"`, and `structure(en): the reader surface
+still carries probe wording "②"` / `"probe"` plus the ZH `"探针"` counterpart.
+
+**Test rebind (same commit, not weakened).** `tests/audit_record.py`'s flights-reach audit
+bound twelve phrases from the retired `covBlind` paragraph (`"about 44% and 34%"`,
+`"~1.2z"`, `"44% 与 34%"`, …). Those are three shares and three z figures that the new
+`limitsFlights` copy still states, so the phrase list was rebound to the deck's wording with
+each of the four shares and each of the three z figures bound separately in both languages
+(`"US East about 44%"`, `"US West 34%"`, `"W/C Europe 13%"`, `"Japan/E Asia 9%"`,
+`"about 1.2z"`, `"about 0.8z"`, `"about 2.0z"`, and the ZH equivalents). The two
+`covBlind` docstring/message references were renamed to `limitsFlights`. The binding is
+stricter than the old combined phrases, not looser.
+
+**Decisions (conservative, reversible).**
+
+- `title` and `promise` replace `tag`. The static `<title>` is the deck's EN title; `render()`
+  sets `document.title` per language and `#tag` renders `promise`. The `#tag` element id
+  keeps its spelling (internal identifier).
+- The `②` kicker string is deleted and `#level-kicker` now renders `referenceTitle`, exactly
+  as `#count-kicker` renders `countTitle` since item 2. The deck deletes `levelKicker`
+  outright; the block still needs a heading, and the deck supplies one.
+- `levelTitle`/`levelBody`/`levelAsof` become `referenceTitle`/`referenceBody`/
+  `referenceAsOf` (deck text verbatim). The deck's `referenceItem` is NOT rendered: it needs
+  `latest {value} / reference {reference} / {days}`, while `docs/data/stuck.csv` carries only
+  `pct` and `since`. Inventing a reference value or a days template would state figures the
+  served record does not contain, so the block keeps its count label, reworded to
+  `reading(s) below its/their fixed reference(s)` / `N 条读数长期低于既定参照`. The deck's
+  demotion of this block below the history chart is a DOM move that no item in this bundle
+  claims; the block stays where it is.
+- `covTitle`/`covLead`/`covLead2`/`covTail`/`covBlind` are replaced by `coverage` (a
+  function of the `watches`-derived region list), `covMore`, `limitsTitle`, `limitsBody` and
+  `limitsFlights`. The limits copy renders in the coverage panel for now; item 5 owns
+  putting it inline as visible body text below the collected records. `covBlind`'s
+  cadence-gap prose (`cnh_cny` weekend session) is not in the deck and is dropped with the
+  rest of that paragraph; `limitsFlights` carries the measured sampling-weight facts.
+- `watchTitle` and `watchDays` were migrated although item 4 lists only `notCounted`: the
+  watchlist heading is where a reader learns which collected lines never enter the count,
+  and the old heading claimed those lines are "not displayed", which contradicted the list
+  directly below it. `watchDays` keeps the deck's `{n} recorded days` template with the
+  English `(s)` hint resolved to grammatical number, the same treatment item 3 used.
+- The deck supplies no replacement string for `noCollect` (`no collection this day` /
+  `当天未采集`), so it is unchanged; `last` keeps its shape with the label word aligned to
+  the deck's `latest`. `source` (`Source` / `数据来源`) and `countQ` → `countQuestion` were
+  already deck strings.
+- `panelTitle`/`panelHint`, `statusOk`/`awaiting`/`warn*`/`alarmDark*`/`disrupt*`,
+  `annoTitle`/`annoBody`, `feel*`, `alarmTag`/`alarmingWhen`, `benignShift`/`calibrating`,
+  `verdictLabel`, `leanNote` and `footer` were left untouched: items 6, 7 and 8 own them.
+  The `<title>` element now carries no world-question framing, and the two probe-kicker
+  comments in the render path were reworded to describe the reference block.
+
+**Files changed.**
+
+- `docs/index.html` — `<title>`; both `T` locales: `tag` → `title` + `promise`,
+  `levelKicker` deleted, `asof` → `asOf`, `nodata`/`more`/`dirUp`/`dirDown`/`range_*`/
+  `notCounted`/`watchTitle`/`watchDays`/`last` migrated, `levelHead` reworded,
+  `levelTitle`/`levelBody`/`levelAsof` → `referenceTitle`/`referenceBody`/`referenceAsOf`,
+  `cov*` → `coverage`/`covMore`/`limitsTitle`/`limitsBody`/`limitsFlights`; `render()` sets
+  `document.title` and the promise, uses `asOf`, renders the reference heading and the
+  deck's coverage sentence; `covModal` renders the limits block; `levelModal` renders the
+  reference rule. No scoring value, record column or tier membership moved.
+- `tests/render_smoke.js` — new T29 block (structural copy, retired keys, circled-kicker
+  and probe-word scan over the rendered page and every detail panel, gap word, detail
+  link, limits panel, reference panel, watchlist not-counted line).
+- `tests/audit_record.py` — flights-reach phrase list rebound to `limitsFlights` copy; two
+  `covBlind` docstring/message references renamed.
+
+**Verification results (after implementation).** Gates run with
+`PATH=/Users/wangyu/.pyenv/shims:$PATH` (pytest 9.0.2), the interpreter iterations 1–3 used.
+
+- gate tier `python -m pytest tests/ -q` — `415 passed, 126 subtests passed in 0.94s`
+- lint tier `python -m unittest discover tests -p "lint_*.py"` — `Ran 69 tests … OK`
+- forbidden literal `python tests/lint_no_forbidden_literal.py` — `Ran 3 tests … OK`
+- audit tier `python -m unittest discover tests -p "audit_*.py"` — `Ran 28 tests … OK`
+- replay `python tools/replay.py --check` — exit 0, `TOTAL 1439 0 0`, divergence 0 since
+  `STABLE_SINCE` 2026-09-09
+- pending `python tools/pending.py --check` — `OK — 6 tagged pending item(s), 0 overdue, 0 unparseable`
+- render smoke `node tests/render_smoke.js` — `render OK in both languages; no runtime errors,
+  no undefined/NaN`; coverage `当前记录范围：… 。本页展示的是这些记录。范围与限度 ↓`
+- annotations mirror `cmp data/annotations.csv docs/data/annotations.csv` — `cmp: identical`
+
+`grep` over `docs/index.html` finds no `①`/`②`/`③` and no `probe`/`探针` anywhere in the
+file, source comments included. `docs/index.html` still has exactly one `innerHTML`, inside
+`setMarkup` (lint `TestMarkupHasOneAuditedSink` passes), and no first-person prose was
+added.
+
+**Notes for the next iteration.**
+
+- Item 5 owns making `limitsTitle`/`limitsBody`/`limitsFlights` visible inline below the
+  collected records. All three render today only in the panel opened by `covMore`; the
+  copy itself is already the deck's, so item 5 is placement plus the visibility assertion.
+  `covMore`'s `↓` should then scroll to that section rather than open the panel.
+- Item 6 owns `countColor`, the four-way status/marker colouring and the inline
+  `trembling`/`颤抖` pill text.
+- Item 7 owns the `alarm:` field, `alarmTag`/`alarmingWhen` and `render.py`'s chart title.
+  `dirUp`/`dirDown` now read `rising`/`falling`, so `alarmTag` renders
+  `alarming when rising` until item 7 renames it.
+- Item 8's guard will still find `alarm` in `alarmTag`/`alarmingWhen`/`statusLabel`'s
+  neighbours, `calm`/`平静` in `feelHint`/`feelGapNote`, `共振` nowhere (the last copy use
+  went with `notCounted`), and the layer wording in nothing migrated here; `footer` and
+  `panelTitle`/`panelHint` remain the unclaimed deck keys.
+- The reference count head uses `levelHead` with the number kept in `#level-n`, matching the
+  daily count block; the deck has no head template for that block.

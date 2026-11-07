@@ -760,6 +760,212 @@ function buildHeadlineFixtureData() {
     } catch (e) { errors.push(`darkalarm render(${lang}): ${e.stack || e}`); }
   }
 
+  // T29 (public-surface migration, item 4): the numbered two-probe framing is
+  // deleted and the structural copy describes a record. No circled-probe
+  // kicker (①/②/③) and no probe wording (probe / 探针) may reach a reader in
+  // either language, and the deck's structural strings are what renders:
+  // title, promise, as-of line, gap word, detail link, direction words, range
+  // labels, the coverage sentence, the limits block, the fixed-reference block
+  // and the watchlist's collected-never-counted line.
+  const DECK_STRUCT = {
+    en: {
+      title: "tremor — readings, kept in view",
+      promise: "A daily record of what each series measures and how today’s readings differ from their own recent records; the meaning stays open.",
+      nodata: "NO READING",
+      more: "Open reading details ›",
+      dirUp: "rising",
+      dirDown: "falling",
+      ranges: { "30": "30 days", "90": "90 days", "365": "1 year", "all": "All" },
+      coveragePrefix: "In view: ",
+      coverageSuffix: ". This is the set of records shown here.",
+      covMore: "Scope and limits ↓",
+      limitsTitle: "Limits of this record",
+      limitsBody: "The rolling comparison looks to recent history; a change that lasts can become part of a series' reference.",
+      limitsFlights: "Flights samples four regions at 22:30 UTC, with uneven shares:",
+      referenceTitle: "Long-running readings below fixed references",
+      referenceBody: "A named strait is listed after its recorded daily traffic stays at or below half of its fixed reference for 14 days.",
+      referenceAsOf: /(^| · )Latest source observation: \d{4}-\d{2}-\d{2} \(about 10 days behind publication\)$/,
+      notCounted: "Collected daily; never included in this count.",
+      watchTitle: "Other daily records",
+      watchDays: ["1 recorded day", "2 recorded days"],
+      asOf: /^Record through \d{4}-\d{2}-\d{2} \(China time\)$/,
+    },
+    zh: {
+      title: "tremor——把读数留在眼前",
+      promise: "每日记录各条序列测量什么，以及今天的读数与各自近期记录相差多远；如何理解，仍由读者决定。",
+      nodata: "无读数",
+      more: "查看读数详情 ›",
+      dirUp: "升高",
+      dirDown: "下降",
+      ranges: { "30": "30 天", "90": "90 天", "365": "1 年", "all": "全部" },
+      coveragePrefix: "当前记录范围：",
+      coverageSuffix: "。本页展示的是这些记录。",
+      covMore: "范围与限度 ↓",
+      limitsTitle: "这份记录的限度",
+      limitsBody: "滚动比较照见近期记录；延续很久的变化，可能渐渐进入一条序列的参照。",
+      limitsFlights: "Flights 每日 22:30 UTC 采样四个区域，各自占比并不相同：",
+      referenceTitle: "长期低于既定参照的条目",
+      referenceBody: "具名海峡的每日记录流量连续 14 天处于固定参照值的一半或以下时，页面列出该项。",
+      referenceAsOf: /(^| · )来源最新观测：\d{4}-\d{2}-\d{2}（发布约滞后 10 天）$/,
+      notCounted: "每日采集，但从不进入这个计数。",
+      watchTitle: "其他每日记录",
+      watchDays: ["已有 1 天记录", "已有 2 天记录"],
+      asOf: /^记录截至 \d{4}-\d{2}-\d{2}（北京时间）$/,
+    },
+  };
+  const PROBE_WORDS = ["①", "②", "③", "probe", "探针"];
+  const structFixture = buildFixtureData();
+  structFixture.stuck = [{ date: FIXTURE_DATE, component: "Strait of Hormuz",
+    since: "2026-04-06", pct: "4", stale: "" }];
+  for (const lang of ["en", "zh"]) {
+    const d = DECK_STRUCT[lang];
+    const Tl = T[lang] || {};
+    global.document.cookie = "tremor_lang=" + lang;
+    // Retired keys: the deck deletes changeKicker and levelKicker outright,
+    // renames asof to asOf, and replaces the two-probe `tag` with `promise`.
+    for (const retired of ["tag", "changeKicker", "levelKicker", "asof"]) {
+      if (typeof Tl[retired] !== "undefined") {
+        errors.push(`structure(${lang}): the retired key ${JSON.stringify(retired)} is still declared`);
+      }
+    }
+    if (Tl.dirUp !== d.dirUp || Tl.dirDown !== d.dirDown) {
+      errors.push(`structure(${lang}): direction words are ${JSON.stringify([Tl.dirUp, Tl.dirDown])}, `
+        + `expected the deck's ${JSON.stringify([d.dirUp, d.dirDown])}`);
+    }
+    for (const r of ["30", "90", "365", "all"]) {
+      if (Tl["range_" + r] !== d.ranges[r]) {
+        errors.push(`structure(${lang}): range_${r} is ${JSON.stringify(Tl["range_" + r])}, `
+          + `expected the deck's ${JSON.stringify(d.ranges[r])}`);
+      }
+    }
+    for (const [name, got, want] of [
+      ["nodata", Tl.nodata, d.nodata],
+      ["more", Tl.more, d.more],
+      ["notCounted", Tl.notCounted, d.notCounted],
+      ["watchTitle", Tl.watchTitle, d.watchTitle],
+      ["watchDays(1)", Tl.watchDays(1), d.watchDays[0]],
+      ["watchDays(2)", Tl.watchDays(2), d.watchDays[1]],
+    ]) {
+      if (got !== want) {
+        errors.push(`structure(${lang}): ${name} is ${JSON.stringify(got)}, `
+          + `expected the deck's ${JSON.stringify(want)}`);
+      }
+    }
+    setDATA(structFixture);
+    appendedNodes = [];
+    try {
+      render();
+      sweepForBadValues("structure-" + lang);
+      if (document.title !== d.title) {
+        errors.push(`structure(${lang}): document title is ${JSON.stringify(document.title)}, `
+          + `expected the deck's ${JSON.stringify(d.title)}`);
+      }
+      if (el("tag").textContent !== d.promise) {
+        errors.push(`structure(${lang}): the promise line is ${JSON.stringify(el("tag").textContent)}, `
+          + `expected the deck's ${JSON.stringify(d.promise)}`);
+      }
+      if (!d.asOf.test(el("asof").textContent)) {
+        errors.push(`structure(${lang}): the as-of line is ${JSON.stringify(el("asof").textContent)}, `
+          + `which does not match the deck's asOf pattern ${d.asOf}`);
+      }
+      const cov = plainText(el("coverage").innerHTML);
+      if (!cov.startsWith(d.coveragePrefix) || !cov.includes(d.coverageSuffix)
+          || !cov.includes(d.covMore)) {
+        errors.push(`structure(${lang}): the coverage line is ${JSON.stringify(cov)}, `
+          + `expected the deck's coverage sentence plus ${JSON.stringify(d.covMore)}`);
+      }
+      if (el("level-kicker").textContent !== d.referenceTitle) {
+        errors.push(`structure(${lang}): the fixed-reference heading is `
+          + `${JSON.stringify(el("level-kicker").textContent)}, expected the deck's `
+          + `${JSON.stringify(d.referenceTitle)}`);
+      }
+      if (!d.referenceAsOf.test(plainText(el("level-label").innerHTML))) {
+        errors.push(`structure(${lang}): the fixed-reference label is `
+          + `${JSON.stringify(plainText(el("level-label").innerHTML))}, which does not carry the `
+          + `deck's referenceAsOf pattern ${d.referenceAsOf}`);
+      }
+      const chips = appendedNodes.filter(n => (n.className || "").startsWith("inst"));
+      const tier1Count = LINES.filter(L => (L.tier || 1) === 1).length;
+      if (chips.length !== tier1Count) {
+        errors.push(`structure(${lang}): expected ${tier1Count} tier-1 chips, found ${chips.length}`);
+      }
+      for (const n of chips) {
+        if (!(n._html || "").includes(`<div class="more">${d.more}</div>`)) {
+          errors.push(`structure(${lang}): a reading chip does not carry the deck's detail link `
+            + `${JSON.stringify(d.more)}`);
+        }
+      }
+      // The coverage link opens the limits block: all four limitations plus the
+      // measured flights sampling fact, in the page's own words.
+      el("covmore").onclick();
+      const limits = plainText(el("modal-body").innerHTML);
+      for (const [name, want] of [["limitsTitle", d.limitsTitle],
+                                  ["limitsBody", d.limitsBody],
+                                  ["limitsFlights", d.limitsFlights]]) {
+        if (!limits.includes(want)) {
+          errors.push(`structure(${lang}): the coverage panel does not carry the deck's `
+            + `${name} ${JSON.stringify(want)}`);
+        }
+      }
+      // The fixed-reference number opens its own rule, not a probe explanation.
+      el("level-count").onclick();
+      const refModal = plainText(el("modal-body").innerHTML);
+      for (const [name, want] of [["referenceTitle", d.referenceTitle],
+                                  ["referenceBody", d.referenceBody]]) {
+        if (!refModal.includes(want)) {
+          errors.push(`structure(${lang}): the fixed-reference panel does not carry the deck's `
+            + `${name} ${JSON.stringify(want)}`);
+        }
+      }
+      // A collected-but-never-counted line says so in its own detail.
+      const tier2 = LINES.find(L => (L.tier || 1) === 2);
+      openTier2Modal(tier2, lang);
+      if (!plainText(el("modal-body").innerHTML).includes(d.notCounted)) {
+        errors.push(`structure(${lang}): a watchlist detail does not carry the deck's `
+          + `not-counted line ${JSON.stringify(d.notCounted)}`);
+      }
+      const watchHeading = appendedNodes.find(n => n._text === d.watchTitle);
+      if (!watchHeading) {
+        errors.push(`structure(${lang}): the watchlist heading is not the deck's `
+          + `${JSON.stringify(d.watchTitle)}`);
+      }
+      // The reader surface -- rendered page plus every detail panel -- must not
+      // carry a numbered kicker or any probe wording.
+      const surface = [
+        document.title, el("tag").textContent, el("asof").textContent, el("coverage").innerHTML,
+        el("count-kicker").textContent, el("count-label").innerHTML,
+        el("level-kicker").textContent, el("level-label").innerHTML,
+        el("panel-title").textContent, el("panel-hint").textContent, el("footer").innerHTML,
+        ...Object.values(made).flatMap(n => [n._text, n._html]),
+        ...appendedNodes.flatMap(n => [n._text, n._html]),
+        covModal(lang), countModal(lang), levelModal(lang),
+        ...LINES.map(L => lineModal(L, lang)),
+      ].join("\n");
+      for (const word of PROBE_WORDS) {
+        if (surface.includes(word)) {
+          errors.push(`structure(${lang}): the reader surface still carries probe wording `
+            + `${JSON.stringify(word)}`);
+        }
+      }
+    } catch (e) { errors.push(`structure render(${lang}): ${e.stack || e}`); }
+    // A line with no reading shows the deck's gap word, not a bare "no data".
+    setDATA(buildDarkAlarmFixtureData());
+    appendedNodes = [];
+    try {
+      render();
+      const darkChips = appendedNodes.filter(n => (n.className || "").includes("inst dark"));
+      if (darkChips.length !== 3) {
+        errors.push(`structure(${lang}): expected 3 dark reading chips, found ${darkChips.length}`);
+      }
+      for (const n of darkChips) {
+        if (!(n._html || "").includes(`<span class="nodata">${d.nodata}</span>`)) {
+          errors.push(`structure(${lang}): a dark reading chip does not carry the deck's gap word `
+            + `${JSON.stringify(d.nodata)}: ${n._html}`);
+        }
+      }
+    } catch (e) { errors.push(`structure dark render(${lang}): ${e.stack || e}`); }
+  }
+
   await new Promise(r => setTimeout(r, 50));
   if (errors.length) { console.log("FAILURES:\n" + errors.join("\n\n")); process.exit(1); }
   console.log("render OK in both languages; no runtime errors, no undefined/NaN");

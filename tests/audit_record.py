@@ -401,7 +401,7 @@ class TestAdsbProviderHealth(unittest.TestCase):
 
 # --- flights reach: bind the docs field-of-view copy to the record ----------
 
-# docs/index.html's covBlind prose (EN+ZH) states that, at the 22:30Z sample
+# docs/index.html's limitsFlights prose (EN+ZH) states that, at the 22:30Z sample
 # hour, only US East and US West carry enough share of the counted total to
 # clear the |z|>3 alarm bar on their own — a complete loss of W/C Europe or
 # E Asia/Japan alone reaches nowhere near it. That is a claim about the DATA
@@ -472,7 +472,7 @@ def _flights_reach():
 
 
 class TestFlightsReachClaimBindsToTheRecord(unittest.TestCase):
-    """docs/index.html's covBlind copy (EN+ZH) claims specific region shares
+    """docs/index.html's limitsFlights copy (EN+ZH) claims specific region shares
     and full-loss reach-z figures for flights at the 22:30Z sample hour, and
     that only the two US regions clear the alarm bar. Both are numbers
     about the record, so they can silently go stale as the window rolls
@@ -504,7 +504,7 @@ class TestFlightsReachClaimBindsToTheRecord(unittest.TestCase):
             actual = shares[region] * 100
             self.assertLess(
                 abs(actual - claim), self.SHARE_TOL,
-                f"{region}: docs/index.html's covBlind claims ~{claim:g}% of "
+                f"{region}: docs/index.html's limitsFlights claims ~{claim:g}% of "
                 f"the flights total but the record now computes {actual:.1f}% "
                 f"— revisit the field-of-view copy (EN+ZH) and this claim")
 
@@ -512,13 +512,13 @@ class TestFlightsReachClaimBindsToTheRecord(unittest.TestCase):
             actual = reach_z[region]
             self.assertLess(
                 abs(actual - claim), self.Z_TOL,
-                f"{region}: docs/index.html's covBlind claims a full-loss "
+                f"{region}: docs/index.html's limitsFlights claims a full-loss "
                 f"reach of ~{claim:g}z but the record now computes "
                 f"{actual:.2f}z — revisit the field-of-view copy (EN+ZH)")
 
         self.assertLess(
             abs(combo_z - self.CLAIMED_COMBO_Z), self.Z_TOL,
-            f"W/C Europe + E Asia/Japan combined: docs/index.html's covBlind "
+            f"W/C Europe + E Asia/Japan combined: docs/index.html's limitsFlights "
             f"claims ~{self.CLAIMED_COMBO_Z:g}z but the record now computes "
             f"{combo_z:.2f}z")
 
@@ -547,9 +547,13 @@ class TestFlightsReachClaimBindsToTheRecord(unittest.TestCase):
         fail here, not just drift unnoticed until the tolerance check above
         happens to still pass some other number."""
         text = support.read_text(os.path.join(ROOT, "docs", "index.html"))
-        for phrase in ("about 44% and 34%", "about 13%", "about 9%",
-                      "~1.2z", "~0.8z", "~2.0z",
-                      "44% 与 34%", "13%", "9%", "1.2z", "0.8z", "2.0z"):
+        # Each of the four claimed shares and each of the three claimed z
+        # figures is bound separately, in both languages, so a copy edit that
+        # drops or changes any one number fails here.
+        for phrase in ("US East about 44%", "US West 34%", "W/C Europe 13%",
+                      "Japan/E Asia 9%", "about 1.2z", "about 0.8z", "about 2.0z",
+                      "美东约 44%", "美西 34%", "西/中欧 13%", "日本/东亚 9%",
+                      "约为 1.2z", "约为 0.8z", "约为 2.0z"):
             self.assertIn(phrase, text,
                           f"docs/index.html: field-of-view copy no longer states {phrase!r}")
 

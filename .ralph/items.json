@@ -93,8 +93,8 @@
         "Keep notCounted visible in the watchlist wording so a reader can tell which collected lines never enter the count.",
         "Run every verification gate and record the output."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 4. The numbered two-probe framing is gone: changeKicker was already deleted by item 2, levelKicker (② …) is deleted in both locales, and the #level-kicker element now renders referenceTitle, so no circled kicker (①/②/③) and no probe/探针 wording appears anywhere in docs/index.html. Structural copy is the deck's: title + promise (tag removed; document.title set per language), asOf, nodata (NO READING / 无读数), more, dirUp/dirDown (rising/falling), range_30/90/365/all, the last-value label (latest), notCounted, watchTitle, watchDays and coverage (function over the watches-derived region list) + covMore. covTitle/covLead/covLead2/covTail/covBlind are replaced by limitsTitle/limitsBody/limitsFlights in the coverage panel; levelTitle/levelBody/levelAsof are replaced by referenceTitle/referenceBody/referenceAsOf, and levelHead now counts readings below a fixed reference. countQ and source already held deck strings. tests/render_smoke.js T29 binds every migrated string in both languages, bans ①/②/③ and probe/探针 across the rendered page and every detail panel, asserts the deck's gap word and detail link render, the coverage panel carries the limits block, the reference panel carries its rule, a watchlist detail carries the not-counted line, and the retired keys tag/changeKicker/levelKicker/asof are gone. tests/audit_record.py's flights-reach phrase list was rebound to the new limitsFlights copy with each share and z figure bound separately in both languages, which is stricter than the old combined phrases. Gates: gate 415 passed; lint 69 OK; forbidden literal 3 OK; audit 28 OK; replay exit 0 (1439 rows since STABLE_SINCE, divergence 0); pending 6 tagged / 0 overdue; render smoke OK; annotations cmp identical."
     },
     {
       "category": "functional",
