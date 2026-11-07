@@ -77,15 +77,38 @@ _LAST = "https://markets.newyorkfed.org/api/rp/all/all/results/last/{n}.json"
 _HEADERS = useragent.HEADERS
 
 
+class _Unusable(ValueError):
+    """The API answered, but not with a usable operations list.
+
+    The message says what it DID answer (status, content type, size), because
+    the dark row's note is the only trace of the response: a bare exception
+    class could not tell an HTML page from an empty body from a rate-limit page
+    (2026-11-07 recorded just ``JSONDecodeError``). A ``ValueError`` still, so
+    every existing handler keeps catching it.
+    """
+
+
+def _answer(r):
+    """One short printable line naming the response: status, content type, size."""
+    ctype = r.headers.get("Content-Type") or "no content-type"
+    ctype = "".join(ch for ch in ctype if ch.isprintable())[:40]
+    return f"HTTP {r.status_code}, {ctype}, {len(r.content)} bytes"
+
+
 def _get(url, params=None):
     r = requests.get(url, params=params, headers=_HEADERS, timeout=30)
     if r.status_code != 200:
-        raise ValueError(f"HTTP {r.status_code}")
-    ops = r.json().get("repo", {}).get("operations")
+        raise _Unusable(_answer(r))
+    try:
+        body = r.json()
+    except ValueError:
+        raise _Unusable(f"{_answer(r)}, not JSON") from None
+    repo = body.get("repo") if isinstance(body, dict) else None
+    ops = repo.get("operations") if isinstance(repo, dict) else None
     if not isinstance(ops, list):
         # a 200 with a changed / empty shape is a source problem, not a $0 day —
         # raise so the caller degrades to a stated-empty, never a fabricated read
-        raise ValueError("unexpected response shape")
+        raise _Unusable(f"{_answer(r)}, unexpected response shape")
     return ops
 
 
@@ -140,13 +163,19 @@ def settled_takeup(operations, today=None):
     return {day: amt for day, amt in daily_takeup(operations).items() if day < today}
 
 
+def _unavailable(detail):
+    return {"raw_value": None,
+            "source_note": f"NY Fed markets API unavailable: {detail}"}
+
+
 def fetch_daily():
     try:
         ops = _recent(40)   # ~2 ops/business day -> a comfortable settled window
         takeup = settled_takeup(ops)
+    except _Unusable as e:
+        return _unavailable(str(e))
     except (requests.RequestException, ValueError, KeyError, TypeError) as e:
-        return {"raw_value": None,
-                "source_note": f"NY Fed markets API unavailable: {type(e).__name__}"}
+        return _unavailable(type(e).__name__)
 
     obs = max(takeup, default=None)
     if obs is None:

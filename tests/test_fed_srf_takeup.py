@@ -3,8 +3,10 @@ pure logic. These stub the one network entry point (``_recent``) and read no
 committed record, so they are safe in the pre-collect gate.
 """
 import datetime
+import json
 import os
 import sys
+import types
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -98,6 +100,94 @@ class TestFetchDaily(unittest.TestCase):
             r = srf.fetch_daily()
         self.assertIsNone(r["raw_value"])
         self.assertIn("unavailable", r["source_note"])
+
+
+def _http(status=200, body=b"", ctype: "str | None" = "application/json"):
+    """A stub ``requests`` response: ``.json()`` parses ``body`` like the real one,
+    so an HTML page raises ``json.JSONDecodeError`` (a ``ValueError``). ``ctype=None``
+    sends no Content-Type header at all."""
+    text = body.decode("utf-8", "replace") if isinstance(body, bytes) else body
+
+    def _json():
+        return json.loads(text)
+    return types.SimpleNamespace(
+        status_code=status, content=body if isinstance(body, bytes) else body.encode(),
+        headers={"Content-Type": ctype} if ctype else {}, json=_json)
+
+
+class TestWhyTheSourceWasUnusable(unittest.TestCase):
+    """A dark day must say what the API actually answered.
+
+    2026-11-07 recorded only ``NY Fed markets API unavailable: JSONDecodeError``:
+    the exception class, nothing about the response. A 200 carrying an HTML page,
+    an empty body and a rate-limit page all read the same, so the next dark day
+    could not be told apart from this one. The note is prose and reaches no
+    verdict (the row is dark either way), so naming the response costs replay
+    nothing.
+    """
+
+    def _fetch(self, response):
+        with support.stub_requests(srf, lambda url, **kw: response):
+            return srf.fetch_daily()
+
+    def test_an_html_200_names_status_type_and_size(self):
+        page = b"<html><body>Service busy, try again</body></html>"
+        r = self._fetch(_http(200, page, ctype="text/html; charset=utf-8"))
+        self.assertIsNone(r["raw_value"])
+        self.assertIn("NY Fed markets API unavailable:", r["source_note"])
+        self.assertIn("HTTP 200", r["source_note"])
+        self.assertIn("not JSON", r["source_note"])
+        self.assertIn("text/html", r["source_note"])
+        self.assertIn(f"{len(page)} bytes", r["source_note"])
+
+    def test_an_empty_200_says_empty(self):
+        r = self._fetch(_http(200, b"", ctype=None))
+        self.assertIsNone(r["raw_value"])
+        self.assertIn("HTTP 200", r["source_note"])
+        self.assertIn("0 bytes", r["source_note"])
+        self.assertIn("no content-type", r["source_note"])
+
+    def test_a_non_200_names_the_status(self):
+        r = self._fetch(_http(503, b"<html>down</html>", ctype="text/html"))
+        self.assertIsNone(r["raw_value"])
+        self.assertIn("HTTP 503", r["source_note"])
+
+    def test_a_json_list_is_a_shape_problem_not_a_crash(self):
+        # r.json().get(...) on a list raised AttributeError, which the handler did
+        # not catch: the day became a generic "fetcher crashed" row with no reason
+        r = self._fetch(_http(200, b"[1, 2, 3]"))
+        self.assertIsNone(r["raw_value"])
+        self.assertIn("unexpected response shape", r["source_note"])
+
+    def test_a_non_dict_repo_is_a_shape_problem_too(self):
+        r = self._fetch(_http(200, b'{"repo": "maintenance"}'))
+        self.assertIsNone(r["raw_value"])
+        self.assertIn("unexpected response shape", r["source_note"])
+
+    def test_the_note_is_one_short_line(self):
+        r = self._fetch(_http(200, b"<html>" + b"x" * 5000 + b"</html>",
+                              ctype="text/html\r\nX-Injected: 1"))
+        note = r["source_note"]
+        self.assertNotIn("\n", note)
+        self.assertNotIn("\r", note)
+        self.assertLessEqual(len(note), 200)
+
+    def test_a_transport_failure_still_names_the_exception_class(self):
+        def boom(url, **kw):
+            raise ConnectionError("connection reset by peer")
+        with support.stub_requests(srf, boom):
+            r = srf.fetch_daily()
+        self.assertIsNone(r["raw_value"])
+        self.assertIn("ConnectionError", r["source_note"])
+
+    def test_a_good_body_is_unchanged(self):
+        yesterday = (datetime.datetime.now(datetime.timezone.utc).date()
+                     - datetime.timedelta(days=1)).isoformat()
+        body = json.dumps({"repo": {"operations": [
+            _op(yesterday, "Repo", 2_000_000), _op(yesterday, "Repo", 3_000_000)]}})
+        r = self._fetch(_http(200, body.encode()))
+        self.assertEqual(r["raw_value"], 5.0)
+        self.assertEqual(r["obs_date"], yesterday)
 
 
 class TestScaleModeWiring(unittest.TestCase):
