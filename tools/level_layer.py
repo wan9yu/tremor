@@ -45,6 +45,7 @@ from datetime import date as _date
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import collect
+from core import dates
 
 REF_WINDOW = (365, 60)   # reference: median over days t-365..t-60
 REF_MIN_OBS = 30         # ...requiring at least this many observations
@@ -111,21 +112,43 @@ def walk(series):
     return out
 
 
-def compute():
-    """All level events across every component, sorted by (date, component)."""
+def series_from_rows(rows):
+    """``({component: [(date, value)] oldest-first}, skipped)`` from the component record.
+
+    A row whose ``date`` is not a strict ``YYYY-MM-DD`` is dropped and counted,
+    never handed on: ``walk`` and ``stale_note`` parse every date with
+    ``date.fromisoformat``, so one mangled row aborts the whole derive step, and
+    a basic-form ``20261002`` is accepted silently by that parser on 3.11+ and
+    then sorts as a distinct key. The component file's date column is written by
+    ``collect.write_components`` from an ``obs_date`` the collector already
+    validates, so this is defence in depth for a hand-edited or damaged file.
+    The same rule, in the same place, as ``drift_layer.series_from_rows``.
+    """
     by_component = {}
-    for r in collect._read_rows(SOURCE):
+    skipped = 0
+    for r in rows:
+        if not dates.is_strict_date(r["date"]):
+            skipped += 1
+            continue
         by_component.setdefault(r["component"], []).append(
             (r["date"], float(r["value"])))
+    for series in by_component.values():
+        series.sort()
+    return by_component, skipped
+
+
+def compute():
+    """``(rows, skipped)`` — every level event across every component, sorted by
+    (date, component), and the component rows the date guard dropped."""
+    by_component, skipped = series_from_rows(collect._read_rows(SOURCE))
     rows = []
     for component, series in by_component.items():
-        series.sort()
         for date, event, trail, ref, ratio in walk(series):
             rows.append({"date": date, "component": component, "event": event,
                          "trail_median": f"{trail:g}", "reference": f"{ref:g}",
                          "ratio": f"{ratio:.3f}"})
     rows.sort(key=lambda r: (r["date"], r["component"]))
-    return rows
+    return rows, skipped
 
 
 def open_states(rows, key):
@@ -177,6 +200,8 @@ def last_seen():
     """
     newest, per_component = "", {}
     for r in collect._read_rows(SOURCE):
+        if not dates.is_strict_date(r["date"]):
+            continue    # a mangled date can sort above every real one
         newest = max(newest, r["date"])
         name = r["component"]
         per_component[name] = max(per_component.get(name, ""), r["date"])
@@ -184,7 +209,7 @@ def last_seen():
 
 
 def main(argv):
-    rows = compute()
+    rows, skipped = compute()
     if "--report" in argv:
         newest, seen = last_seen()
         open_now, opened = open_states(rows, "component")
@@ -198,7 +223,8 @@ def main(argv):
         return 0
     collect._write_rows(OUT, HEADER, rows)
     events = sum(1 for r in rows if r["event"] != "hold")
-    print(f"levels: {len(rows)} rows ({events} open/clear events) -> {OUT}")
+    print(f"levels: {len(rows)} rows ({events} open/clear events) -> {OUT}"
+          f"; {skipped} component row(s) dropped (unusable date)")
     return 0
 
 

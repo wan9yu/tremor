@@ -158,5 +158,75 @@ class TestDriftDateGuard(unittest.TestCase):
         self.assertEqual(skipped, 1)
 
 
+class TestLevelDateGuard(unittest.TestCase):
+    """A component row with an unusable date is dropped at the read, counted.
+
+    ``walk`` and ``stale_note`` both parse every date they are handed with
+    ``date.fromisoformat``, so one mangled row in the component record would
+    abort the whole derive step, and a basic-form ``20261002`` would be
+    accepted silently by that parser on 3.11+ and then sort as a distinct key.
+    Same rule and same shape as ``TestDriftDateGuard``: the guard sits where
+    rows become series, not inside ``walk``.
+    """
+
+    @staticmethod
+    def rows():
+        return [
+            {"date": "2026-10-01", "component": "Strait A", "value": "10"},
+            {"date": "<!DOCTYPE html>", "component": "Strait A", "value": "5"},
+            {"date": "20261002", "component": "Strait A", "value": "6"},
+            {"date": "", "component": "Strait A", "value": "7"},
+            {"date": "2026-10-03", "component": "Strait A", "value": "7"},
+            {"date": "2026-10-01", "component": "Strait B", "value": "3"},
+        ]
+
+    def test_unusable_dates_are_dropped_and_counted_per_the_whole_record(self):
+        by_component, skipped = level_layer.series_from_rows(self.rows())
+        self.assertEqual(skipped, 3)
+        self.assertEqual(by_component, {
+            "Strait A": [("2026-10-01", 10.0), ("2026-10-03", 7.0)],
+            "Strait B": [("2026-10-01", 3.0)],
+        })
+
+    def test_the_surviving_series_is_safe_to_walk(self):
+        by_component, _ = level_layer.series_from_rows(self.rows())
+        for series in by_component.values():
+            self.assertEqual(level_layer.walk(series), [])
+
+    def test_series_are_sorted_oldest_first(self):
+        rows = [{"date": "2026-10-03", "component": "X", "value": "1"},
+                {"date": "2026-10-01", "component": "X", "value": "2"}]
+        by_component, skipped = level_layer.series_from_rows(rows)
+        self.assertEqual(skipped, 0)
+        self.assertEqual([d for d, _ in by_component["X"]],
+                         ["2026-10-01", "2026-10-03"])
+
+    def test_a_clean_record_drops_nothing(self):
+        rows = [{"date": "2026-10-01", "component": "X", "value": "1.5"}]
+        self.assertEqual(level_layer.series_from_rows(rows),
+                         ({"X": [("2026-10-01", 1.5)]}, 0))
+
+    def test_compute_reports_what_it_dropped(self):
+        with support.stub_attr(level_layer.collect, "_read_rows",
+                               lambda path: self.rows()):
+            rows, skipped = level_layer.compute()
+        self.assertEqual(rows, [])
+        self.assertEqual(skipped, 3)
+
+    def test_last_seen_ignores_unusable_dates(self):
+        # stale_note parses both dates it is given; a mangled "newest" would
+        # raise there, and a mangled string can also sort above every real date
+        rows = self.rows() + [{"date": "~~junk", "component": "Strait B", "value": "1"}]
+        with support.stub_attr(level_layer.collect, "_read_rows",
+                               lambda path: list(rows)):
+            newest, per_component = level_layer.last_seen()
+        self.assertEqual(newest, "2026-10-03")
+        self.assertEqual(per_component, {"Strait A": "2026-10-03",
+                                         "Strait B": "2026-10-01"})
+        self.assertEqual(level_layer.stale_note(newest, per_component["Strait B"]),
+                         "  [NO LONGER SERVED: last seen 2026-10-01, 2 observation days ago "
+                         "\u2014 this state cannot clear because nothing is watching it]")
+
+
 if __name__ == "__main__":
     unittest.main()
