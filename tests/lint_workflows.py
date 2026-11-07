@@ -128,7 +128,7 @@ class TestWorkflowsPassAStructuralSanityScan(unittest.TestCase):
 
 class TestNoStaleTwentyTwoZeroDailyRunPhrasing(unittest.TestCase):
     """Guard against the stale "22:00 daily run" comment class: daily.yml
-    fires at 18:00Z and sleeps to the 22:30Z collection target (see
+    fires at 17:00Z and sleeps to the 22:30Z collection target (see
     daily.yml's own "Sleep until the 22:30Z sample target" step) — there has
     never been a 22:00 daily run. A comment naming one names a schedule that
     does not exist."""

@@ -17,7 +17,7 @@ import support
 class TestWorkflowParsing(unittest.TestCase):
     def test_cron_hours_reads_the_daily_schedule(self):
         hours = support.cron_hours(os.path.join(ROOT, ".github/workflows/daily.yml"))
-        self.assertEqual(hours, [18])
+        self.assertEqual(hours, [17])
 
     def test_run_steps_include_the_sleep_block(self):
         steps = support.workflow_run_steps(os.path.join(ROOT, ".github/workflows/daily.yml"))
