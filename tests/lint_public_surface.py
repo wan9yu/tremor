@@ -629,5 +629,92 @@ class TestReadmeClaimsBindToSource(unittest.TestCase):
                 self.assertEqual(claims[label], expected, msg)
 
 
+class TestMarkupHasOneAuditedSink(unittest.TestCase):
+    """docs/index.html writes markup in exactly one place, and that place is audited.
+
+    Every row this page shows comes from a CSV, and some of those cells are
+    written by a fetcher from whatever a remote answered: the record already
+    holds a gateway's whole HTML error page in an ``hkma_aggr_balance``
+    ``source_note``, and the FRED incident put ``<link href=…`` into five lines'
+    notes. A page that interpolates such a cell into ``innerHTML`` executes
+    whatever the upstream sent, in every reader's browser, forever — the CSV is
+    append-only, so the payload is never retracted.
+
+    The defence is two-part and both parts are checked here:
+
+    * ``esc()`` is applied to the record-derived strings (``source_note``, an
+      annotation's ``note``/``verdict``) at the sink. ``tests/render_smoke.js``
+      proves it end to end with a payload fixture, in both languages.
+    * every markup write goes through ``setMarkup(el, html)``, so there is ONE
+      line in the file that can do harm and reviewing it is a two-second job. A
+      new ``el.innerHTML = someRow.source_note`` cannot be added quietly.
+
+    STDLIB-ONLY (lint tier): the file is read as text, never parsed or executed.
+    """
+
+    def _html(self):
+        with open(DOCS_INDEX, encoding="utf-8") as fh:
+            return fh.read()
+
+    @staticmethod
+    def _code_lines(text):
+        """The file's lines with comments and blank lines dropped.
+
+        A comment may name the thing being banned — the ``setMarkup`` docstring
+        does, on purpose — without that counting as a use of it.
+        """
+        out = []
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("//"):
+                continue
+            out.append(line)
+        return out
+
+    def test_exactly_one_inner_html_assignment_exists(self):
+        code = [ln for ln in self._code_lines(self._html()) if "innerHTML" in ln]
+        self.assertEqual(
+            len(code), 1,
+            "docs/index.html should write markup in exactly one place (setMarkup); "
+            f"found {len(code)} lines naming innerHTML outside comments: {code}")
+
+    def test_the_one_assignment_is_inside_set_markup(self):
+        code = [ln for ln in self._code_lines(self._html()) if "innerHTML" in ln]
+        self.assertTrue(code, "no innerHTML assignment found — did setMarkup go away?")
+        self.assertIn("function setMarkup(", code[0])
+        self.assertIn("el.innerHTML", code[0])
+
+    def test_set_markup_is_the_only_door(self):
+        """No ``.innerHTML`` may be written other than through setMarkup."""
+        text = self._html()
+        self.assertIn("function setMarkup(el,html)", text)
+        # every push into the DOM goes through the helper: count its uses, and
+        # require that no other line assigns to an element's innerHTML
+        code = self._code_lines(text)
+        other = [ln for ln in code
+                 if "innerHTML" in ln and "function setMarkup(" not in ln]
+        self.assertEqual(other, [], f"markup written outside setMarkup: {other}")
+
+    def test_esc_escapes_all_five_metacharacters(self):
+        """The helper must cover every character that can start markup or a scheme."""
+        text = self._html()
+        m = re.search(r"function esc\(v\)\{.*?\}", text)
+        self.assertIsNotNone(m, "esc() is gone")
+        body = m.group(0)
+        for ch in ('"&"', '"<"', '">"', "'"'", ""'""):
+            self.assertIn(ch, body, f"esc() does not handle {ch}")
+        self.assertIn("&amp;", body)
+        self.assertIn("&lt;", body)
+        self.assertIn("&gt;", body)
+
+    def test_the_record_derived_strings_go_through_esc(self):
+        """The three sinks that render a CSV cell must call esc() on it."""
+        text = self._html()
+        self.assertIn("esc(todayRow.source_note)", text,
+                      "a dark row's source_note reaches the DOM unescaped")
+        self.assertIn("esc(a.note)", text, "an annotation note reaches the DOM unescaped")
+        self.assertIn("esc(a.verdict)", text, "an annotation verdict reaches the DOM unescaped")
+
+
 if __name__ == "__main__":
     unittest.main()

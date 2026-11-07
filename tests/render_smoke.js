@@ -115,6 +115,29 @@ function fixtureRow(overrides) {
   }, overrides);
 }
 const FIXTURE_DATE = "2026-09-03";
+// T25: a payload shaped like what a hostile or merely broken upstream can put in
+// a source_note (the record already holds a gateway's HTML error page verbatim).
+// Every sink that renders record text must show it as TEXT, never as markup.
+const XSS_NOTE = 'gw said <img src=x onerror="alert(1)"> & <script>alert(2)</script> done';
+// Markup that must never appear in rendered output: a tag that could execute, or
+// any raw angle bracket that survived interpolation.
+const XSS_MARKERS = ["<img", "<script", "onerror=\"alert", "& <script"];
+function xssScan(label, text) {
+  const out = [];
+  for (const marker of XSS_MARKERS) {
+    if (text.includes(marker)) {
+      out.push(`xss(${label}): output contains raw markup ${JSON.stringify(marker)} `
+        + `-- a record string reached innerHTML unescaped`);
+    }
+  }
+  return out;
+}
+function xssErrors(label) {
+  const bits = [];
+  for (const n of Object.values(made)) bits.push(n._text, n._html);
+  for (const n of appendedNodes) bits.push(n._text, n._html);
+  return xssScan(label, bits.join("\n"));
+}
 function buildFixtureData() {
   const lines = {};
   // --- tier-1 (all three since R28 demoted net_outages): scoring+trembling,
@@ -126,7 +149,7 @@ function buildFixtureData() {
   lines.credit_spread = [fixtureRow({ date: FIXTURE_DATE, raw_value: "4.2", z_score: "0.4",
     trembling: "0", direction: "up", status: "scoring" })];                 // calm
   lines.cnh_cny = [fixtureRow({ date: FIXTURE_DATE, status: "closed",
-    source_note: "no new observation: FX weekend, both legs frozen" })];
+    source_note: XSS_NOTE })];
   // --- tier-2: the remaining statuses, plus the gap-chip run boundary ---
   // net_outages is tier-2 since R28; its single dark day exercises a tier-2
   // dark reading below the gap-chip run boundary (like space_weather below).
@@ -186,6 +209,8 @@ function buildAdjFixtureData() {
   };
   const annotations = [
     { date: ADJ_DATE, line: "flights", verdict: "artifact", note: "fixture: instrument artifact" },
+    // verdict must not be "method": annosFor() filters those out of the modal
+    { date: ADJ_PREV_DATE, line: "flights", verdict: "correction", note: XSS_NOTE },
   ];
   const leans = [
     { date: ADJ_DATE, line: "flights", lean: "common-mode", evidence: "MUST NOT RENDER: annotation wins" },
@@ -340,6 +365,7 @@ function buildDarkAlarmFixtureData() {
           + `(warming-up + no-spread), found ${blindItems.length}`);
       }
     } catch (e) { errors.push(`fixture render(${lang}): ${e.stack || e}`); }
+    errors.push(...xssErrors("fixture-" + lang));
     // exercise the modal builders against the fixture too, tier-1 and tier-2.
     try { covModal(lang); resoModal(lang); levelModal(lang); } catch (e) { errors.push(`fixture modal(${lang}): ${e.stack || e}`); }
     for (const id of Object.keys(fixture.lines)) {
@@ -453,6 +479,16 @@ function buildDarkAlarmFixtureData() {
             + `(a method annotation must not block the common-mode lean's hatch)`);
       }
     } catch (e) { errors.push(`adj2 render(${lang}): ${e.stack || e}`); }
+  }
+
+  // T25: record text is escaped at every sink, including the builders that
+  // RETURN markup (lineModal / openTier2Modal reach the DOM only through
+  // openModal, so a DOM-only sweep would miss them entirely).
+  for (const lang of ["en", "zh"]) {
+    global.document.cookie = "tremor_lang=" + lang;
+    setDATA(adjFixture);
+    const flightsLine = LINES.find(x => x.id === "flights");
+    errors.push(...xssScan("lineModal-" + lang, lineModal(flightsLine, lang)));
   }
 
   // T24 (R29 C1): sysstatus alarm banner fires on a TIER1.length-derived

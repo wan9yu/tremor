@@ -562,6 +562,18 @@ function wrapNote(s,width=48,maxLines=4){
   return lines;
 }
 function fmt(v){ const n=parseFloat(v); return Math.abs(n)>=1000?n.toLocaleString():(""+v); }
+// RECORD TEXT IS NOT MARKUP. Every string on this page that came from a CSV is
+// run through esc() before it is interpolated into markup: a source_note is
+// written by a fetcher from whatever a remote answered (the record already holds
+// a gateway's whole HTML error page in one), and an annotation note is free
+// text. Escaping at the sink is what makes that safe whatever wrote it.
+function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+// THE ONE PLACE THIS PAGE WRITES MARKUP. Every argument is markup built here from
+// trusted constants (T, LINES) with any record-derived text already through esc().
+// Routing every write through one function is what makes that reviewable: a lint
+// test asserts this file contains exactly one innerHTML, inside setMarkup, so a
+// future `el.innerHTML = someRow.source_note` cannot be added quietly.
+function setMarkup(el,html){ el.innerHTML=String(html==null?"":html); }
 function countColor(n){ return n>=3?"var(--alarm)":n===2?"var(--orange)":n===1?"var(--amber)":"var(--calm)"; }
 function utcMidnight(d){ const p=d.split("-").map(Number); return Date.UTC(p[0],p[1]-1,p[2]); }
 // Rows are dated in China time (UTC+8), so compute "today" the same way for the staleness gap.
@@ -569,7 +581,7 @@ function nowChinaMidnight(){ const t=new Date(Date.now()+8*3600*1000); return Da
 
 // ---------- modal ----------
 let modalChart=null;
-function openModal(html){ if(modalChart){modalChart.destroy();modalChart=null;} document.getElementById("modal-body").innerHTML=html; document.getElementById("modal").hidden=false; }
+function openModal(html){ if(modalChart){modalChart.destroy();modalChart=null;} setMarkup(document.getElementById("modal-body"),html); document.getElementById("modal").hidden=false; }
 function closeModal(){ if(modalChart){modalChart.destroy();modalChart=null;} document.getElementById("modal").hidden=true; }
 document.getElementById("modal-x").onclick=closeModal;
 document.getElementById("modal-backdrop").onclick=closeModal;
@@ -580,7 +592,7 @@ function lineModal(L,lang){
   const annos=annosFor(L.id).slice(-3).reverse();
   const annoHtml=annos.length
     ? `<h4 class="annoh">${T[lang].annoTitle}</h4>`+annos.map(a=>
-        `<p class="anno"><b>${a.date}</b> <span class="tag2">${a.verdict}</span> ${a.note}</p>`).join("")
+        `<p class="anno"><b>${esc(a.date)}</b> <span class="tag2">${esc(a.verdict)}</span> ${esc(a.note)}</p>`).join("")
     : "";
   return `<div class="mdomain">${L.domain[lang]}</div>
     <h3>${L.label[lang]}</h3>
@@ -714,7 +726,7 @@ function render(){
   document.getElementById("tag").textContent=T[lang].tag;
   document.getElementById("panel-title").textContent=T[lang].panelTitle;
   document.getElementById("panel-hint").textContent=T[lang].panelHint;
-  document.getElementById("footer").innerHTML=T[lang].footer;
+  setMarkup(document.getElementById("footer"),T[lang].footer);
   document.getElementById("count-q").textContent=T[lang].countQ;
   document.getElementById("count-kicker").textContent=T[lang].changeKicker;
 
@@ -782,13 +794,13 @@ function render(){
       const run=tremblingRunLength(rows,L.alarm);
       if(run>=2) adjBits.push(T[lang].runNote(tag,run));
     }
-    document.getElementById("count-label").innerHTML =
+    setMarkup(document.getElementById("count-label"),
       base + (firing.length>1?`<span class="pairnote">${T[lang].whichNote(firing)}</span>`:"")
            + adjBits.map(b=>`<span class="calibnote">${b}</span>`).join("")
            + (darkCount?`<span class="darknote">${T[lang].darkNote(darkCount)}</span>`:"")
            + (blindCount?`<span class="darknote">${T[lang].blindNote(blindCount)}</span>`:"")
            + (closedCount?`<span class="calibnote">${T[lang].closedNote(closedNames.join(", "))}</span>`:"")
-           + (calibN?`<span class="calibnote">${T[lang].calibNote(calibN,TIER1.length)}</span>`:"");
+           + (calibN?`<span class="calibnote">${T[lang].calibNote(calibN,TIER1.length)}</span>`:""));
     document.getElementById("asof").textContent=T[lang].asof(last.date);
   }
   document.getElementById("count").onclick=()=>openModal(resoModal(lang));
@@ -809,10 +821,10 @@ function render(){
     const cnt=openNow.length;
     const lnEl=document.getElementById("level-n"); lnEl.textContent=cnt; lnEl.style.color=countColor(cnt);
     const names=openNow.map(r=>straitLabel(r.component,lang));
-    document.getElementById("level-label").innerHTML=
+    setMarkup(document.getElementById("level-label"),
       T[lang].levelHead(cnt)
       +(cnt?`<span class="pairnote">${T[lang].levelWhich(names)}</span>`:"")
-      +`<span class="calibnote">${T[lang].levelAsof(lLatest)}</span>`;
+      +`<span class="calibnote">${T[lang].levelAsof(lLatest)}</span>`);
     document.getElementById("level-q").textContent=T[lang].countQ;
     lc.onclick=()=>openModal(levelModal(lang));
   } else { lc.hidden=true; lk.hidden=true; }
@@ -836,7 +848,7 @@ function render(){
   // with long histories, drop the everyday dots and keep only tremble markers
   const denseView=viewDates.length>120;
 
-  const strip=document.getElementById("strip"); strip.innerHTML="";
+  const strip=document.getElementById("strip"); setMarkup(strip,"");
   const datasets=[]; const darkNames=[];
   for(const L of TIER1){
     const rows=lines[L.id]||[]; const byDate={}; rows.forEach(r=>byDate[r.date]=r);
@@ -880,13 +892,13 @@ function render(){
       nowHtml=isClosed
         ? `<span style="color:var(--muted)">${T[lang].statusLabel.closed}</span>`
         : `<span class="nodata">${T[lang].nodata}</span>`;
-      const reason=todayRow?todayRow.source_note:T[lang].noCollect;
+      const reason=todayRow?esc(todayRow.source_note):T[lang].noCollect;
       subHtml=`${reason}${lastGood?T[lang].last(fmt(lastGood.raw_value),L.unit[lang],lastGood.date):""}`;
     }
-    chip.innerHTML=`<div class="domain">${L.domain[lang]}</div>
+    setMarkup(chip,`<div class="domain">${L.domain[lang]}</div>
       <div class="now">${nowHtml}</div>
       <div class="sub">${subHtml}</div>
-      <div class="more">${T[lang].more}</div>`;
+      <div class="more">${T[lang].more}</div>`);
     chip.onclick=()=>openModal(lineModal(L,lang));
     strip.appendChild(chip);
 
@@ -902,17 +914,17 @@ function render(){
   const cov=document.getElementById("coverage"); cov.hidden=false;
   // Derived from the same `watches` metadata the modal uses, so a tier swap can
   // never leave this sentence describing instruments that are no longer here.
-  cov.innerHTML=`${T[lang].covLead2}${TIER1.map(L=>L.watches[lang]).join(" · ")}.`
-    + `${T[lang].covTail}<span class="cmore" id="covmore">${T[lang].covMore}</span>`;
+  setMarkup(cov,`${T[lang].covLead2}${TIER1.map(L=>L.watches[lang]).join(" · ")}.`
+    + `${T[lang].covTail}<span class="cmore" id="covmore">${T[lang].covMore}</span>`);
   document.getElementById("covmore").onclick=()=>openModal(covModal(lang));
 
   // system status banner
   const st=document.getElementById("sysstatus"); st.hidden=false;
-  if(!last){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].nodata}</span>`; }
-  else if(gapDays>=2){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].disruptH}</span>${T[lang].disruptB(last.date,gapDays)}`; }
-  else if(darkCount*2>TIER1.length){ st.className="sysstatus alarm"; st.innerHTML=`<span class="h">${T[lang].alarmDarkH(darkCount,TIER1.length)}</span>${T[lang].alarmDarkB(darkNames.join(", "))}`; }
-  else if(darkCount>=1){ st.className="sysstatus warn"; st.innerHTML=`<span class="h">${T[lang].warnH(darkCount)}</span>${T[lang].warnB(darkNames.join(", "))}`; }
-  else { st.className="sysstatus ok"; st.innerHTML=`<span class="h">${T[lang].statusOk}</span>`+(gapDays>=1?T[lang].awaiting(last.date):""); }
+  if(!last){ st.className="sysstatus alarm"; setMarkup(st,`<span class="h">${T[lang].nodata}</span>`); }
+  else if(gapDays>=2){ st.className="sysstatus alarm"; setMarkup(st,`<span class="h">${T[lang].disruptH}</span>${T[lang].disruptB(last.date,gapDays)}`); }
+  else if(darkCount*2>TIER1.length){ st.className="sysstatus alarm"; setMarkup(st,`<span class="h">${T[lang].alarmDarkH(darkCount,TIER1.length)}</span>${T[lang].alarmDarkB(darkNames.join(", "))}`); }
+  else if(darkCount>=1){ st.className="sysstatus warn"; setMarkup(st,`<span class="h">${T[lang].warnH(darkCount)}</span>${T[lang].warnB(darkNames.join(", "))}`); }
+  else { st.className="sysstatus ok"; setMarkup(st,`<span class="h">${T[lang].statusOk}</span>`+(gapDays>=1?T[lang].awaiting(last.date):"")); }
 
   // Dashed ±3 trembling-threshold guides — visual reference only, kept out of
   // the legend and the hover tooltip so only the real lines are listed.
@@ -984,7 +996,7 @@ function render(){
 
   // watchlist — tier-2 candidates: collected daily, not counted; click for data
   const wl=document.getElementById("watchlist");
-  wl.innerHTML=""; wl.hidden=!TIER2.length;
+  setMarkup(wl,""); wl.hidden=!TIER2.length;
   if(TIER2.length){
     const b=document.createElement("b"); b.textContent=T[lang].watchTitle; b.style.display="block"; b.style.marginBottom="4px"; wl.appendChild(b);
     for(const L of TIER2){
@@ -1001,9 +1013,9 @@ function render(){
       // that unreachable "dark":"NO DATA" statusLabel entry gets read.
       const gap=gapRunLength(rows)>=GAP_RUN_LOUD;
       const item=document.createElement("span"); item.className="wl-item"+(gap?" wl-gap":"");
-      item.innerHTML=`<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)})`
+      setMarkup(item,`<span class="dot"></span>${L.label[lang]} <span class="days">(${T[lang].watchDays(days)})`
         + (gap?` <span class="wl-gap">${stTxt||T[lang].nodata}</span>`
-           : (blind&&stTxt?` <span class="wl-blind">${stTxt}</span>`:""))+` ›</span>`;
+           : (blind&&stTxt?` <span class="wl-blind">${stTxt}</span>`:""))+` ›</span>`);
       item.onclick=()=>openTier2Modal(L,lang);
       wl.appendChild(item);
     }
@@ -1019,7 +1031,7 @@ function openTier2Modal(L,lang){
   const annos=annosFor(L.id).slice(-3).reverse();
   const annoHtml=annos.length
     ? `<h4 class="annoh">${T[lang].annoTitle}</h4>`+annos.map(a=>
-        `<p class="anno"><b>${a.date}</b> <span class="tag2">${a.verdict}</span> ${a.note}</p>`).join("")
+        `<p class="anno"><b>${esc(a.date)}</b> <span class="tag2">${esc(a.verdict)}</span> ${esc(a.note)}</p>`).join("")
     : "";
   openModal(`<div class="mdomain">${L.domain[lang]}</div>
     <h3>${L.label[lang]}</h3>
