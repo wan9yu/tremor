@@ -3,7 +3,7 @@ silently drift from what the code (or the append-only log) actually says:
 
   1. docs/index.html's ``const LINES`` (the dashboard's own per-line
      metadata) must agree with ``collect.LINES`` as SETS — same ids, and per
-     id the same alarm direction and tier. Ordering is deliberately NOT
+     id the same declared direction and tier. Ordering is deliberately NOT
      checked: collect.py groups its list by domain-diversity comment blocks
      (see its own module docstring), docs/index.html groups by a different
      reading order, and neither ordering is a contract the other side must
@@ -94,7 +94,9 @@ def _collect_lines_aliases(tree):
         if (isinstance(node, ast.Assign) and len(node.targets) == 1
                 and isinstance(node.targets[0], ast.Name)
                 and node.targets[0].id == "LINES"):
-            return [elt.id for elt in node.value.elts if isinstance(elt, ast.Name)]
+            if isinstance(node.value, ast.List):
+                return [elt.id for elt in node.value.elts if isinstance(elt, ast.Name)]
+            return None
     return None
 
 
@@ -112,7 +114,7 @@ def _module_level_const(tree, name):
 
 @functools.lru_cache(maxsize=None)
 def _collect_registry():
-    """{LINE id: {"alarm": ANOMALY_DIRECTION, "tier": TIER}}, built without
+    """{LINE id: {"declared_dir": ANOMALY_DIRECTION, "tier": TIER}}, built without
     ever importing collect.py or a fetcher module (see the module
     docstring). Memoized — ast-parsing collect.py plus every fetcher module
     it references is pure and no-arg, and every test method below calls
@@ -132,7 +134,7 @@ def _collect_registry():
         assert line_id, f"fetchers/{modname}.py declares no module-level LINE"
         tier = _module_level_const(tree, "TIER")
         registry[line_id] = {
-            "alarm": _module_level_const(tree, "ANOMALY_DIRECTION"),
+            "declared_dir": _module_level_const(tree, "ANOMALY_DIRECTION"),
             "tier": tier if tier is not None else 1,
         }
     return registry, aliases
@@ -140,28 +142,35 @@ def _collect_registry():
 
 # --- docs/index.html's `const LINES` (JS side) -----------------------------
 
-# One `const LINES` entry's opening line — id/color/alarm always appear
+def _docs_lines_block():
+    """The raw text of docs/index.html's ``const LINES = [ ... ];`` block —
+    what a field-shape assertion reads, so a renamed or missing field fails
+    loudly instead of silently parsing to zero entries."""
+    html = support.read_text(DOCS_INDEX)
+    m = re.search(r'const LINES = \[(.*?)\n\];', html, re.S)
+    assert m, "docs/index.html: could not locate `const LINES = [ ... ];`"
+    return m.group(1)
+
+
+# One `const LINES` entry's opening line — id/color/declared_dir always appear
 # together on it, `tier` only when the line is not the (default) tier 1, the
 # same default docs/index.html's own `L.tier||1` reads use throughout.
 _JS_LINE_ENTRY = re.compile(
-    r'^\s*\{\s*id:"(?P<id>[^"]+)",\s*color:"[^"]+",\s*alarm:"(?P<alarm>up|down)",'
+    r'^\s*\{\s*id:"(?P<id>[^"]+)",\s*color:"[^"]+",\s*declared_dir:"(?P<declared_dir>up|down)",'
     r'(?:\s*tier:(?P<tier>\d+),)?\s*$', re.M)
 
 
 @functools.lru_cache(maxsize=None)
 def _docs_registry():
-    """{id: {"alarm":..., "tier":...}} parsed out of docs/index.html's
+    """{id: {"declared_dir":..., "tier":...}} parsed out of docs/index.html's
     `const LINES = [...]` block, plus the ordered list of raw regex matches
     (so a caller can also check for duplicate ids). Memoized — pure, no-arg,
     and re-invoked by several test methods below."""
-    html = support.read_text(DOCS_INDEX)
-    m = re.search(r'const LINES = \[(.*?)\n\];', html, re.S)
-    assert m, "docs/index.html: could not locate `const LINES = [ ... ];`"
-    entries = list(_JS_LINE_ENTRY.finditer(m.group(1)))
+    entries = list(_JS_LINE_ENTRY.finditer(_docs_lines_block()))
     registry = {}
     for e in entries:
         registry[e.group("id")] = {
-            "alarm": e.group("alarm"),
+            "declared_dir": e.group("declared_dir"),
             "tier": int(e.group("tier")) if e.group("tier") else 1,
         }
     return registry, entries
@@ -210,17 +219,41 @@ class TestDashboardLinesMatchCollectLines(unittest.TestCase):
         _assert_id_sets_equal(self, collect_registry, docs_registry,
                                "collect.LINES", "docs/index.html's `const LINES`")
 
-    def test_docs_and_collect_agree_on_alarm_direction_and_tier(self):
+    def test_every_docs_line_declares_a_direction_under_the_neutral_field_name(self):
+        """The per-line direction is a RECORDED HYPOTHESIS, so the dashboard
+        field is `declared_dir` — the comparison direction noted when the
+        line was built — not `alarm`. A missing field also drops the entry out
+        of `_JS_LINE_ENTRY`, so this names the lines rather than leaving a
+        bare count mismatch."""
+        block = _docs_lines_block()
+        ids = set(re.findall(r'^\s*\{\s*id:"([^"]+)"', block, re.M))
+        declared = set(re.findall(
+            r'^\s*\{\s*id:"([^"]+)",\s*color:"[^"]+",\s*declared_dir:"(?:up|down)"',
+            block, re.M))
+        self.assertEqual(sorted(ids - declared), [],
+                          "docs/index.html `const LINES` line(s) declare no "
+                          f"`declared_dir` field: {sorted(ids - declared)}")
+
+    def test_docs_lines_carry_no_alarm_field(self):
+        """`alarm:` must not come back: the field records a direction chosen
+        when the line was built, never a verdict on a reading."""
+        found = re.findall(r'\balarm\s*:', _docs_lines_block())
+        self.assertEqual(found, [],
+                          "docs/index.html's `const LINES` still declares an `alarm:` "
+                          f"field on {len(found)} line(s); the recorded direction "
+                          "belongs under `declared_dir`")
+
+    def test_docs_and_collect_agree_on_declared_direction_and_tier(self):
         docs_registry, _ = _docs_registry()
         collect_registry, _ = _collect_registry()
         mismatches = []
         for line_id in sorted(set(docs_registry) & set(collect_registry)):
             d, c = docs_registry[line_id], collect_registry[line_id]
-            if d["alarm"] != c["alarm"] or d["tier"] != c["tier"]:
+            if d["declared_dir"] != c["declared_dir"] or d["tier"] != c["tier"]:
                 mismatches.append({"id": line_id, "docs": d, "collect": c})
         self.assertEqual(mismatches, [],
-                          "docs/index.html vs collect.LINES: alarm direction and/or tier "
-                          f"disagree: {mismatches}")
+                          "docs/index.html vs collect.LINES: declared direction and/or "
+                          f"tier disagree: {mismatches}")
 
 
 # --- radar.md's tier tables --------------------------------------------------
@@ -290,6 +323,7 @@ class TestRadarMdNamesEveryLineOnceInItsTierSection(unittest.TestCase):
                             if line.strip().startswith("|")), None)
             self.assertIsNotNone(
                 header, f"radar.md: no table header row found under {heading!r}")
+            assert header is not None  # narrows the type; assertIsNotNone already bound it
             for banned in ("Reliab", "Respons"):
                 self.assertNotIn(
                     banned, header,

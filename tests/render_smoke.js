@@ -316,7 +316,7 @@ function buildHeadlineFixtureData() {
     const L = LINES.find(x => x.id === id);
     lines[id] = [fixtureRow({ date: RUNTIME_TODAY, raw_value: "1", z_score: "0.5",
       trembling: id === "flights" || id === "credit_spread" ? "1" : "0",
-      direction: L.alarm, status: "scoring" })];
+      direction: L.declared_dir, status: "scoring" })];
   }
   const summary = [{ date: RUNTIME_TODAY, trembling_count: "2", dark_count: "0", blind_count: "0" }];
   return { summary, dates: [RUNTIME_TODAY], lines, annotations: [], annoMap: new Map(), stuck: [] };
@@ -1041,6 +1041,66 @@ function buildHeadlineFixtureData() {
         errors.push(`limits(${lang}): reading the limitations required opening a panel`);
       }
     } catch (e) { errors.push(`limits render(${lang}): ${e.stack || e}`); }
+  }
+
+  // T31 (public-surface migration, item 7): the per-line direction is the
+  // comparison direction recorded when the line was built -- a selection note,
+  // not a verdict on a reading. Every detail and every card states it in the
+  // deck's own words, in both languages; the retired `alarm` field and the
+  // `alarming when …` phrasing are gone.
+  const DIRECTION_LABEL = {
+    en: "Comparison direction noted when this series was selected: ",
+    zh: "比较方向（建线时记下）：",
+  };
+  for (const lang of ["en", "zh"]) {
+    for (const L of LINES) {
+      if (L.alarm !== undefined) {
+        errors.push(`direction(${lang}): LINES entry ${L.id} still declares an \`alarm\` `
+          + `field; the recorded direction belongs under declared_dir`);
+      }
+      if (L.declared_dir !== "up" && L.declared_dir !== "down") {
+        errors.push(`direction(${lang}): LINES entry ${L.id} declares declared_dir `
+          + `${JSON.stringify(L.declared_dir)}, expected "up" or "down"`);
+        continue;
+      }
+      const dir = L.declared_dir === "down" ? T[lang].dirDown : T[lang].dirUp;
+      const want = DIRECTION_LABEL[lang] + dir;
+      const detail = plainText(lineModal(L, lang));
+      if (!detail.includes(want)) {
+        errors.push(`direction(${lang}): lineModal(${L.id}) does not state `
+          + `${JSON.stringify(want)}`);
+      }
+      if (detail.includes("alarming when")) {
+        errors.push(`direction(${lang}): lineModal(${L.id}) still renders the retired `
+          + `\`alarming when …\` framing`);
+      }
+    }
+    for (const retired of ["alarmTag", "alarmingWhen"]) {
+      if (T[lang][retired] !== undefined) {
+        errors.push(`direction(${lang}): the retired key ${JSON.stringify(retired)} is `
+          + `still declared; one directionLabel states the recorded comparison direction`);
+      }
+    }
+    // The cards carry the same note, so a reader does not have to open a line
+    // to see what direction was recorded when it was built.
+    global.document.cookie = "tremor_lang=" + lang;
+    setDATA(buildHeadlineFixtureData());
+    appendedNodes = [];
+    try {
+      render();
+      const chips = appendedNodes.filter(n => (n.className || "").startsWith("inst"));
+      for (const L of LINES.filter(x => (x.tier || 1) === 1)) {
+        const dir = L.declared_dir === "down" ? T[lang].dirDown : T[lang].dirUp;
+        const want = L.label[lang] + " · " + DIRECTION_LABEL[lang] + dir;
+        const chip = chips.find(c => (c._html || "").includes(L.label[lang] + " · "));
+        if (!chip) {
+          errors.push(`direction(${lang}): no reading card rendered for ${L.id}`);
+        } else if (!chip._html.includes(want)) {
+          errors.push(`direction(${lang}): the ${L.id} card does not carry `
+            + `${JSON.stringify(want)}`);
+        }
+      }
+    } catch (e) { errors.push(`direction cards(${lang}): ${e.stack || e}`); }
   }
 
   await new Promise(r => setTimeout(r, 50));

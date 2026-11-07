@@ -532,3 +532,136 @@ the deck's `limitsBody` verbatim in both languages, and T30 reads them from the 
   any item in this bundle.
 - The smoke harness now depends on `scrollIntoView` existing on a node; any future handler
   that calls another real-DOM method needs the stub extended the same way.
+
+## Iteration 6 — item 7 (functional): the per-line direction is a recorded hypothesis under a neutral field
+
+**Chosen because** `.ralph/plan.md` ranks copy and structure that other items reference
+first, and names the `declared_dir` field as the third of the three fields later items
+reference (`measures` was item 1, the headline label item 2). Items 1–5 are passing; item 6
+(style and colour) depends on markers rather than on this field, while item 8's vocabulary
+guard is the last-ranked class and needs the field name settled first. No item is
+hard-blocked; the ledger held iterations 1–5, all green.
+
+**Entry state measured.** Gate 415 passed; lint 69 OK; forbidden-literal 3 OK; audit 28 OK;
+`replay --check` exit 0 (1439 rows since `STABLE_SINCE`, divergence 0); `pending --check`
+6 tagged / 0 overdue; render smoke OK; annotations mirror identical.
+
+**Test-first, failures recorded.** Three assertions were added before any page copy moved:
+
+- `tests/lint_registry.py` (new `_docs_lines_block()` helper plus two tests):
+  `test_every_docs_line_declares_a_direction_under_the_neutral_field_name` requires a
+  `declared_dir:"up"|"down"` field on every `const LINES` entry, and
+  `test_docs_lines_carry_no_alarm_field` requires the block to declare no `alarm:` field.
+  Run on the unmodified page: 8 lint failures, including
+  `Lists differ: ['capital_premium', 'chokepoint_breadth', … 'vix'] != [] : docs/index.html
+  const LINES line(s) declare no declared_dir field: [24 ids]`,
+  `Lists differ: ['alarm:', 'alarm:', …] != []`, and the parse-dependent tests reporting
+  `docs/index.html's const LINES parsed to 0 entries but collect.LINES resolves to 24`.
+- `tests/lint_public_surface.py` (new `TestChartTitlesStateTheRecordedDirection`): no
+  `alarming when` anywhere in `render.py`, and the `ax.set_title(...)` call that
+  interpolates `ANOMALY_DIRECTION` must state the recorded comparison direction. Run before
+  the change: `AssertionError: 'alarming when' unexpectedly found in … render.py still
+  titles a per-line chart 'alarming when …'`.
+- `tests/render_smoke.js` (new T31 block): every line's detail and every reading card must
+  carry the deck's direction sentence in both languages, the `alarm` field must be gone, and
+  `alarmTag`/`alarmingWhen` must not be declared. Run on the unmodified page: `exit 1` with
+  108 `direction(...)` failures, e.g. `direction(en): LINES entry flights still declares an
+  'alarm' field; the recorded direction belongs under declared_dir` and
+  `direction(en): LINES entry flights declares declared_dir undefined, expected "up" or
+  "down"` (two per line per language).
+
+**Decisions (conservative, reversible).**
+
+- One `directionLabel` key per locale carries the deck's full sentence
+  (`Comparison direction noted when this series was selected: {direction}` /
+  `比较方向（建线时记下）：{direction}`), replacing both `alarmingWhen` and `alarmTag`. The
+  deck's migration row maps both retired keys to that one key, and the page has three render
+  sites for a direction: the line detail's tag row (the "legend" of the detail), the tier-2
+  detail's tag row, and the reading card's subtitle (what a reader sees on the card). All
+  three render the same sentence, so no shorter, invented copy was introduced. The card
+  subtitle now wraps on narrow screens; no CSS changed.
+- `render.py` has no locale: the per-line chart title uses the deck's EN sentence with
+  `{mod.ANOMALY_DIRECTION}` interpolated. The overview PNG title
+  (`Resonance — lines trembling per day`) is untouched — no item in this bundle claims it,
+  and changing the source without regenerating `charts/` is out of scope (that directory is
+  the nightly job's output).
+- `_collect_registry()` and `_docs_registry()` now both key the comparison on
+  `declared_dir`, so the agreement test still compares the dashboard field to each fetcher's
+  unchanged `ANOMALY_DIRECTION`, and the test is named
+  `test_docs_and_collect_agree_on_declared_direction_and_tier`.
+- `tremblingRunLength`'s parameter is renamed `declaredDir` (a pure internal rename). Its
+  direction-sensitive semantics are unchanged: the direction-free run is part of the
+  separate scoring phase that `.ralph/plan.md` scopes out.
+- Two pre-existing type-narrowing defects in `tests/lint_registry.py` were fixed while the
+  file was open (an `ast.List` guard in `_collect_lines_aliases`, and an
+  `assert header is not None` after `assertIsNotNone`). Neither changes an assertion.
+- The retired `alarmTag` notion survives nowhere as a T key; `T.en`/`T.zh` stay key-for-key
+  identical (both lose two keys, both gain one).
+- Residual `alarm` spelling in `docs/index.html` is exactly the encumbrance the plan
+  permits or assigns elsewhere: the `--alarm` CSS variable and `.sysstatus.alarm` class,
+  the `alarmDarkH`/`alarmDarkB` status-banner T keys (deck row: `manyDark`/`disruption`,
+  item 8's vocabulary work), `countColor` and the `trembleState` state name (item 6), and the
+  feel-chart block (`feelHint`, the `feel z` axis title) that no item claims.
+
+**Files changed.**
+
+- `docs/index.html` — 24 `alarm:` fields renamed `declared_dir:`; all 8 `L.alarm` reads
+  renamed; `alarmingWhen` and `alarmTag` deleted from both locales and `directionLabel`
+  added; `lineModal`, `openTier2Modal` and the card subtitle render it; `tremblingRunLength`
+  parameter and its comment reworded. No scoring value, record column or tier membership
+  moved.
+- `render.py` — per-line chart title states the recorded comparison direction.
+- `tests/lint_registry.py` — `_docs_lines_block()` helper, `declared_dir` regex group, both
+  registry dicts keyed `declared_dir`, agreement test renamed, two new field tests, and the
+  two type narrowings.
+- `tests/lint_public_surface.py` — `RENDER` path, `TestChartTitlesStateTheRecordedDirection`,
+  and the module docstring's fourth checked surface.
+- `tests/render_smoke.js` — T31 block; the headline fixture's direction read rebound from
+  `L.alarm` to `L.declared_dir` (the only existing fixture that bound the renamed field).
+
+**Verification results (after implementation).** Gates run with
+`PATH=/Users/wangyu/.pyenv/shims:$PATH` (pytest 9.0.2), the interpreter iterations 1–5 used.
+
+- gate tier `python -m pytest tests/ -q` — `415 passed, 126 subtests passed in 1.00s`
+- lint tier `python -m unittest discover tests -p "lint_*.py"` — `Ran 72 tests … OK`
+- forbidden literal `python tests/lint_no_forbidden_literal.py` — `Ran 3 tests … OK`
+- audit tier `python -m unittest discover tests -p "audit_*.py"` — `Ran 28 tests … OK`
+- replay `python tools/replay.py --check` — exit 0, `TOTAL 1439 0 0`, divergence 0 since
+  `STABLE_SINCE` 2026-09-09
+- pending `python tools/pending.py --check` — `OK — 6 tagged pending item(s), 0 overdue, 0 unparseable`
+- render smoke `node tests/render_smoke.js` — `render OK in both languages; no runtime errors,
+  no undefined/NaN`; headline `2 / 4`
+- annotations mirror `cmp data/annotations.csv docs/data/annotations.csv` — `cmp: identical`
+
+Rendered detail checked by hand for `flights` in both languages: `EN: Airspace · Aircraft
+airborne · Comparison direction noted when this series was selected: falling · Source:
+Community ADS-B, 4 busy regions · Measures Aircraft reported airborne across …`; the ZH
+counterpart reads `比较方向（建线时记下）：下降`. All 24 entries carry `declared_dir`, no entry
+carries `alarm`, and neither locale declares `alarmTag` or `alarmingWhen`. `docs/index.html`
+still has exactly one `innerHTML`, inside `setMarkup`, and the chart title change is a source
+change only: `charts/` was not regenerated or touched (nightly output).
+
+**Notes for the next iteration.**
+
+- Item 6 (style and colour) now has the field name it needs: `countColor`, the four-way
+  status/marker colouring, the `trembleState` "alarm"/"benign" split, `.pill.trembling`
+  and the adjudicated hatch are untouched here.
+- Item 8's guard should treat `alarmDarkH`/`alarmDarkB` (deck row: `manyDark`/`disruption`),
+  `feelHint`/`feelGapNote`, `notCounted`'s neighbours, `panelTitle`/`panelHint` and `footer`
+  as residual strings to migrate; the `alarm` CSS variable and `.sysstatus.alarm` class must
+  stay out of the scan (the plan exempts CSS class names and internal identifiers).
+- The feel chart (`feelTitle`/`feelHint`/`feelGapNote`/`feelBars`/`feelchart`) and its
+  `feel z (toward alarm)` / `感觉 z（报警方向）` axis title remain, with `data/leans.csv`
+  consumption, because no item in this bundle claims their deletion. They are the largest
+  remaining source of alarm vocabulary on the public page.
+- `render.py`'s overview title still says `Resonance`, and the two per-line titles will only
+  change in the committed PNGs at the next nightly render; nothing in the gate tier renders
+  charts.
+
+**Analyzer note.** The editor-side analyzer reports four unresolved imports in `render.py`
+(`matplotlib`, `matplotlib.pyplot`, `matplotlib.dates`, `PIL`, lines 10–15). Verified and
+left unchanged: those imports predate this iteration (`git diff render.py` changes only the
+title call), `python -c "import render"` succeeds under the gate interpreter
+(`matplotlib 3.9.0`, `pillow 12.2.0`), and removing them to silence the finding would break
+the module's only job. The report is a package-resolution mismatch in the analyzer's own
+interpreter, not a defect in the file.

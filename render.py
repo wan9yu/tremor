@@ -65,7 +65,9 @@ def render_line(mod):
     if tx:
         ax.scatter(tx, ty, color="#d62728", s=36, zorder=3, label="trembling")
         ax.legend(loc="best", fontsize=8)
-    ax.set_title(f"{mod.LABEL}  ·  alarming when {mod.ANOMALY_DIRECTION}", fontsize=11)
+    ax.set_title(f"{mod.LABEL}  ·  "
+                 f"Comparison direction noted when this series was selected: "
+                 f"{mod.ANOMALY_DIRECTION}", fontsize=11)
     ax.set_ylabel(mod.UNIT, fontsize=9)
     ax.grid(True, alpha=0.25)
     ax.xaxis.set_major_formatter(DateFormatter("%b %d"))

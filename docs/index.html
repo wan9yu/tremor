@@ -208,7 +208,7 @@ function setRange(r){ document.cookie="tremor_range="+r+";path=/;max-age="+(3600
 // what this record cannot see — are written by hand and must be revisited when
 // coverage genuinely changes.
 const LINES = [
-  { id:"flights", color:"#5aa9e6", alarm:"down",
+  { id:"flights", color:"#5aa9e6", declared_dir:"down",
     watches:{en:"W/C Europe · US East · US West · Japan/E Asia",zh:"西/中欧 · 美东 · 美西 · 日本/东亚"},
     unit:{en:"aircraft",zh:"架"},
     domain:{en:"Airspace",zh:"空域"},
@@ -217,7 +217,7 @@ const LINES = [
     measures:{
       en:"Aircraft reported airborne across W/C Europe, US East, US West, and Japan/E Asia, summed from one ADS-B snapshot at 22:30 UTC each day; unit: aircraft.",
       zh:"每日 22:30 UTC 对西/中欧、美东、美西及日本/东亚各取一次 ADS-B 快照，合计当时报告在空的飞机数；单位：架。"} },
-  { id:"credit_spread", color:"#e0a83d", alarm:"up",
+  { id:"credit_spread", color:"#e0a83d", declared_dir:"up",
     watches:{en:"the US high-yield bond market",zh:"美国高收益债市场"},
     unit:{en:"pp",zh:"个百分点"},
     domain:{en:"Financial system",zh:"金融系统"},
@@ -226,7 +226,7 @@ const LINES = [
     measures:{
       en:"Daily ICE BofA US High Yield option-adjusted spread for US high-yield bonds, on the latest available business date; unit: percentage points (pp).",
       zh:"美国高收益债的 ICE BofA US High Yield 期权调整利差，按最新可得的交易日记录；单位：百分点（pp）。"} },
-  { id:"capital_premium", color:"#c678dd", alarm:"up", tier:2,
+  { id:"capital_premium", color:"#c678dd", declared_dir:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Capital controls",zh:"资本管制"},
     label:{en:"Korea BTC premium",zh:"韩国比特币溢价"},
@@ -234,7 +234,7 @@ const LINES = [
     measures:{
       en:"Once-daily snapshot: the Korean BTC price in KRW converted at the USD/KRW reference rate, divided by Coinbase BTC/USD, minus one; unit: percent.",
       zh:"每日一次快照：韩国市场的韩元 BTC 价格按 USD/KRW 参考汇率折成美元，再除以 Coinbase BTC/USD 并减一；单位：百分比。"} },
-  { id:"grid_frequency", color:"#3fb27f", alarm:"up", tier:2,
+  { id:"grid_frequency", color:"#3fb27f", declared_dir:"up", tier:2,
     unit:{en:"mHz",zh:"mHz"},
     domain:{en:"Infrastructure",zh:"基础设施"},
     label:{en:"Grid freq. max |dev|",zh:"电网频率最大偏离"},
@@ -242,7 +242,7 @@ const LINES = [
     measures:{
       en:"Maximum absolute deviation from 50 Hz in Fingrid measurements of the Nordic grid over a 24-hour window, collected daily; unit: millihertz (mHz).",
       zh:"每日记录 Fingrid 对北欧电网 24 小时观测窗内相对 50 Hz 的最大绝对偏差；单位：毫赫兹（mHz）。"} },
-  { id:"cnh_cny", color:"#e0617d", alarm:"up", tier:1,
+  { id:"cnh_cny", color:"#e0617d", declared_dir:"up", tier:1,
     watches:{en:"the onshore/offshore yuan spread",zh:"在岸/离岸人民币价差"},
     unit:{en:"pips",zh:"点"},
     domain:{en:"Capital controls (China)",zh:"资本管制（中国）"},
@@ -251,7 +251,7 @@ const LINES = [
     measures:{
       en:"Daily simultaneous USDCNH and USDCNY quotes near 22:30 UTC; offshore minus onshore yuan spread; unit: pips (0.0001 yuan per USD).",
       zh:"每日约 22:30 UTC 同时读取 USDCNH 与 USDCNY 报价；离岸减在岸人民币价差；单位：点（每美元 0.0001 元）。"} },
-  { id:"gdelt", color:"#6f7686", alarm:"up", tier:2,
+  { id:"gdelt", color:"#6f7686", declared_dir:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Conflict events (global)",zh:"冲突事件（全球）"},
     label:{en:"Global conflict-event share",zh:"全球冲突事件占比"},
@@ -259,7 +259,7 @@ const LINES = [
     measures:{
       en:"Share of GDELT QuadClass 4 events among event-coded items across the full previous UTC day, aggregated from about 96 quarter-hour files; unit: percent.",
       zh:"前一完整 UTC 日的 GDELT 事件编码条目中，QuadClass 4 所占比例；汇总约 96 个 15 分钟文件；单位：百分比。"} },
-  { id:"gdelt_tone", color:"#9b8ec4", alarm:"down", tier:2,
+  { id:"gdelt_tone", color:"#9b8ec4", declared_dir:"down", tier:2,
     unit:{en:"tone",zh:"tone"},
     domain:{en:"Feel (news tone)",zh:"感觉（新闻情绪）"},
     label:{en:"Global news tone",zh:"全球新闻情绪"},
@@ -267,7 +267,7 @@ const LINES = [
     measures:{
       en:"Mean GDELT AvgTone across news-coded events for the full previous UTC day; unit: GDELT tone units.",
       zh:"前一完整 UTC 日新闻编码事件的 GDELT AvgTone 均值；单位：GDELT 情绪值。"} },
-  { id:"vix", color:"#d98fb0", alarm:"up", tier:2,
+  { id:"vix", color:"#d98fb0", declared_dir:"up", tier:2,
     unit:{en:"index",zh:"点"},
     domain:{en:"Feel (priced fear)",zh:"感觉（恐惧定价）"},
     label:{en:"VIX (fear priced)",zh:"VIX（恐惧定价）"},
@@ -275,7 +275,7 @@ const LINES = [
     measures:{
       en:"CBOE VIX daily closing index, as published by FRED for the latest available business date; unit: index points.",
       zh:"FRED 发布的最新交易日 CBOE VIX 收盘指数；单位：指数点。"} },
-  { id:"chokepoint_breadth", color:"#d98a5b", alarm:"down", tier:2,
+  { id:"chokepoint_breadth", color:"#d98a5b", declared_dir:"down", tier:2,
     unit:{en:"vessels",zh:"艘"},
     domain:{en:"Trade (global)",zh:"贸易（全球）"},
     label:{en:"Chokepoint vessel transits",zh:"海上咽喉点航运量"},
@@ -283,7 +283,7 @@ const LINES = [
     measures:{
       en:"Daily total vessel transits across IMF PortWatch's 28 maritime chokepoints, for the latest available observation (about 10 days behind publication); unit: vessels.",
       zh:"IMF PortWatch 记录的 28 个海上咽喉点每日船舶通行总数，取最新可得观测（发布约滞后 10 天）；单位：艘。"} },
-  { id:"gnss_interference", color:"#56b6c2", alarm:"up", tier:2,
+  { id:"gnss_interference", color:"#56b6c2", declared_dir:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Navigation (global)",zh:"导航（全球）"},
     label:{en:"GPS interference",zh:"GPS 干扰"},
@@ -291,7 +291,7 @@ const LINES = [
     measures:{
       en:"Aircraft reporting bad GPS among tracked aircraft in all cells of the latest available GPSJam daily file; unit: percent.",
       zh:"最新可得 GPSJam 日文件中，所有网格内报告 GPS 异常的飞机占被追踪飞机的比例；单位：百分比。"} },
-  { id:"sofr_iorb_spread", color:"#c9a227", alarm:"up", tier:2,
+  { id:"sofr_iorb_spread", color:"#c9a227", declared_dir:"up", tier:2,
     unit:{en:"bps",zh:"基点"},
     domain:{en:"Financial plumbing (US→global)",zh:"金融管道（美国→全球）"},
     label:{en:"SOFR − IORB spread",zh:"SOFR−IORB 利差"},
@@ -299,7 +299,7 @@ const LINES = [
     measures:{
       en:"SOFR minus IORB on the latest date both FRED series report, recorded on business days; unit: basis points (bps).",
       zh:"FRED 的 SOFR 与 IORB 两个序列在同一最新报告日的差值，按交易日记录；单位：基点（bps）。"} },
-  { id:"em_corp_oas", color:"#b5651d", alarm:"up", tier:2,
+  { id:"em_corp_oas", color:"#b5651d", declared_dir:"up", tier:2,
     unit:{en:"pp",zh:"个百分点"},
     domain:{en:"EM financial (global)",zh:"新兴市场金融（全球）"},
     label:{en:"EM corporate credit spread",zh:"新兴市场企业债利差"},
@@ -307,7 +307,7 @@ const LINES = [
     measures:{
       en:"ICE BofA Emerging Markets Corporate option-adjusted spread for emerging-market corporate bonds, latest available business date; unit: percentage points (pp).",
       zh:"新兴市场企业债的 ICE BofA Emerging Markets Corporate 期权调整利差，取最新可得交易日；单位：百分点（pp）。"} },
-  { id:"port_throughput", color:"#cd853f", alarm:"down", tier:2,
+  { id:"port_throughput", color:"#cd853f", declared_dir:"down", tier:2,
     unit:{en:"port calls",zh:"靠港次数"},
     domain:{en:"Trade (global)",zh:"贸易（全球）"},
     label:{en:"Global port calls",zh:"全球港口靠港量"},
@@ -315,7 +315,7 @@ const LINES = [
     measures:{
       en:"Daily PortWatch port calls across 2,065 ports worldwide, for the latest available observation; unit: port calls.",
       zh:"PortWatch 覆盖全球 2,065 个港口的每日靠港次数，取最新可得观测；单位：次。"} },
-  { id:"net_outages", color:"#8fbf6f", alarm:"up", tier:2,
+  { id:"net_outages", color:"#8fbf6f", declared_dir:"up", tier:2,
     watches:{en:"country-level internet reachability, worldwide",zh:"全球范围的国家级互联网可达性"},
     unit:{en:"countries",zh:"国"},
     domain:{en:"Communications (global)",zh:"通信（全球）"},
@@ -324,7 +324,7 @@ const LINES = [
     measures:{
       en:"Countries with an IODA ping-slash24 outage detection in the completed 24-hour window ending at 22:00 UTC, recorded once daily with about a one-day settle lag; unit: countries.",
       zh:"IODA ping-slash24 在截至 22:00 UTC 的完整 24 小时观测窗内检出的国家数，每日记录一次，结算约滞后一天；单位：个国家。"} },
-  { id:"net_bgp_withdrawal", color:"#4fb0a5", alarm:"down", tier:2,
+  { id:"net_bgp_withdrawal", color:"#4fb0a5", declared_dir:"down", tier:2,
     watches:{en:"country-level BGP route announcement, worldwide",zh:"全球范围的国家级 BGP 路由通告"},
     unit:{en:"fraction",zh:"比值"},
     domain:{en:"Communications (global) — route withdrawal",zh:"通信（全球）— 路由撤回"},
@@ -333,7 +333,7 @@ const LINES = [
     measures:{
       en:"For each of 153 countries, the day's minimum visible-/24 route count divided by that country's preceding 28-day rolling-median baseline; the lowest fraction is recorded daily for a completed UTC day; unit: fraction.",
       zh:"对 153 个国家，分别以当天最低可见 /24 路由数除以该国此前 28 天滚动中位基线；每日记录完整 UTC 日中最低的比值；单位：比值。"} },
-  { id:"euro_hy_spread", color:"#a3be8c", alarm:"up", tier:2,
+  { id:"euro_hy_spread", color:"#a3be8c", declared_dir:"up", tier:2,
     unit:{en:"pp",zh:"个百分点"},
     domain:{en:"European financial",zh:"欧洲金融"},
     label:{en:"Euro HY credit spread (OAS)",zh:"欧元高收益债信用利差 (OAS)"},
@@ -341,7 +341,7 @@ const LINES = [
     measures:{
       en:"ICE BofA Euro High Yield option-adjusted spread for European high-yield bonds, latest available business date; unit: percentage points (pp).",
       zh:"欧洲高收益债的 ICE BofA Euro High Yield 期权调整利差，取最新可得交易日；单位：百分点（pp）。"} },
-  { id:"fx_parallel_premium", color:"#d08770", alarm:"up", tier:2,
+  { id:"fx_parallel_premium", color:"#d08770", declared_dir:"up", tier:2,
     unit:{en:"%",zh:"%"},
     domain:{en:"Capital controls (Argentina)",zh:"资本管制（阿根廷）"},
     label:{en:"Argentina blue-vs-official premium",zh:"阿根廷平行汇率溢价"},
@@ -349,7 +349,7 @@ const LINES = [
     measures:{
       en:"Once-daily Argentine blue-market sell rate divided by the official sell rate, minus one; weekend quote dates map to the Friday session; unit: percent.",
       zh:"每日一次记录阿根廷平行市场卖出价除以官方卖出价再减一；周末报价日期归回周五交易日；单位：百分比。"} },
-  { id:"hkma_aggr_balance", color:"#5e81ac", alarm:"down", tier:2,
+  { id:"hkma_aggr_balance", color:"#5e81ac", declared_dir:"down", tier:2,
     unit:{en:"HK$m",zh:"百万港元"},
     domain:{en:"Currency peg (Hong Kong)",zh:"联系汇率（香港）"},
     label:{en:"HKMA aggregate balance",zh:"香港金管局总结余"},
@@ -357,7 +357,7 @@ const LINES = [
     measures:{
       en:"Hong Kong banking system closing aggregate balance from the HKMA daily interbank-liquidity figures, published about one business day later; unit: HK$ millions.",
       zh:"香港金管局每日银行间流动性数据中的银行体系收盘总结余，约滞后一个交易日发布；单位：百万港元。"} },
-  { id:"polar_temp", color:"#88c0d0", alarm:"up", tier:2,
+  { id:"polar_temp", color:"#88c0d0", declared_dir:"up", tier:2,
     unit:{en:"°C",zh:"°C"},
     domain:{en:"Planetary context",zh:"行星背景"},
     label:{en:"Arctic 80N temp anomaly",zh:"北极 80N 温度距平"},
@@ -365,7 +365,7 @@ const LINES = [
     measures:{
       en:"DMI daily mean air temperature north of 80°N minus the 1958–2002 day-of-year normal; unit: degrees Celsius.",
       zh:"DMI 每日记录的北纬 80° 以北平均气温，减去 1958–2002 年同日序常值；单位：摄氏度。"} },
-  { id:"space_weather", color:"#ebcb8b", alarm:"up", tier:2,
+  { id:"space_weather", color:"#ebcb8b", declared_dir:"up", tier:2,
     unit:{en:"Kp",zh:"Kp"},
     domain:{en:"Space weather (confounder)",zh:"太空天气（混淆项）"},
     label:{en:"Geomagnetic storm — daily max Kp",zh:"地磁暴 —— 当日最大 Kp"},
@@ -373,7 +373,7 @@ const LINES = [
     measures:{
       en:"Maximum planetary Kp across the 3-hour readings of the latest complete UTC day; unit: Kp index points, reported in thirds.",
       zh:"最新完整 UTC 日内每 3 小时 Kp 观测值的最大值；单位：Kp 指数点，按三分之一刻度报告。"} },
-  { id:"tga_days_cash", color:"#bf616a", alarm:"down", tier:2,
+  { id:"tga_days_cash", color:"#bf616a", declared_dir:"down", tier:2,
     unit:{en:"days",zh:"天"},
     domain:{en:"Fiscal plumbing (US)",zh:"财政管道（美国）"},
     label:{en:"US Treasury cash buffer",zh:"美国财政部现金缓冲"},
@@ -381,7 +381,7 @@ const LINES = [
     measures:{
       en:"Daily closing US Treasury General Account balance divided by mean daily withdrawals over the preceding 20 business days; unit: days of withdrawals.",
       zh:"每日美国财政部一般账户收盘余额除以前 20 个交易日的日均提款额；单位：可支应提款的天数。"} },
-  { id:"stablecoin_peg", color:"#8fbcbb", alarm:"up", tier:2,
+  { id:"stablecoin_peg", color:"#8fbcbb", declared_dir:"up", tier:2,
     unit:{en:"bp",zh:"个基点"},
     domain:{en:"Crypto dollar peg (global)",zh:"加密美元锚（全球）"},
     label:{en:"Stablecoin depeg — worst of USDC/USDT",zh:"稳定币脱锚 —— USDC/USDT 取其重"},
@@ -389,7 +389,7 @@ const LINES = [
     measures:{
       en:"The larger absolute distance from $1 among the settled daily USDC/USD and USDT/USD closes; unit: basis points (bp).",
       zh:"USDC/USD 与 USDT/USD 已结算日收盘价中，偏离 $1 较大的绝对距离；单位：基点（bp）。"} },
-  { id:"fed_srf_takeup", color:"#86a5d9", alarm:"up", tier:1,
+  { id:"fed_srf_takeup", color:"#86a5d9", declared_dir:"up", tier:1,
     watches:{en:"daily Fed Standing Repo Facility take-up",zh:"美联储常备回购便利每日动用量"},
     unit:{en:"$m",zh:"百万美元"},
     domain:{en:"Financial plumbing (US→global)",zh:"金融管道（美国→全球）"},
@@ -398,7 +398,7 @@ const LINES = [
     measures:{
       en:"Total amount accepted across the day's completed Fed Standing Repo Facility operations, latest completed operation date; unit: $ millions.",
       zh:"美联储常备回购便利在最近一个完整操作日各次操作的接受总额；单位：百万美元。"} },
-  { id:"control_daylength", color:"#4c566a", alarm:"up", tier:2,
+  { id:"control_daylength", color:"#4c566a", declared_dir:"up", tier:2,
     unit:{en:"s",zh:"秒"},
     domain:{en:"Control (no world in it)",zh:"对照（不含世界）"},
     label:{en:"Day length at Greenwich",zh:"格林尼治昼长"},
@@ -473,9 +473,10 @@ const T = {
     limitsBody:"The rolling comparison looks to recent history; a change that lasts can become part of a series' reference. The displayed roster is selected under written measurement assumptions, and the count does not undo that selection. Other daily records are collected but never enter this count. No communications-domain reading is included, so a worldwide connectivity event reads zero in this count. Some sources arrive late or skip dates; missing values remain gaps.",
     limitsFlights:"Flights samples four regions at 22:30 UTC, with uneven shares: US East about 44%, US West 34%, W/C Europe 13%, and Japan/E Asia 9%. At that sample hour, either US region alone can move the line past |z| > 3; a Europe-only drop is about 1.2z, a Japan-only drop about 0.8z, and both together about 2.0z.",
     feelBars:"trembling count (real)",
-    alarmingWhen:dir=>"alarming when "+dir, dirUp:"rising", dirDown:"falling",
+    directionLabel:dir=>"Comparison direction noted when this series was selected: "+dir,
+    dirUp:"rising", dirDown:"falling",
     last:(v,u,d)=>" · latest: "+v+" "+u+" on "+d, noCollect:"no collection this day",
-    source:"Source", measuresLabel:"Measures", alarmTag:dir=>"alarming when "+dir,
+    source:"Source", measuresLabel:"Measures",
     countModalTitle:"How the count is made",
     countModalBody:m=>"A line contributes when its scored value crosses its own threshold in either direction. The threshold varies with the amount of distinct history available. The denominator "+m+" is the number available under the daily comparison rule: the primary roster minus lines with no reading, too little history or variation to compare, or a closed market. A repeated observation does not add another score. This counts lines on a date, not events. The roster reflects written selection assumptions.",
     countQualifying:"A statistical comparison, not a judgment of conditions.",
@@ -537,9 +538,9 @@ const T = {
     limitsBody:"滚动比较照见近期记录；延续很久的变化，可能渐渐进入一条序列的参照。页面展示哪些线，依据书面观测假设选定，计数不会抹去这份选择。其他每日记录会继续采集，却永不进入这个计数。这里没有通信域的读数，所以全球性的连通事件在这个计数里读作零。有些来源发布较迟，也会漏掉日期；缺失处仍留空。",
     limitsFlights:"Flights 每日 22:30 UTC 采样四个区域，各自占比并不相同：美东约 44%，美西 34%，西/中欧 13%，日本/东亚 9%。在这个采样时刻，单独一个美国区域的变化足以把这条线推过 |z| > 3；西/中欧单独约为 1.2z，日本/东亚约为 0.8z，两者合计约为 2.0z。",
     feelBars:"颤抖根数（真实）",
-    alarmingWhen:dir=>dir+"时为异常", dirUp:"升高", dirDown:"下降",
+    directionLabel:dir=>"比较方向（建线时记下）："+dir, dirUp:"升高", dirDown:"下降",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
-    source:"数据来源", measuresLabel:"测量内容", alarmTag:dir=>dir+"时为异常",
+    source:"数据来源", measuresLabel:"测量内容",
     countModalTitle:"这个计数如何得出",
     countModalBody:m=>"一条线的分数向任一方向越过自身阈值时，便计入其中。阈值随可用的不同观测数量而变。分母 "+m+" 按每日比较规则计算：从主记录组中扣除没有读数、历史或变化不足以比较、以及市场休市的线。重复观测不会再添一个分数。这里数的是某日的线，不是事件。记录组依据书面观测假设选定。",
     countQualifying:"这是统计比较，不替处境下判断。",
@@ -603,7 +604,7 @@ document.getElementById("modal-backdrop").onclick=closeModal;
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
 
 function lineModal(L,lang){
-  const dir = L.alarm==="down"?T[lang].dirDown:T[lang].dirUp;
+  const dir = L.declared_dir==="down"?T[lang].dirDown:T[lang].dirUp;
   const annos=annosFor(L.id).slice(-3).reverse();
   const annoHtml=annos.length
     ? `<h4 class="annoh">${T[lang].annoTitle}</h4>`+annos.map(a=>
@@ -611,7 +612,7 @@ function lineModal(L,lang){
     : "";
   return `<div class="mdomain">${L.domain[lang]}</div>
     <h3>${L.label[lang]}</h3>
-    <div class="tags"><span class="tag2">${T[lang].alarmTag(dir)}</span><span class="tag2">${T[lang].source}: ${L.source[lang]}</span></div>
+    <div class="tags"><span class="tag2">${T[lang].directionLabel(dir)}</span><span class="tag2">${T[lang].source}: ${L.source[lang]}</span></div>
     <h4 class="annoh">${T[lang].measuresLabel}</h4><p>${L.measures[lang]}</p>${annoHtml}`;
 }
 function countModal(lang){
@@ -670,15 +671,15 @@ function gapRunLength(rows){
   return n;
 }
 // How many of `rows`' most recent entries, counting back from the last one,
-// are alarm-direction trembles without interruption -- the run-ending-at-today
-// walk, same shape as gapRunLength above but over trembling+direction instead
-// of a GAP_STATUSES status. Pure client compute, no new data: it never touches
-// the trembling integer itself, only whether a firing line reads as a fresh
-// alarm or day N of one already disclosed.
-function tremblingRunLength(rows,alarmDir){
+// are trembles in the recorded direction without interruption -- the
+// run-ending-at-today walk, same shape as gapRunLength above but over
+// trembling+direction instead of a GAP_STATUSES status. Pure client compute, no
+// new data: it never touches the trembling integer itself, only whether a
+// firing line reads as a fresh departure or day N of one already disclosed.
+function tremblingRunLength(rows,declaredDir){
   let n=0;
   for(let i=rows.length-1;i>=0;i--){
-    if(rows[i].trembling!=="1"||rows[i].direction!==alarmDir) break;
+    if(rows[i].trembling!=="1"||rows[i].direction!==declaredDir) break;
     n++;
   }
   return n;
@@ -790,7 +791,7 @@ function render(){
     // reader judge that instead of trusting the integer.
     const firingLines=TIER1.filter(L=>{
       const rows=lines[L.id]||[]; const r=rows[rows.length-1];
-      return r&&r.date===last.date&&r.trembling==="1"&&r.direction===L.alarm;
+      return r&&r.date===last.date&&r.trembling==="1"&&r.direction===L.declared_dir;
     });
     const firing=firingLines.map(L=>L.label[lang]);
     // Disclosure, not suppression: the integer above never changes. For each
@@ -815,7 +816,7 @@ function render(){
         const lean=leanOn(L.id,last.date);
         if(lean&&lean.lean==="common-mode") adjBits.push(T[lang].leanNote(tag,lean.evidence));
       }
-      const run=tremblingRunLength(rows,L.alarm);
+      const run=tremblingRunLength(rows,L.declared_dir);
       if(run>=2) adjBits.push(T[lang].runNote(tag,run));
     }
     setMarkup(document.getElementById("count-label"),
@@ -878,7 +879,7 @@ function render(){
   for(const L of TIER1){
     const rows=lines[L.id]||[]; const byDate={}; rows.forEach(r=>byDate[r.date]=r);
     // per-date tremble state: "alarm" reads red, "benign" (guard reasserting) reads calm
-    const trembleState=r=>r&&r.trembling==="1"?(r.direction===L.alarm?"alarm":"benign"):null;
+    const trembleState=r=>r&&r.trembling==="1"?(r.direction===L.declared_dir?"alarm":"benign"):null;
     const tstate=viewDates.map(d=>trembleState(byDate[d]));
     const ptColor=tstate.map(t=>t==="alarm"?"#d64545":t==="benign"?"#3fb27f":L.color);
     // plot the RECORDED z_score — the instrument's actual verdicts — so the ±3
@@ -912,7 +913,7 @@ function render(){
           : `<span class="pill benign">${T[lang].benignShift}</span>`;
       } else if(calibrating) pill=`<span class="pill calib">${T[lang].calibrating}</span>`;
       nowHtml=`${fmt(todayRow.raw_value)} <span class="u">${L.unit[lang]}</span>`+pill;
-      subHtml=`${L.label[lang]} · ${T[lang].alarmingWhen(L.alarm==="down"?T[lang].dirDown:T[lang].dirUp)}`;
+      subHtml=`${L.label[lang]} · ${T[lang].directionLabel(L.declared_dir==="down"?T[lang].dirDown:T[lang].dirUp)}`;
     } else {
       nowHtml=isClosed
         ? `<span style="color:var(--muted)">${T[lang].statusLabel.closed}</span>`
@@ -991,7 +992,7 @@ function render(){
     // z toward the line's alarming direction, so "up" always reads "feels worse"
     const zA=feelDates.map((d,i)=>{const r=byD[d]; const v=r?parseFloat(r.z_score):NaN;
       if(isNaN(v)) return null;
-      const t=L.alarm==="down"?-v:v;
+      const t=L.declared_dir==="down"?-v:v;
       if(feelMax[i]===null||t>feelMax[i]) feelMax[i]=t;
       return t;});
     return { type:"line", label:L.label[lang], data:zA, yAxisID:"y2",
@@ -1062,7 +1063,7 @@ function render(){
 function openTier2Modal(L,lang){
   const rows=(DATA.lines[L.id]||[]).filter(r=>r.raw_value!=="");
   const cur=rows[rows.length-1];
-  const dir=L.alarm==="down"?T[lang].dirDown:T[lang].dirUp;
+  const dir=L.declared_dir==="down"?T[lang].dirDown:T[lang].dirUp;
   const annos=annosFor(L.id).slice(-3).reverse();
   const annoHtml=annos.length
     ? `<h4 class="annoh">${T[lang].annoTitle}</h4>`+annos.map(a=>
@@ -1070,14 +1071,14 @@ function openTier2Modal(L,lang){
     : "";
   openModal(`<div class="mdomain">${L.domain[lang]}</div>
     <h3>${L.label[lang]}</h3>
-    <div class="tags"><span class="tag2">${T[lang].notCounted}</span><span class="tag2">${T[lang].alarmTag(dir)}</span><span class="tag2">${T[lang].source}: ${L.source[lang]}</span></div>
+    <div class="tags"><span class="tag2">${T[lang].notCounted}</span><span class="tag2">${T[lang].directionLabel(dir)}</span><span class="tag2">${T[lang].source}: ${L.source[lang]}</span></div>
     <h4 class="annoh">${T[lang].measuresLabel}</h4><p>${L.measures[lang]}</p>
     ${cur?`<p class="mnow"><b>${fmt(cur.raw_value)}</b> ${L.unit[lang]} <span class="days">(${cur.date}${cur.z_score?` · z=${cur.z_score}`:""})</span></p>`:""}
     <canvas class="mchart" height="110"></canvas>
     ${annoHtml}`);
   // mini chart of raw values, tremble points colored like the main chart
   const recent=rows.slice(-90);
-  const colors=recent.map(r=>r.trembling==="1"?(r.direction===L.alarm?"#d64545":"#3fb27f"):L.color);
+  const colors=recent.map(r=>r.trembling==="1"?(r.direction===L.declared_dir?"#d64545":"#3fb27f"):L.color);
   if(modalChart) modalChart.destroy();
   modalChart=new Chart(document.querySelector("#modal-body .mchart"),{
     type:"line",

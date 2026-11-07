@@ -107,6 +107,11 @@ Three things are checked:
      definition that explains why a reading moved is exactly the claim the
      migration removed from the page.
 
+  4. The per-line chart title. ``render.py`` writes one committed PNG per
+     primary line. The title states the comparison direction recorded when
+     the series was selected (each fetcher's own ``ANOMALY_DIRECTION``), in
+     the deck's words, and never calls that direction an alarm.
+
 core/normalize.py imports only ``statistics``, ``datetime`` and
 ``itertools`` (see tests/lint_support_stdlib.py's sibling guarantee for
 support.py — normalize.py carries the same property, just unenforced by a
@@ -138,6 +143,7 @@ from core import normalize
 
 DOCS_INDEX = os.path.join(ROOT, "docs", "index.html")
 README = os.path.join(ROOT, "README.md")
+RENDER = os.path.join(ROOT, "render.py")
 
 # The six status strings core/normalize.py's fetcher contract can write to a
 # row's `status` column today (see its module docstring). Named explicitly,
@@ -693,6 +699,34 @@ class TestLineDetailStatesWhatIsMeasured(unittest.TestCase):
                           "`measures` definition(s) carry a causal connective, which "
                           "puts an explanation of a reading back on the page: "
                           f"{hits}")
+
+
+class TestChartTitlesStateTheRecordedDirection(unittest.TestCase):
+    """A per-line chart title records a selection note, not a verdict.
+
+    ``render.py`` used to title every committed PNG ``alarming when up`` /
+    ``alarming when down``. That reads the direction as an alarm — a judgment
+    about the world — while the same direction is, in the registry, the one
+    written down when the line was built. The title says that, in the deck's
+    words, with the fetcher's own direction interpolated.
+    """
+
+    def test_per_line_chart_title_names_the_recorded_comparison_direction(self):
+        src = support.read_text(RENDER)
+        self.assertNotIn("alarming when", src,
+                         "render.py still titles a per-line chart `alarming when …`")
+        calls = re.findall(r"ax\.set_title\((.*?)\)", src, re.S)
+        title = next((re.sub(r"\s+", " ", c) for c in calls
+                      if "ANOMALY_DIRECTION" in c), None)
+        if title is None:
+            self.fail("render.py no longer interpolates a line's ANOMALY_DIRECTION "
+                      "into any chart title")
+        self.assertIn("Comparison direction noted when this series was selected:", title,
+                      "render.py's per-line chart title does not state the recorded "
+                      "comparison direction")
+        self.assertIn("{mod.ANOMALY_DIRECTION}", title,
+                      "render.py's per-line chart title does not interpolate the "
+                      "line's own direction")
 
 
 class TestReadmeClaimsBindToSource(unittest.TestCase):
