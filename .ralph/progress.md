@@ -665,3 +665,135 @@ title call), `python -c "import render"` succeeds under the gate interpreter
 (`matplotlib 3.9.0`, `pillow 12.2.0`), and removing them to silence the finding would break
 the module's only job. The report is a package-resolution mismatch in the analyzer's own
 interpreter, not a defect in the file.
+
+## Iteration 7 — item 6 (functional): one neutral reading treatment
+
+**Chosen because** item 6 is the only unfinished style item and `.ralph/plan.md` ranks style
+after copy and structure (items 1–5 and 7 pass) and before the vocabulary guard (item 8).
+No item is hard-blocked; the ledger held iterations 1–6, all green.
+
+**Entry state measured.** Gate 415 passed; lint 72 OK; forbidden-literal 3 OK; audit 28 OK;
+`replay --check` exit 0 (1439 rows since `STABLE_SINCE`, divergence 0); `pending --check`
+6 tagged / 0 overdue; render smoke OK; annotations mirror identical.
+
+**Test-first, failures recorded.** `tests/lint_public_surface.py` gained
+`TestNeutralReadingTreatment` (four tests) before any page change. Run on the unmodified
+page: `Ran 76 tests in 0.753s` / `FAILED (failures=4)`:
+
+- `test_count_color_is_gone` — `countColor` is still defined at `docs/index.html:593`.
+- `test_no_severity_hue_remains_in_the_stylesheet` — the stylesheet still carries
+  `--calm/--amber/--orange/--alarm`, `#3fb27f`, `#e0a83d`, `#ff6b6b` and the matching
+  `rgba(...)` triples.
+- `test_the_count_and_reference_numbers_use_the_neutral_reading_mark` — `.count .n` has no
+  `color:var(--reading-mark)`, and `#count-n` / `#level-n` are painted from JS with
+  `el.style.color=countColor(...)`.
+- `test_the_unusual_marker_does_not_hatch` — `.pill.trembling.adjudicated`, the emitted
+  `" adjudicated"` class, `ptColor`, and the red `rgba(214,69,69,.45)` threshold remain.
+
+The smoke rebinds and the new T32 were then run against the pre-change page
+(`git show HEAD:docs/index.html` swapped in, then restored): exit 1 with 26 failures. Each
+language reported `adj`/`adj2` failures on both firing cards ("does not carry the one
+neutral unusual marker undefined", "still carries an adjudication-specific marker class")
+and seven `neutral(...)` failures: the retired `benignShift` key is still declared, neither
+direction carries the neutral marker, the against-direction card still carries the
+direction-specific marker, the rendered page still carries "benign shift" / "良性异动",
+and `#count-n` / `#level-n` are painted `var(--orange)` / `var(--amber)`.
+
+**Decisions (conservative, reversible).**
+
+- One tone: `--reading-mark:#c7ccd6` (the deck's value) replaces the four severity
+  variables, which are deleted from `:root` (unused after the change; the plan permits
+  keeping their spelling, not requiring it). `.count .n` applies the tone to both
+  `#count-n` and `#level-n`; size (54px / 44px) and weight (700 / 600) carry emphasis, and
+  neither element is painted from JS.
+- CSS class NAMES kept: `sysstatus.ok/.warn/.alarm`, `inst dark` and `pill trembling` stay
+  in markup as internal state names, per the plan's "do not rename CSS class names in this
+  bundle". Their colour rules are deleted (`.sysstatus` variants, `.inst.dark`), so every
+  banner and card renders the base neutral panel and a status is read from its sentence.
+- Reading cards: the `--dot` series accent and its JS `setProperty` are removed;
+  `.inst .nodata`, `.wl-blind`, `.wl-gap`, `.count .darknote` and `.count .pairnote` move to
+  the neutral tone. `L.color` now reaches only chart datasets.
+- Unusual marker: `.pill.trembling.adjudicated` and its hatch are deleted together with the
+  card-level adjudication/lean lookup; the marker is one `<span class="pill trembling">`
+  in either direction. The deck's `unusualPill` (`Unusual` / `偏离近期记录`) replaces the
+  inline `trembling` / `颤抖` literal and `benignShift` / `良性异动` is deleted, because the
+  deck's migration row for these exact surfaces is "one neutral `unusual` marker in both
+  directions" and keeping "benign shift" would leave a favourable/unfavourable copy split
+  inside that one treatment. This is the item's one copy change; no other item in the
+  bundle names the key. The class spelling stays `trembling` (renaming a CSS class is out
+  of scope).
+- Chart: `trembleState` returns one `unusual` state; `ptColor` is deleted and the tremble
+  point uses the series' own `L.color` with the existing larger radius. The ±3 threshold
+  guide moves from alarm red to neutral ink, and the tier-2 mini chart drops its red/green
+  point map for the series colour with the same radius emphasis.
+- The feel chart (`feelTitle`, `feelHint`, `feelGapNote`, `feelBars`, red bars, amber
+  divergence columns, both axis titles) is untouched: no item in this bundle claims it, and
+  its colours are chart-trace colours rather than the count/card/status/marker surfaces
+  item 6 names. It remains the one place whose copy still carries `alarm` / `报警` and
+  `calm` / `平静` (item 8's subject).
+
+**Files changed.**
+
+- `docs/index.html` — `:root` (`--reading-mark`, four severity variables removed);
+  `.count .n` / `.darknote` / `.pairnote`, `.sysstatus` colour variants, `.inst` accent and
+  `.inst.dark`, `.inst .nodata`, `.pill.trembling` plus hatch rule and `.pill.benign`,
+  `.wl-blind` / `.wl-gap`; `unusualPill` added and `benignShift` deleted in both locales;
+  `countColor` and its two call sites deleted; `chip.style.setProperty("--dot",…)` deleted;
+  `trembleState` reduced to one state and `ptColor` deleted; card pill one neutral marker;
+  chart point colours, threshold colour and tier-2 mini-chart point colours; the
+  `adjudication()` reader comment.
+- `tests/lint_public_surface.py` — `SEVERITY_TOKENS`, `_STYLE_BLOCK`,
+  `_COUNT_NUMBER_RULE`, `_docs_style_block()`, `TestNeutralReadingTreatment`; the module
+  docstring now lists five checks and states the style-vs-vocabulary scope.
+- `tests/render_smoke.js` — T22/T23 rebound from the retired hatch class to the neutral
+  marker (both firing cards render `class="pill trembling">unusualPill` and no card carries
+  `adjudicated`; the calm card carries no unusual marker); new T32 (one marker in both
+  directions, retired `benignShift`, neither number painted in JS).
+
+**Verification results (after implementation).** Gates run with
+`PATH=/Users/wangyu/.pyenv/shims:$PATH` (pytest 9.0.2), the interpreter iterations 1–6 used.
+
+- gate tier `python -m pytest tests/ -q` — `415 passed, 126 subtests passed in 0.90s`
+- lint tier `python -m unittest discover tests -p "lint_*.py"` — `Ran 76 tests in 0.752s … OK`
+  (was 72)
+- forbidden literal `python tests/lint_no_forbidden_literal.py` — `Ran 3 tests … OK`
+- audit tier `python -m unittest discover tests -p "audit_*.py"` — `Ran 28 tests … OK`
+- replay `python tools/replay.py --check` — exit 0, `TOTAL 1439 0 0`, divergence 0 since
+  `STABLE_SINCE` 2026-09-09
+- pending `python tools/pending.py --check` — `OK — 6 tagged pending item(s), 0 overdue, 0 unparseable`
+- render smoke `node tests/render_smoke.js` — `render OK in both languages; no runtime
+  errors, no undefined/NaN`; headline `2 / 4`
+- annotations mirror `cmp data/annotations.csv docs/data/annotations.csv` — `cmp: identical`
+
+`grep` over `docs/index.html` finds no `countColor`, no `ptColor`, no `--dot`, no
+`--calm`/`--amber`/`--orange`/`--alarm`, no `.pill.trembling.adjudicated` and no emitted
+`" adjudicated"` class. One `innerHTML` code line remains, inside `setMarkup` (lint
+`TestMarkupHasOneAuditedSink` passes), and both record-derived sinks still call `esc()`.
+The rendered marker was checked by hand in both languages: a card trembling in its
+recorded direction and a card trembling against it both read `Unusual` / `偏离近期记录`
+in the same neutral outline.
+
+**Notes for the next iteration.**
+
+- Item 8 is the only item left: rewrite the README opening and add the vocabulary guard.
+  The guard must scan user-visible VALUES, not keys: `alarmDarkH` / `alarmDarkB` are
+  internal key names whose values carry no banned word, so a whole-`const T`-block
+  substring scan would trip on them and must not be written that way.
+- Residual banned words in user-visible values today, all in the unclaimed feel chart: EN
+  `feelHint` ("alarming direction", "read calm"), EN `feelGapNote` ("measured calm"), ZH
+  `feelHint` ("报警方向", "读数平静"), ZH `feelGapNote` ("测量平静"). No `resonance` / `共振`
+  and no layer vocabulary remain in the T locale values or in `LINES`.
+- README still carries the world-disorder question plus alarm and resonance prose; item 8
+  rewrites it. The deck's replacement copy for the feel chart is deletion, which no item
+  claims, so item 8 has to either reword those two strings or drop the chart's hint copy
+  under the guard.
+- The feel chart's red bars `rgba(214,69,69,.55)` and amber gap columns
+  `rgba(224,168,61,.28)` remain in JS, outside the stylesheet scope the new lint binds.
+- Still unmigrated and unclaimed after this bundle's items: `statusLabel.scoring`,
+  `verdictLabel`, `panelTitle` ("Tension lines"), `panelHint` ("trembling threshold"),
+  `statusOk` / `awaiting` / `warnH` / `warnB` / `alarmDarkH` / `alarmDarkB` / `disruptH` /
+  `disruptB`, `annoTitle`, `feelBars`, `footer`.
+
+**Analyzer note.** No new analyzer findings: the four `render.py` import findings recorded
+in iteration 6 are unchanged and still a package-resolution mismatch in the analyzer's own
+interpreter (the gate interpreter imports `render` cleanly).

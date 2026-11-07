@@ -120,8 +120,8 @@
         "Update every existing test that asserts on the removed classes or colours to assert the neutral treatment instead.",
         "Run every verification gate and record the output."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 7. One neutral reading treatment. `--reading-mark:#c7ccd6` replaces the four severity variables in `:root`, `countColor` and its two call sites are deleted, and `.count .n` paints both `#count-n` and `#level-n` in that tone with emphasis left to size and weight. The reading card lost its `--dot` series accent and its red dark rule; the three `.sysstatus` colour variants are deleted (the `ok`/`warn`/`alarm` class names stay in markup as internal state names); `.inst .nodata`, `.wl-blind`, `.wl-gap`, `.count .darknote` and `.count .pairnote` moved to the neutral tone. `.pill.trembling.adjudicated` and its hatch rule are deleted, the card marker is one `<span class=\"pill trembling\">` rendering the deck's `unusualPill` (Unusual / 偏离近期记录) in either direction, `benignShift` is deleted, and the chart's directional `ptColor`, the red ±3 threshold guide and the tier-2 mini-chart red/green point map are replaced by the series' own colour with the existing radius emphasis. tests/lint_public_surface.py adds TestNeutralReadingTreatment (countColor gone, --reading-mark declared and binding both numbers, no severity token in the stylesheet, no --dot, no hatch/ptColor/threshold hue) and states the CSS-spelling scope; tests/render_smoke.js rebinds T22/T23 from the retired hatch class to the neutral marker and adds T32 (one marker in both directions, retired benignShift, neither number painted in JS). Gates: gate 415 passed / 126 subtests; lint 76 OK (was 72); forbidden literal 3 OK; audit 28 OK; replay exit 0 (1439 rows since STABLE_SINCE, divergence 0); pending 6 tagged / 0 overdue; render smoke OK; annotations cmp identical."
     },
     {
       "category": "functional",

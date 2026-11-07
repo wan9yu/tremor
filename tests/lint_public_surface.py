@@ -3,7 +3,7 @@ and status vocabulary, and a small README.md claims table — to core/normalize.
 so the page and the docs cannot silently drift from what the code actually
 emits.
 
-Three things are checked:
+Five things are checked:
   1. Status vocabulary. core/normalize.py defines six status strings a line's
      verdict can carry (STATUS_SCORING plus five others). docs/index.html
      carries TWO ``statusLabel`` maps (English ~:416, Chinese ~:470) that give
@@ -111,6 +111,20 @@ Three things are checked:
      primary line. The title states the comparison direction recorded when
      the series was selected (each fetcher's own ``ANOMALY_DIRECTION``), in
      the deck's words, and never calls that direction an alarm.
+
+  5. One neutral reading treatment. The page reports whether a reading is
+     unusual; it does not report whether that is better or worse. A
+     green-through-red ramp answers "more unusual = worse" on the reader's
+     behalf, so the count, the reference count, the reading cards, the
+     status line and the unusual marker share one neutral ink tone
+     (``--reading-mark``), with emphasis coming from size, weight and the
+     status wording. This lint asserts the four-way ``countColor()`` is gone,
+     the two numbers are painted by the neutral rule rather than in JS, the
+     stylesheet carries no severity hue, and the adjudication hatch and the
+     direction-coloured chart marker are gone. ``TestNeutralReadingTreatment``'s
+     docstring states the scope: CSS class and variable SPELLING is out of
+     scope (``--alarm``, ``.sysstatus.alarm`` keep their names in this
+     bundle), as are series hues on chart traces.
 
 core/normalize.py imports only ``statistics``, ``datetime`` and
 ``itertools`` (see tests/lint_support_stdlib.py's sibling guarantee for
@@ -727,6 +741,93 @@ class TestChartTitlesStateTheRecordedDirection(unittest.TestCase):
         self.assertIn("{mod.ANOMALY_DIRECTION}", title,
                       "render.py's per-line chart title does not interpolate the "
                       "line's own direction")
+
+
+# --- the neutral reading mark: one tone, no severity ramp -------------------
+#
+# The four severity colours the old ramp was built from, by CSS variable name
+# and by the literal spellings the stylesheet used for them. A status is read
+# from its word, never from a hue; series colours identify a chart trace and
+# never encode a status or a magnitude.
+SEVERITY_TOKENS = (
+    "--calm", "--amber", "--orange", "--alarm",
+    "#3fb27f", "#e0a83d", "#e07b39", "#d64545", "#ff6b6b",
+    "63,178,127", "224,168,61", "224,123,57", "214,69,69",
+)
+_STYLE_BLOCK = re.compile(r"<style>(.*?)</style>", re.S)
+# `.count .n` is the element rule that covers both `#count-n` and `#level-n`
+# (the fixed-reference block reuses `.count .count-level`).
+_COUNT_NUMBER_RULE = re.compile(r"\.count \.n\{([^}]*)\}")
+
+
+@functools.cache
+def _docs_style_block():
+    """The text inside docs/index.html's single ``<style>`` block. Memoized
+    (see `_status_label_key_sets` above)."""
+    block = _STYLE_BLOCK.search(support.read_text(DOCS_INDEX))
+    assert block, "docs/index.html: could not locate a `<style>...</style>` block"
+    return block.group(1)
+
+
+class TestNeutralReadingTreatment(unittest.TestCase):
+    """One neutral tone for every reading, in both directions.
+
+    SCOPE: this is a docs/index.html STYLE check, not a vocabulary check. CSS
+    class and variable SPELLING is deliberately not policed -- the plan keeps
+    ``--alarm`` and ``.sysstatus.alarm`` as names in this bundle, and renaming
+    internal identifiers is a separate job. What must not survive is a hue
+    TREATMENT on a number, a card, the status line or the unusual marker.
+    Series hues (``L.color``, a chart dataset's own border/point colour) are
+    out of scope too: they identify a series and never a status.
+    """
+
+    def test_count_color_is_gone(self):
+        html = support.read_text(DOCS_INDEX)
+        self.assertNotIn("countColor", html,
+                          "docs/index.html still defines or calls countColor -- the "
+                          "count is one neutral reading, not a severity ramp")
+
+    def test_the_count_and_reference_numbers_use_the_neutral_reading_mark(self):
+        html = support.read_text(DOCS_INDEX)
+        self.assertRegex(html, r"--reading-mark:\s*#c7ccd6",
+                         "docs/index.html declares no neutral `--reading-mark`")
+        rule = _COUNT_NUMBER_RULE.search(_docs_style_block())
+        self.assertIsNotNone(rule, "docs/index.html: no `.count .n{...}` rule found")
+        assert rule is not None
+        self.assertIn("color:var(--reading-mark)", rule.group(1),
+                      "the count and reference numbers (`.count .n`, i.e. #count-n and "
+                      "#level-n) are not painted with the neutral reading mark")
+        for element in ("count-n", "level-n"):
+            writes = [ln for ln in html.splitlines()
+                      if f'getElementById("{element}")' in ln]
+            self.assertTrue(writes,
+                            f"docs/index.html no longer writes #{element}")
+            painted = [ln for ln in writes if "style.color" in ln]
+            self.assertEqual(painted, [],
+                             f"#{element} is painted with a hue in JS instead of the "
+                             f"neutral reading mark: {painted}")
+
+    def test_no_severity_hue_remains_in_the_stylesheet(self):
+        style = _docs_style_block()
+        folded = style.lower()
+        hits = [token for token in SEVERITY_TOKENS if token.lower() in folded]
+        self.assertEqual(hits, [],
+                         "docs/index.html's stylesheet still carries the old severity "
+                         f"ramp colour(s) {hits}; one neutral tone replaces it")
+        self.assertNotIn("--dot", support.read_text(DOCS_INDEX),
+                         "a reading card still paints a series-colour accent (`--dot`); "
+                         "series hues belong to chart traces only")
+
+    def test_the_unusual_marker_does_not_hatch(self):
+        html = support.read_text(DOCS_INDEX)
+        self.assertNotIn(".pill.trembling.adjudicated", html,
+                          "docs/index.html still declares the adjudicated hatch rule")
+        self.assertNotIn('" adjudicated"', html,
+                          "the unusual marker still emits an adjudication-specific class")
+        self.assertNotIn("ptColor", html,
+                          "the history chart still colours a tremble point by direction")
+        self.assertNotIn("rgba(214,69,69,.45)", html,
+                          "the trembling-threshold guide is still painted in the alarm hue")
 
 
 class TestReadmeClaimsBindToSource(unittest.TestCase):

@@ -400,7 +400,9 @@ function buildHeadlineFixtureData() {
   // T22: adjudication/lean/run disclosure (Task 2), both languages -- the
   // headline integer must not move, precedence must hold (flights' lean
   // evidence must never surface once it is annotated), and all three new
-  // qualifiers plus the strip's pill-hatch must actually render.
+  // qualifiers must actually render. The reading cards carry ONE neutral
+  // unusual marker either way (T32 binds the both-directions case); no card
+  // hatches or discloses an adjudication of its own.
   const adjFixture = buildAdjFixtureData();
   for (const lang of ["en", "zh"]) {
     global.document.cookie = "tremor_lang=" + lang;
@@ -432,27 +434,32 @@ function buildHeadlineFixtureData() {
       if (!labelHtml.includes(runCore)) {
         errors.push(`adj(${lang}): missing the 2-day trembling-run qualifier for credit_spread`);
       }
-      // strip pill hatch: TIER1 order is [flights, credit_spread, cnh_cny]
-      // (net_outages demoted R28) -- flights (artifact) and cnh_cny
-      // (common-mode lean) must carry the "adjudicated" hatch class;
-      // credit_spread (run only, "ok" lean) must not.
+      // one neutral marker: every firing card carries the SAME unusual pill --
+      // the card never hatches or distinguishes an adjudication, and the
+      // headline qualifier above is where a recorded adjudication is disclosed.
       const instNodes = appendedNodes.filter(n => n.className === "inst");
       if (instNodes.length !== 3) {
         errors.push(`adj(${lang}): expected 3 tier-1 strip chips, found ${instNodes.length}`);
       } else {
-        if (!/class="pill trembling adjudicated"/.test(instNodes[0]._html))
-          errors.push(`adj(${lang}): flights' pill missing the adjudicated hatch class`);
-        if (/adjudicated/.test(instNodes[1]._html))
-          errors.push(`adj(${lang}): credit_spread's pill wrongly carries the adjudicated hatch class`);
-        if (!/class="pill trembling adjudicated"/.test(instNodes[2]._html))
-          errors.push(`adj(${lang}): cnh_cny's pill missing the adjudicated hatch class`);
+        for (const [i, id] of [[0, "flights"], [1, "credit_spread"], [2, "cnh_cny"]]) {
+          const chipHtml = instNodes[i]._html || "";
+          if (!chipHtml.includes(`class="pill trembling">${Tl.unusualPill}</span>`)) {
+            errors.push(`adj(${lang}): ${id}'s card does not carry the one neutral `
+              + `unusual marker ${JSON.stringify(Tl.unusualPill)}: ${chipHtml}`);
+          }
+          if (/adjudicated/.test(chipHtml)) {
+            errors.push(`adj(${lang}): ${id}'s card still carries an adjudication-specific `
+              + `marker class: ${chipHtml}`);
+          }
+        }
       }
     } catch (e) { errors.push(`adj render(${lang}): ${e.stack || e}`); }
   }
 
-  // T23 (review fix): method-only annotation must not suppress the lean/pill
-  // (case d), and an adjudicating row must win regardless of row order among
-  // duplicates for the same (line,date) (case e).
+  // T23 (review fix): method-only annotation must not suppress the lean (case
+  // d), and an adjudicating row must win regardless of row order among
+  // duplicates for the same (line,date) (case e). The cards' one neutral marker
+  // is bound here too: a firing card renders it without an adjudication class.
   const adj2Fixture = buildAdjPrecedenceFixtureData();
   for (const lang of ["en", "zh"]) {
     global.document.cookie = "tremor_lang=" + lang;
@@ -483,19 +490,23 @@ function buildHeadlineFixtureData() {
           + `non-adjudicating (correction) row for the same (line,date) -- `
           + `the adjudicating row must win regardless of order`);
       }
-      // strip pill hatch: TIER1 order is [flights, credit_spread, cnh_cny]
-      // (net_outages demoted R28) -- flights (artifact, order-independent) and
-      // cnh_cny (method-only + common-mode lean) must both hatch.
+      // one neutral marker: flights (artifact, order-independent) and cnh_cny
+      // (method-only + common-mode lean) both render the same unusual pill;
+      // the calm bystander renders no pill at all.
       const instNodes = appendedNodes.filter(n => n.className === "inst");
       if (instNodes.length !== 3) {
         errors.push(`adj2(${lang}): expected 3 tier-1 strip chips, found ${instNodes.length}`);
       } else {
-        if (!/class="pill trembling adjudicated"/.test(instNodes[0]._html))
-          errors.push(`adj2(${lang}): flights' pill missing the adjudicated hatch class `
-            + `(shadowed by the later correction row?)`);
-        if (!/class="pill trembling adjudicated"/.test(instNodes[2]._html))
-          errors.push(`adj2(${lang}): cnh_cny's pill missing the adjudicated hatch class `
-            + `(a method annotation must not block the common-mode lean's hatch)`);
+        for (const [i, id] of [[0, "flights"], [2, "cnh_cny"]]) {
+          const chipHtml = instNodes[i]._html || "";
+          if (!chipHtml.includes(`class="pill trembling">${Tl.unusualPill}</span>`)) {
+            errors.push(`adj2(${lang}): ${id}'s card does not carry the one neutral `
+              + `unusual marker: ${chipHtml}`);
+          }
+        }
+        if (/class="pill trembling|class="pill benign/.test(instNodes[1]._html || "")) {
+          errors.push(`adj2(${lang}): the calm credit_spread card carries an unusual marker`);
+        }
       }
     } catch (e) { errors.push(`adj2 render(${lang}): ${e.stack || e}`); }
   }
@@ -1101,6 +1112,81 @@ function buildHeadlineFixtureData() {
         }
       }
     } catch (e) { errors.push(`direction cards(${lang}): ${e.stack || e}`); }
+  }
+
+  // T32 (public-surface migration, item 6): one neutral treatment. A departure
+  // in the recorded direction and a departure AGAINST it render the same
+  // marker text (no favourable/unfavourable split), the marker never hatches,
+  // and neither number is painted in JS -- both take the stylesheet's one
+  // neutral reading mark. The retired `benign shift` wording is gone from both
+  // languages. The stylesheet side of the rule (no severity hue anywhere) is
+  // bound by tests/lint_public_surface.py::TestNeutralReadingTreatment, which
+  // reads the CSS this harness cannot.
+  const RETIRED_MARKER_TEXTS = { en: "benign shift", zh: "良性异动" };
+  const neutralFixture = buildFixtureData();
+  neutralFixture.summary = [{ date: FIXTURE_DATE, trembling_count: "2",
+    dark_count: "0", blind_count: "0" }];
+  // TIER1 order is [flights, credit_spread, cnh_cny]. flights (declared down)
+  // trembles in its recorded direction; credit_spread (declared up) trembles
+  // against it -- the case the old code painted green and called "benign shift".
+  neutralFixture.lines.flights = [fixtureRow({ date: FIXTURE_DATE, raw_value: "1000",
+    z_score: "-3.5", trembling: "1", direction: "down", status: "scoring" })];
+  neutralFixture.lines.credit_spread = [fixtureRow({ date: FIXTURE_DATE, raw_value: "4.2",
+    z_score: "-3.1", trembling: "1", direction: "down", status: "scoring" })];
+  neutralFixture.lines.cnh_cny = [fixtureRow({ date: FIXTURE_DATE, raw_value: "10",
+    z_score: "0.2", trembling: "0", direction: "up", status: "scoring" })];
+  neutralFixture.lines.fed_srf_takeup = [fixtureRow({ date: FIXTURE_DATE,
+    raw_value: "0", z_score: "0.1", trembling: "0", direction: "up", status: "scoring" })];
+  neutralFixture.stuck = [{ date: FIXTURE_DATE, component: "Strait of Hormuz",
+    since: "2026-04-06", pct: "4", stale: "" }];
+  for (const lang of ["en", "zh"]) {
+    global.document.cookie = "tremor_lang=" + lang;
+    setDATA(neutralFixture);
+    appendedNodes = [];
+    try {
+      render();
+      sweepForBadValues("neutral-" + lang);
+      const Tl = T[lang];
+      if (Tl.benignShift !== undefined) {
+        errors.push(`neutral(${lang}): the retired benignShift key is still declared -- `
+          + `a departure gets one marker in either direction`);
+      }
+      const chips = appendedNodes.filter(n => (n.className || "").startsWith("inst"));
+      if (chips.length !== 4) {
+        errors.push(`neutral(${lang}): expected 4 tier-1 chips, found ${chips.length}`);
+      } else {
+        const want = `class="pill trembling">${Tl.unusualPill}</span>`;
+        for (const [i, id] of [[0, "flights (recorded direction)"],
+                               [1, "credit_spread (against its recorded direction)"]]) {
+          const chipHtml = chips[i]._html || "";
+          if (!chipHtml.includes(want)) {
+            errors.push(`neutral(${lang}): ${id} does not carry the one neutral marker `
+              + `${JSON.stringify(Tl.unusualPill)}: ${chipHtml}`);
+          }
+          if (/class="pill benign/.test(chipHtml) || /adjudicated/.test(chipHtml)) {
+            errors.push(`neutral(${lang}): ${id} still carries a direction- or `
+              + `adjudication-specific marker: ${chipHtml}`);
+          }
+        }
+        if (/class="pill trembling|class="pill benign/.test(chips[2]._html || "")) {
+          errors.push(`neutral(${lang}): the calm cnh_cny card carries an unusual marker`);
+        }
+      }
+      const surface = [el("count-label").innerHTML, el("count-n").textContent,
+        el("sysstatus").innerHTML,
+        ...appendedNodes.flatMap(n => [n._text, n._html])].join("\n");
+      if (surface.toLowerCase().includes(RETIRED_MARKER_TEXTS[lang].toLowerCase())) {
+        errors.push(`neutral(${lang}): the rendered page still carries the retired marker `
+          + `wording ${JSON.stringify(RETIRED_MARKER_TEXTS[lang])}`);
+      }
+      for (const id of ["count-n", "level-n"]) {
+        if (el(id).style.color !== undefined) {
+          errors.push(`neutral(${lang}): #${id} is painted with `
+            + `${JSON.stringify(el(id).style.color)} in JS instead of the one neutral `
+            + `reading mark`);
+        }
+      }
+    } catch (e) { errors.push(`neutral render(${lang}): ${e.stack || e}`); }
   }
 
   await new Promise(r => setTimeout(r, 50));
