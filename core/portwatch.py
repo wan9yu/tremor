@@ -66,9 +66,19 @@ _quota_waits_left = 1
 _sleep = time.sleep
 
 
+_NOTE_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                        "0123456789 .,;:/+_()#%-")
+
+
 def _clean(value, limit):
-    """``value`` as one short printable line, for a note the record will keep."""
-    return "".join(ch for ch in str(value) if ch.isprintable())[:limit]
+    """``value`` as one short note-safe line: alphanumerics and neutral punctuation.
+
+    The note lands in a committed CSV and reaches the dashboard, which renders a
+    dark row's ``source_note`` as HTML. An allowlist (not a strip of
+    non-printables) means nothing this function returns can open a tag, quote an
+    attribute or start a scheme, whatever a proxy or the upstream sends back.
+    """
+    return "".join(ch for ch in str(value) if ch in _NOTE_CHARS)[:limit]
 
 
 def _query(service, params):

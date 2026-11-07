@@ -120,6 +120,10 @@ class TestQuotaReason(_Quiet):
         self.assertNotIn("\n", reason)
         self.assertNotIn("\r", reason)
         self.assertLessEqual(len(reason), 80)
+        # the dashboard renders a dark row's note as HTML, so no markup-capable
+        # byte may leave this module
+        for ch in "<>\"'&":
+            self.assertNotIn(ch, reason)
 
     def test_a_json_list_is_a_stated_shape_problem_not_an_attribute_error(self):
         rows, reason = self.run_with(_Script(_resp([1, 2, 3])), portwatch.daily_totals,

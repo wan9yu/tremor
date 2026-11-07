@@ -88,10 +88,17 @@ class _Unusable(ValueError):
     """
 
 
+# A note may carry no markup-capable byte: it lands in a committed CSV and the
+# dashboard renders a dark row's note as HTML, so an allowlist (not a strip of
+# non-printables) is what keeps a hostile Content-Type header from opening a tag.
+_NOTE_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                        "0123456789 .,;:/+_()#%-")
+
+
 def _answer(r):
-    """One short printable line naming the response: status, content type, size."""
+    """One short note-safe line naming the response: status, content type, size."""
     ctype = r.headers.get("Content-Type") or "no content-type"
-    ctype = "".join(ch for ch in ctype if ch.isprintable())[:40]
+    ctype = "".join(ch for ch in ctype if ch in _NOTE_CHARS)[:40]
     return f"HTTP {r.status_code}, {ctype}, {len(r.content)} bytes"
 
 

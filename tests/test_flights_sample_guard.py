@@ -124,6 +124,28 @@ class TestScheduleArithmetic(unittest.TestCase):
     def test_the_sleep_target_is_the_module_target(self):
         self.assertEqual(self.target, flights.SAMPLE_TARGET_UTC_H)
 
+    def test_the_head_start_leaves_room_under_the_job_limit(self):
+        """A GitHub-hosted job is killed at 6h; the DAY must be committed before that.
+
+        Runtime is ``22:30Z - creation`` + the work after the sleep, so a run
+        created exactly on the cron slot is the worst case: it sleeps the whole
+        head-start. The day is made durable by the "Commit the day" step, which
+        runs right after collection and before every derive/audit step, so the
+        reserve this guards is sleep-to-commit, not sleep-to-finish. Measured:
+        post-sleep work to the end of the run was 1.1-2.4 min across 63 runs
+        (internal/plans/evidence-2026-11-07/daily-runs.json), and the collect
+        loop's own timeouts bound the pathological case well inside this reserve.
+        """
+        (cron_h,) = support.cron_hours(self.daily)
+        job_limit_min = 6 * 60
+        head_start_min = (self.target - cron_h) * 60
+        reserve = job_limit_min - head_start_min
+        self.assertGreaterEqual(
+            reserve, 25,
+            f"a {head_start_min:.0f} min head-start leaves only "
+            f"{reserve:.0f} min of the 6h job limit for collection and the "
+            f"commit that makes the day durable")
+
     def test_the_head_start_exceeds_the_tolerance(self):
         (cron_h,) = support.cron_hours(self.daily)
         self.assertGreater(flights.SAMPLE_TARGET_UTC_H - cron_h, flights.SAMPLE_TOL_H,

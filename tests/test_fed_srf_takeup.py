@@ -164,6 +164,16 @@ class TestWhyTheSourceWasUnusable(unittest.TestCase):
         self.assertIsNone(r["raw_value"])
         self.assertIn("unexpected response shape", r["source_note"])
 
+    def test_a_hostile_content_type_cannot_inject_markup(self):
+        # the note is rendered as HTML by the dashboard; an allowlist is what
+        # stops a header (or proxy) from writing a tag into a committed CSV
+        r = self._fetch(_http(200, b"<html>x</html>",
+                              ctype='text/html\"><script>alert(1)</script>'))
+        note = r["source_note"]
+        for ch in "<>'\"&":
+            self.assertNotIn(ch, note)
+        self.assertIn("HTTP 200", note)
+
     def test_the_note_is_one_short_line(self):
         r = self._fetch(_http(200, b"<html>" + b"x" * 5000 + b"</html>",
                               ctype="text/html\r\nX-Injected: 1"))

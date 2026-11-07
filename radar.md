@@ -436,9 +436,11 @@ re-reading the log. Close an item by editing it out with a round reference.
 
 - **flights fixed-hour re-review** (opened R26; the R25.1 sample-hour fix itself SHIPPED and is
   closed — the fix, its guard and the 34-day simulation are in radar-log.md R25.1) — re-review after
-  ~90 collection days of the fixed-hour regime: confirm the live 18Z-cron delay distribution still
+  ~90 collection days of the fixed-hour regime: confirm the live cron delay distribution still
   lands the sample on the fixed hour (the workflow schedules early and sleeps to 22:30:00Z, so the
-  sample hour is deterministic only within that head-start) and that no artifact of the adjudicated
+  sample hour is deterministic only within that head-start — 4.5h from an 18:00Z cron through
+  2026-11-06, 5.5h from a 17:00Z cron since 2026-11-07, when measured queue delay had grown past the
+  older window and darks became routine) and that no artifact of the adjudicated
   CI-queue sample-hour class recurs. ANTI-LOOPHOLE (standing): a repeat of that adjudicated artifact
   class AFTER the fix is itself demotion-disqualifying. The 22:30Z baseline is continuous for the
   TOTAL only — R34 found Japan's SHARE moving with a ~30-min cron drift (a diurnal-ramp phase seam),
@@ -603,7 +605,7 @@ gets one line added here.
   queued (needs approval) with an anti-loophole clause. Reconciliation tripwire clean (0/7); cnh_cny n=52 (<60); no
   tier moves. Audited by an external model (GO-WITH-CHANGES; three must-fixes folded in)
 - **Round 25.1** — 2026-09-01 · the flights sample-hour fix SHIPPED: sleep-to-target. The daily workflow schedules
-  early (18Z) and sleeps to 22:30:00Z before collecting, so the one-sided GH queue delay lands the sample on a fixed
+  early (18Z as shipped; 17:00Z from 2026-11-07) and sleeps to 22:30:00Z before collecting, so the one-sided GH queue delay lands the sample on a fixed
   hour (all 31 non-trough days of the record); a declarative backstop guard (`collect.py apply_sample_guard`,
   `flights.SAMPLE_TARGET_UTC_H`=22.5/`SAMPLE_TOL_H`=1.5, bound to the CI target by a test) darks the rare run delayed
   past the window. Fixes the sample TIME not the reading; no firewall change, no lag, no reseed, replay 0-divergence,
