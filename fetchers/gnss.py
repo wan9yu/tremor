@@ -51,22 +51,42 @@ _URL = "https://gpsjam.org/data/{date}-h3_4.csv"
 _HEADERS = useragent.HEADERS
 
 
-def counts_from_csv(text):
-    """``(bad, total)`` aircraft summed over every h3 cell of one day's file.
+# The table's header, exactly. The two aircraft columns are positional, so a file
+# that names them in the other order would still parse and read as a ratio near
+# 100% -- the header is the only thing that says which column is which.
+_HEADER = "hex,count_good_aircraft,count_bad_aircraft"
 
-    Rows are ``hex,count_good_aircraft,count_bad_aircraft``. The seeder
-    aggregates whole archive days through this same function, which is what
-    makes its "identical to the live fetcher" claim true by construction.
+
+def counts_from_csv(text):
+    """``(bad, total)`` aircraft summed over every h3 cell of one day's file, or
+    ``None`` when the body is not the GPSJam table.
+
+    Rows are ``hex,count_good_aircraft,count_bad_aircraft``. The first line must
+    be that header exactly: without the check an HTML page, a header-less file
+    (whose first data row the parse would silently skip) or a file with the two
+    count columns swapped all produced a number. A row whose counts are not
+    non-negative integers is skipped on its own, as before; the day's total is
+    NOT judged against a floor, because it comes from a volunteer receiver
+    network and varies by an order of magnitude over the seeded history.
+
+    The seeder aggregates whole archive days through this same function, which
+    is what makes its "identical to the live fetcher" claim true by construction.
     """
+    lines = text.strip().splitlines()
+    if not lines or lines[0].strip() != _HEADER:
+        return None
     good = bad = 0
-    for row in text.strip().splitlines()[1:]:
+    for row in lines[1:]:
         cols = row.split(",")
         if len(cols) >= 3:
             try:
-                good += int(cols[1])
-                bad += int(cols[2])
+                g, b = int(cols[1]), int(cols[2])
             except ValueError:
                 continue
+            if g < 0 or b < 0:
+                continue
+            good += g
+            bad += b
     return bad, good + bad
 
 
@@ -82,7 +102,11 @@ def fetch_daily():
         if r.status_code != 200 or len(r.text) < 100:
             last_status = f"HTTP {r.status_code}"
             continue
-        bad, total = counts_from_csv(r.text)
+        counts = counts_from_csv(r.text)
+        if counts is None:
+            last_status = "unexpected table"
+            continue
+        bad, total = counts
         if total == 0:
             last_status = "empty"
             continue

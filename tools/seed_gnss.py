@@ -91,8 +91,14 @@ def day_counts(day):
             if r.status_code == 404:
                 return None, None
             if r.status_code == 200:
-                return gnss.counts_from_csv(r.text)
-            last_error = f"{day}: HTTP {r.status_code}"
+                counts = gnss.counts_from_csv(r.text)
+                if counts is not None:
+                    return counts
+                # a 200 that is not the table (an error page, a changed
+                # layout): retry, then stop loudly -- never cache it as a day
+                last_error = f"{day}: unexpected table"
+            else:
+                last_error = f"{day}: HTTP {r.status_code}"
         if attempt == 1:
             time.sleep(10)
     raise RuntimeError(last_error)
