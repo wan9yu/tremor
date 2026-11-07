@@ -11,15 +11,20 @@ network in its pure half. These tests exercise only build_panel with synthetic
 rows and a stub classify -- no network, no data/ read -- so they are safe in
 the pre-collect gate.
 """
+import contextlib
+import io
 import os
 import sys
+import tempfile
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import lean_panel
+import support  # noqa: E402
+import lean_panel  # noqa: E402
 
 
 class _Mod:
@@ -131,6 +136,99 @@ class TestBuildPanel(unittest.TestCase):
 
     def test_empty(self):
         self.assertEqual(lean_panel.build_panel([], {}, TIER1, _stub_classify([])), [])
+
+
+class TestMainNeverFails(unittest.TestCase):
+    """``main()`` is the post-commit derive step and must never redden it.
+
+    The contract (``tools/lean_panel.py``'s docstring, "Collection-Day-Risk:
+    NONE"): whatever goes wrong, ``main()`` returns 0, says ``FAILED`` on
+    stdout, and leaves whatever ``docs/data/leans.csv`` already held exactly as
+    it was, rather than write a half-built file. Nothing pinned that, so a
+    "fix" that let an exception escape would have turned a presentational
+    layer into a lost day's red run with every other test still green.
+
+    No network, no ``data/``: the reads are stubbed and ``OUT`` is a temp file.
+    """
+
+    SUMMARY_ROWS = [{"date": "2026-09-04"}, {"date": "2026-09-05"}]
+    LINE_ROWS = {
+        "net_outages.csv": [_row("2026-09-04", "0", "up"), _row("2026-09-05", "1", "up")],
+        "flights.csv": [_row("2026-09-04", "0", "down"), _row("2026-09-05", "0", "down")],
+    }
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.out = os.path.join(self._tmp.name, "leans.csv")
+
+    def _read_rows(self, path):
+        if os.path.basename(path) == "summary.csv":
+            return [dict(r) for r in self.SUMMARY_ROWS]
+        return [dict(r) for r in self.LINE_ROWS[os.path.basename(path)]]
+
+    def _run(self, **stubs):
+        """Run ``main()`` with the reads and ``OUT`` stubbed; ``stubs`` overrides
+        names on ``lean_panel`` or ``lean_panel.collect``. Returns (code, stdout)."""
+        buf = io.StringIO()
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(support.stub_attr(lean_panel, "OUT", self.out))
+            stack.enter_context(support.stub_attr(lean_panel, "TIER1", TIER1))
+            stack.enter_context(support.stub_attr(
+                lean_panel, "_classify", lambda line, obs: ("STUB-LEAN", "STUB-EVIDENCE")))
+            stack.enter_context(support.stub_attr(
+                lean_panel.collect, "_read_rows", stubs.pop("_read_rows", self._read_rows)))
+            for name, value in stubs.items():
+                stack.enter_context(support.stub_attr(lean_panel, name, value))
+            with contextlib.redirect_stdout(buf):
+                code = lean_panel.main()
+        return code, buf.getvalue()
+
+    def test_the_happy_path_writes_the_panel_and_returns_zero(self):
+        code, out = self._run()
+        self.assertEqual(code, 0)
+        self.assertNotIn("FAILED", out)
+        with open(self.out, encoding="utf-8") as fh:
+            body = fh.read()
+        self.assertIn("2026-09-05,net_outages,STUB-LEAN,STUB-EVIDENCE", body)
+
+    def test_a_build_failure_returns_zero_says_failed_and_writes_nothing(self):
+        def boom(*args, **kwargs):
+            raise RuntimeError("builder blew up")
+        code, out = self._run(build_panel=boom)
+        self.assertEqual(code, 0)
+        self.assertIn("FAILED (RuntimeError: builder blew up)", out)
+        self.assertFalse(os.path.exists(self.out),
+                         "a failed first run must not leave a half-built file")
+
+    def test_a_failure_leaves_the_prior_file_byte_for_byte(self):
+        prior = "date,line,lean,evidence\n2026-09-01,net_outages,ok,kept\n"
+        with open(self.out, "w", encoding="utf-8", newline="") as fh:
+            fh.write(prior)
+
+        def boom(*args, **kwargs):
+            raise ValueError("bad row")
+        code, out = self._run(build_panel=boom)
+        self.assertEqual(code, 0)
+        self.assertIn("leaving prior", out)
+        with open(self.out, encoding="utf-8", newline="") as fh:
+            self.assertEqual(fh.read(), prior)
+
+    def test_a_read_failure_is_covered_too(self):
+        def unreadable(path):
+            raise FileNotFoundError(path)
+        code, out = self._run(_read_rows=unreadable)
+        self.assertEqual(code, 0)
+        self.assertIn("FAILED (FileNotFoundError", out)
+        self.assertFalse(os.path.exists(self.out))
+
+    def test_a_write_failure_is_covered_too(self):
+        def unwritable(path, header, rows):
+            raise PermissionError(path)
+        with support.stub_attr(lean_panel.collect, "_write_rows", unwritable):
+            code, out = self._run()
+        self.assertEqual(code, 0)
+        self.assertIn("FAILED (PermissionError", out)
 
 
 if __name__ == "__main__":
