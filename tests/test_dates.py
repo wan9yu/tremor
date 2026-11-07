@@ -7,8 +7,9 @@ and the FRED body parser) and each used to spell it out. They now share
 from drifting and what kept the refactor from changing a verdict.
 
 ``tests/audit_record.py`` keeps its own copy on purpose: an audit that imports
-the code it audits cannot notice that code loosening. Its parity with this
-table is bound there, not here, because that file is audit tier.
+the code it audits cannot notice that code loosening. That copy is deliberately
+NOT bound to this table, so loosening the shared predicate cannot loosen the
+audit with it; the audit goes red on a bad committed date instead.
 
 Pure: no network, no ``data/``.
 """
@@ -30,6 +31,8 @@ STRING_PROBES = [
     ("9999-12-31", True),
     ("20261022", False),             # basic form: fromisoformat accepts it on 3.11+
     ("2026-1-2", False),
+    ("26-10-22", False),             # strptime("%Y-%m-%d") alone would take this
+    ("999-12-31", False),            # ...and this; the shape check comes first
     ("2026-02-30", False),           # right shape, no such day
     ("2025-02-29", False),           # not a leap year
     ("0000-01-01", False),           # year 0 is not a calendar year

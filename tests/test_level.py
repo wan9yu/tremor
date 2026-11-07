@@ -3,7 +3,9 @@
 Pure logic on synthetic series — no committed data is asserted here, so this
 file may gate collection.
 """
+import contextlib
 import datetime
+import io
 import os
 import sys
 import unittest
@@ -212,6 +214,24 @@ class TestLevelDateGuard(unittest.TestCase):
             rows, skipped = level_layer.compute()
         self.assertEqual(rows, [])
         self.assertEqual(skipped, 3)
+
+    def _report(self, rows):
+        """``(exit code, stdout)`` of ``level_layer.main(["--report"])`` over ``rows``."""
+        buf = io.StringIO()
+        with support.stub_attr(level_layer.collect, "_read_rows", lambda path: rows), \
+                contextlib.redirect_stdout(buf):
+            code = level_layer.main(["--report"])
+        return code, buf.getvalue()
+
+    def test_the_report_says_how_many_rows_the_guard_dropped(self):
+        code, out = self._report(self.rows())
+        self.assertEqual(code, 0)
+        self.assertIn("3 component row(s) dropped (unusable date)", out)
+
+    def test_the_report_is_silent_when_nothing_was_dropped(self):
+        clean = [r for r in self.rows() if r["date"].startswith("2026-")]
+        _, out = self._report(clean)
+        self.assertNotIn("dropped", out)
 
     def test_last_seen_ignores_unusable_dates(self):
         # stale_note parses both dates it is given; a mangled "newest" would

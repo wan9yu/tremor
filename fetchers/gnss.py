@@ -73,7 +73,7 @@ def counts_from_csv(text):
     is what makes its "identical to the live fetcher" claim true by construction.
     """
     lines = text.strip().splitlines()
-    if not lines or lines[0].strip() != _HEADER:
+    if not lines or lines[0].lstrip("\ufeff").strip() != _HEADER:
         return None
     good = bad = 0
     for row in lines[1:]:

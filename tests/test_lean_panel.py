@@ -201,7 +201,11 @@ class TestMainNeverFails(unittest.TestCase):
         self.assertFalse(os.path.exists(self.out),
                          "a failed first run must not leave a half-built file")
 
-    def test_a_failure_leaves_the_prior_file_byte_for_byte(self):
+    def test_a_failure_before_the_write_leaves_the_prior_file_byte_for_byte(self):
+        # Covers the build and read stages. A failure DURING the write itself
+        # (disk full) truncates ``OUT`` -- ``collect._write_rows`` opens it "w" --
+        # and ``main()`` cannot undo that; the file is recomputed from scratch on
+        # the next run, so the damage lasts one day at most.
         prior = "date,line,lean,evidence\n2026-09-01,net_outages,ok,kept\n"
         with open(self.out, "w", encoding="utf-8", newline="") as fh:
             fh.write(prior)

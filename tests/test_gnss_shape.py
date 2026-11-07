@@ -51,6 +51,12 @@ class TestCountsFromCsv(unittest.TestCase):
     def test_trailing_whitespace_and_a_final_newline_are_fine(self):
         self.assertEqual(gnss.counts_from_csv(GOOD + "\n\n"), (15, 315))
 
+    def test_a_byte_order_mark_before_the_header_is_tolerated(self):
+        self.assertEqual(gnss.counts_from_csv("\ufeff" + GOOD), (15, 315))
+
+    def test_crlf_line_endings_are_tolerated(self):
+        self.assertEqual(gnss.counts_from_csv(GOOD.replace("\n", "\r\n")), (15, 315))
+
     def test_swapped_columns_are_refused(self):
         swapped = "hex,count_bad_aircraft,count_good_aircraft\n8a,5,100\n8b,10,200\n"
         self.assertIsNone(gnss.counts_from_csv(swapped))

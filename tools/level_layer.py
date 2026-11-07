@@ -213,6 +213,8 @@ def main(argv):
     if "--report" in argv:
         newest, seen = last_seen()
         open_now, opened = open_states(rows, "component")
+        if skipped:
+            print(f"{skipped} component row(s) dropped (unusable date)")
         if not open_now:
             print("no state is open")
         for component, r in sorted(open_now.items()):
