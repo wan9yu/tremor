@@ -3,7 +3,7 @@ and status vocabulary, and a small README.md claims table — to core/normalize.
 so the page and the docs cannot silently drift from what the code actually
 emits.
 
-Five things are checked:
+Six things are checked:
   1. Status vocabulary. core/normalize.py defines six status strings a line's
      verdict can carry (STATUS_SCORING plus five others). docs/index.html
      carries TWO ``statusLabel`` maps (English ~:416, Chinese ~:470) that give
@@ -125,6 +125,15 @@ Five things are checked:
      docstring states the scope: CSS class and variable SPELLING is out of
      scope (``--alarm``, ``.sysstatus.alarm`` keep their names in this
      bundle), as are series hues on chart traces.
+
+  6. Public-copy vocabulary. The reader-facing copy names a reading and its
+     comparison, never an alarm, a zero state or a layer. This lint scans the
+     string VALUES of docs/index.html's `const T` locale objects, each `const
+     LINES` entry's ``label``/``source``/``measures``/``watches``/``domain``
+     values, and README.md's prose for ``alarm``, ``报警``, ``resonance``,
+     ``共振``, ``calm``, ``平静`` and the layer vocabulary. See
+     `TestPublicCopyVocabulary`'s section comment for why CSS class names and
+     internal identifiers stay out of the corpus.
 
 core/normalize.py imports only ``statistics``, ``datetime`` and
 ``itertools`` (see tests/lint_support_stdlib.py's sibling guarantee for
@@ -828,6 +837,151 @@ class TestNeutralReadingTreatment(unittest.TestCase):
                           "the history chart still colours a tremble point by direction")
         self.assertNotIn("rgba(214,69,69,.45)", html,
                           "the trembling-threshold guide is still painted in the alarm hue")
+
+
+# --- the public-copy vocabulary guard ---------------------------------------
+#
+# A reading is not a verdict about the world, so the reader-facing copy cannot
+# call a departure an "alarm", call a day without one "calm", call several at
+# once "resonance", or describe the roster as layers. The strings the page and
+# the README used to carry for those terms are gone; these tests keep them from
+# coming back.
+#
+# SCOPE -- user-visible VALUES only, from three surfaces:
+#   * every double-quoted string VALUE inside docs/index.html's `const T`
+#     locale objects (English and Chinese),
+#   * each `const LINES` entry's `label`, `source`, `measures`, `watches` and
+#     `domain` values, both languages,
+#   * README.md's prose (the whole file).
+# Deliberately NOT scanned: the stylesheet, markup attribute values, JS code and
+# comments. CSS class and custom-property spellings (--alarm,
+# .sysstatus.alarm), the `trembling` pill class and JS identifiers keep their
+# spelling in this bundle, and an unquoted T key name such as `alarmDarkH` is an
+# internal identifier, not copy -- its VALUE ("N of M instruments dark.") is what
+# a reader sees and what this guard reads.
+# `test_the_guard_scans_visible_copy_only` binds that scope: widening the corpus
+# to the whole file (or to the stylesheet) turns it red.
+BANNED_COPY_WORDS = ("alarm", "报警", "resonance", "共振", "calm", "平静")
+# `calm`/`平静` are banned outright rather than only in a narrow "zero-state"
+# sense: on this page every use of the word reads the absence of a departure as
+# a state of the world, which is the claim the migration removed.
+_LAYER_VOCABULARY = (
+    (re.compile(r"第[一二三]层"), "第一层/第二层/第三层"),
+    (re.compile(r"(?i)\blayers?\s*[123]\b"), "Layer 1/2/3"),
+    (re.compile(r"\bL[123]\b"), "L1/L2/L3"),
+    (re.compile(r"(?i)\btier of analysis\b"), "tier of analysis"),
+)
+
+# A JS double-quoted string on one line; an escaped quote does not end it.
+# Backtick text is NOT read: inside this block the backtick spans are code
+# comments naming internal values (`real`, `benign`), not copy.
+_JS_STRING = re.compile(r'"(?:[^"\\\n]|\\.)*"')
+# One `field:{en:"...",zh:"..."}` pair on a single line. `unit` is left out on
+# purpose: it is a measure word ("aircraft", "架"), not prose.
+_JS_LINE_COPY_FIELD = re.compile(
+    r'(?:watches|domain|label|source):\s*\{en:"((?:[^"\\\n]|\\.)*)",'
+    r'\s*zh:"((?:[^"\\\n]|\\.)*)"\}')
+
+
+def _line_of(html, needle):
+    """1-based line number of `needle` in `html`; fails loudly if absent."""
+    at = html.find(needle)
+    assert at != -1, f"docs/index.html: copy string not found: {needle[:60]!r}"
+    return html[:at].count("\n") + 1
+
+
+@functools.cache
+def _visible_copy(surface):
+    """[(where, text)] for one user-visible surface: ``"locale"`` for the T
+    block's string values, ``"lines"`` for the five copy fields of every
+    ``const LINES`` entry, ``"readme"`` for README.md. Memoized (see
+    `_status_label_key_sets` above)."""
+    if surface == "readme":
+        return [("README.md", support.read_text(README))]
+
+    html = support.read_text(DOCS_INDEX)
+    if surface == "locale":
+        block = _DOCS_CONST_T_BLOCK.search(html)
+        assert block, "docs/index.html: could not locate a `const T = {...};` block"
+        body, start = block.group(1), block.start(1)
+        out = []
+        for m in _JS_STRING.finditer(body):
+            if body.startswith(":", m.end()):
+                continue                      # a quoted KEY, not a value
+            line = html[:start + m.start()].count("\n") + 1
+            out.append((f"docs/index.html:{line}", m.group(0)[1:-1]))
+        assert out, "docs/index.html's `const T` block parsed with no string values"
+        return out
+
+    assert surface == "lines", f"unknown copy surface {surface!r}"
+    block = _LINES_BLOCK.search(html)
+    assert block, "docs/index.html: could not locate `const LINES = [ ... ];`"
+    body, start = block.group(1), block.start(1)
+    out = []
+    for m in _JS_LINE_COPY_FIELD.finditer(body):
+        line = html[:start + m.start()].count("\n") + 1
+        out.append((f"docs/index.html:{line}", m.group(1)))
+        out.append((f"docs/index.html:{line}", m.group(2)))
+    for by_lang in _docs_measures().values():
+        for text in by_lang.values():
+            out.append((f"docs/index.html:{_line_of(html, text)}", text))
+    # 24 lines x (label, source, domain) x 2 languages is the floor; a parse
+    # that silently drops the block fails here rather than passing vacuously.
+    assert len(out) >= 24 * 3 * 2, (
+        "docs/index.html's `const LINES` copy fields parsed to only "
+        f"{len(out)} values -- the block's shape changed")
+    return out
+
+
+def _banned_copy_hits(text):
+    """The banned token(s) one copy string carries, in declaration order."""
+    folded = text.lower()
+    hits = [word for word in BANNED_COPY_WORDS if word.lower() in folded]
+    hits.extend(label for pattern, label in _LAYER_VOCABULARY if pattern.search(text))
+    return hits
+
+
+class TestPublicCopyVocabulary(unittest.TestCase):
+    """No reader-facing string names an alarm, a zero state or a layer.
+
+    See the section comment above for the exact corpus and its exclusions: the
+    ban reaches user-visible VALUES, not CSS class names or internal
+    identifiers.
+    """
+
+    def _assert_clean(self, surface):
+        offenders = []
+        for where, text in _visible_copy(surface):
+            hits = _banned_copy_hits(text)
+            if hits:
+                offenders.append(f"{where}: {hits} in {text[:90]!r}")
+        self.assertEqual(offenders, [],
+                         "user-visible copy still carries retired reading "
+                         f"vocabulary ({surface}):\n" + "\n".join(offenders))
+
+    def test_locale_strings_carry_no_banned_vocabulary(self):
+        self._assert_clean("locale")
+
+    def test_line_metadata_carries_no_banned_vocabulary(self):
+        self._assert_clean("lines")
+
+    def test_readme_prose_carries_no_banned_vocabulary(self):
+        self._assert_clean("readme")
+
+    def test_the_guard_scans_visible_copy_only(self):
+        corpus = "\n".join(text for surface in ("locale", "lines", "readme")
+                           for _, text in _visible_copy(surface))
+        # Every in-scope surface is represented.
+        self.assertIn("A statistical comparison, not a judgment of conditions.", corpus)
+        self.assertIn("Aircraft reported airborne across W/C Europe", corpus)
+        self.assertIn("## Machine-checked claims", corpus)
+        # Internal spellings the ban deliberately exempts. Widening the corpus
+        # to the whole file or to the stylesheet would put these in it.
+        for internal in ("--reading-mark", ".sysstatus", "alarmDarkH",
+                         "const LINES", "<style>"):
+            self.assertNotIn(internal, corpus,
+                             "the vocabulary guard's corpus includes the internal "
+                             f"spelling {internal!r}; it must scan copy only")
 
 
 class TestReadmeClaimsBindToSource(unittest.TestCase):

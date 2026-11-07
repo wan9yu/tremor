@@ -797,3 +797,123 @@ in the same neutral outline.
 **Analyzer note.** No new analyzer findings: the four `render.py` import findings recorded
 in iteration 6 are unchanged and still a package-resolution mismatch in the analyzer's own
 interpreter (the gate interpreter imports `render` cleanly).
+
+## Iteration 8 — item 8 (docs): README and public copy pass the vocabulary guard
+
+**Chosen because** item 8 is the only item left with `passes: false`, and
+`.ralph/plan.md` ranks the guard last: it can only pass once the copy is clean, and items
+1–7 (the `measures` field, the headline label, the status vocabulary, the structural copy,
+the inline limits, the neutral treatment, `declared_dir`) are all passing. No item is
+hard-blocked; the ledger held iterations 1–7, all green.
+
+**Entry state measured.** Gate 415 passed / 126 subtests; lint 76 OK; forbidden-literal 3
+OK; audit 28 OK; `replay --check` exit 0 (1439 rows since `STABLE_SINCE`, divergence 0);
+`pending --check` 6 tagged / 0 overdue; render smoke OK; annotations mirror identical.
+
+**Test-first, failures recorded.** `tests/lint_public_surface.py` gained the
+`TestPublicCopyVocabulary` section before any copy changed (four tests, plus the
+`BANNED_COPY_WORDS` / `_LAYER_VOCABULARY` constants, `_visible_copy`, `_line_of` and
+`_banned_copy_hits`). Run on the unmodified page and README: `Ran 27 tests … FAILED
+(failures=2)`:
+
+- `test_locale_strings_carry_no_banned_vocabulary` — four offenders, exactly the feel
+  chart's copy: `docs/index.html:460: ['alarm', 'calm']` (EN `feelHint`),
+  `:461: ['calm']` (EN `feelGapNote`), `:525: ['报警', '平静']` (ZH `feelHint`),
+  `:526: ['平静']` (ZH `feelGapNote`).
+- `test_readme_prose_carries_no_banned_vocabulary` — `README.md: ['alarm', 'resonance',
+  'calm']`.
+- `test_line_metadata_carries_no_banned_vocabulary` and
+  `test_the_guard_scans_visible_copy_only` passed on entry: `const LINES`' copy fields
+  were already clean, and the corpus was already copy-only. They are the non-vacuity and
+  scope bindings, not the failing evidence.
+
+**Decisions (conservative, reversible).**
+
+- The guard's corpus is exactly the item's enumeration: every double-quoted string VALUE
+  in the `const T` block, each `const LINES` entry's `label`, `source`, `measures`,
+  `watches` and `domain` values in both languages, and the whole README. `_visible_copy`
+  skips a quoted literal immediately followed by `:` so `statusLabel`/`verdictLabel` keys
+  are not read as copy; `unit` is left out because it is a measure word ("aircraft", "架").
+- The corpus excludes CSS and code by construction, and
+  `test_the_guard_scans_visible_copy_only` binds that: it asserts every surface is
+  represented, then asserts `--reading-mark`, `.sysstatus`, `alarmDarkH`, `const LINES`
+  and `<style>` are absent from the corpus, so a whole-file (or stylesheet) scan would go
+  red. The section comment states the same scope, including why an unquoted key name such
+  as `alarmDarkH` is an internal identifier while its VALUE is copy.
+- `calm` / `平静` are banned outright rather than only in a narrow zero-state sense: on
+  this page every use of the word read the absence of a departure as a state of the world,
+  which is the claim the migration removed. The choice is stated on the constant.
+- Backtick strings are deliberately not read: the only backtick spans inside the `const T`
+  block are code comments naming internal values (`real`, `benign`), so a backtick scan
+  would pull internal identifiers into the corpus and contradict the stated scope.
+- Residual copy fixed in place: the four feel-chart strings above (`feelHint`,
+  `feelGapNote` in both locales) keep their structure and their factual content, with the
+  banned phrases replaced by the deck's vocabulary — "the comparison direction recorded
+  when each feel line was selected" instead of "each line's alarming direction", "sat
+  inside its own recent range" instead of "read calm", and the dropped "how disordered the
+  world FEELS" clause replaced by the two series it named.
+- The feel chart's hardcoded y2 axis title (`感觉 z（报警方向）` / `feel z (toward alarm)`)
+  is visible page text outside the locale objects, so the guard does not cover it. It was
+  reworded in place to `感觉 z（建线时记下的比较方向）` / `feel z (recorded comparison
+  direction)` to satisfy the bundle's completion definition ("no alarm … vocabulary in
+  visible strings"), and left out of the corpus rather than adding an invented T key: the
+  deck deletes the feel chart and supplies no key for its axis. `render.py`'s overview PNG
+  title still reads `Resonance — lines trembling per day`; no item claims it and `charts/`
+  is the nightly job's output, so it was not touched.
+- README rewrite: the deck's `promise` (EN, plus its ZH line in place of the old ZH
+  sentence), `readmeCount` for the count description and `limitsBody` verbatim for the
+  scope paragraph. The four-line list, the R28/R30 history parenthetical and the
+  machine-checked claims table are unchanged; the table's `primary (tier-1) lines | 4` row
+  still binds through `_tier1_line_count_claims`, and the new prose keeps one matching
+  claim ("Four lines are primary today"). Removed: the one-question blockquote, the
+  "guarded equilibria … a larger force has overpowered its guard" causal framing, the
+  resonance/doom-score paragraph, the field-of-view paragraph with its "reads calm too"
+  and "second headline / level layer" claims, and the metaphor clause at the end of the
+  missing-data sentence. The fixed-reference list is described as a distinct measure with
+  its own rule and lag, not as a second answer to the count.
+
+**Files changed.**
+
+- `README.md` — opening, count description, registry paragraph and scope paragraph
+  rewritten to the deck's copy; Run it and Machine-checked claims sections unchanged.
+- `docs/index.html` — `feelHint` and `feelGapNote` in both locales reworded; the feel
+  chart's y2 axis title reworded. No scoring value, record column, tier membership or
+  layout moved.
+- `tests/lint_public_surface.py` — the `TestPublicCopyVocabulary` block (constants,
+  `_JS_STRING`, `_JS_LINE_COPY_FIELD`, `_line_of`, `_visible_copy`, `_banned_copy_hits`,
+  four tests) and the module docstring's sixth checked surface.
+
+**Verification results (after implementation).** Gates run with
+`PATH=/Users/wangyu/.pyenv/shims:$PATH` (pytest 9.0.2), the interpreter iterations 1–7 used.
+
+- gate tier `python -m pytest tests/ -q` — `415 passed, 126 subtests passed in 0.94s`
+- lint tier `python -m unittest discover tests -p "lint_*.py"` — `Ran 80 tests in 0.774s …
+  OK` (was 76)
+- forbidden literal `python tests/lint_no_forbidden_literal.py` — `Ran 3 tests … OK`
+- audit tier `python -m unittest discover tests -p "audit_*.py"` — `Ran 28 tests in 2.473s
+  … OK`
+- replay `python tools/replay.py --check` — exit 0, `TOTAL 1439 0 0`, divergence 0 since
+  `STABLE_SINCE` 2026-09-09
+- pending `python tools/pending.py --check` — `OK — 6 tagged pending item(s), 0 overdue, 0
+  unparseable`
+- render smoke `node tests/render_smoke.js` — `render OK in both languages; no runtime
+  errors, no undefined/NaN`; headline `2 / 4`
+- annotations mirror `cmp data/annotations.csv docs/data/annotations.csv` — `cmp: identical`
+
+`grep` over `docs/index.html` finds `alarm`/`calm` only in the exempt internals: the CSS
+names (`--alarm` removed already; `.sysstatus.alarm` and its comment), the unquoted T keys
+`alarmDarkH`/`alarmDarkB` (values clean), and code comments. `grep` over `README.md` finds
+none of the banned tokens. `docs/index.html` still has exactly one `innerHTML` code line,
+inside `setMarkup` (lint `TestMarkupHasOneAuditedSink` passes), and no first-person prose
+was added.
+
+**Notes for the next iteration.** Every item in `.ralph/items.json` now has `passes: true`
+and every gate is green, so the bundle's completion definition is met on branch
+`public-surface/migration` (nine commits, one per item; nothing pushed, nothing merged).
+Deliberately still outside this bundle, all unclaimed by any item: the feel chart itself
+(deleted by the deck but not by any item — it keeps `data/leans.csv`, its red bars, amber
+gap columns and `feelBars` legend), `panelTitle`/`panelHint` ("Tension lines, normalized"),
+the status-banner keys `statusOk`/`awaiting`/`warnH`/`warnB`/`alarmDarkH`/`alarmDarkB`/
+`disruptH`/`disruptB`, `verdictLabel`, `annoTitle`, `footer`, and `render.py`'s overview
+chart title. Removing the feel chart would also retire the guard's only reworded
+T strings, so it belongs to a later phase that owns the chart and `leans.csv` together.

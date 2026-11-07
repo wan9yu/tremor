@@ -145,8 +145,8 @@
         "Confirm the guard does not scan CSS class names or internal identifiers, and add a test comment stating that scope.",
         "Run every verification gate; every gate must pass with the guard in place."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 8. README rewritten to the deck's copy: the promise (EN and ZH) opens the file, the count description is readmeCount, the scope paragraph is limitsBody verbatim, and the separate fixed-reference list is described without the retired second-headline and level-layer claims; the world-disorder question, the causal 'guarded equilibria' framing, the doom-score/resonance paragraph and the 'reads calm too' sentence are gone, the four-line list and the machine-checked claims table are unchanged. tests/lint_public_surface.py adds TestPublicCopyVocabulary: BANNED_COPY_WORDS (alarm, 报警, resonance, 共振, calm, 平静) and _LAYER_VOCABULARY (第一/二/三层, Layer 1/2/3, L1/L2/L3, tier of analysis) scanned over three corpora -- every double-quoted string value in the const T block, the label/source/measures/watches/domain values of every const LINES entry, and the whole README -- with _visible_copy and test_the_guard_scans_visible_copy_only binding the corpus to copy only (CSS class/variable spellings, unquoted T key names such as alarmDarkH, and JS comments are excluded by construction). Residual copy fixed: T feelHint and feelGapNote in both locales (the feel chart's last alarm/calm wording) and the feel chart's hardcoded feel-z axis title, which sat outside the locale objects but is visible page text. Gates: gate 415 passed / 126 subtests; lint 80 OK (was 76); forbidden literal 3 OK; audit 28 OK; replay exit 0 (1439 rows since STABLE_SINCE, divergence 0); pending 6 tagged / 0 overdue; render smoke OK; annotations cmp identical."
     }
   ]
 }

@@ -1,30 +1,27 @@
 # tremor
 
-> An honest, long-running instrument for one question: is the world actually getting more disordered — or does it only feel that way?
+> A daily record of what each series measures and how today’s readings differ from their own recent records; the meaning stays open.
 
-中文：tremor 是一台诚实的、长期运行的仪器，回答"这个世界是不是真的更乱了"。它**不预言**末日——是地震仪，不是先知。
+中文：每日记录各条序列测量什么，以及今天的读数与各自近期记录相差多远；如何理解，仍由读者决定。
 
-tremor watches a few **tension indicators**: guarded equilibria that something powerful normally holds still. When one moves anyway, a larger — often hidden — force has overpowered its guard. Four lines, each guarding a different domain:
+tremor collects a small set of daily readings from public sources and compares each one with its own recent record: a robust z-score against a trailing window, or — for a pegged or near-constant series, where "normal" is a declared value rather than a rolling history — a declared anchor and materiality. Lines with a known weekly rhythm are de-cycled by weekday, so a routine weekend does not read as a departure. Readings are never combined into one score.
+
+Four lines are primary today; their readings are the ones the headline counts:
 
 - **Flights airborne** — airspace (community ADS-B)
 - **US high-yield credit spread** — financial system (FRED)
 - **Offshore−onshore yuan spread** — capital controls (CNH−CNY)
 - **Fed SRF take-up** — financial plumbing / US dollar funding (NY Fed markets API)
 
-(The communications slot ran **Internet outages** — how many countries are dark at once, via IODA — until R28 demoted that line to tier-2 after its eight largest readings adjudicated as artifacts. R30 filled the open primary slot with **Fed SRF take-up** — a fourth financial line whose two standing gates cleared — rather than a communications line, because the sole comms candidate was still unbuilt; communications now rides the watchlist as a passive-BGP route-withdrawal line, the standing candidate for a future slot.)
+(The communications slot ran **Internet outages** — a daily count of countries with an IODA outage detection — until R28 moved that line to tier 2 after its eight largest readings were adjudicated as artifacts. R30 filled the open primary slot with **Fed SRF take-up** — a fourth financial line whose two standing gates cleared — rather than a communications line, because the sole comms candidate was still unbuilt; communications now rides the collected set as a passive-BGP route-withdrawal line, the standing candidate for a future slot.)
 
-The primary set is chosen and re-chosen by a scored radar process — see `radar.md` for the
-current tiers, the metrics, and every calibration decision. A larger watchlist rides
-alongside — shown on the dashboard, collected daily while each line earns (or loses) a
-place — including contrast lines (VIX, news tone) that measure how disordered the world
-FEELS, two context lines (a planetary slow-level read and a space-weather
-confounder-subtractor), and one control line with no world in it at all.
+The primary set is chosen and re-chosen by a scored radar process — see `radar.md` for the current tiers, the metrics, and every calibration decision. The rest of the registry is collected daily and shown beside the count: other daily records, contrast lines (VIX, global news tone), context lines (a planetary slow-level read and a space-weather confounder-subtractor), and one control line with no world in it at all. None of them enters the count.
 
-Each line is normalized on its own (most against their own recent history with a robust z-score; a few pegged or near-constant lines are scored against a declared anchor and materiality instead, because "normal" for a $1 peg is the peg, not a rolling window; lines with a known weekly rhythm are de-cycled by weekday so a routine weekend dip doesn't false-trigger); they are never combined into a single doom score. What matters is **resonance** — how many lines are trembling at once. Several independent instruments screaming together is what "actually more disordered" looks like; one moving alone is just a local event.
+The headline states how many scored primary lines crossed their own threshold in either direction, out of those comparable that day. It counts lines, not events; repeated observations do not add another score. A separate list records long-running readings that stay below a fixed reference — the named straits whose daily traffic holds at or below half of the reference for 14 days — with its own rule and publication lag. It is a distinct measure, not a second answer to the count.
 
-The dashboard states its own **field of view**: the four primary lines watch airspace over four fixed regions (W/C Europe, US East, US West, Japan/E Asia — but at the sample hour only the two US regions hold enough share to move the line's alarm), US high-yield credit, the onshore/offshore yuan, and daily Fed Standing Repo Facility take-up (US dollar-funding plumbing). (The communications slot ran worldwide internet reachability until R28 demoted that line to tier-2 — its eight largest readings adjudicated, none a cited world event; R30 filled the open slot with a fourth financial line, and communications now rides tier-2 as a passive-BGP route-withdrawal candidate.) Strain outside that can be entirely real and still read 0 — and because each line is scored against its own recent history, a disorder that has already been running for weeks sits inside its own baseline and reads calm too. Both limits are written down in `radar.md`. The second one is why a separate **level layer** (`tools/level_layer.py`) walks the per-strait record for states that are stuck broken, and why the dashboard carries a second headline — how many guarded states are broken right now. It is what says, while every scored line reads calm, that the Strait of Hormuz has been stuck far below its pinned normal since April (the current ratio, and any other broken states, are on the dashboard).
+The rolling comparison looks to recent history; a change that lasts can become part of a series' own reference. The displayed roster is selected under written measurement assumptions, and the count does not undo that selection. Other daily records are collected but never enter this count. No communications-domain reading is included, so a worldwide connectivity event reads zero in this count. Some sources arrive late or skip dates; missing values remain gaps.
 
-Missing data is never faked or hidden: a source going dark is recorded as a gap, and a prolonged collection blackout is shown as its own "system disruption" — because the instrument itself falling silent is a kind of tremor.
+Missing data is never faked or hidden: a source going dark is recorded as a gap, and a prolonged collection blackout is shown as its own system disruption.
 
 Data is collected daily by a GitHub Actions cron and committed back to the repo (git-scraping). A static dashboard reads the CSVs directly:
 

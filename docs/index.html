@@ -457,8 +457,8 @@ const T = {
                  "dark":"No reading received","closed":"Market closed"},
     range_30:"30 days", range_90:"90 days", range_365:"1 year", range_all:"All",
     feelTitle:"Real vs felt — where they diverge",
-    feelHint:"Bars: how many primary instruments trembled that day (the measured side). Lines: how disordered the world FEELS — priced fear (VIX) and global news tone/conflict share — shown as z toward each line's alarming direction. Feel lines are contrast only, never counted. Amber columns mark a DIVERGENCE: the felt side ran hot while every primary instrument read calm. A divergence has two possible causes and this chart cannot tell them apart — the feeling outran the world (an anxiety premium), or the strain fell outside what tremor watches (a coverage gap).",
-    feelGapNote:"divergence — felt hot, measured calm; cause unknown (anxiety premium or coverage gap)",
+    feelHint:"Bars: how many primary instruments trembled that day (the measured side). Lines: priced fear (VIX) and global news tone/conflict share, shown as z toward the comparison direction recorded when each feel line was selected. Feel lines are contrast only, never counted. Amber columns mark a DIVERGENCE: the felt side ran hot while every primary instrument sat inside its own recent range. A divergence has two possible causes and this chart cannot tell them apart — the feel measures moved more than the measured side (an anxiety premium), or the strain fell outside what tremor watches (a coverage gap).",
+    feelGapNote:"divergence — felt hot, measured inside its recent range; cause unknown (anxiety premium or coverage gap)",
     levelHead:n=>(n===1?" reading below its fixed reference":" readings below their fixed references"),
     levelWhich:names=>" · "+names.join(" + "),
     referenceAsOf:d=>"Latest source observation: "+d+" (about 10 days behind publication)",
@@ -522,8 +522,8 @@ const T = {
                  "dark":"尚未收到读数","closed":"市场休市"},
     range_30:"30 天", range_90:"90 天", range_365:"1 年", range_all:"全部",
     feelTitle:"真实 vs 感觉 — 两者的背离",
-    feelHint:"柱：当天一级仪器的颤抖根数（测量侧）。线：世界「感觉」有多乱——恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自报警方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 一次背离：感觉侧发烫，而所有一级仪器读数平静。背离有两种可能，这张图分不出是哪一种——要么是感觉跑在了世界前面（焦虑溢价），要么是压力落在了 tremor 的视野之外（覆盖盲区）。",
-    feelGapNote:"背离 —— 感觉发烫，测量平静；成因未知（焦虑溢价或覆盖盲区）",
+    feelHint:"柱：当天一级仪器的颤抖根数（测量侧）。线：恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自建线时记下的比较方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 一次背离：感觉侧发烫，而所有一级仪器的读数都在各自近期记录之内。背离有两种可能，这张图分不出是哪一种——要么感觉侧的变化大于测量侧（焦虑溢价），要么压力落在了 tremor 的视野之外（覆盖盲区）。",
+    feelGapNote:"背离 —— 感觉侧发烫，测量侧在近期记录之内；成因未知（焦虑溢价或覆盖盲区）",
     levelHead:n=>n+" 条读数长期低于既定参照",
     levelWhich:names=>" · "+names.join(" ＋ "),
     referenceAsOf:d=>"来源最新观测："+d+"（发布约滞后 10 天）",
@@ -1010,7 +1010,7 @@ function render(){
         y:{min:0,max:4,ticks:{stepSize:1,color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"},
            title:{display:true,text:lang==="zh"?"颤抖根数":"trembles",color:"#8a909c",font:{size:10}}},
         y2:{position:"right",grid:{drawOnChartArea:false},ticks:{color:"#8a909c",font:{size:10}},
-           title:{display:true,text:lang==="zh"?"感觉 z（报警方向）":"feel z (toward alarm)",color:"#8a909c",font:{size:10}}} } }
+           title:{display:true,text:lang==="zh"?"感觉 z（建线时记下的比较方向）":"feel z (recorded comparison direction)",color:"#8a909c",font:{size:10}}} } }
   });
 
   // watchlist — tier-2 candidates: collected daily, not counted; click for data
