@@ -67,8 +67,8 @@
         "Update every existing test that binds one of the replaced strings to the new string in the same commit, without weakening the assertion.",
         "Run every verification gate and record the output."
       ],
-      "passes": false,
-      "regression_notes": ""
+      "passes": true,
+      "regression_notes": "Iteration 2. Headline is the deck's one canonical fraction in both locales: countLabel '{n} / {m} readings unusual today' / '今天有 {n}/{m} 条读数偏离各自近期记录', split in render() around its two numbers so #count-n and #count-of stay separate display elements while the rendered sentence stays exact; the denominator keeps the existing roster-minus-dark/blind/closed rule, and the same value is stored in headlineDenominator and inserted into countModalBody's {m}. countTitle now heads the block (it replaced changeKicker here, earlier than item 3 lists, because that is the block-heading slot); countQuestion replaced countQ; resoTitle/resoBody and resoModal are gone, replaced by countModalTitle/countModalBody behind the same #count click. calm/tremblingOne/tremblingMany are deleted: the deck has no zero phrase, so the zero case uses countLabel too (this pre-empts that part of item 3). render_smoke T27 assembles the rendered headline from its own fragments and matches the deck pattern with matching numerator/denominator in both languages for a 2/4 and a 0/1 case, asserts the title, question, modal title and a countModalBody marker, and bans Resonance/共振/only number that matters/唯一重要的数字 from the block and its modal; render_smoke's resoModal references were renamed to countModal. Gates: gate 415 passed; lint 69 OK; forbidden literal 3 OK; audit 28 OK; replay exit 0 (1439 rows since STABLE_SINCE, divergence 0); pending 6 tagged / 0 overdue; render smoke OK; annotations cmp identical."
     },
     {
       "category": "functional",

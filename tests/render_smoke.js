@@ -73,8 +73,8 @@ process.on("unhandledRejection", e => errors.push("unhandledRejection: " + (e &&
 // reassigned by load(). Synthesize a setter in this same eval scope (it closes
 // over the real `DATA` binding) and export it on globalThis.__P so T21's
 // fixtures below can inject DATA directly, bypassing fetch/load().
-(0, eval)(js + "\n;globalThis.__P={LINES,T,covModal,resoModal,lineModal,levelModal,openTier2Modal,render,load,setDATA:function(v){DATA=v;}};");
-const {LINES,T,covModal,resoModal,lineModal,levelModal,openTier2Modal,render,load,setDATA}=globalThis.__P;
+(0, eval)(js + "\n;globalThis.__P={LINES,T,covModal,countModal,lineModal,levelModal,openTier2Modal,render,load,setDATA:function(v){DATA=v;}};");
+const {LINES,T,covModal,countModal,lineModal,levelModal,openTier2Modal,render,load,setDATA}=globalThis.__P;
 
 // Rendered text lives in two places: nodes looked up by id (`made`, mutated in
 // place on every render -- so at sweep time, right after render(), they hold
@@ -303,6 +303,24 @@ function buildDarkAlarmFixtureData() {
   return { summary, dates: [RUNTIME_TODAY], lines, annotations: [], annoMap: new Map(), stuck: [] };
 }
 
+// T27 (public-surface migration, item 2): the headline states a fraction of
+// comparable readings with a denominator, in one canonical template per
+// language, and the retired resonance framing is gone from the count block and
+// the explanation modal it opens. A headline fixture with a non-zero count and
+// one with the zero case: the deck says the zero case uses the SAME label
+// template rather than a separate zero phrase, so both must render it.
+function buildHeadlineFixtureData() {
+  const lines = {};
+  for (const id of ["flights", "credit_spread", "cnh_cny", "fed_srf_takeup"]) {
+    const L = LINES.find(x => x.id === id);
+    lines[id] = [fixtureRow({ date: RUNTIME_TODAY, raw_value: "1", z_score: "0.5",
+      trembling: id === "flights" || id === "credit_spread" ? "1" : "0",
+      direction: L.alarm, status: "scoring" })];
+  }
+  const summary = [{ date: RUNTIME_TODAY, trembling_count: "2", dark_count: "0", blind_count: "0" }];
+  return { summary, dates: [RUNTIME_TODAY], lines, annotations: [], annoMap: new Map(), stuck: [] };
+}
+
 (async () => {
   try {
   await load();
@@ -313,7 +331,7 @@ function buildDarkAlarmFixtureData() {
   }
   // exercise every modal builder, in both languages
   for (const lang of ["en", "zh"]) {
-    try { covModal(lang); resoModal(lang); levelModal(lang); } catch (e) { errors.push(`modal(${lang}): ${e.stack || e}`); }
+    try { covModal(lang); countModal(lang); levelModal(lang); } catch (e) { errors.push(`modal(${lang}): ${e.stack || e}`); }
     for (const L of LINES) {
       try { lineModal(L, lang); } catch (e) { errors.push(`lineModal(${L.id},${lang}): ${e.stack || e}`); }
       // openTier2Modal is only ever invoked (in docs/index.html) for tier-2
@@ -367,7 +385,7 @@ function buildDarkAlarmFixtureData() {
     } catch (e) { errors.push(`fixture render(${lang}): ${e.stack || e}`); }
     errors.push(...xssErrors("fixture-" + lang));
     // exercise the modal builders against the fixture too, tier-1 and tier-2.
-    try { covModal(lang); resoModal(lang); levelModal(lang); } catch (e) { errors.push(`fixture modal(${lang}): ${e.stack || e}`); }
+    try { covModal(lang); countModal(lang); levelModal(lang); } catch (e) { errors.push(`fixture modal(${lang}): ${e.stack || e}`); }
     for (const id of Object.keys(fixture.lines)) {
       const L = LINES.find(x => x.id === id);
       if (!L) continue;
@@ -509,6 +527,91 @@ function buildDarkAlarmFixtureData() {
         errors.push(`measures(${lang}): lineModal(${L.id}) does not render its own `
           + `measures.${lang} definition`);
       }
+    }
+  }
+
+  // T27 (public-surface migration, item 2): the headline is one canonical
+  // fraction - {n} over {m}, where {m} is the day's comparable-line count - in
+  // both languages, and the retired resonance framing is gone from the count
+  // block and from the explanation modal that block opens. The rendered
+  // headline is assembled from the count block's own fragments (prefix,
+  // numerator, separator + denominator, label tail), because the numerator
+  // keeps its own display element; the ASSEMBLED sentence is what must match
+  // the deck's countLabel template.
+  const COUNT_LABEL_PATTERN = {
+    en: /^(\d+) \/ (\d+) readings unusual today/,
+    zh: /^今天有 (\d+)\/(\d+) 条读数偏离各自近期记录/,
+  };
+  const COUNT_TITLE = { en: "Readings unusual today", zh: "今日偏离近期记录的读数" };
+  const COUNT_QUESTION = { en: "How is this count made? ›", zh: "这个计数如何得出？›" };
+  const COUNT_MODAL_TITLE = { en: "How the count is made", zh: "这个计数如何得出" };
+  const COUNT_MODAL_MARKER = {
+    en: "A line contributes when its scored value crosses its own threshold in either direction.",
+    zh: "一条线的分数向任一方向越过自身阈值时，便计入其中。",
+  };
+  const RETIRED_HEADLINE = ["Resonance", "共振", "only number that matters", "唯一重要的数字"];
+  const plainText = s => String(s == null ? "" : s).replace(/<[^>]+>/g, "");
+  const headlineCases = [
+    { name: "nonzero", data: buildHeadlineFixtureData() },
+    { name: "zero", data: buildDarkAlarmFixtureData() },
+  ];
+  for (const { name, data } of headlineCases) {
+    for (const lang of ["en", "zh"]) {
+      global.document.cookie = "tremor_lang=" + lang;
+      setDATA(data);
+      appendedNodes = [];
+      try {
+        render();
+        sweepForBadValues("headline-" + name + "-" + lang);
+        const headline = plainText(el("count-prefix").textContent)
+          + plainText(el("count-n").textContent)
+          + plainText(el("count-sep").textContent)
+          + plainText(el("count-of").textContent)
+          + plainText(el("count-label").innerHTML);
+        const match = COUNT_LABEL_PATTERN[lang].exec(headline);
+        if (!match) {
+          errors.push(`headline(${name}-${lang}): the rendered count block is `
+            + `${JSON.stringify(headline)}, which does not match the deck's `
+            + `countLabel pattern ${COUNT_LABEL_PATTERN[lang]}`);
+        } else {
+          if (match[1] !== el("count-n").textContent) {
+            errors.push(`headline(${name}-${lang}): the label's numerator is `
+              + `${JSON.stringify(match[1])} but the count shows ${JSON.stringify(el("count-n").textContent)}`);
+          }
+          if (match[2] !== el("count-of").textContent) {
+            errors.push(`headline(${name}-${lang}): the label's denominator is `
+              + `${JSON.stringify(match[2])} but the count shows ${JSON.stringify(el("count-of").textContent)}`);
+          }
+        }
+        if (el("count-kicker").textContent !== COUNT_TITLE[lang]) {
+          errors.push(`headline(${name}-${lang}): count title is `
+            + `${JSON.stringify(el("count-kicker").textContent)}, expected ${JSON.stringify(COUNT_TITLE[lang])}`);
+        }
+        if (el("count-q").textContent !== COUNT_QUESTION[lang]) {
+          errors.push(`headline(${name}-${lang}): count question is `
+            + `${JSON.stringify(el("count-q").textContent)}, expected ${JSON.stringify(COUNT_QUESTION[lang])}`);
+        }
+        // The explanation modal is opened by clicking the count block itself,
+        // so scan what a reader actually gets rather than a builder called in
+        // isolation (the old resonance payload lived in exactly this modal).
+        el("count").onclick();
+        const modal = plainText(el("modal-body").innerHTML);
+        if (!modal.includes(COUNT_MODAL_TITLE[lang])) {
+          errors.push(`headline(${name}-${lang}): the count modal does not carry `
+            + `the title ${JSON.stringify(COUNT_MODAL_TITLE[lang])}`);
+        }
+        if (!modal.includes(COUNT_MODAL_MARKER[lang])) {
+          errors.push(`headline(${name}-${lang}): the count modal does not carry `
+            + `the countModalBody marker ${JSON.stringify(COUNT_MODAL_MARKER[lang])}`);
+        }
+        const surface = headline + "\n" + modal;
+        for (const phrase of RETIRED_HEADLINE) {
+          if (surface.includes(phrase)) {
+            errors.push(`headline(${name}-${lang}): the count block or its modal `
+              + `still renders the retired framing ${JSON.stringify(phrase)}`);
+          }
+        }
+      } catch (e) { errors.push(`headline render(${name}-${lang}): ${e.stack || e}`); }
     }
   }
 

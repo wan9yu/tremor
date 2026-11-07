@@ -84,3 +84,100 @@ map, the feel chart block (`feelTitle`/`feelHint`/`feelBars`/`feelchart`), and
 `data/leans.csv` consumption — the design deck deletes the feel chart, but no item lists
 it, so it was left alone rather than half-removed. `docs/index.html` still has exactly one
 `innerHTML`, inside `setMarkup` (lint `TestMarkupHasOneAuditedSink` passes).
+
+## Iteration 2 — item 2 (functional): headline states a fraction with its denominator
+
+**Chosen because** `.ralph/plan.md` ranks copy and structure first, and names the
+headline label as the second of the three fields later items reference (`measures` was
+item 1). It also removes the last block of `resonance` prose from the page: the
+`resoTitle`/`resoBody` modal behind the headline. No item is hard-blocked; the ledger
+held only iteration 1.
+
+**Test-first, failures recorded.** `tests/render_smoke.js` gained a fixture with a
+non-zero count (2 of 4 comparable) and one with the zero case, plus a T27 block that
+assembles the rendered headline from the count block's own fragments (prefix, numerator,
+separator, denominator, label tail) and matches it against the deck's pattern, asserts
+the block title, question, modal title and a `countModalBody` marker, and bans
+`Resonance` / `共振` / `only number that matters` / `唯一重要的数字` from the block and the
+modal that opens from it. Run on the unmodified page: 14 failures, one per language and
+case, including `the rendered count block is "2lines trembling today …" which does not
+match the deck's countLabel pattern`, `count title is "① the change probe · what
+suddenly moved today"`, `the count modal does not carry the title "How the count is
+made"`, and both retired phrasing hits in each language. A first version of the
+assembly read a static `#count-of-wrap` node; the smoke harness has no HTML parser, so
+that fragment came back empty and the same four pattern failures reappeared after the
+implementation. The assertion now assembles from the three nodes `render()` actually
+writes (`#count-prefix`, `#count-sep`, `#count-of`), which is the same sentence and not
+a weaker check.
+
+**Decisions (conservative, reversible).**
+
+- The deck's `countLabel` is kept as one template string per language with `{n}` and
+  `{m}`; `render()` splits it around the placeholders into a prefix, a separator and a
+  tail, so `#count-n` and `#count-of` remain the separate numeric display elements
+  (item 6 also names `#count-n`). A `#count-prefix` span carries the ZH leading
+  `今天有` and is `hidden` when empty (EN); `#count-sep` carries the exact separator
+  (` / ` EN, `/` ZH). The rendered sentence is therefore the deck template verbatim.
+- `countTitle` occupies the block-heading slot (`#count-kicker`), which previously held
+  `changeKicker`. This is earlier than item 3's step list, which still lists deleting
+  `changeKicker` and its DOM assignment; that deletion is now already done. **Item 3
+  must keep the `#count-kicker` → `countTitle` assignment** rather than removing the
+  kicker element's text assignment.
+- The comparable-line denominator rule in `render()` is unchanged (primary roster minus
+  dark, blind, closed). The computed value is stored in `headlineDenominator` so
+  `countModalBody`'s `{m}` states the same number the headline shows.
+- `calm`, `tremblingOne` and `tremblingMany` are deleted: the deck has no zero phrase,
+  and the zero case uses the same `countLabel`. This pre-empts the zero-state part of
+  item 3, whose remaining anchors are `statusLabel.scoring`, the qualifiers, `nodata`
+  and `more`.
+- `#level-q` still renders `countQuestion`; the fixed-reference section is outside item
+  2's steps and its copy is item 3/5 material. `countColor`, the level headline and
+  their style hooks are untouched (item 6).
+
+**Files changed.**
+
+- `docs/index.html` — count block markup (added `#count-prefix`, `#count-sep`, wrapped
+  `#count-of`); both `T` locales: `changeKicker` → `countTitle`, `calm` /
+  `tremblingOne` / `tremblingMany` → `countLabel`, `countQ` → `countQuestion`,
+  `resoTitle` / `resoBody` → `countModalTitle` / `countModalBody(m)`; `resoModal` →
+  `countModal` (same `#count` click); `render()` splits the label template, sets
+  prefix/separator, stores `headlineDenominator` and renders the tail before the
+  existing qualifiers; `#level-q` now reads `countQuestion`.
+- `tests/render_smoke.js` — new `buildHeadlineFixtureData` (2 of 4 comparable) and T27
+  block (both fixtures × both languages); `resoModal` export/destructure/calls renamed
+  to `countModal`, same coverage.
+
+**Verification results (after implementation).** The shell's default `python` resolves
+to the pi-lens pip-tools interpreter, which has no pytest; gates were run with
+`PATH=/Users/wangyu/.pyenv/shims:$PATH` (pytest 9.0.2), which is the interpreter
+iteration 1's 415-passed baseline used.
+
+- gate tier `python -m pytest tests/ -q` — `415 passed, 126 subtests passed in 1.14s`
+- lint tier `python -m unittest discover tests -p "lint_*.py"` — `Ran 69 tests … OK`
+- forbidden literal `python tests/lint_no_forbidden_literal.py` — `Ran 3 tests … OK`
+- audit tier `python -m unittest discover tests -p "audit_*.py"` — `Ran 28 tests … OK`
+- replay `python tools/replay.py --check` — exit 0, `TOTAL 1439 0`, divergence 0
+  since `STABLE_SINCE` 2026-09-09
+- pending `python tools/pending.py --check` — `OK — 6 tagged pending item(s), 0 overdue, 0 unparseable`
+- render smoke `node tests/render_smoke.js` — `render OK in both languages; no runtime errors, no undefined/NaN`; headline `0 / 1`; label tail `条读数偏离各自近期记录 · 3 根线无数据（4/4 根线校准中）`
+- annotations mirror `cmp data/annotations.csv docs/data/annotations.csv` — `cmp: identical`
+
+The count modal was opened by clicking the real `#count` handler in both languages, so
+the asserted title, marker and retired-phrase scan cover the rendered reader surface,
+not a builder left unconnected. `grep` finds no remaining `reso`, `countQ`, `calm`,
+`tremblingOne` or `tremblingMany` reference in the page.
+
+**Notes for the next iteration.**
+
+- Item 3's step "delete the `changeKicker` key and its DOM assignment" is already
+  satisfied; the `#count-kicker` assignment must stay (it renders `countTitle`). Its
+  zero-state assertion is also partly satisfied — no `calm`/`平静` key remains in `T` —
+  so its failing anchor is `statusLabel.scoring`.
+- The reviewer role in the global contract has no installed agent here (only
+  `final-review` and `vision-check` are defined, and this bundle never merges or
+  releases), so the diff was checked against the item's steps and the gates.
+- `render.py`'s overview chart title still reads `Resonance — lines trembling per day`
+  and its per-line title still reads `alarming when …`. Item 7 claims only the per-line
+  title; the overview title is claimed by no item in this bundle and was left alone.
+- `tag`, `<title>`, `levelKicker`, `nodata`, `more`, the `verdictLabel` map and the feel
+  chart remain untouched (items 3–8).
