@@ -696,16 +696,24 @@ class TestMarkupHasOneAuditedSink(unittest.TestCase):
         self.assertEqual(other, [], f"markup written outside setMarkup: {other}")
 
     def test_esc_escapes_all_five_metacharacters(self):
-        """The helper must cover every character that can start markup or a scheme."""
-        text = self._html()
-        m = re.search(r"function esc\(v\)\{.*?\}", text)
-        self.assertIsNotNone(m, "esc() is gone")
-        body = m.group(0)
-        for ch in ('"&"', '"<"', '">"', "'"'", ""'""):
-            self.assertIn(ch, body, f"esc() does not handle {ch}")
-        self.assertIn("&amp;", body)
-        self.assertIn("&lt;", body)
-        self.assertIn("&gt;", body)
+        """The helper must cover every character that can start markup or a scheme.
+
+        The escape map is read off the one ``esc()`` line rather than re-stated:
+        asserting that the source text contains a particular pair of quote
+        characters would test how Python spells them, not what the page escapes.
+        """
+        line = next((ln for ln in self._html().splitlines()
+                     if "function esc(v)" in ln), None)
+        if line is None:
+            self.fail("esc() is gone from docs/index.html")
+        char_class = re.search(r"replace\(/\[(.*?)\]/g", line)
+        if char_class is None:
+            self.fail("esc() no longer takes a character class")
+        matched = char_class.group(1)
+        for ch in ("&", "<", ">", '"', "'"):
+            self.assertIn(ch, matched, f"esc() does not match {ch!r}")
+        for entity in ("&amp;", "&lt;", "&gt;", "&quot;", "&#39;"):
+            self.assertIn(entity, line, f"esc() does not emit {entity}")
 
     def test_the_record_derived_strings_go_through_esc(self):
         """The three sinks that render a CSV cell must call esc() on it."""
