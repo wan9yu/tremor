@@ -31,6 +31,7 @@ day instead would be fresher and would still be unable to judge itself.
 """
 import datetime
 import json
+import time
 
 import requests
 
@@ -42,6 +43,66 @@ _HEADERS = useragent.HEADERS
 
 LAG_DAYS = 10
 _FETCH_DAYS = 40  # one request comfortably covers a publication cycle
+
+# THE QUOTA. The ArcGIS host meters request units per minute (6000), and it
+# answers a breach with HTTP 200 and an error body, not with a 429 status:
+#
+#     {"error": {"code": 429, "message": "Unable to perform query. Too many
+#      requests.", "details": ["... maximum allowed request units (6000) per
+#      Minute. Retry after 60 sec."]}}
+#
+# Read as a feature layer that body has no ``features``, which used to be
+# reported as "returned no usable daily rows" -- indistinguishable from the
+# series being empty -- and ``components_at`` returned ``{}`` with no reason.
+# A breach is now named as one, and waited out ONCE per process: the body says
+# "Retry after 60 sec", a collection run makes only a handful of calls, and an
+# unbounded retry would hold up every line behind this one. The wait is a budget
+# of the whole process, not of each request, so a run that breaches twice still
+# loses at most ``QUOTA_WAIT_S``. Lines that declare a sample hour are collected
+# before the PortWatch lines (``collect.LINES``), so the wait cannot push them
+# out of tolerance.
+QUOTA_WAIT_S = 60
+_quota_waits_left = 1
+_sleep = time.sleep
+
+
+def _clean(value, limit):
+    """``value`` as one short printable line, for a note the record will keep."""
+    return "".join(ch for ch in str(value) if ch.isprintable())[:limit]
+
+
+def _query(service, params):
+    """``(body, "")`` for a usable JSON object, else ``(None, reason)``.
+
+    One request, plus -- at most once per process -- one retry after the stated
+    quota wait. Everything else (a transport failure, a non-200, a non-JSON or
+    list body, an error body that is not the quota) is final on the first answer.
+    """
+    global _quota_waits_left
+    while True:
+        try:
+            r = requests.get(_BASE.format(svc=service), params=params,
+                             headers=_HEADERS, timeout=30)
+        except requests.RequestException as e:
+            return None, f"PortWatch request failed: {type(e).__name__}"
+        if r.status_code != 200:
+            return None, f"PortWatch HTTP {r.status_code}"
+        try:
+            body = r.json()
+        except ValueError:
+            return None, "PortWatch returned a non-JSON body"
+        if not isinstance(body, dict):
+            return None, "PortWatch returned an unexpected JSON shape"
+        error = body.get("error")
+        if error is None:
+            return body, ""
+        code = error.get("code") if isinstance(error, dict) else None
+        if str(code).strip() != "429":
+            return None, f"PortWatch error body (code {_clean(code, 20)})"
+        if _quota_waits_left <= 0:
+            return None, "PortWatch quota: HTTP 200 error 429"
+        _quota_waits_left -= 1
+        _sleep(QUOTA_WAIT_S)
 
 
 def _parse_date(value):
@@ -70,16 +131,10 @@ def daily_totals(service, field, count=_FETCH_DAYS):
         "resultRecordCount": count,
         "f": "json",
     }
-    try:
-        r = requests.get(_BASE.format(svc=service), params=params, headers=_HEADERS, timeout=30)
-    except requests.RequestException as e:
-        return None, f"PortWatch request failed: {type(e).__name__}"
-    if r.status_code != 200:
-        return None, f"PortWatch HTTP {r.status_code}"
-    try:
-        features = r.json().get("features") or []
-    except ValueError:
-        return None, "PortWatch returned a non-JSON body"
+    body, reason = _query(service, params)
+    if body is None:
+        return None, reason
+    features = body.get("features") or []
     rows = []
     for feature in features:
         attrs = feature.get("attributes", {})
@@ -116,7 +171,12 @@ def daily_sum_at_lag(service, field, today, lag_days=LAG_DAYS):
 
 
 def components_at(service, field, name_field, obs_date):
-    """``{name: value}`` for every feature on ``obs_date``, or ``{}``.
+    """``({name: value}, reason)`` for every feature on ``obs_date``.
+
+    ``reason`` is ``""`` when the breakdown came back, else the sentence for why
+    it did not (``{}`` alongside it): a quota breach, a non-200, an empty answer.
+    The breakdown is diagnostic and never blocks a reading, but a scored total
+    sitting beside a missing breakdown must say why in the record.
 
     The sum this module normally returns throws away the thing that actually
     matters. PortWatch answers with all 28 chokepoints every day and the line
@@ -131,16 +191,15 @@ def components_at(service, field, name_field, obs_date):
         "resultRecordCount": 200,
         "f": "json",
     }
-    try:
-        r = requests.get(_BASE.format(svc=service), params=params,
-                         headers=_HEADERS, timeout=30)
-        features = r.json().get("features") or [] if r.status_code == 200 else []
-    except (requests.RequestException, ValueError):
-        return {}
+    body, reason = _query(service, params)
+    if body is None:
+        return {}, reason
     out = {}
-    for feature in features:
+    for feature in body.get("features") or []:
         attrs = feature.get("attributes", {})
         name, value = attrs.get(name_field), attrs.get(field)
         if name is not None and value is not None:
             out[str(name)] = float(value)
-    return out
+    if not out:
+        return {}, f"PortWatch returned no features for {_clean(obs_date, 10)}"
+    return out, ""

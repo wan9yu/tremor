@@ -40,7 +40,7 @@ def fetch_daily():
     # The 28 straits arrive in the same response the sum is built from.
     # Storing only the sum is why a 65% collapse at Hormuz moved this line
     # by under 2% and left nothing to go back to.
-    components = portwatch.components_at(SERVICE, FIELD, "portname", date)
+    components, why_not = portwatch.components_at(SERVICE, FIELD, "portname", date)
     # The sum is only comparable across days if it is a sum of the same
     # straits. The source CAN change size — obs 2026-07-24 arrived with no
     # Hormuz row at all, day ~146 of the closure — and either direction must
@@ -48,6 +48,11 @@ def fetch_daily():
     # sitting in a 28-strait series. Which straits is in the components file.
     if components and len(components) != PANEL:
         note += f" [panel: {len(components)} straits in the response, series expects {PANEL}]"
+    # The total scored; the breakdown did not arrive. Say why in the row (prose,
+    # reaches no verdict) -- 2026-11-06 recorded a scored 10-25 with no 10-25
+    # components and nothing explaining the absence.
+    if not components:
+        note += f" [components: unavailable ({why_not})]"
     return {
         "raw_value": total,
         "source_note": f"{NOTE} {date}{note}",
