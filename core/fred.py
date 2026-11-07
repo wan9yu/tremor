@@ -12,13 +12,11 @@ fallback engages), which without spacing runs at half the measured lockout rate
 from a CI address this project cannot afford to burn. Every request through
 this module therefore waits out a minimum gap from the previous one.
 """
-import re
 import time
-from datetime import date
 
 import requests
 
-from core import useragent
+from core import dates, useragent
 
 _URL = "https://fred.stlouisfed.org/graph/fredgraph.csv"
 _HEADERS = useragent.HEADERS
@@ -33,28 +31,11 @@ _last_request = 0.0
 # column was ever checked, so five lines committed it as an observation, and
 # the malformed obs_date later crashed the nightly derive step.
 #
-# Same predicate as ``tools/drift_layer.is_strict_date`` (the derive step's
-# guard over the obs_date it reads); the two must not diverge.
-_ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}\Z")
-
-
-def _is_iso_date(field):
-    """True when ``field`` is exactly ``YYYY-MM-DD`` AND a real calendar day.
-
-    Deliberately not ``date.fromisoformat``: since 3.11 that also accepts the
-    basic form ``20261022``, which fredgraph never serves. The record-shape
-    gate over the same field (``tools/drift_layer.is_strict_date``) already
-    rejects it, so accepting it here would write an obs_date the derive layer
-    then drops as unusable. Total over any input, so a caller can pass a
-    parsed field without pre-checking its type.
-    """
-    if not isinstance(field, str) or not _ISO_DATE.match(field):
-        return False
-    try:
-        date(int(field[0:4]), int(field[5:7]), int(field[8:10]))
-    except ValueError:
-        return False
-    return True
+# The test is the record's one shared date predicate (``core.dates``), the same
+# one the collector's obs_date gate and the derive step's guard use, so what is
+# accepted here is exactly what those layers will accept downstream. It is total
+# over any input, so a caller can pass a parsed field without a type check.
+_is_iso_date = dates.is_strict_date
 
 
 def _spaced_get(params, timeout=15):

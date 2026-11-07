@@ -58,11 +58,10 @@ trembling count; the lines are never multiplied into a single doom score.
 import csv
 import math
 import os
-import re
 import shutil
 from datetime import datetime, timezone
 
-from core import clock, normalize
+from core import clock, dates, normalize
 
 from fetchers import (capital_premium, chokepoint, cnh_cny, control_daylength,
                       credit_spread, em_oas, euro_hy_spread, fed_srf_takeup, flights,
@@ -174,26 +173,10 @@ def _stored_float(raw):
     return float(_fmt(raw))
 
 
-_DATE_SHAPE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}\Z")
-
-
-def is_strict_date(value):
-    """True when ``value`` is a calendar date written exactly ``YYYY-MM-DD``.
-
-    Deliberately NOT ``date.fromisoformat``: from Python 3.11 that also accepts
-    the basic form ``20261022``, which is not the shape this record writes and
-    not a shape a parser can safely hand on. Same predicate as
-    ``tools/drift_layer.is_strict_date`` and ``core.fred._is_iso_date``; the
-    three live in different layers (a derive tool, a fetch parser, the
-    collector) and sharing one module is a wider change than the guard itself.
-    """
-    if not isinstance(value, str) or not _DATE_SHAPE.match(value):
-        return False
-    try:
-        datetime.strptime(value, "%Y-%m-%d")
-    except ValueError:
-        return False
-    return True
+# The record's one date shape lives in ``core.dates``; the name stays here
+# because the collection-time gate below and ``tools/repair_fred_html_rows.py``
+# reach it as ``collect.is_strict_date``.
+is_strict_date = dates.is_strict_date
 
 
 def obs_date_problem(obs_date, date):

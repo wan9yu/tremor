@@ -42,7 +42,6 @@ changes no verdict, and it is recomputed from scratch on every run.
     python tools/drift_layer.py --report   # print the states currently open
 """
 import os
-import re
 import statistics
 import sys
 from bisect import bisect_left
@@ -54,6 +53,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import collect
 import level_layer
 import seedlib
+from core import dates
 
 # The window geometry is the sibling's, imported rather than restated so the
 # two detectors cannot drift apart on the parts that are deliberately identical.
@@ -69,23 +69,13 @@ CLEAR_BAND = 0.2         # clear when back within this fraction of PINNED
 OUT = os.path.join(collect.DATA, "drifts.csv")
 HEADER = ["date", "line", "event", "direction", "trail_median", "reference", "ratio"]
 
-# The record's date column is YYYY-MM-DD and nothing else. The predicate is
-# spelled once, as a shape PLUS a calendar check: ``date.fromisoformat`` alone
-# is not it, because from 3.11 that function also accepts the basic form
-# ``20261022``, which would sort as a distinct key and then be written into the
-# file's date column.
-_DATE_SHAPE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}\Z")
-
-
-def is_strict_date(value):
-    """True only for a ``YYYY-MM-DD`` string that names a real calendar day."""
-    if not isinstance(value, str) or not _DATE_SHAPE.match(value):
-        return False
-    try:
-        _date(int(value[0:4]), int(value[5:7]), int(value[8:10]))
-    except ValueError:
-        return False
-    return True
+# The record's date column is YYYY-MM-DD and nothing else; the predicate is the
+# shared ``core.dates`` one (shape PLUS a calendar check, because
+# ``date.fromisoformat`` alone also accepts the basic form ``20261022``, which
+# would sort as a distinct key and then be written into the file's date column).
+# The name stays here for ``series_for`` and the tests that reach it as
+# ``drift_layer.is_strict_date``.
+is_strict_date = dates.is_strict_date
 
 
 def walk(series):

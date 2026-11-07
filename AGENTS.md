@@ -113,7 +113,8 @@ import to a `lint_*.py` or the module it imports.
 - `collect.py` — the daily scrape+score+write cycle; `LINES` is the tier SSOT; the fetcher
   contract is documented at the top.
 - `core/normalize.py` — the scorer (rolling-z + anchored). `core/adsb.py`,
-  `core/useragent.py`, `core/clock.py` — shared fetch/scoring helpers.
+  `core/useragent.py`, `core/clock.py`, `core/dates.py` (the one strict `YYYY-MM-DD` predicate
+  the collector, the derive step and the FRED parser share) — shared fetch/scoring helpers.
 - `fetchers/<line>.py` — one per line; module attrs (`LINE`, `TIER`, `ANOMALY_DIRECTION`,
   and `ANCHOR`/`MATERIALITY` or `QUANTUM`) + `fetch_daily()`.
 - `tools/` — `replay.py` (integrity), `pending.py` (tripwires), `episodes.py` +
