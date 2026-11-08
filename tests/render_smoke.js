@@ -1189,6 +1189,42 @@ function buildHeadlineFixtureData() {
     } catch (e) { errors.push(`neutral render(${lang}): ${e.stack || e}`); }
   }
 
+  // T33 (completion R1.1): the real-vs-felt chart is deleted, not renamed. The
+  // deck removes the chart, its explanation and its render path; the summary
+  // chart title follows in render.py (bound by TestRealVsFeltChartIsGone and
+  // TestChartTitlesStateTheRecordedDirection in tests/lint_public_surface.py).
+  for (const token of ["feelchart", "feel-title", "feel-hint", "FEEL_IDS",
+                       "isDivergent", "FEEL_HOT", "feelChart"]) {
+    if (html.includes(token)) {
+      errors.push(`feel: docs/index.html still carries the retired chart token ${JSON.stringify(token)}`);
+    }
+  }
+  for (const lang of ["en", "zh"]) {
+    const Tl = T[lang];
+    for (const retired of ["feelTitle", "feelHint", "feelGapNote", "feelBars"]) {
+      if (Tl[retired] !== undefined) {
+        errors.push(`feel(${lang}): the retired copy key ${JSON.stringify(retired)} is still declared`);
+      }
+    }
+    global.document.cookie = "tremor_lang=" + lang;
+    setDATA(buildFixtureData());
+    appendedNodes = [];
+    try {
+      render();
+      for (const id of ["feel-title", "feel-hint", "feelchart"]) {
+        if (made[id] !== undefined) {
+          errors.push(`feel(${lang}): render still looks up the retired element #${id}`);
+        }
+      }
+      const surface = [el("count-label").innerHTML, el("coverage").innerHTML,
+        el("sysstatus").innerHTML,
+        ...appendedNodes.flatMap(n => [n._text, n._html])].join("\n");
+      if (/Real vs felt|真实 vs 感觉/.test(surface)) {
+        errors.push(`feel(${lang}): the rendered page still carries the retired chart heading`);
+      }
+    } catch (e) { errors.push(`feel render(${lang}): ${e.stack || e}`); }
+  }
+
   await new Promise(r => setTimeout(r, 50));
   if (errors.length) { console.log("FAILURES:\n" + errors.join("\n\n")); process.exit(1); }
   console.log("render OK in both languages; no runtime errors, no undefined/NaN");

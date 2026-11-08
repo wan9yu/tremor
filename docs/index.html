@@ -169,12 +169,6 @@
     <canvas id="chart" height="150"></canvas>
   </div>
 
-  <div class="panel" style="margin-top:16px">
-    <h2 id="feel-title"></h2>
-    <p class="hint" id="feel-hint"></p>
-    <canvas id="feelchart" height="120"></canvas>
-  </div>
-
   <p class="watchlist" id="watchlist" hidden></p>
 
   <section class="panel limits" id="limits" hidden></section>
@@ -456,9 +450,6 @@ const T = {
                  "stale":"Repeated observation; prior record retained",
                  "dark":"No reading received","closed":"Market closed"},
     range_30:"30 days", range_90:"90 days", range_365:"1 year", range_all:"All",
-    feelTitle:"Real vs felt — where they diverge",
-    feelHint:"Bars: how many primary instruments trembled that day (the measured side). Lines: priced fear (VIX) and global news tone/conflict share, shown as z toward the comparison direction recorded when each feel line was selected. Feel lines are contrast only, never counted. Amber columns mark a DIVERGENCE: the felt side ran hot while every primary instrument sat inside its own recent range. A divergence has two possible causes and this chart cannot tell them apart — the feel measures moved more than the measured side (an anxiety premium), or the strain fell outside what tremor watches (a coverage gap).",
-    feelGapNote:"divergence — felt hot, measured inside its recent range; cause unknown (anxiety premium or coverage gap)",
     levelHead:n=>(n===1?" reading below its fixed reference":" readings below their fixed references"),
     levelWhich:names=>" · "+names.join(" + "),
     referenceAsOf:d=>"Latest source observation: "+d+" (about 10 days behind publication)",
@@ -469,7 +460,6 @@ const T = {
     limitsTitle:"Limits of this record",
     limitsBody:"The rolling comparison looks to recent history; a change that lasts can become part of a series' reference. The displayed roster is selected under written measurement assumptions, and the count does not undo that selection. Other daily records are collected but never enter this count. No communications-domain reading is included, so a worldwide connectivity event reads zero in this count. Some sources arrive late or skip dates; missing values remain gaps.",
     limitsFlights:"Flights samples four regions at 22:30 UTC, with uneven shares: US East about 44%, US West 34%, W/C Europe 13%, and Japan/E Asia 9%. At that sample hour, either US region alone can move the line past |z| > 3; a Europe-only drop is about 1.2z, a Japan-only drop about 0.8z, and both together about 2.0z.",
-    feelBars:"trembling count (real)",
     directionLabel:dir=>"Comparison direction noted when this series was selected: "+dir,
     dirUp:"rising", dirDown:"falling",
     last:(v,u,d)=>" · latest: "+v+" "+u+" on "+d, noCollect:"no collection this day",
@@ -521,9 +511,6 @@ const T = {
                  "stale":"重复观测；沿用此前记录",
                  "dark":"尚未收到读数","closed":"市场休市"},
     range_30:"30 天", range_90:"90 天", range_365:"1 年", range_all:"全部",
-    feelTitle:"真实 vs 感觉 — 两者的背离",
-    feelHint:"柱：当天一级仪器的颤抖根数（测量侧）。线：恐惧定价（VIX）与全球新闻情绪/冲突占比，按各自建线时记下的比较方向折算成 z。感觉线仅作对照、永不计数。琥珀色竖带 = 一次背离：感觉侧发烫，而所有一级仪器的读数都在各自近期记录之内。背离有两种可能，这张图分不出是哪一种——要么感觉侧的变化大于测量侧（焦虑溢价），要么压力落在了 tremor 的视野之外（覆盖盲区）。",
-    feelGapNote:"背离 —— 感觉侧发烫，测量侧在近期记录之内；成因未知（焦虑溢价或覆盖盲区）",
     levelHead:n=>n+" 条读数长期低于既定参照",
     levelWhich:names=>" · "+names.join(" ＋ "),
     referenceAsOf:d=>"来源最新观测："+d+"（发布约滞后 10 天）",
@@ -534,7 +521,6 @@ const T = {
     limitsTitle:"这份记录的限度",
     limitsBody:"滚动比较照见近期记录；延续很久的变化，可能渐渐进入一条序列的参照。页面展示哪些线，依据书面观测假设选定，计数不会抹去这份选择。其他每日记录会继续采集，却永不进入这个计数。这里没有通信域的读数，所以全球性的连通事件在这个计数里读作零。有些来源发布较迟，也会漏掉日期；缺失处仍留空。",
     limitsFlights:"Flights 每日 22:30 UTC 采样四个区域，各自占比并不相同：美东约 44%，美西 34%，西/中欧 13%，日本/东亚 9%。在这个采样时刻，单独一个美国区域的变化足以把这条线推过 |z| > 3；西/中欧单独约为 1.2z，日本/东亚约为 0.8z，两者合计约为 2.0z。",
-    feelBars:"颤抖根数（真实）",
     directionLabel:dir=>"比较方向（建线时记下）："+dir, dirUp:"升高", dirDown:"下降",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
     source:"数据来源", measuresLabel:"测量内容",
@@ -618,7 +604,7 @@ function countModal(lang){
 function levelModal(lang){ return `<h3>${T[lang].referenceTitle}</h3><p>${T[lang].referenceBody}</p>`; }
 
 // ---------- data + render ----------
-let DATA=null, chart=null, feelChart=null;
+let DATA=null, chart=null;
 // The comparable-line denominator from the last render, so the count
 // explanation modal states the SAME {m} the headline shows.
 let headlineDenominator=null;
@@ -630,10 +616,6 @@ const straitLabel=(c,lang)=>(STRAIT_LABEL[c]||{})[lang]||c;
 // display-side hedge: MIN_POINTS=10 is the scoring floor, but a robust scale
 // stays jumpy on short windows until roughly this many unique observations exist
 const CALIBRATING_OBS=30;
-// A day "diverges" when the felt side runs hot while every primary instrument
-// reads calm. This is a DESCRIPTION, not a diagnosis: the cause may be excess
-// feeling or missing coverage, and the instrument cannot distinguish them.
-const FEEL_IDS=["vix","gdelt_tone","gdelt"];
 // The full status vocabulary core/normalize.py can write to a row's `status`
 // column (see that module's docstring). Bound to normalize.ALL_STATUSES by
 // tests/lint_public_surface.py, so a status added or removed there is caught
@@ -680,8 +662,6 @@ function tremblingRunLength(rows,declaredDir){
   }
   return n;
 }
-const FEEL_HOT=2;
-const isDivergent=(count,feelMax)=>count===0&&feelMax!==null&&feelMax>=FEEL_HOT;
 async function load(){
   const [summary, annotations, stuck, leans, ...lineArr]=await Promise.all([
     getCSV("data/summary.csv"), getCSV("data/annotations.csv"), getCSV("data/stuck.csv"),
@@ -963,54 +943,6 @@ function render(){
       scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
         y:{title:{display:true,text:lang==="zh"?"稳健 z 分数":"robust z-score",color:"#8a909c",font:{size:11}},
            ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"}} } }
-  });
-
-  // ---- real vs felt: the answer to the question's second half ----
-  document.getElementById("feel-title").textContent=T[lang].feelTitle;
-  document.getElementById("feel-hint").textContent=T[lang].feelHint;
-  const sumBy={}; summary.forEach(r=>sumBy[r.date]=r);
-  // the feel axis is independent of the instrument axis: seeded feel history
-  // (the VIX archive) predates the instrument's birth and deserves to show —
-  // bars are simply absent for days before the instrument existed
-  let feelDates=[...new Set([...dates,...FEEL_IDS.flatMap(id=>(lines[id]||[]).map(r=>r.date))])].sort();
-  if(cutDate) feelDates=feelDates.filter(d=>d>=cutDate);
-  const counts=feelDates.map(d=>{const r=sumBy[d];
-    return r&&r.trembling_count!==""?(parseInt(r.trembling_count,10)||0):null;});
-  let feelMax=feelDates.map(()=>null);
-  const feelSets=FEEL_IDS.map(id=>{
-    const L=LINES.find(l=>l.id===id); if(!L) return null;
-    const byD={}; (lines[id]||[]).forEach(r=>byD[r.date]=r);
-    // z toward the line's alarming direction, so "up" always reads "feels worse"
-    const zA=feelDates.map((d,i)=>{const r=byD[d]; const v=r?parseFloat(r.z_score):NaN;
-      if(isNaN(v)) return null;
-      const t=L.declared_dir==="down"?-v:v;
-      if(feelMax[i]===null||t>feelMax[i]) feelMax[i]=t;
-      return t;});
-    return { type:"line", label:L.label[lang], data:zA, yAxisID:"y2",
-      borderColor:L.color, backgroundColor:L.color, borderWidth:1.6, tension:.25,
-      spanGaps:true, pointRadius:0, pointHoverRadius:4, order:1 };
-  }).filter(ds=>ds&&ds.data.some(v=>v!==null));  // hide lines still warming up
-  // anxiety premium: feeling hot (any feel z>=2) while the instruments read 0
-  const gapCol=feelDates.map((d,i)=>isDivergent(counts[i],feelMax[i])?4:null);
-  if(feelChart) feelChart.destroy();
-  feelChart=new Chart(document.getElementById("feelchart"),{
-    data:{ labels:feelDates, datasets:[
-      { type:"bar", label:T[lang].feelBars, data:counts, yAxisID:"y",
-        backgroundColor:"rgba(214,69,69,.55)", order:3 },
-      { type:"bar", label:"gap", _gap:true, data:gapCol, yAxisID:"y",
-        backgroundColor:"rgba(224,168,61,.28)", barPercentage:1, categoryPercentage:1, order:4 },
-      ...feelSets ]},
-    options:{ responsive:true, animation:false, interaction:{mode:"index",intersect:false},
-      plugins:{ legend:{labels:{color:"#c7ccd6",boxWidth:14,font:{size:11},
-                  filter:(item,data)=>!data.datasets[item.datasetIndex]._gap}},
-        tooltip:{ filter:item=>!item.dataset._gap,
-          callbacks:{label:c=>c.parsed.y==null?null:
-            (c.dataset.type==="bar"?`${c.dataset.label}: ${c.parsed.y}`:`${c.dataset.label}: z=${c.parsed.y.toFixed(2)}`)}} },
-      scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
-        y:{min:0,max:4,ticks:{stepSize:1,color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"},
-           title:{display:true,text:lang==="zh"?"颤抖根数":"trembles",color:"#8a909c",font:{size:10}}},
-        y2:{position:"right",grid:{drawOnChartArea:false},ticks:{color:"#8a909c",font:{size:10}},
-           title:{display:true,text:lang==="zh"?"感觉 z（建线时记下的比较方向）":"feel z (recorded comparison direction)",color:"#8a909c",font:{size:10}}} } }
   });
 
   // watchlist — tier-2 candidates: collected daily, not counted; click for data

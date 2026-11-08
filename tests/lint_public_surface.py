@@ -107,10 +107,13 @@ Six things are checked:
      definition that explains why a reading moved is exactly the claim the
      migration removed from the page.
 
-  4. The per-line chart title. ``render.py`` writes one committed PNG per
-     primary line. The title states the comparison direction recorded when
-     the series was selected (each fetcher's own ``ANOMALY_DIRECTION``), in
-     the deck's words, and never calls that direction an alarm.
+  4. The chart titles. ``render.py`` writes one committed PNG per primary
+     line plus the summary PNG. The per-line title states the comparison
+     direction recorded when the series was selected (each fetcher's own
+     ``ANOMALY_DIRECTION``), in the deck's words, and never calls that
+     direction an alarm. The summary title says what the bars count
+     (readings in each line's recorded direction per day) and no longer calls
+     that count a resonance.
 
   5. One neutral reading treatment. The page reports whether a reading is
      unusual; it does not report whether that is better or worse. A
@@ -750,6 +753,45 @@ class TestChartTitlesStateTheRecordedDirection(unittest.TestCase):
         self.assertIn("{mod.ANOMALY_DIRECTION}", title,
                       "render.py's per-line chart title does not interpolate the "
                       "line's own direction")
+
+    def test_overview_title_states_what_the_bars_count(self):
+        src = support.read_text(RENDER)
+        self.assertNotIn("resonance", src.lower(),
+                         "render.py still describes the summary PNG as a resonance; "
+                         "the bars count readings in their recorded direction")
+        titles = re.findall(r'ax\.set_title\(f"([^"]*)"', src)
+        summary = [t for t in titles if "(0-" in t]
+        self.assertEqual(len(summary), 1,
+                         "render.py no longer titles the summary chart with its "
+                         f"dynamic 0-N ceiling: {titles}")
+        self.assertIn("recorded direction", summary[0],
+                      "render.py's summary chart title does not say that the bars "
+                      f"count readings in their recorded direction: {summary[0]!r}")
+
+
+class TestRealVsFeltChartIsGone(unittest.TestCase):
+    """The real-vs-felt chart is deleted, not renamed.
+
+    The deck removes the chart, its explanation and its render path: two unlike
+    series on one picture invite a comparison the record cannot support, and
+    the copy around it carried the last world-disorder framing on the page.
+    ``data/leans.csv`` stays served — its same-day machine lean is read by the
+    headline (``leanMap``), a different consumer.
+    """
+
+    def test_no_feel_chart_code_remains(self):
+        html = support.read_text(DOCS_INDEX)
+        for token in ("feelchart", "feelChart", "FEEL_IDS", "isDivergent",
+                      "FEEL_HOT"):
+            self.assertNotIn(token, html,
+                             f"docs/index.html still carries feel-chart code {token!r}")
+
+    def test_no_feel_chart_copy_remains(self):
+        html = support.read_text(DOCS_INDEX)
+        for key in ("feelTitle", "feelHint", "feelGapNote", "feelBars"):
+            self.assertNotIn(f"{key}:", html,
+                             f"docs/index.html still declares the retired copy key "
+                             f"{key!r}")
 
 
 # --- the neutral reading mark: one tone, no severity ramp -------------------

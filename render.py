@@ -1,4 +1,4 @@
-"""Render tremor's PNG "temperature charts": one per line + a resonance overview.
+"""Render tremor's PNG "temperature charts": one per line + a summary overview.
 
 These are committed alongside the data so the repository itself is readable at a
 glance, with no dashboard required.
@@ -84,10 +84,10 @@ def render_overview():
     counts = [int(r["trembling_count"]) if r.get("trembling_count") not in (None, "") else 0
               for r in rows]
 
-    n = len(LINES)  # tier-1 line count — the resonance ceiling, dynamic
+    n = len(LINES)  # tier-1 line count — the display ceiling, dynamic
     fig, ax = plt.subplots(figsize=(9, 3.2))
     ax.bar(xs, counts, color="#d62728", alpha=0.85)
-    ax.set_title(f"Resonance — lines trembling per day (0-{n})", fontsize=11)
+    ax.set_title(f"Lines trembling in their recorded direction per day (0-{n})", fontsize=11)
     ax.set_ylim(0, n)
     ax.set_yticks(list(range(0, n + 1)))
     ax.grid(True, axis="y", alpha=0.25)
