@@ -1488,6 +1488,9 @@ function buildHeadlineFixtureData() {
       if (!label.includes(Tl.referenceAsOf(RUNTIME_TODAY))) {
         errors.push(`r3(${lang}): the level label lost its source-as-of line: ${label}`);
       }
+      if (lang === "en" && !Tl.referenceItem("n", "1", "1", "1", "2026-01-01").includes("1 day")) {
+        errors.push("r3(en): a one-day open state renders plural \"1 days\"");
+      }
       if (LEVEL_NAMES[lang].some(name => label.includes(name))) {
         errors.push(`r3(${lang}): the level label still lists names without their reference: ${label}`);
       }

@@ -446,7 +446,7 @@ const T = {
     range_30:"30 days", range_90:"90 days", range_365:"1 year", range_all:"All",
     zAxis:"Robust z-score",
     levelHead:n=>(n===1?" reading below its fixed reference":" readings below their fixed references"),
-    referenceItem:(name,median,ref,days,since)=>name+" · open since "+since+" · 14-day median "+median+" vs pinned reference "+ref+" transits/day · "+days+" days",
+    referenceItem:(name,median,ref,days,since)=>name+" · open since "+since+" · 14-day median "+median+" vs pinned reference "+ref+" transits/day · "+days+(days==="1"?" day":" days"),
     referenceAsOf:d=>"Latest source observation: "+d+" (about 10 days behind publication)",
     referenceTitle:"Long-running readings below fixed references",
     referenceBody:"A named strait is listed after its recorded daily traffic stays at or below half of its fixed reference for 14 days. The reference is set before the observed change. IMF PortWatch publishes with roughly a 10-day lag; the date shown is the latest available observation.",
