@@ -772,7 +772,7 @@ class TestDeckStatusAndPanelCopy(unittest.TestCase):
     def test_deck_keys_are_declared_in_both_locales(self):
         html = support.read_text(DOCS_INDEX)
         for key in ("manyDark", "disruption", "noRecord", "annoBody",
-                    "zAxis", "close", "aboutTitle", "aboutBody"):
+                    "zAxis", "close", "aboutTitle", "aboutBody", "referenceItem"):
             self.assertEqual(html.count(f"{key}:"), 2,
                              f"docs/index.html should declare {key!r} in both "
                              f"locales, found {html.count(f'{key}:')}")
@@ -782,6 +782,14 @@ class TestDeckStatusAndPanelCopy(unittest.TestCase):
         self.assertIn("text:T[lang].zAxis", html,
                       "the history chart still hardcodes its vertical-axis label "
                       "instead of reading the deck's `zAxis` key")
+
+    def test_the_level_block_carries_the_reference_with_each_name(self):
+        html = support.read_text(DOCS_INDEX)
+        self.assertNotIn("levelWhich", html,
+                         "the fixed-reference block still renders a bare name list; "
+                         "each name goes with the reference it is compared with")
+        self.assertIn("referenceItem", html,
+                      "the fixed-reference block has no per-item reference line")
 
     def test_the_run_is_direction_free(self):
         html = support.read_text(DOCS_INDEX)

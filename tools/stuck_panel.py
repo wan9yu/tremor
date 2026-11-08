@@ -19,6 +19,7 @@ verdict, and it is served BY THE REPORTER, never through collect.MIRRORED.
 
     python tools/stuck_panel.py    # rebuild docs/data/stuck.csv from data/levels.csv
 """
+import datetime
 import os
 import sys
 
@@ -31,7 +32,20 @@ import level_layer
 
 LEVELS = os.path.join(ROOT, "data", "levels.csv")
 OUT = os.path.join(ROOT, "docs", "data", "stuck.csv")
-HEADER = ["date", "component", "since", "pct", "stale"]
+HEADER = ["date", "component", "since", "pct", "stale",
+          "trail_median", "reference", "open_days"]
+
+
+def _days_open(day, since):
+    """Whole calendar days a state has been open, counting both ends.
+
+    Calendar days, not "consecutive breach days": an open state persists after
+    the trailing median recovers (until it clears at 0.8x the pinned
+    reference), so this is how long the entry has been on the page, not how
+    long the breach lasted.
+    """
+    return str((datetime.date.fromisoformat(day)
+                - datetime.date.fromisoformat(since)).days + 1)
 
 
 def build_panel(level_rows, stale_now=frozenset()):
@@ -39,10 +53,11 @@ def build_panel(level_rows, stale_now=frozenset()):
 
     ``level_rows`` are ``data/levels.csv`` rows (date, component, event, ...,
     ratio). One output row per (date, strait) for every day a strait is OPEN,
-    carrying the date its state opened and its trailing traffic as a whole-number
-    percentage of the pinned reference. Grouping the output by date gives the
-    daily count of straits stuck quiet -- the number the 28-strait sum cannot
-    show. ``stale_now`` is the set of components whose source stopped arriving
+    carrying the date its state opened, its trailing traffic as a whole-number
+    percentage of the pinned reference, and the level layer's own
+    ``trail_median`` / pinned ``reference`` (transits/day) plus the calendar
+    days the state has been open. Grouping the output by date gives the daily
+    count of straits stuck quiet -- the number the 28-strait sum cannot show. ``stale_now`` is the set of components whose source stopped arriving
     while their state was open; the flag is set only on the most recent date, the
     one day it actually describes.
     """
@@ -59,9 +74,13 @@ def build_panel(level_rows, stale_now=frozenset()):
             continue
         # event is "open" or "hold" here (walk emits nothing else): a stuck day
         stale = "1" if (date == latest and comp in stale_now) else ""
+        since = opened.get(comp, date)
         out.append({"date": date, "component": comp,
-                    "since": opened.get(comp, date),
-                    "pct": round(float(r["ratio"]) * 100), "stale": stale})
+                    "since": since,
+                    "pct": round(float(r["ratio"]) * 100), "stale": stale,
+                    "trail_median": r.get("trail_median", ""),
+                    "reference": r.get("reference", ""),
+                    "open_days": _days_open(date, since)})
     return out
 
 

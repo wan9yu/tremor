@@ -54,14 +54,23 @@ class TestBuildPanel(unittest.TestCase):
         import stuck_panel
         self.build = stuck_panel.build_panel
 
-    def test_count_since_and_pct(self):
+    def test_count_since_pct_and_the_pinned_reference(self):
+        # `trail_median` and `reference` are the level layer's own numbers
+        # (transits/day); the panel must carry them through so the page can
+        # state what the ratio compares, not just the percentage.
         rows = [
-            {"date": "2026-04-06", "component": "Strait of Hormuz", "event": "open", "ratio": "0.125"},
-            {"date": "2026-04-07", "component": "Strait of Hormuz", "event": "hold", "ratio": "0.120"},
-            {"date": "2026-07-26", "component": "Kerch Strait", "event": "open", "ratio": "0.083"},
-            {"date": "2026-07-26", "component": "Strait of Hormuz", "event": "hold", "ratio": "0.070"},
-            {"date": "2026-07-27", "component": "Kerch Strait", "event": "hold", "ratio": "0.000"},
-            {"date": "2026-07-27", "component": "Strait of Hormuz", "event": "hold", "ratio": "0.070"},
+            {"date": "2026-04-06", "component": "Strait of Hormuz", "event": "open",
+             "trail_median": "9", "reference": "72", "ratio": "0.125"},
+            {"date": "2026-04-07", "component": "Strait of Hormuz", "event": "hold",
+             "trail_median": "8.6", "reference": "72", "ratio": "0.120"},
+            {"date": "2026-07-26", "component": "Kerch Strait", "event": "open",
+             "trail_median": "6", "reference": "72", "ratio": "0.083"},
+            {"date": "2026-07-26", "component": "Strait of Hormuz", "event": "hold",
+             "trail_median": "5", "reference": "72", "ratio": "0.070"},
+            {"date": "2026-07-27", "component": "Kerch Strait", "event": "hold",
+             "trail_median": "0", "reference": "72", "ratio": "0.000"},
+            {"date": "2026-07-27", "component": "Strait of Hormuz", "event": "hold",
+             "trail_median": "5", "reference": "72", "ratio": "0.070"},
         ]
         out = self.build(rows, stale_now={"Kerch Strait"})
         latest = "2026-07-27"
@@ -72,10 +81,16 @@ class TestBuildPanel(unittest.TestCase):
         self.assertEqual(kerch["since"], "2026-07-26")   # since = its own open date
         self.assertEqual(kerch["pct"], 0)                # 0.000 -> 0%
         self.assertEqual(kerch["stale"], "1")            # in stale_now, on the latest date
+        self.assertEqual(kerch["trail_median"], "0")     # carried, not recomputed
+        self.assertEqual(kerch["reference"], "72")       # the PINNED reference
+        self.assertEqual(kerch["open_days"], "2")        # 07-26..07-27 inclusive
         hormuz = next(r for r in now if r["component"] == "Strait of Hormuz")
         self.assertEqual(hormuz["since"], "2026-04-06")
         self.assertEqual(hormuz["pct"], 7)               # 0.070 -> 7%
         self.assertEqual(hormuz["stale"], "")            # not stale, though on the latest date
+        self.assertEqual(hormuz["trail_median"], "5")    # latest HOLD row, not the open day
+        self.assertEqual(hormuz["reference"], "72")
+        self.assertEqual(hormuz["open_days"], "113")     # 04-06..07-27 inclusive
 
     def test_stale_flag_only_on_the_latest_date(self):
         rows = [

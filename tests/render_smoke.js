@@ -332,6 +332,18 @@ function buildNoRecordFixtureData() {
   return { summary: [], dates: [], lines: {}, annotations: [], annoMap: new Map(), stuck: [] };
 }
 
+// R3 fixtures: two open level states with the reporter's new carried fields.
+function buildLevelFixtureData() {
+  const data = buildFixtureData();
+  data.stuck = [
+    { date: RUNTIME_TODAY, component: "Strait of Hormuz", since: "2026-04-06",
+      pct: "5", stale: "", trail_median: "3.5", reference: "72", open_days: "207" },
+    { date: RUNTIME_TODAY, component: "Kerch Strait", since: "2026-07-26",
+      pct: "0", stale: "1", trail_median: "0", reference: "12", open_days: "96" },
+  ];
+  return data;
+}
+
 // R2 fixtures: two tier-1 lines tremble through the same two days. flights
 // trembles in its recorded direction; credit_spread trembles AGAINST its own.
 // The ledger's trembling_count is therefore 1, while the displayed
@@ -893,7 +905,8 @@ function buildHeadlineFixtureData() {
   const PROBE_WORDS = ["①", "②", "③", "probe", "探针"];
   const structFixture = buildFixtureData();
   structFixture.stuck = [{ date: FIXTURE_DATE, component: "Strait of Hormuz",
-    since: "2026-04-06", pct: "4", stale: "" }];
+    since: "2026-04-06", pct: "4", stale: "",
+    trail_median: "3", reference: "72", open_days: "151" }];
   for (const lang of ["en", "zh"]) {
     const d = DECK_STRUCT[lang];
     const Tl = T[lang] || {};
@@ -1204,7 +1217,8 @@ function buildHeadlineFixtureData() {
   neutralFixture.lines.fed_srf_takeup = [fixtureRow({ date: FIXTURE_DATE,
     raw_value: "0", z_score: "0.1", trembling: "0", direction: "up", status: "scoring" })];
   neutralFixture.stuck = [{ date: FIXTURE_DATE, component: "Strait of Hormuz",
-    since: "2026-04-06", pct: "4", stale: "" }];
+    since: "2026-04-06", pct: "4", stale: "",
+    trail_median: "3", reference: "72", open_days: "151" }];
   for (const lang of ["en", "zh"]) {
     global.document.cookie = "tremor_lang=" + lang;
     setDATA(neutralFixture);
@@ -1440,6 +1454,44 @@ function buildHeadlineFixtureData() {
           + `expected the derived direction-free 2 (the ledger's trembling_count is 1)`);
       }
     } catch (e) { errors.push(`r2 render(${lang}): ${e.stack || e}`); }
+  }
+
+  // T36 (completion R3): the fixed-reference block states, per open state, the
+  // pinned reference and the trailing median it is compared with, plus how
+  // long the state has been open. The values come from the reporter's own
+  // carried fields (trail_median/reference/open_days), never from the rounded
+  // percentage. `levelWhich` (a bare name list without the reference) is gone.
+  const LEVEL_NAMES = { en: ["Strait of Hormuz", "Kerch Strait"],
+                        zh: ["霍尔木兹海峡", "刻赤海峡"] };
+  const LEVEL_ROWS = [["3.5", "72", "207", "2026-04-06"], ["0", "12", "96", "2026-07-26"]];
+  for (const lang of ["en", "zh"]) {
+    global.document.cookie = "tremor_lang=" + lang;
+    const Tl = T[lang];
+    try {
+      setDATA(buildLevelFixtureData());
+      render();
+      if (Tl.levelWhich !== undefined) {
+        errors.push(`r3(${lang}): the retired levelWhich key is still declared`);
+      }
+      if (el("level-items").hidden) {
+        errors.push(`r3(${lang}): the fixed-reference item list is hidden`);
+      }
+      const items = el("level-items").innerHTML;
+      LEVEL_NAMES[lang].forEach((name, i) => {
+        const [median, ref, days, since] = LEVEL_ROWS[i];
+        const want = Tl.referenceItem(name, median, ref, days, since);
+        if (!items.includes(want)) {
+          errors.push(`r3(${lang}): the item list does not carry ${JSON.stringify(want)}: ${items}`);
+        }
+      });
+      const label = el("level-label").innerHTML;
+      if (!label.includes(Tl.referenceAsOf(RUNTIME_TODAY))) {
+        errors.push(`r3(${lang}): the level label lost its source-as-of line: ${label}`);
+      }
+      if (LEVEL_NAMES[lang].some(name => label.includes(name))) {
+        errors.push(`r3(${lang}): the level label still lists names without their reference: ${label}`);
+      }
+    } catch (e) { errors.push(`r3 render(${lang}): ${e.stack || e}`); }
   }
 
   await new Promise(r => setTimeout(r, 50));

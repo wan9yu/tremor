@@ -48,6 +48,8 @@
   .count-level .n{font-size:44px}
   .kicker{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:22px 2px 5px}
   .level-kicker{margin-top:18px}
+  .refitems{margin:0 0 10px}
+  .refitem{display:block;color:var(--muted);font-size:13px;line-height:1.6}
   .asof{color:var(--muted);font-size:13px;margin:0 0 16px}
   .sysstatus{border-radius:10px;padding:11px 15px;margin:0 0 18px;font-size:13px;
     border:1px solid var(--line);background:var(--panel)}
@@ -154,6 +156,7 @@
     <span class="label" id="level-label"></span>
     <span class="q" id="level-q"></span>
   </div>
+  <p class="refitems" id="level-items" hidden></p>
 
   <div class="sysstatus" id="sysstatus" hidden></div>
 
@@ -443,7 +446,7 @@ const T = {
     range_30:"30 days", range_90:"90 days", range_365:"1 year", range_all:"All",
     zAxis:"Robust z-score",
     levelHead:n=>(n===1?" reading below its fixed reference":" readings below their fixed references"),
-    levelWhich:names=>" · "+names.join(" + "),
+    referenceItem:(name,median,ref,days,since)=>name+" · open since "+since+" · 14-day median "+median+" vs pinned reference "+ref+" transits/day · "+days+" days",
     referenceAsOf:d=>"Latest source observation: "+d+" (about 10 days behind publication)",
     referenceTitle:"Long-running readings below fixed references",
     referenceBody:"A named strait is listed after its recorded daily traffic stays at or below half of its fixed reference for 14 days. The reference is set before the observed change. IMF PortWatch publishes with roughly a 10-day lag; the date shown is the latest available observation.",
@@ -501,7 +504,7 @@ const T = {
     range_30:"30 天", range_90:"90 天", range_365:"1 年", range_all:"全部",
     zAxis:"稳健 z 分数",
     levelHead:n=>n+" 条读数长期低于既定参照",
-    levelWhich:names=>" · "+names.join(" ＋ "),
+    referenceItem:(name,median,ref,days,since)=>name+" · 自 "+since+" 起开放 · 14 天中位 "+median+"，既定参照 "+ref+" 艘/日 · 已 "+days+" 天",
     referenceAsOf:d=>"来源最新观测："+d+"（发布约滞后 10 天）",
     referenceTitle:"长期低于既定参照的条目",
     referenceBody:"具名海峡的每日记录流量连续 14 天处于固定参照值的一半或以下时，页面列出该项。参照值在观测变化之前设定。IMF PortWatch 约有 10 天发布滞后；页面日期为最新可得观测日期。",
@@ -824,11 +827,16 @@ function render(){
     const openNow=lByDate[lLatest];
     const cnt=openNow.length;
     document.getElementById("level-n").textContent=cnt;
-    const names=openNow.map(r=>straitLabel(r.component,lang));
     setMarkup(document.getElementById("level-label"),
       T[lang].levelHead(cnt)
-      +(cnt?`<span class="pairnote">${T[lang].levelWhich(names)}</span>`:"")
       +`<span class="calibnote"> · ${T[lang].referenceAsOf(lLatest)}</span>`);
+    // One line per open state: the name goes with the reference it is compared
+    // with, the carried trailing median, and how long the state has been open.
+    // The values are the reporter's own cells; nothing is recomputed here.
+    const refItems=openNow.map(r=>`<span class="refitem">${
+      T[lang].referenceItem(straitLabel(r.component,lang),r.trail_median,r.reference,r.open_days,r.since)}</span>`).join("");
+    const refList=document.getElementById("level-items");
+    refList.hidden=!refItems; setMarkup(refList,refItems);
     document.getElementById("level-q").textContent=T[lang].countQuestion;
     lc.onclick=()=>openModal(levelModal(lang));
   } else { lc.hidden=true; lk.hidden=true; }
