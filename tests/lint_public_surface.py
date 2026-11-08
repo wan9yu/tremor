@@ -794,6 +794,38 @@ class TestRealVsFeltChartIsGone(unittest.TestCase):
                              f"{key!r}")
 
 
+class TestDeckStatusAndPanelCopy(unittest.TestCase):
+    """The banner, panel headings, dated notes and footer carry the deck's words.
+
+    The retired banner keys read an absence of data as a signal (``alarmDarkB``:
+    "widespread source failure is itself a signal") and split a collection gap
+    into a heading plus a body. The deck replaces them with complete sentences:
+    ``manyDark``, ``disruption``, ``noRecord``, and the four ``statusOk`` /
+    ``awaiting`` / ``warnH`` / ``warnB`` rows.
+    """
+
+    def test_retired_banner_keys_are_gone(self):
+        html = support.read_text(DOCS_INDEX)
+        for key in ("alarmDarkH", "alarmDarkB", "disruptH", "disruptB"):
+            self.assertNotIn(f"{key}:", html,
+                             f"docs/index.html still declares the retired banner key "
+                             f"{key!r}")
+
+    def test_deck_keys_are_declared_in_both_locales(self):
+        html = support.read_text(DOCS_INDEX)
+        for key in ("manyDark", "disruption", "noRecord", "annoBody",
+                    "zAxis", "close"):
+            self.assertEqual(html.count(f"{key}:"), 2,
+                             f"docs/index.html should declare {key!r} in both "
+                             f"locales, found {html.count(f'{key}:')}")
+
+    def test_main_chart_axis_title_uses_the_z_axis_key(self):
+        html = support.read_text(DOCS_INDEX)
+        self.assertIn("text:T[lang].zAxis", html,
+                      "the history chart still hardcodes its vertical-axis label "
+                      "instead of reading the deck's `zAxis` key")
+
+
 # --- the neutral reading mark: one tone, no severity ramp -------------------
 #
 # The four severity colours the old ramp was built from, by CSS variable name

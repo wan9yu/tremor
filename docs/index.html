@@ -74,6 +74,7 @@
   .pill.trembling{color:var(--reading-mark);border-color:rgba(199,204,214,.55);background:transparent}
   .pill.calib{color:var(--muted);border-color:var(--line);background:transparent}
   .modal-card .annoh{font-size:13px;margin:16px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .modal-card .annobody{font-size:13px;line-height:1.5;margin:0 0 8px;color:var(--muted)}
   .modal-card .anno{font-size:13px;line-height:1.5;margin:0 0 8px;color:#c7ccd6}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 16px 10px}
   .panel h2{font-size:14px;margin:0;font-weight:600}
@@ -409,21 +410,21 @@ const T = {
     closedNote:names=>" · market closed: "+names,
     countQuestion:"How is this count made? ›",
     asOf:d=>"Record through "+d+" (China time)",
-    panelTitle:"Tension lines, normalized",
-    panelHint:"Each line's recorded robust z-score, so different units share one axis. Dashed band = the ±3 trembling threshold; gaps = warming up or no new observation.",
-    statusOk:"All instruments reporting.",
-    awaiting:d=>" Awaiting today's collection (last: "+d+").",
-    warnH:n=>n+" instrument"+(n>1?"s":"")+" dark today.",
-    warnB:names=>" No reading from "+names+". Recorded as a gap, never filled in.",
-    alarmDarkH:(n,m)=>n+" of "+m+" instruments dark.",
+    panelTitle:"Readings over time",
+    panelHint:"Each score compares one line with its own recent record. Dashed guides mark the statistical threshold; gaps are not filled.",
+    statusOk:"Today's collection is recorded.",
+    awaiting:d=>"Today's collection is not yet available. Latest record: "+d+".",
+    warnH:n=>n+" line"+(n===1?"":"s")+" "+(n===1?"has":"have")+" no reading today.",
+    warnB:names=>"No reading from "+names+"; missing values remain blank.",
+    manyDark:(n,m,names)=>n+" of "+m+" lines have no reading today: "+names+".",
+    noRecord:"No daily record is available yet.",
     watchTitle:"Other daily records",
     watchDays:n=>n+(n===1?" recorded day":" recorded days"),
-    alarmDarkB:names=>" No reading today from "+names+". Widespread source failure is itself a signal, not just an absence.",
-    disruptH:"System disruption.",
-    disruptB:(d,g)=>" No successful collection since "+d+" ("+g+" days ago). The recording apparatus itself may be down — and a prolonged silence is its own kind of tremor.",
+    disruption:(d,g)=>"No successful collection has been recorded since "+d+" ("+g+" days). This page may not include newer data.",
     nodata:"NO READING", more:"Open reading details ›",
     unusualPill:"Unusual", calibrating:"calibrating",
-    annoTitle:"Recent trembles, attributed",
+    annoTitle:"Dated notes in the record",
+    annoBody:"Notes are shown with their recorded dates and wording. They are attached text, not output from the scoring rule.",
     notCounted:"Collected daily; never included in this count.",
     calibNote:(n,m)=>" · comparison history is still forming for "+n+" of "+m+" lines",
     whichLines:(names)=>" · "+names.join(" + "),
@@ -450,6 +451,7 @@ const T = {
                  "stale":"Repeated observation; prior record retained",
                  "dark":"No reading received","closed":"Market closed"},
     range_30:"30 days", range_90:"90 days", range_365:"1 year", range_all:"All",
+    zAxis:"Robust z-score",
     levelHead:n=>(n===1?" reading below its fixed reference":" readings below their fixed references"),
     levelWhich:names=>" · "+names.join(" + "),
     referenceAsOf:d=>"Latest source observation: "+d+" (about 10 days behind publication)",
@@ -463,11 +465,11 @@ const T = {
     directionLabel:dir=>"Comparison direction noted when this series was selected: "+dir,
     dirUp:"rising", dirDown:"falling",
     last:(v,u,d)=>" · latest: "+v+" "+u+" on "+d, noCollect:"no collection this day",
-    source:"Source", measuresLabel:"Measures",
+    source:"Source", measuresLabel:"Measures", close:"Close",
     countModalTitle:"How the count is made",
     countModalBody:m=>"A line contributes when its scored value crosses its own threshold in either direction. The threshold varies with the amount of distinct history available. The denominator "+m+" is the number available under the daily comparison rule: the primary roster minus lines with no reading, too little history or variation to compare, or a closed market. A repeated observation does not add another score. This counts lines on a date, not events. The roster reflects written selection assumptions.",
     countQualifying:"A statistical comparison, not a judgment of conditions.",
-    footer:"tremor doesn't predict the end — nobody can. It only makes <b>now</b> readable: a seismograph, not a prophet, blind to instantaneous shocks and listening for the slow, systemic, trace-leaving kind of disorder. Data is collected daily by a GitHub Actions cron and committed back to the repo (<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>); this dashboard reads the CSVs directly — no backend.",
+    footer:"A measuring instrument, not a forecast. Public data are collected daily; this static page reads the published record directly. Source code and history: <a href=\"https://github.com/wan9yu/tremor\">GitHub</a>.",
   },
   zh:{
     title:"tremor——把读数留在眼前",
@@ -478,21 +480,21 @@ const T = {
     closedNote:names=>" · 市场休市："+names,
     countQuestion:"这个计数如何得出？›",
     asOf:d=>"记录截至 "+d+"（北京时间）",
-    panelTitle:"张力线（已归一化）",
-    panelHint:"画的是每根线记录在案的稳健 z 分数，不同单位因此能共用一根纵轴。虚线带 = ±3 颤抖阈值；空缺 = 校准中或无新观测。",
-    statusOk:"全部仪器在正常上报。",
-    awaiting:d=>"正在等待今天的采集（最近："+d+"）。",
-    warnH:n=>"今天有 "+n+" 台仪器无数据。",
-    warnB:names=>"以下来源无读数："+names+"。记为缺口，绝不填补。",
-    alarmDarkH:(n,m)=>m+" 台中有 "+n+" 台仪器无数据。",
+    panelTitle:"读数随时间的变化",
+    panelHint:"每条分数都与本线近期记录比较。虚线标出统计阈值；空缺不作填补。",
+    statusOk:"今天的采集已有记录。",
+    awaiting:d=>"今天的采集记录尚未到达。最近一条记录："+d+"。",
+    warnH:n=>"今天有 "+n+" 条线没有读数。",
+    warnB:names=>names+" 没有读数；缺失处仍留空。",
+    manyDark:(n,m,names)=>m+" 条线中有 "+n+" 条今天没有读数："+names+"。",
+    noRecord:"每日记录尚未生成。",
     watchTitle:"其他每日记录",
     watchDays:n=>"已有 "+n+" 天记录",
-    alarmDarkB:names=>"今天以下来源无读数："+names+"。大面积的来源失效本身就是信号，而不只是缺席。",
-    disruptH:"系统紊乱。",
-    disruptB:(d,g)=>"自 "+d+" 起已 "+g+" 天没有成功采集。记录装置本身可能已经瘫痪——而长久的沉默，本身就是一种颤抖。",
+    disruption:(d,g)=>"自 "+d+" 起已有 "+g+" 天没有成功采集记录。本页可能尚未包含较新的数据。",
     nodata:"无读数", more:"查看读数详情 ›",
     unusualPill:"偏离近期记录", calibrating:"校准中",
-    annoTitle:"近期颤抖及归因",
+    annoTitle:"记录中的日期注记",
+    annoBody:"注记按记录中的日期与原文展示。它们是附上的文字，不由计分规则生成。",
     notCounted:"每日采集，但从不进入这个计数。",
     calibNote:(n,m)=>" · "+m+" 条线中有 "+n+" 条的近期参照仍在积累",
     whichLines:(names)=>" · "+names.join(" ＋ "),
@@ -511,6 +513,7 @@ const T = {
                  "stale":"重复观测；沿用此前记录",
                  "dark":"尚未收到读数","closed":"市场休市"},
     range_30:"30 天", range_90:"90 天", range_365:"1 年", range_all:"全部",
+    zAxis:"稳健 z 分数",
     levelHead:n=>n+" 条读数长期低于既定参照",
     levelWhich:names=>" · "+names.join(" ＋ "),
     referenceAsOf:d=>"来源最新观测："+d+"（发布约滞后 10 天）",
@@ -523,11 +526,11 @@ const T = {
     limitsFlights:"Flights 每日 22:30 UTC 采样四个区域，各自占比并不相同：美东约 44%，美西 34%，西/中欧 13%，日本/东亚 9%。在这个采样时刻，单独一个美国区域的变化足以把这条线推过 |z| > 3；西/中欧单独约为 1.2z，日本/东亚约为 0.8z，两者合计约为 2.0z。",
     directionLabel:dir=>"比较方向（建线时记下）："+dir, dirUp:"升高", dirDown:"下降",
     last:(v,u,d)=>" · 最近："+d+" 为 "+v+" "+u, noCollect:"当天未采集",
-    source:"数据来源", measuresLabel:"测量内容",
+    source:"数据来源", measuresLabel:"测量内容", close:"关闭",
     countModalTitle:"这个计数如何得出",
     countModalBody:m=>"一条线的分数向任一方向越过自身阈值时，便计入其中。阈值随可用的不同观测数量而变。分母 "+m+" 按每日比较规则计算：从主记录组中扣除没有读数、历史或变化不足以比较、以及市场休市的线。重复观测不会再添一个分数。这里数的是某日的线，不是事件。记录组依据书面观测假设选定。",
     countQualifying:"这是统计比较，不替处境下判断。",
-    footer:"tremor 不预言末日——没人能。它只让<b>此刻</b>变得可读：是地震仪，不是先知；对瞬时灾难无能为力，只倾听那种缓慢的、系统性的、会留下痕迹的失序。数据由 GitHub Actions 每日定时采集并提交回仓库（<a href=\"https://github.com/wan9yu/tremor\">git-scraping</a>），仪表盘直接读取 CSV——无需后端。",
+    footer:"一件测量仪器，不作预言。公开数据每日采集；这个静态页面直接读取已发布的记录。源代码与历史见 <a href=\"https://github.com/wan9yu/tremor\">GitHub</a>。",
   }
 };
 
@@ -589,7 +592,7 @@ function lineModal(L,lang){
   const dir = L.declared_dir==="down"?T[lang].dirDown:T[lang].dirUp;
   const annos=annosFor(L.id).slice(-3).reverse();
   const annoHtml=annos.length
-    ? `<h4 class="annoh">${T[lang].annoTitle}</h4>`+annos.map(a=>
+    ? `<h4 class="annoh">${T[lang].annoTitle}</h4><p class="annobody">${T[lang].annoBody}</p>`+annos.map(a=>
         `<p class="anno"><b>${esc(a.date)}</b> <span class="tag2">${esc(a.verdict)}</span> ${esc(a.note)}</p>`).join("")
     : "";
   return `<div class="mdomain">${L.domain[lang]}</div>
@@ -714,6 +717,7 @@ function render(){
   document.documentElement.lang = lang==="zh"?"zh":"en";
   document.querySelectorAll("#langtoggle button").forEach(b=>b.classList.toggle("on", b.dataset.lang===lang));
   document.title=T[lang].title;
+  document.getElementById("modal-x").setAttribute("aria-label",T[lang].close);
   document.getElementById("tag").textContent=T[lang].promise;
   document.getElementById("panel-title").textContent=T[lang].panelTitle;
   document.getElementById("panel-hint").textContent=T[lang].panelHint;
@@ -919,11 +923,11 @@ function render(){
 
   // system status banner
   const st=document.getElementById("sysstatus"); st.hidden=false;
-  if(!last){ st.className="sysstatus alarm"; setMarkup(st,`<span class="h">${T[lang].nodata}</span>`); }
-  else if(gapDays>=2){ st.className="sysstatus alarm"; setMarkup(st,`<span class="h">${T[lang].disruptH}</span>${T[lang].disruptB(last.date,gapDays)}`); }
-  else if(darkCount*2>TIER1.length){ st.className="sysstatus alarm"; setMarkup(st,`<span class="h">${T[lang].alarmDarkH(darkCount,TIER1.length)}</span>${T[lang].alarmDarkB(darkNames.join(", "))}`); }
-  else if(darkCount>=1){ st.className="sysstatus warn"; setMarkup(st,`<span class="h">${T[lang].warnH(darkCount)}</span>${T[lang].warnB(darkNames.join(", "))}`); }
-  else { st.className="sysstatus ok"; setMarkup(st,`<span class="h">${T[lang].statusOk}</span>`+(gapDays>=1?T[lang].awaiting(last.date):"")); }
+  if(!last){ st.className="sysstatus alarm"; setMarkup(st,`<span class="h">${T[lang].noRecord}</span>`); }
+  else if(gapDays>=2){ st.className="sysstatus alarm"; setMarkup(st,`<span class="h">${T[lang].disruption(last.date,gapDays)}</span>`); }
+  else if(darkCount*2>TIER1.length){ st.className="sysstatus alarm"; setMarkup(st,`<span class="h">${T[lang].manyDark(darkCount,TIER1.length,darkNames.join(", "))}</span>`); }
+  else if(darkCount>=1){ st.className="sysstatus warn"; setMarkup(st,`<span class="h">${T[lang].warnH(darkCount)}</span> ${T[lang].warnB(darkNames.join(", "))}`); }
+  else { st.className="sysstatus ok"; setMarkup(st,`<span class="h">${T[lang].statusOk}</span>`+(gapDays>=1?" "+T[lang].awaiting(last.date):"")); }
 
   // Dashed ±3 trembling-threshold guides — visual reference only, kept out of
   // the legend and the hover tooltip so only the real lines are listed.
@@ -941,7 +945,7 @@ function render(){
             afterLabel:c=>{ const a=c.dataset._lineId&&annoOn(c.dataset._lineId,c.label);
               return a?wrapNote("• "+a.note):null; }}} },
       scales:{ x:{ticks:{color:"#8a909c",maxTicksLimit:8,font:{size:10}},grid:{color:"#1c1f27"}},
-        y:{title:{display:true,text:lang==="zh"?"稳健 z 分数":"robust z-score",color:"#8a909c",font:{size:11}},
+        y:{title:{display:true,text:T[lang].zAxis,color:"#8a909c",font:{size:11}},
            ticks:{color:"#8a909c",font:{size:10}},grid:{color:"#1c1f27"}} } }
   });
 
@@ -989,7 +993,7 @@ function openTier2Modal(L,lang){
   const dir=L.declared_dir==="down"?T[lang].dirDown:T[lang].dirUp;
   const annos=annosFor(L.id).slice(-3).reverse();
   const annoHtml=annos.length
-    ? `<h4 class="annoh">${T[lang].annoTitle}</h4>`+annos.map(a=>
+    ? `<h4 class="annoh">${T[lang].annoTitle}</h4><p class="annobody">${T[lang].annoBody}</p>`+annos.map(a=>
         `<p class="anno"><b>${esc(a.date)}</b> <span class="tag2">${esc(a.verdict)}</span> ${esc(a.note)}</p>`).join("")
     : "";
   openModal(`<div class="mdomain">${L.domain[lang]}</div>

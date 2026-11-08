@@ -31,7 +31,8 @@ function el(id) {
     id, _html: "", _text: "", hidden: false, className: "", dataset: {},
     style: { setProperty() {}, removeProperty() {}, getPropertyValue: () => "" }, classList: { add() {}, remove() {}, toggle() {} },
     appendChild(child) { appendedNodes.push(child); return child; },
-    setAttribute() {}, removeAttribute() {}, scrollIntoView() {},
+    setAttribute(k, v) { this["attr:" + k] = String(v); },
+    getAttribute(k) { return this["attr:" + k]; }, removeAttribute() {}, scrollIntoView() {},
     addEventListener() {}, getContext: () => ({}),
     set innerHTML(v) { this._html = String(v); }, get innerHTML() { return this._html; },
     set textContent(v) { this._text = String(v); }, get textContent() { return this._text; },
@@ -302,6 +303,31 @@ function buildDarkAlarmFixtureData() {
   };
   const summary = [{ date: RUNTIME_TODAY, trembling_count: "0", dark_count: "3", blind_count: "0" }];
   return { summary, dates: [RUNTIME_TODAY], lines, annotations: [], annoMap: new Map(), stuck: [] };
+}
+
+// R1.2 fixtures: every sysstatus branch. `GAP_DATE` is China-today minus 3
+// days, so gapDays>=2 fires the collection-gap branch before any dark branch.
+const GAP_DATE = new Date(Date.parse(RUNTIME_TODAY) - 3 * 86400000).toISOString().slice(0, 10);
+function buildOneDarkFixtureData() {
+  const lines = {
+    flights: [fixtureRow({ date: RUNTIME_TODAY, status: "dark" })],
+    credit_spread: [fixtureRow({ date: RUNTIME_TODAY, raw_value: "3.0", z_score: "0.2", direction: "up" })],
+    cnh_cny: [fixtureRow({ date: RUNTIME_TODAY, raw_value: "10", z_score: "0.1", direction: "up" })],
+    fed_srf_takeup: [fixtureRow({ date: RUNTIME_TODAY, raw_value: "0", z_score: "0.1", direction: "up" })],
+  };
+  const summary = [{ date: RUNTIME_TODAY, trembling_count: "0", dark_count: "1", blind_count: "0" }];
+  return { summary, dates: [RUNTIME_TODAY], lines, annotations: [], annoMap: new Map(), stuck: [] };
+}
+function buildGapFixtureData() {
+  const lines = {};
+  for (const id of ["flights", "credit_spread", "cnh_cny", "fed_srf_takeup"]) {
+    lines[id] = [fixtureRow({ date: GAP_DATE, raw_value: "1", z_score: "0.5", direction: "up" })];
+  }
+  const summary = [{ date: GAP_DATE, trembling_count: "0", dark_count: "0", blind_count: "0" }];
+  return { summary, dates: [GAP_DATE], lines, annotations: [], annoMap: new Map(), stuck: [] };
+}
+function buildNoRecordFixtureData() {
+  return { summary: [], dates: [], lines: {}, annotations: [], annoMap: new Map(), stuck: [] };
 }
 
 // T27 (public-surface migration, item 2): the headline states a fraction of
@@ -747,9 +773,9 @@ function buildHeadlineFixtureData() {
 
   // T24 (R29 C1): sysstatus alarm banner fires on a TIER1.length-derived
   // MAJORITY (2-of-3 today), not the old hard-coded 3-of-3. Assert the
-  // alarmDark-SPECIFIC text in both languages -- a className-only check
-  // ("alarm") cannot distinguish this branch from the disrupt branch just
-  // above it (:902), which also sets className "sysstatus alarm".
+  // manyDark-SPECIFIC text in both languages -- a className-only check
+  // ("alarm") cannot distinguish this branch from the collection-gap branch
+  // just above it (:922), which also sets className "sysstatus alarm".
   const darkAlarmFixture = buildDarkAlarmFixtureData();
   for (const lang of ["en", "zh"]) {
     global.document.cookie = "tremor_lang=" + lang;
@@ -760,12 +786,14 @@ function buildHeadlineFixtureData() {
       sweepForBadValues("darkalarm-" + lang);
       const Tl = T[lang];
       const st = el("sysstatus");
-      const expectH = Tl.alarmDarkH(3, 4);
+      const darkDomains = ["flights", "credit_spread", "fed_srf_takeup"]
+        .map(id => LINES.find(l => l.id === id).domain[lang]).join(", ");
+      const expectH = Tl.manyDark(3, 4, darkDomains);
       if (st.className !== "sysstatus alarm") {
         errors.push(`darkalarm(${lang}): expected className "sysstatus alarm", got "${st.className}"`);
       }
       if (!st.innerHTML.includes(expectH)) {
-        errors.push(`darkalarm(${lang}): expected the alarmDarkH(3,4) text "${expectH}" in the `
+        errors.push(`darkalarm(${lang}): expected the manyDark(3,4) text "${expectH}" in the `
           + `sysstatus banner, got: ${st.innerHTML}`);
       }
     } catch (e) { errors.push(`darkalarm render(${lang}): ${e.stack || e}`); }
@@ -1223,6 +1251,96 @@ function buildHeadlineFixtureData() {
         errors.push(`feel(${lang}): the rendered page still carries the retired chart heading`);
       }
     } catch (e) { errors.push(`feel render(${lang}): ${e.stack || e}`); }
+  }
+
+  // T34 (completion R1.2): the status banner, panel headings, dated-notes
+  // copy, footer, chart axis label and modal close label are the deck's. All
+  // five banner branches are driven: no record, collection gap, majority dark
+  // (T24), one dark, and the normal branch.
+  const DECK_R12 = {
+    en: {
+      panel: ["Readings over time",
+        "Each score compares one line with its own recent record. Dashed guides mark the statistical threshold; gaps are not filled."],
+      footer: "A measuring instrument, not a forecast.",
+      anno: ["Dated notes in the record",
+        "They are attached text, not output from the scoring rule."],
+    },
+    zh: {
+      panel: ["读数随时间的变化",
+        "每条分数都与本线近期记录比较。虚线标出统计阈值；空缺不作填补。"],
+      footer: "一件测量仪器，不作预言。",
+      anno: ["记录中的日期注记", "它们是附上的文字，不由计分规则生成。"],
+    },
+  };
+  for (const lang of ["en", "zh"]) {
+    global.document.cookie = "tremor_lang=" + lang;
+    const Tl = T[lang];
+    const deck = DECK_R12[lang];
+    try {
+      setDATA(buildFixtureData()); render();
+      if (el("panel-title").textContent !== deck.panel[0]) {
+        errors.push(`r12(${lang}): panel title is ${JSON.stringify(el("panel-title").textContent)}, `
+          + `expected the deck's ${JSON.stringify(deck.panel[0])}`);
+      }
+      if (el("panel-hint").textContent !== deck.panel[1]) {
+        errors.push(`r12(${lang}): panel hint is ${JSON.stringify(el("panel-hint").textContent)}, `
+          + `expected the deck's ${JSON.stringify(deck.panel[1])}`);
+      }
+      if (!el("footer").innerHTML.includes(deck.footer)) {
+        errors.push(`r12(${lang}): the footer does not carry the deck's sentence `
+          + `${JSON.stringify(deck.footer)}`);
+      }
+      if (el("modal-x").getAttribute("aria-label") !== Tl.close) {
+        errors.push(`r12(${lang}): the close control's aria-label is `
+          + `${JSON.stringify(el("modal-x").getAttribute("aria-label"))}, expected `
+          + `${JSON.stringify(Tl.close)}`);
+      }
+      if (!Tl.zAxis) errors.push(`r12(${lang}): the deck's zAxis key is not declared`);
+
+      const banner = () => el("sysstatus").innerHTML;
+      setDATA(buildNoRecordFixtureData()); render();
+      if (!banner().includes(Tl.noRecord)) {
+        errors.push(`r12(${lang}): the no-record banner does not state ${JSON.stringify(Tl.noRecord)}: ${banner()}`);
+      }
+      setDATA(buildGapFixtureData()); render();
+      const gapCopy = Tl.disruption(GAP_DATE, 3);
+      if (!banner().includes(gapCopy)) {
+        errors.push(`r12(${lang}): the collection-gap banner does not state `
+          + `${JSON.stringify(gapCopy)}: ${banner()}`);
+      }
+      setDATA(buildOneDarkFixtureData()); render();
+      const oneDarkName = LINES.find(l => l.id === "flights").domain[lang];
+      if (!banner().includes(Tl.warnH(1)) || !banner().includes(Tl.warnB(oneDarkName))) {
+        errors.push(`r12(${lang}): the one-dark banner does not state `
+          + `${JSON.stringify(Tl.warnH(1))} + ${JSON.stringify(Tl.warnB(oneDarkName))}: ${banner()}`);
+      }
+      setDATA(buildHeadlineFixtureData()); render();
+      if (!banner().includes(Tl.statusOk)) {
+        errors.push(`r12(${lang}): the normal banner does not state ${JSON.stringify(Tl.statusOk)}: ${banner()}`);
+      }
+
+      // Dated notes: heading + body in both detail builders.
+      const noteFixture = buildFixtureData();
+      const flightsLine = LINES.find(l => l.id === "flights");
+      const vixLine = LINES.find(l => l.id === "vix");
+      const flightNote = { date: FIXTURE_DATE, line: flightsLine.id, verdict: "artifact", note: "fixture dated note" };
+      const vixNote = { date: FIXTURE_DATE, line: vixLine.id, verdict: "artifact", note: "fixture tier-2 note" };
+      noteFixture.annotations = [flightNote, vixNote];
+      noteFixture.annoMap = new Map([[flightsLine.id + "|" + FIXTURE_DATE, flightNote],
+        [vixLine.id + "|" + FIXTURE_DATE, vixNote]]);
+      setDATA(noteFixture);
+      const lineHtml = lineModal(flightsLine, lang);
+      if (!lineHtml.includes(deck.anno[0]) || !lineHtml.includes(deck.anno[1])) {
+        errors.push(`r12(${lang}): the line detail does not carry the deck's dated-notes `
+          + `heading and body: ${lineHtml}`);
+      }
+      openTier2Modal(vixLine, lang);
+      const tier2Html = el("modal-body").innerHTML;
+      if (!tier2Html.includes(deck.anno[0]) || !tier2Html.includes(deck.anno[1])) {
+        errors.push(`r12(${lang}): the watchlist detail does not carry the deck's dated-notes `
+          + `heading and body: ${tier2Html}`);
+      }
+    } catch (e) { errors.push(`r12 render(${lang}): ${e.stack || e}`); }
   }
 
   await new Promise(r => setTimeout(r, 50));
