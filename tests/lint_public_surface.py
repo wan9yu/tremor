@@ -1154,6 +1154,12 @@ class TestMarkupHasOneAuditedSink(unittest.TestCase):
                       "a dark row's source_note reaches the DOM unescaped")
         self.assertIn("esc(a.note)", text, "an annotation note reaches the DOM unescaped")
         self.assertIn("esc(a.verdict)", text, "an annotation verdict reaches the DOM unescaped")
+        # The fixed-reference block renders a component name and four carried
+        # CSV cells; a hostile upstream component name must be escaped too.
+        self.assertIn("esc(straitLabel(r.component,lang))", text,
+                      "a level component name reaches the DOM unescaped")
+        self.assertIn("esc(r.trail_median)", text,
+                      "a level trailing median reaches the DOM unescaped")
 
 
 if __name__ == "__main__":

@@ -1049,3 +1049,15 @@ the trailing median recovers). The rendered line therefore states what the recor
 `Ran 28 tests … OK`; forbidden literal `OK`; replay exit 0 (`TOTAL 1463 0 0`); pending
 `6 tagged / 0 overdue`; render smoke `OK`; annotations mirror identical. `charts/*.png`
 and `radar-metrics.md` remain the nightly job's output.
+
+## Iteration 11 — P0/P1 sweep after the reference-item merge (human-directed)
+
+One P1 found and fixed: the new fixed-reference block interpolated the component name and
+four carried CSV cells straight into the page's single markup sink, against the page's own
+`esc()` contract and the record's threat model (an upstream component name can carry
+markup, as the FRED HTML incident showed). Fixed by escaping `straitLabel(r.component,lang)`,
+`r.trail_median`, `r.reference`, `r.open_days`, `r.since` and `lLatest`, with a render-smoke
+T37 hostile-component case and two lint bindings. No P0 found: gates, replay (0 divergence
+over 1463 rows), audit, mirrors (all 26 MIRRORED files byte-equal), CI on the prior pushes
+and the Pages build were green; the 2026-11-08 headline derives to 0 and agrees with the
+per-line rows.

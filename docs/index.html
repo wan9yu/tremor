@@ -829,12 +829,12 @@ function render(){
     document.getElementById("level-n").textContent=cnt;
     setMarkup(document.getElementById("level-label"),
       T[lang].levelHead(cnt)
-      +`<span class="calibnote"> · ${T[lang].referenceAsOf(lLatest)}</span>`);
+      +`<span class="calibnote"> · ${T[lang].referenceAsOf(esc(lLatest))}</span>`);
     // One line per open state: the name goes with the reference it is compared
     // with, the carried trailing median, and how long the state has been open.
     // The values are the reporter's own cells; nothing is recomputed here.
     const refItems=openNow.map(r=>`<span class="refitem">${
-      T[lang].referenceItem(straitLabel(r.component,lang),r.trail_median,r.reference,r.open_days,r.since)}</span>`).join("");
+      T[lang].referenceItem(esc(straitLabel(r.component,lang)),esc(r.trail_median),esc(r.reference),esc(r.open_days),esc(r.since))}</span>`).join("");
     const refList=document.getElementById("level-items");
     refList.hidden=!refItems; setMarkup(refList,refItems);
     document.getElementById("level-q").textContent=T[lang].countQuestion;

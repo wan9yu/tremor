@@ -1494,6 +1494,22 @@ function buildHeadlineFixtureData() {
     } catch (e) { errors.push(`r3 render(${lang}): ${e.stack || e}`); }
   }
 
+  // T37 (P1 security): the fixed-reference block renders a component name and
+  // four CSV cells through the one markup sink. A hostile upstream component
+  // name must arrive escaped, like every other record-derived string.
+  for (const lang of ["en", "zh"]) {
+    global.document.cookie = "tremor_lang=" + lang;
+    const hostile = buildLevelFixtureData();
+    hostile.stuck = [{ date: RUNTIME_TODAY, component: XSS_NOTE, since: "2026-04-06",
+      pct: "4", stale: "", trail_median: "3", reference: "72", open_days: "151" }];
+    setDATA(hostile);
+    appendedNodes = [];
+    try {
+      render();
+      errors.push(...xssErrors("level-" + lang));
+    } catch (e) { errors.push(`level xss(${lang}): ${e.stack || e}`); }
+  }
+
   await new Promise(r => setTimeout(r, 50));
   if (errors.length) { console.log("FAILURES:\n" + errors.join("\n\n")); process.exit(1); }
   console.log("render OK in both languages; no runtime errors, no undefined/NaN");
