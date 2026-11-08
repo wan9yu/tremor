@@ -111,8 +111,11 @@ COUNT_METHOD = "either-direction-tier1-v1"
 # First collection day whose summary row must carry the two cells above
 # (``tools/replay.py --check`` enforces this). Earlier rows may leave them
 # empty: they were written before the display rule existed, and forward-only is
-# the record's contract.
-UNUSUAL_SINCE = "2026-11-08"
+# the record's contract. Set to the first day the merged collector can write --
+# the 2026-11-08 summary row predates this change (the nightly job wrote it
+# before the branch merged), so requiring the cells on that date would fail
+# replay for a row no deployed code ever wrote.
+UNUSUAL_SINCE = "2026-11-09"
 # Only what the dashboard actually reads is mirrored into docs/: the line CSVs,
 # the summary, and the annotations. Everything else under data/ — the intraday
 # sampler, components, archives, derived layers — is a measurement ABOUT the
