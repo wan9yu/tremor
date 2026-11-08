@@ -917,3 +917,61 @@ the status-banner keys `statusOk`/`awaiting`/`warnH`/`warnB`/`alarmDarkH`/`alarm
 `disruptH`/`disruptB`, `verdictLabel`, `annoTitle`, `footer`, and `render.py`'s overview
 chart title. Removing the feel chart would also retire the guard's only reworded
 T strings, so it belongs to a later phase that owns the chart and `leans.csv` together.
+
+## Iteration 9 — post-bundle completion, phase R1 (human-directed)
+
+**Why this exists.** After the bundle's eight items passed and the branch was pushed, the
+operator asked for the remaining deck work. `.ralph/items.json` stays the bundle record (all
+eight still pass); this phase is tracked here. A forward plan was written to
+`internal/plans/2026-11-08-public-surface-completion-plan.md` (local, gitignored) and
+reviewed read-only by two other opencode-go models (`glm-5.3-flash`, `kimi-k3.1-pro`); their
+findings and dispositions are the plan's §7.
+
+**R1.1 — the real-vs-felt chart is deleted (`f7311fb`).** Tests first: `TestRealVsFeltChartIsGone`
+(no `feelchart`/`feelChart`/`FEEL_IDS`/`isDivergent`/`FEEL_HOT`; no `feelTitle`/`feelHint`/
+`feelGapNote`/`feelBars`), a summary-title test, and render-smoke T33 (no retired key, no
+render lookup, no retired heading). Removed the panel markup, the render block, the four
+copy keys in both locales, `FEEL_IDS`, `FEEL_HOT`, `isDivergent`, `feelChart`; kept the
+`data/leans.csv` fetch and `leanMap` (the headline's machine lean, a different consumer).
+`render.py`'s summary title is now "Lines trembling in their recorded direction per day
+(0-{n})" (what the bars count), and its docstring/comment no longer call the summary a
+resonance — the reviewers caught that the old title would regenerate forever.
+
+**R1.2 — status, panel, notes and footer copy to the deck (`367e9fd`).** Tests first:
+`TestDeckStatusAndPanelCopy` (retired `alarmDarkH`/`alarmDarkB`/`disruptH`/`disruptB` gone;
+`manyDark`/`disruption`/`noRecord`/`annoBody`/`zAxis`/`close` declared twice) and
+render-smoke T34 (all five banner branches, panel headings, footer, `zAxis`, modal close
+label, dated-notes heading and body in both detail builders). The banner's five branches
+now render `noRecord` / `disruption` / `manyDark` / `warnH`+`warnB` / `statusOk`; the
+`alarmDarkB` claim that a source failure "is itself a signal" is gone; the chart's vertical
+axis reads the `zAxis` key; the close control's aria-label is localized. T24 was rebound
+from `alarmDarkH` to `manyDark` with the same 3-of-4 majority rule.
+
+**R1.3 — no adjudication paraphrase in the headline (`f8ad2f7`).** Tests first: T22 now
+asserts the raw annotation note never renders in the headline while the line detail keeps
+it, and T23's order-precedence case is re-expressed as a machine-lean canary (the fixture
+gained a flights lean; a later non-adjudicating `correction` must not un-adjudicate the
+earlier `artifact` row). Removed the `verdictLabel` maps and their render site; `leanNote`
+is the deck's sentence ("this line's own inputs moved together (…); no review note is
+attached"), with the line tag's colon localized. `tests/lint_public_surface.py` drops the
+map's parity test (the surface no longer exists) and asserts the map is gone; the module
+docstring records why.
+
+**R1.4 — an About block in the reading order (`d1d1d1d`).** Tests first: the declared-key
+lint gains `aboutTitle`/`aboutBody`, and T34 asserts the section sits between `#limits` and
+`#footer`, is visible after a plain render, and carries the deck's heading and body in both
+languages. Rendered by `render()` into a new `#about` panel with one small CSS rule.
+
+**Verification (all green after R1.4).** gate `415 passed / 126 subtests`; lint `Ran 85
+tests … OK`; forbidden literal `OK`; audit `Ran 28 tests … OK`; replay exit 0
+(`TOTAL 1439 0 0`); pending `6 tagged / 0 overdue`; render smoke `OK`; annotations mirror
+identical. `docs/index.html` still has exactly one `innerHTML`, inside `setMarkup`.
+
+**Not started: R2 (the count's number semantics).** The page's copy already says the count
+crosses "in either direction" while `collect.counts_as_tremble` still counts the declared
+direction only — a live mismatch. The reviewed design (plan §3 + §7): add forward-only
+`unusual_count`/`count_method` cells, leave `counts_as_tremble` and the ledger's
+`trembling_count` untouched, cut over with an `UNUSUAL_SINCE` marker that replay enforces,
+derive the same rule in the page when the cell is absent (never fall back to
+`trembling_count`), do not render `count_method`, and teach `tools/repair_fred_html_rows.py`
+to maintain the new cells. Needs its own commit series and a data-owner window.

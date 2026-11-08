@@ -263,6 +263,8 @@ function buildAdjPrecedenceFixtureData() {
   ];
   const leans = [
     { date: ADJ2_DATE, line: "cnh_cny", lean: "common-mode", evidence: "12/12 synchronized" },
+    { date: ADJ2_DATE, line: "flights", lean: "common-mode",
+      evidence: "MUST NOT RENDER: later correction must not un-adjudicate" },
   ];
   const summary = [{ date: ADJ2_DATE, trembling_count: "2", dark_count: "0", blind_count: "0" }];
   return {
@@ -444,8 +446,15 @@ function buildHeadlineFixtureData() {
           + `the integer must never move for a disclosure qualifier`);
       }
       const labelHtml = el("count-label").innerHTML;
-      if (!labelHtml.includes(Tl.verdictLabel.artifact)) {
-        errors.push(`adj(${lang}): missing the artifact-adjudication qualifier for flights`);
+      // The deck deletes the adjudication paraphrase from the headline: the
+      // dated note stays in the record detail, never as generated headline text.
+      if (labelHtml.includes("fixture: instrument artifact")) {
+        errors.push(`adj(${lang}): the raw annotation note rendered in the headline; `
+          + `dated notes belong to the record detail`);
+      }
+      if (!lineModal(LINES.find(l => l.id === "flights"), lang)
+            .includes("fixture: instrument artifact")) {
+        errors.push(`adj(${lang}): the line detail does not carry the dated annotation note`);
       }
       const leanCore = Tl.leanNote("", "7/7 synchronized").replace(" · ", "");
       if (!labelHtml.includes(leanCore)) {
@@ -509,12 +518,17 @@ function buildHeadlineFixtureData() {
           + `cnh_cny's common-mode lean qualifier (method must not act as an adjudication)`);
       }
       // (e) flights carries an `artifact` row written FIRST and a `correction`
-      // row written LAST for the same (line,date) -- the artifact qualifier
-      // must still render (a last-row-over-ALL-rows lookup would miss it).
-      if (!labelHtml.includes(Tl.verdictLabel.artifact)) {
-        errors.push(`adj2(${lang}): flights' artifact adjudication was shadowed by a later, `
-          + `non-adjudicating (correction) row for the same (line,date) -- `
-          + `the adjudicating row must win regardless of order`);
+      // row written LAST for the same (line,date). The correction does not
+      // adjudicate, so adjudication() must still return the artifact row --
+      // observable through the lean it suppresses: flights' fixture lean
+      // evidence is a canary that must never reach the headline.
+      if (labelHtml.includes("MUST NOT RENDER: later correction must not un-adjudicate")) {
+        errors.push(`adj2(${lang}): flights' machine lean rendered, so a later `
+          + `non-adjudicating (correction) row shadowed the adjudicating row`);
+      }
+      const flightsHtml = lineModal(LINES.find(l => l.id === "flights"), lang);
+      if (!flightsHtml.includes("fixture: artifact, written FIRST")) {
+        errors.push(`adj2(${lang}): the line detail does not carry the dated artifact note`);
       }
       // one neutral marker: flights (artifact, order-independent) and cnh_cny
       // (method-only + common-mode lean) both render the same unusual pill;
@@ -1262,6 +1276,7 @@ function buildHeadlineFixtureData() {
       panel: ["Readings over time",
         "Each score compares one line with its own recent record. Dashed guides mark the statistical threshold; gaps are not filled."],
       footer: "A measuring instrument, not a forecast.",
+      about: ["About this record", "This static page reads the published CSV files directly."],
       anno: ["Dated notes in the record",
         "They are attached text, not output from the scoring rule."],
     },
@@ -1269,6 +1284,7 @@ function buildHeadlineFixtureData() {
       panel: ["读数随时间的变化",
         "每条分数都与本线近期记录比较。虚线标出统计阈值；空缺不作填补。"],
       footer: "一件测量仪器，不作预言。",
+      about: ["关于这份记录", "本静态页面直接读取已发布的 CSV 文件。"],
       anno: ["记录中的日期注记", "它们是附上的文字，不由计分规则生成。"],
     },
   };
@@ -1296,6 +1312,23 @@ function buildHeadlineFixtureData() {
           + `${JSON.stringify(Tl.close)}`);
       }
       if (!Tl.zAxis) errors.push(`r12(${lang}): the deck's zAxis key is not declared`);
+      // About block: visible body text in the reading order (limits -> about -> footer).
+      const limAt = html.indexOf('id="limits"'), aboutAt = html.indexOf('id="about"'),
+        footAt = html.indexOf('id="footer"');
+      if (!(limAt !== -1 && limAt < aboutAt && aboutAt < footAt)) {
+        errors.push(`r12(${lang}): the About section is not in the page body between `
+          + `the limits section (${limAt}) and the footer (${footAt}): ${aboutAt}`);
+      }
+      const aboutHtml = el("about").innerHTML;
+      if (aboutHtml.includes("undefined")) {
+        errors.push(`r12(${lang}): the About section rendered an undefined value: ${aboutHtml}`);
+      }
+      if (el("about").hidden) {
+        errors.push(`r12(${lang}): the About section is hidden after a plain render`);
+      }
+      if (!aboutHtml.includes(deck.about[0]) || !aboutHtml.includes(deck.about[1])) {
+        errors.push(`r12(${lang}): the About section does not carry the deck's heading and body: ${aboutHtml}`);
+      }
 
       const banner = () => el("sysstatus").innerHTML;
       setDATA(buildNoRecordFixtureData()); render();

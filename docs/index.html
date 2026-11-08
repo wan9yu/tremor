@@ -93,6 +93,8 @@
   .coverage .cmore{color:#9aa1ad;cursor:pointer;margin-left:4px}
   .coverage .cmore:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
   .limits{margin-top:16px}
+  .about{margin-top:16px}
+  .about p{color:var(--muted);font-size:13px;line-height:1.62;margin:0;max-width:82ch}
   .limits ul.cov{margin:8px 0 12px;padding-left:18px;font-size:13px;line-height:1.62;color:var(--muted)}
   .limits ul.cov li{margin:0 0 5px}
   .limits p{color:var(--muted);font-size:13px;line-height:1.62;margin:0 0 10px;max-width:82ch}
@@ -173,6 +175,8 @@
   <p class="watchlist" id="watchlist" hidden></p>
 
   <section class="panel limits" id="limits" hidden></section>
+
+  <section class="panel about" id="about" hidden></section>
 
   <footer id="footer"></footer>
 </div>
@@ -429,21 +433,7 @@ const T = {
     calibNote:(n,m)=>" · comparison history is still forming for "+n+" of "+m+" lines",
     whichLines:(names)=>" · "+names.join(" + "),
     blindNote:n=>" · "+n+" line"+(n===1?"":"s")+" cannot yet be compared",
-    // What the RECORD concluded about a firing line, not an editorial gloss.
-    // `real` only ever claims what every real-verdict row on file actually
-    // supports -- NOT an instrument artifact -- never "attributed to a
-    // specific event", since some real rows carry no event at all (e.g. a
-    // character note on a line that never trembled). `benign` is an
-    // adjudication (it suppresses the machine lean, see ADJUDICATING_VERDICTS
-    // above) but still renders no qualifier of its own here -- it, like
-    // method/correction/retraction, is recorded in the modal, not the headline.
-    verdictLabel:{
-      artifact:"adjudicated an instrument artifact, not a world event",
-      real:"adjudicated real — not an instrument artifact",
-      attributed:"adjudicated real — not an instrument artifact",
-      mixed:"adjudicated: partly attributed",
-    },
-    leanNote:(tag,ev)=>" · "+tag+"machine lean: common-mode ("+ev+") — awaiting adjudication",
+    leanNote:(tag,ev)=>" · "+tag+"this line's own inputs moved together ("+ev+"); no review note is attached",
     runNote:(tag,n)=>" · "+tag+"outside its recent range for "+n+" consecutive collection days",
     statusLabel:{"scoring":"Compared with recent record",
                  "warming-up":"Comparison history still forming",
@@ -469,6 +459,8 @@ const T = {
     countModalTitle:"How the count is made",
     countModalBody:m=>"A line contributes when its scored value crosses its own threshold in either direction. The threshold varies with the amount of distinct history available. The denominator "+m+" is the number available under the daily comparison rule: the primary roster minus lines with no reading, too little history or variation to compare, or a closed market. A repeated observation does not add another score. This counts lines on a date, not events. The roster reflects written selection assumptions.",
     countQualifying:"A statistical comparison, not a judgment of conditions.",
+    aboutTitle:"About this record",
+    aboutBody:"Data are collected daily and committed to the repository. This static page reads the published CSV files directly. Values, dates, gaps, and notes are shown as recorded.",
     footer:"A measuring instrument, not a forecast. Public data are collected daily; this static page reads the published record directly. Source code and history: <a href=\"https://github.com/wan9yu/tremor\">GitHub</a>.",
   },
   zh:{
@@ -499,13 +491,7 @@ const T = {
     calibNote:(n,m)=>" · "+m+" 条线中有 "+n+" 条的近期参照仍在积累",
     whichLines:(names)=>" · "+names.join(" ＋ "),
     blindNote:n=>" · "+n+" 条线暂不可比较",
-    verdictLabel:{
-      artifact:"已裁定为仪器伪迹，并非真实世界事件",
-      real:"已裁定为真实信号，并非仪器伪迹",
-      attributed:"已裁定为真实信号，并非仪器伪迹",
-      mixed:"已裁定：部分归因",
-    },
-    leanNote:(tag,ev)=>" · "+tag+"机器判读：共模（"+ev+"）——等待裁定",
+    leanNote:(tag,ev)=>" · "+tag+"这条线自身的输入彼此同步（"+ev+"）；尚无审阅注记",
     runNote:(tag,n)=>" · "+tag+"已连续 "+n+" 个采集日偏离近期范围",
     statusLabel:{"scoring":"已与近期记录比较",
                  "warming-up":"近期参照仍在积累",
@@ -530,6 +516,8 @@ const T = {
     countModalTitle:"这个计数如何得出",
     countModalBody:m=>"一条线的分数向任一方向越过自身阈值时，便计入其中。阈值随可用的不同观测数量而变。分母 "+m+" 按每日比较规则计算：从主记录组中扣除没有读数、历史或变化不足以比较、以及市场休市的线。重复观测不会再添一个分数。这里数的是某日的线，不是事件。记录组依据书面观测假设选定。",
     countQualifying:"这是统计比较，不替处境下判断。",
+    aboutTitle:"关于这份记录",
+    aboutBody:"数据每日采集并提交到仓库。本静态页面直接读取已发布的 CSV 文件。数值、日期、空缺与注记按记录呈现。",
     footer:"一件测量仪器，不作预言。公开数据每日采集；这个静态页面直接读取已发布的记录。源代码与历史见 <a href=\"https://github.com/wan9yu/tremor\">GitHub</a>。",
   }
 };
@@ -776,23 +764,21 @@ function render(){
     const firing=firingLines.map(L=>L.label[lang]);
     // Disclosure, not suppression: the integer above never changes. For each
     // firing line, say what the RECORD already knows about it. A human
-    // ADJUDICATION (annotations.csv, via adjudication() above) always wins
-    // over a same-day machine lean (leans.csv) -- the lean is consulted only
-    // when nothing has actually adjudicated the tremble yet, even when the
+    // annotation (annotations.csv, via adjudication() above) suppresses the
+    // same-day machine lean (leans.csv) -- the lean is consulted only when
+    // nothing has actually adjudicated the tremble yet, even when the
     // adjudication itself carries no qualifier (verdict=benign) -- plus how
     // many days running it has been trembling, computed client-side from
-    // that line's own history. Tagged with the line's own label only when
-    // more than one line fires at once; a single firing line is otherwise
-    // unambiguous.
+    // that line's own history. An annotation's own dated text stays in the
+    // record detail; the headline no longer paraphrases an adjudication.
+    // Tagged with the line's own label only when more than one line fires at
+    // once; a single firing line is otherwise unambiguous.
     const adjBits=[];
     for(const L of firingLines){
       const rows=lines[L.id]||[];
       const anno=adjudication(L.id,last.date);
-      const tag=firingLines.length>1?(L.label[lang]+": "):"";
-      const vlabel=anno&&T[lang].verdictLabel[anno.verdict];
-      if(vlabel){
-        adjBits.push(" · "+tag+vlabel);
-      } else if(!anno){
+      const tag=firingLines.length>1?(L.label[lang]+(lang==="zh"?"：":": ")):"";
+      if(!anno){
         const lean=leanOn(L.id,last.date);
         if(lean&&lean.lean==="common-mode") adjBits.push(T[lang].leanNote(tag,lean.evidence));
       }
@@ -983,6 +969,11 @@ function render(){
   setMarkup(lim,`<h2>${T[lang].limitsTitle}</h2>`
     +`<ul class="cov">${TIER1.map(L=>`<li><b>${L.domain[lang]}</b> — ${L.watches[lang]}</li>`).join("")}</ul>`
     +`<p>${T[lang].limitsBody}</p><p>${T[lang].limitsFlights}</p>`);
+
+  // About this record: what the page is and what it reads. Body text, after the
+  // scope and limits, before the footer's source line.
+  const about=document.getElementById("about"); about.hidden=false;
+  setMarkup(about,`<h2>${T[lang].aboutTitle}</h2><p>${T[lang].aboutBody}</p>`);
 }
 
 // tier-2 detail: explanation + latest reading + mini history chart + attributions.
