@@ -947,7 +947,7 @@ now render `noRecord` / `disruption` / `manyDark` / `warnH`+`warnB` / `statusOk`
 axis reads the `zAxis` key; the close control's aria-label is localized. T24 was rebound
 from `alarmDarkH` to `manyDark` with the same 3-of-4 majority rule.
 
-**R1.3 — no adjudication paraphrase in the headline (`f8ad2f7`).** Tests first: T22 now
+**R1.3 — no adjudication paraphrase in the headline (landed in `5f79e62` together with R1.4).** Tests first: T22 now
 asserts the raw annotation note never renders in the headline while the line detail keeps
 it, and T23's order-precedence case is re-expressed as a machine-lean canary (the fixture
 gained a flights lean; a later non-adjudicating `correction` must not un-adjudicate the
@@ -957,7 +957,7 @@ attached"), with the line tag's colon localized. `tests/lint_public_surface.py` 
 map's parity test (the surface no longer exists) and asserts the map is gone; the module
 docstring records why.
 
-**R1.4 — an About block in the reading order (`d1d1d1d`).** Tests first: the declared-key
+**R1.4 — an About block in the reading order (`5f79e62`).** Tests first: the declared-key
 lint gains `aboutTitle`/`aboutBody`, and T34 asserts the section sits between `#limits` and
 `#footer`, is visible after a plain render, and carries the deck's heading and body in both
 languages. Rendered by `render()` into a new `#about` panel with one small CSS rule.
