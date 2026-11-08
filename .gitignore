@@ -1,6 +1,9 @@
 # Internal documentation (not for public repo)
 internal/
 
+# Local agent-loop ledger (runtime scratch, never part of the record)
+.ralph/
+
 # Python
 __pycache__/
 *.py[cod]
