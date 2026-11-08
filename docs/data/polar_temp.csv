@@ -2836,3 +2836,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-06,11.936,4.911,1,up,"DMI +80N 2026-11-04: -11.56°C, +11.94°C vs 1958-2002 normal (context line, never counted) [sampled 23:29:12Z]",2026-11-04,scoring
 2026-11-07,11.894,4.719,1,up,"DMI +80N 2026-11-05: -11.29°C, +11.89°C vs 1958-2002 normal (context line, never counted) [sampled 22:54:27Z]",2026-11-05,scoring
 2026-11-08,11.499,4.431,1,up,"DMI +80N 2026-11-06: -11.28°C, +11.50°C vs 1958-2002 normal (context line, never counted) [sampled 22:30:45Z]",2026-11-06,scoring
+2026-11-09,11.94,4.439,1,up,"DMI +80N 2026-11-07: -10.87°C, +11.94°C vs 1958-2002 normal (context line, never counted) [sampled 22:30:49Z]",2026-11-07,scoring

@@ -1742,3 +1742,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-06,0,-1.407,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-04 22:00Z) [sampled 23:28:13Z],2026-11-04,scoring
 2026-11-07,1,-0.938,0,down,IODA 1 countries with ping-slash24 outages (24h to 2026-11-05 22:00Z) [Aruba] [sampled 22:53:54Z],2026-11-05,scoring
 2026-11-08,0,-1.407,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-06 22:00Z) [sampled 22:30:12Z],2026-11-06,scoring
+2026-11-09,0,-1.407,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-07 22:00Z) [sampled 22:30:17Z],2026-11-07,scoring

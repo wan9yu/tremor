@@ -1732,3 +1732,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-06,0.9449,-0.276,0,down,"IODA bgp worst-of route visibility 0.9449 of normal, driven by ET (daily-min ÷ 28d median), across 153/153 countries (settled UTC day 2026-11-04) [sampled 23:28:14Z]",2026-11-04,scoring
 2026-11-07,0.9461,-0.269,0,down,"IODA bgp worst-of route visibility 0.9461 of normal, driven by NG (daily-min ÷ 28d median), across 153/153 countries (settled UTC day 2026-11-05) [sampled 22:53:55Z]",2026-11-05,scoring
 2026-11-08,0.8273,-0.863,0,down,"IODA bgp worst-of route visibility 0.8273 of normal, driven by DO (daily-min ÷ 28d median), across 153/153 countries (settled UTC day 2026-11-06) [sampled 22:30:13Z]",2026-11-06,scoring
+2026-11-09,0.9448,-0.276,0,down,"IODA bgp worst-of route visibility 0.9448 of normal, driven by ET (daily-min ÷ 28d median), across 153/153 countries (settled UTC day 2026-11-07) [sampled 22:30:18Z]",2026-11-07,scoring
