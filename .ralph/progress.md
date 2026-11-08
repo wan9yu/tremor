@@ -1061,3 +1061,32 @@ T37 hostile-component case and two lint bindings. No P0 found: gates, replay (0 
 over 1463 rows), audit, mirrors (all 26 MIRRORED files byte-equal), CI on the prior pushes
 and the Pages build were green; the 2026-11-08 headline derives to 0 and agrees with the
 per-line rows.
+
+## Iteration 12 — P2 confirmation and fixes (human-directed, reviewer: deepseek-v4.1-flash)
+
+The P2 review confirmed: the summary-column cutover is correct (the page derives the same
+rule and replay tolerates the pre-cutover absence); `radar-metrics.md` needs nothing;
+`reviewNote`/the loop ledger are not public-surface defects; the chart titles self-heal at
+the nightly render. It also found two real defects and two copy issues:
+
+- **ZH headline printed the count twice** — `levelHead` carried the number that `#level-n`
+  already renders ("2 2 条读数…"). The ZH template no longer carries the number; a T36
+  assertion binds it.
+- **The `stale` flag was unreachable** — a state whose source stopped has no row on the
+  panel's latest date, so it silently dropped out of the day's count (the one case the
+  panel exists for, per its own docstring). `build_panel` now carries each still-open
+  state onto the latest panel date with its own last observed values and `stale="1"`, and
+  the page renders the deck's `statusLabel.dark` beside it. A gate test covers the stalled
+  case; current data has no stalled component, so the served CSV is unchanged.
+- The run helper's stale direction-bound docstring was removed, and the count-fallback
+  comment now states the pre/post-cutover source of truth instead of claiming the number
+  and names can never disagree.
+- The reference lines are now `<li>` items in a `<ul>` (list semantics), still one tone.
+
+Charts: the reviewer recommended waiting for the nightly render — a manual run risks pin
+drift and would bake the declared-direction `trembling_count` under the new title while
+the headline counts `unusual_count`; the nightly rewrites all five PNGs anyway.
+
+**Verification.** gate `421 passed / 126 subtests`; lint `OK`; audit `OK`; forbidden `OK`;
+replay exit 0; pending 6/0; render smoke `OK`; annotations mirror identical; regenerated
+`stuck.csv` is byte-identical for the current data.

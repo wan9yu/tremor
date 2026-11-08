@@ -1484,7 +1484,17 @@ function buildHeadlineFixtureData() {
           errors.push(`r3(${lang}): the item list does not carry ${JSON.stringify(want)}: ${items}`);
         }
       });
+      if (!/<li class="refitem">/.test(items)) {
+        errors.push(`r3(${lang}): the reference lines are not list items`);
+      }
+      if (!items.includes(Tl.statusLabel.dark)) {
+        errors.push(`r3(${lang}): the stalled Kerch state carries no stale marker`);
+      }
       const label = el("level-label").innerHTML;
+      const plainLabel = label.replace(/<[^>]+>/g, "");
+      if (lang === "zh" && /^\s*2/.test(plainLabel)) {
+        errors.push(`r3(zh): the level label repeats the count already in #level-n: ${plainLabel}`);
+      }
       if (!label.includes(Tl.referenceAsOf(RUNTIME_TODAY))) {
         errors.push(`r3(${lang}): the level label lost its source-as-of line: ${label}`);
       }

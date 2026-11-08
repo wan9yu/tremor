@@ -92,6 +92,35 @@ class TestBuildPanel(unittest.TestCase):
         self.assertEqual(hormuz["reference"], "72")
         self.assertEqual(hormuz["open_days"], "113")     # 04-06..07-27 inclusive
 
+    def test_a_stalled_open_state_is_carried_with_the_stale_flag(self):
+        # Kerch stops being served after 07-26 while Hormuz keeps advancing.
+        # The state is still open, so it must stay in the day's count on the
+        # panel's latest date -- flagged stale, with its own last observed
+        # values, never interpolated.
+        rows = [
+            {"date": "2026-07-26", "component": "Kerch Strait", "event": "open",
+             "trail_median": "6", "reference": "12", "ratio": "0.500"},
+            {"date": "2026-07-26", "component": "Strait of Hormuz", "event": "open",
+             "trail_median": "9", "reference": "72", "ratio": "0.125"},
+            {"date": "2026-07-27", "component": "Strait of Hormuz", "event": "hold",
+             "trail_median": "9", "reference": "72", "ratio": "0.125"},
+            {"date": "2026-07-28", "component": "Strait of Hormuz", "event": "hold",
+             "trail_median": "8", "reference": "72", "ratio": "0.111"},
+        ]
+        out = self.build(rows, stale_now={"Kerch Strait"})
+        latest = [r for r in out if r["date"] == "2026-07-28"]
+        self.assertEqual([r["component"] for r in latest],
+                         ["Kerch Strait", "Strait of Hormuz"])
+        kerch = latest[0]
+        self.assertEqual(kerch["stale"], "1")
+        self.assertEqual(kerch["trail_median"], "6")   # its last observed value
+        self.assertEqual(kerch["reference"], "12")
+        self.assertEqual(kerch["since"], "2026-07-26")
+        self.assertEqual(kerch["open_days"], "3")      # carried to the panel date
+        hormuz = latest[1]
+        self.assertEqual(hormuz["stale"], "")
+        self.assertEqual(hormuz["trail_median"], "8")
+
     def test_stale_flag_only_on_the_latest_date(self):
         rows = [
             {"date": "2026-07-26", "component": "Kerch Strait", "event": "open", "ratio": "0.083"},

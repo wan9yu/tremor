@@ -48,7 +48,7 @@
   .count-level .n{font-size:44px}
   .kicker{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:22px 2px 5px}
   .level-kicker{margin-top:18px}
-  .refitems{margin:0 0 10px}
+  .refitems{margin:0 0 10px;padding:0;list-style:none}
   .refitem{display:block;color:var(--muted);font-size:13px;line-height:1.6}
   .asof{color:var(--muted);font-size:13px;margin:0 0 16px}
   .sysstatus{border-radius:10px;padding:11px 15px;margin:0 0 18px;font-size:13px;
@@ -156,7 +156,7 @@
     <span class="label" id="level-label"></span>
     <span class="q" id="level-q"></span>
   </div>
-  <p class="refitems" id="level-items" hidden></p>
+  <ul class="refitems" id="level-items" hidden></ul>
 
   <div class="sysstatus" id="sysstatus" hidden></div>
 
@@ -503,7 +503,7 @@ const T = {
                  "dark":"尚未收到读数","closed":"市场休市"},
     range_30:"30 天", range_90:"90 天", range_365:"1 年", range_all:"全部",
     zAxis:"稳健 z 分数",
-    levelHead:n=>n+" 条读数长期低于既定参照",
+    levelHead:n=>" 条读数长期低于既定参照",
     referenceItem:(name,median,ref,days,since)=>name+" · 自 "+since+" 起开放 · 14 天中位 "+median+"，既定参照 "+ref+" 艘/日 · 已 "+days+" 天",
     referenceAsOf:d=>"来源最新观测："+d+"（发布约滞后 10 天）",
     referenceTitle:"长期低于既定参照的条目",
@@ -642,12 +642,6 @@ function gapRunLength(rows){
   }
   return n;
 }
-// How many of `rows`' most recent entries, counting back from the last one,
-// are trembles in the recorded direction without interruption -- the
-// run-ending-at-today walk, same shape as gapRunLength above but over
-// trembling+direction instead of a GAP_STATUSES status. Pure client compute, no
-// new data: it never touches the trembling integer itself, only whether a
-// firing line reads as a fresh departure or day N of one already disclosed.
 // Consecutive collection days outside the recent range, in EITHER direction:
 // the run is part of the same displayed reading as the headline count, so it
 // must not stop at a departure that moved against the line's recorded
@@ -770,9 +764,10 @@ function render(){
     });
     // The displayed count is the collector's direction-free cell. A summary row
     // written before that cell existed carries no value; the same rule is then
-    // derived from the rows above, so the number and the names can never
-    // disagree and the ledger's direction-bound `trembling_count` is never
-    // shown as the headline.
+    // derived from the rows above, so the number and the names are produced by
+    // one list. After the cutover the cell is the source of truth and the two
+    // are linked by the served-summary audit; the ledger's direction-bound
+    // `trembling_count` is never shown as the headline.
     const unusualCell=last.unusual_count;
     const n=(unusualCell===undefined||unusualCell==="")?firingLines.length:(parseInt(unusualCell,10)||0);
     document.getElementById("count-n").textContent=n;
@@ -833,8 +828,9 @@ function render(){
     // One line per open state: the name goes with the reference it is compared
     // with, the carried trailing median, and how long the state has been open.
     // The values are the reporter's own cells; nothing is recomputed here.
-    const refItems=openNow.map(r=>`<span class="refitem">${
-      T[lang].referenceItem(esc(straitLabel(r.component,lang)),esc(r.trail_median),esc(r.reference),esc(r.open_days),esc(r.since))}</span>`).join("");
+    const refItems=openNow.map(r=>`<li class="refitem">${
+      T[lang].referenceItem(esc(straitLabel(r.component,lang)),esc(r.trail_median),esc(r.reference),esc(r.open_days),esc(r.since))}${
+      r.stale==="1"?" · "+T[lang].statusLabel.dark:""}</li>`).join("");
     const refList=document.getElementById("level-items");
     refList.hidden=!refItems; setMarkup(refList,refItems);
     document.getElementById("level-q").textContent=T[lang].countQuestion;

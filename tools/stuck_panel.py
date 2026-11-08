@@ -64,6 +64,7 @@ def build_panel(level_rows, stale_now=frozenset()):
     rows = sorted(level_rows, key=lambda r: (r["date"], r["component"]))
     latest = rows[-1]["date"] if rows else None
     opened = {}
+    last_by_comp = {}
     out = []
     for r in rows:
         comp, event, date = r["component"], r["event"], r["date"]
@@ -75,12 +76,28 @@ def build_panel(level_rows, stale_now=frozenset()):
         # event is "open" or "hold" here (walk emits nothing else): a stuck day
         stale = "1" if (date == latest and comp in stale_now) else ""
         since = opened.get(comp, date)
-        out.append({"date": date, "component": comp,
-                    "since": since,
-                    "pct": round(float(r["ratio"]) * 100), "stale": stale,
-                    "trail_median": r.get("trail_median", ""),
-                    "reference": r.get("reference", ""),
-                    "open_days": _days_open(date, since)})
+        row = {"date": date, "component": comp,
+               "since": since,
+               "pct": round(float(r["ratio"]) * 100), "stale": stale,
+               "trail_median": r.get("trail_median", ""),
+               "reference": r.get("reference", ""),
+               "open_days": _days_open(date, since)}
+        out.append(row)
+        last_by_comp[comp] = row
+
+    # Carry each still-open state whose source stopped onto the latest panel
+    # date. Its carried values are the last ones actually observed; the stale
+    # flag is what keeps the carry honest.
+    for comp, since in opened.items():
+        last = last_by_comp.get(comp)
+        if last is None or last["date"] == latest:
+            continue
+        out.append({"date": latest, "component": comp, "since": since,
+                    "pct": last["pct"], "stale": "1",
+                    "trail_median": last["trail_median"],
+                    "reference": last["reference"],
+                    "open_days": _days_open(latest, since)})
+    out.sort(key=lambda row: (row["date"], row["component"]))
     return out
 
 
