@@ -783,6 +783,14 @@ class TestDeckStatusAndPanelCopy(unittest.TestCase):
                       "the history chart still hardcodes its vertical-axis label "
                       "instead of reading the deck's `zAxis` key")
 
+    def test_the_run_is_direction_free(self):
+        html = support.read_text(DOCS_INDEX)
+        self.assertNotIn("tremblingRunLength", html,
+                         "the page still stops a run at the first departure that "
+                         "moves against the line's recorded direction")
+        self.assertIn("function unusualRunLength(rows)", html,
+                      "the page has no direction-free run helper")
+
     def test_the_adjudication_paraphrase_is_gone(self):
         html = support.read_text(DOCS_INDEX)
         self.assertNotIn("verdictLabel", html,

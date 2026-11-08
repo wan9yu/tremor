@@ -156,6 +156,11 @@ def rebuild_summary(since):
         derived = {
             "trembling_count": str(sum(
                 1 for mod, row in entries if collect.counts_as_tremble(row, mod))),
+            # The displayed count is a direction-free schema extension; this
+            # repair rebuilds every summary cell it owns from the same rows.
+            "unusual_count": str(sum(
+                1 for _, row in entries if row["trembling"] == "1")),
+            "count_method": collect.COUNT_METHOD,
             "dark_count": str(sum(
                 1 for _, row in entries if row["status"] == normalize.STATUS_DARK)),
             "blind_count": str(sum(

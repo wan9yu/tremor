@@ -645,10 +645,14 @@ function gapRunLength(rows){
 // trembling+direction instead of a GAP_STATUSES status. Pure client compute, no
 // new data: it never touches the trembling integer itself, only whether a
 // firing line reads as a fresh departure or day N of one already disclosed.
-function tremblingRunLength(rows,declaredDir){
+// Consecutive collection days outside the recent range, in EITHER direction:
+// the run is part of the same displayed reading as the headline count, so it
+// must not stop at a departure that moved against the line's recorded
+// direction.
+function unusualRunLength(rows){
   let n=0;
   for(let i=rows.length-1;i>=0;i--){
-    if(rows[i].trembling!=="1"||rows[i].direction!==declaredDir) break;
+    if(rows[i].trembling!=="1") break;
     n++;
   }
   return n;
@@ -750,17 +754,25 @@ function render(){
   // confidence, so the headline carries a calibrating qualifier until then
   const calibN=TIER1.filter(L=>uniqueObs(lines[L.id]||[])<CALIBRATING_OBS).length;
   if(last){
-    const n=parseInt(last.trembling_count||"0",10)||0;
-    document.getElementById("count-n").textContent=n;
     // WHICH lines, not just how many. A count of two is not one fact: measured
-    // per-line alarm rates differ by more than an order of magnitude, so a
-    // credit + airspace pair is near-certainly two independent events while a
+    // per-line rates differ by more than an order of magnitude, so a credit +
+    // airspace pair is near-certainly two independent observations while a
     // pair sharing a domain may be one event counted twice. Naming them lets a
-    // reader judge that instead of trusting the integer.
+    // reader judge that instead of trusting the integer. Either direction
+    // counts: the headline reports a reading outside its recent range, not a
+    // verdict about which way it moved.
     const firingLines=TIER1.filter(L=>{
       const rows=lines[L.id]||[]; const r=rows[rows.length-1];
-      return r&&r.date===last.date&&r.trembling==="1"&&r.direction===L.declared_dir;
+      return r&&r.date===last.date&&r.trembling==="1";
     });
+    // The displayed count is the collector's direction-free cell. A summary row
+    // written before that cell existed carries no value; the same rule is then
+    // derived from the rows above, so the number and the names can never
+    // disagree and the ledger's direction-bound `trembling_count` is never
+    // shown as the headline.
+    const unusualCell=last.unusual_count;
+    const n=(unusualCell===undefined||unusualCell==="")?firingLines.length:(parseInt(unusualCell,10)||0);
+    document.getElementById("count-n").textContent=n;
     const firing=firingLines.map(L=>L.label[lang]);
     // Disclosure, not suppression: the integer above never changes. For each
     // firing line, say what the RECORD already knows about it. A human
@@ -782,7 +794,7 @@ function render(){
         const lean=leanOn(L.id,last.date);
         if(lean&&lean.lean==="common-mode") adjBits.push(T[lang].leanNote(tag,lean.evidence));
       }
-      const run=tremblingRunLength(rows,L.declared_dir);
+      const run=unusualRunLength(rows);
       if(run>=2) adjBits.push(T[lang].runNote(tag,run));
     }
     setMarkup(document.getElementById("count-label"),

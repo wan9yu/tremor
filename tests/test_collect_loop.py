@@ -128,8 +128,9 @@ class TestTierOneOnlyCountingAndTheDarkBlindSplit(_CollectCase):
     """``score_row`` is stubbed to return a canned verdict keyed by each stub's
     (unique) raw value, so the aggregation in ``collect()`` — not
     ``normalize.judge`` — is what is under test: only tier-1 lines count
-    toward any of the three summary tallies, and trembling counts only when
-    the direction matches the line's declared alarm direction.
+    toward any of the three summary tallies, ``trembling_count`` counts only
+    when the direction matches the line's declared direction, and
+    ``unusual_count`` counts every tier-1 tremble in either direction.
 
     Each category (trembling, dark, blind) fields TWO tier-1 members against
     only ONE tier-2 member, and the trembling category also fields two
@@ -185,6 +186,11 @@ class TestTierOneOnlyCountingAndTheDarkBlindSplit(_CollectCase):
         self.assertEqual(row["trembling_count"], "2")
         self.assertEqual(row["dark_count"], "2")
         self.assertEqual(row["blind_count"], "2")
+        # The displayed count is direction-free: both tier-1 trembles in the
+        # declared direction AND the one that trembles against it, never the
+        # tier-2 member, and it names its own rule.
+        self.assertEqual(row["unusual_count"], "3")
+        self.assertEqual(row["count_method"], collect.COUNT_METHOD)
 
 
 class TestSampleGuardAttrsRequireBothTogether(unittest.TestCase):

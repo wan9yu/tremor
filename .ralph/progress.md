@@ -975,3 +975,44 @@ direction only — a live mismatch. The reviewed design (plan §3 + §7): add fo
 derive the same rule in the page when the cell is absent (never fall back to
 `trembling_count`), do not render `count_method`, and teach `tools/repair_fred_html_rows.py`
 to maintain the new cells. Needs its own commit series and a data-owner window.
+
+**R2 — the displayed count is direction-free (`collect: record a direction-free count beside the ledger's`).** The page's copy has said
+"either direction" since item 2 while `collect.counts_as_tremble` counted the declared
+direction only: a live mismatch between the published sentence and the published number.
+Both reviewers put this first. Implemented as a forward-only schema extension, not a
+rescoring:
+
+- `collect.py`: `SUMMARY_HEADER` gains `unusual_count` and `count_method`; the collector
+  counts every tier-1 row with `trembling == "1"` (either direction) into the new cell and
+  stamps `COUNT_METHOD = "either-direction-tier1-v1"`. `trembling_count`, `counts_as_tremble`,
+  episodes, lean panel, pair verdict and the repair predicate are untouched — the ledger
+  keeps its declared-direction meaning and its SSOT.
+- `tools/replay.py`: `summary_mismatches()` is now a pure function and also re-derives
+  `unusual_count` from the replayed tier-1 rows. Rows before `collect.UNUSUAL_SINCE`
+  (`2026-11-08`) may leave both cells empty; a row at or after it must carry them, the
+  count must agree, and the method token must match. A corrupt cell is reported, not raised.
+  `tests/test_replay.py` gains five gate tests for those rules.
+- `tools/repair_fred_html_rows.py`: a summary rebuild maintains the two new cells.
+- `docs/index.html`: the numerator reads `last.unusual_count`; when the cell is absent (a
+  legacy row) it derives the same rule from the per-line rows already loaded — never from
+  `trembling_count`. `firingLines` names every trembling tier-1 line either way, and
+  `tremblingRunLength(rows, declaredDir)` became `unusualRunLength(rows)`.
+- `tests/test_collect_loop.py`: the asymmetric fixture now also asserts `unusual_count == "3"`
+  (two in-direction + one against-direction, never the tier-2 member) and the method token.
+- `tests/render_smoke.js` T35: a two-day fixture where one line trembles in its recorded
+  direction and one against it — headline 2 while `trembling_count` is 1, both lines named,
+  a two-day run for each, and a legacy row still deriving 2 rather than falling back to 1.
+  The assertion was proven load-bearing by running it against the pre-R2 page
+  (`r2(en): the headline shows "1", expected the stored direction-free count 2`, plus the
+  names/run/legacy failures, in both languages).
+- `tests/lint_public_surface.py`: no `tremblingRunLength`, and a direction-free run helper.
+
+`data/summary.csv` is untouched: the next collection writes the two cells for its own day,
+the older rows keep empty cells, and the dashboard's derivation covers the transition. No
+scoring rule, threshold, tier, `STABLE_SINCE` or historical value changed (both reviewers
+confirmed no bump is required).
+
+**Verification (R2).** gate `420 passed / 126 subtests`; lint `Ran 86 tests … OK`; audit
+`Ran 28 tests … OK`; forbidden literal `OK`; replay exit 0 (`TOTAL 1439 0 0`, summary
+re-derivation clean); pending `6 tagged / 0 overdue`; render smoke `OK`; annotations mirror
+identical.

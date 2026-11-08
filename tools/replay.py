@@ -120,6 +120,54 @@ def _differs(published, replayed):
     return False
 
 
+def summary_mismatches(summary_rows, counts_now, unusual_now, tier1_status):
+    """[(date, stored, derived)] for every summary row since STABLE_SINCE that
+    does not re-derive from the replayed rows.
+
+    ``unusual_count`` / ``count_method`` are the dashboard's displayed count,
+    added forward-only. A date before ``collect.UNUSUAL_SINCE`` may leave both
+    cells empty (the row predates the rule); a date at or after it must carry
+    them and agree with the replay. Missing cells after the cutover are
+    reported against their derived value, so a collector that stops writing
+    them is red instead of silently tolerated.
+    """
+    bad = []
+    for row in summary_rows:
+        date = row["date"]
+        if date < STABLE_SINCE:
+            continue
+        statuses = tier1_status.get(date, [])
+        derived = {
+            "trembling_count": len(counts_now.get(date, [])),
+            "dark_count": sum(s == normalize.STATUS_DARK for s in statuses),
+            "blind_count": sum(s in normalize.BLIND_STATUSES for s in statuses),
+        }
+        stored = {k: int(row.get(k) or 0) for k in derived}
+        if stored != derived:
+            bad.append((date, stored, derived))
+        unusual = len(unusual_now.get(date, []))
+        cell = (row.get("unusual_count") or "").strip()
+        if not cell:
+            if date >= collect.UNUSUAL_SINCE:
+                bad.append((date, {"unusual_count": cell},
+                            {"unusual_count": unusual}))
+        else:
+            try:
+                stored_unusual = int(cell)
+            except ValueError:
+                bad.append((date, {"unusual_count": cell},
+                            {"unusual_count": unusual}))
+            else:
+                if stored_unusual != unusual:
+                    bad.append((date, {"unusual_count": cell},
+                                {"unusual_count": unusual}))
+        method = row.get("count_method")
+        if date >= collect.UNUSUAL_SINCE and method != collect.COUNT_METHOD:
+            bad.append((date, {"count_method": method},
+                        {"count_method": collect.COUNT_METHOD}))
+    return bad
+
+
 def main(argv):
     verbose = "--verbose" in argv
     check = "--check" in argv
@@ -127,6 +175,7 @@ def main(argv):
     total = diverged = recent_diverged = 0
     per_line = []
     counts_now = {}
+    unusual_now = {}  # date -> [tier-1 line id outside its recent range, either direction]
     tier1_status = {}  # date -> [replayed status of each tier-1 row that day]
 
     for mod in collect.LINES:
@@ -148,6 +197,8 @@ def main(argv):
             tier1_status.setdefault(date, []).append(replayed["status"])
             if collect.counts_as_tremble(replayed, mod):
                 counts_now.setdefault(date, []).append(mod.LINE)
+            if replayed["trembling"] == "1":
+                unusual_now.setdefault(date, []).append(mod.LINE)
         if verbose:
             for date, p, r in bad:
                 print(f"  {mod.LINE:22} {date}  published z={p['z_score'] or '—':>7} "
@@ -181,23 +232,11 @@ def main(argv):
 
     # The summary is a derived record too, and until now nothing ever re-derived
     # it: per-row verdicts replayed while the headline counts — the one number
-    # the dashboard leads with — were taken on faith. Reconstruct all three
-    # counts from the replayed tier-1 rows and hold the summary to them, on the
-    # same since-STABLE_SINCE terms as the rows themselves.
-    summary_bad = []
-    for row in summary_rows:
-        date = row["date"]
-        if date < STABLE_SINCE:
-            continue
-        statuses = tier1_status.get(date, [])
-        derived = {
-            "trembling_count": len(counts_now.get(date, [])),
-            "dark_count": sum(s == normalize.STATUS_DARK for s in statuses),
-            "blind_count": sum(s in normalize.BLIND_STATUSES for s in statuses),
-        }
-        stored = {k: int(row.get(k) or 0) for k in derived}
-        if stored != derived:
-            summary_bad.append((date, stored, derived))
+    # the dashboard leads with — were taken on faith. Reconstruct the counts
+    # from the replayed tier-1 rows and hold the summary to them, on the same
+    # since-STABLE_SINCE terms as the rows themselves.
+    summary_bad = summary_mismatches(summary_rows, counts_now, unusual_now,
+                                     tier1_status)
     if summary_bad:
         print(f"\nsummary does not re-derive on {len(summary_bad)} day(s) since {STABLE_SINCE}:")
         for date, stored, derived in summary_bad:

@@ -332,6 +332,30 @@ function buildNoRecordFixtureData() {
   return { summary: [], dates: [], lines: {}, annotations: [], annoMap: new Map(), stuck: [] };
 }
 
+// R2 fixtures: two tier-1 lines tremble through the same two days. flights
+// trembles in its recorded direction; credit_spread trembles AGAINST its own.
+// The ledger's trembling_count is therefore 1, while the displayed
+// direction-free count is 2.
+const PREV_DAY = new Date(Date.parse(RUNTIME_TODAY) - 86400000).toISOString().slice(0, 10);
+function buildEitherDirectionFixtureData() {
+  const lines = {
+    flights: [
+      fixtureRow({ date: PREV_DAY, raw_value: "900", z_score: "-3.4", trembling: "1", direction: "down" }),
+      fixtureRow({ date: RUNTIME_TODAY, raw_value: "1000", z_score: "-3.5", trembling: "1", direction: "down" }),
+    ],
+    credit_spread: [
+      fixtureRow({ date: PREV_DAY, raw_value: "4.0", z_score: "-3.2", trembling: "1", direction: "down" }),
+      fixtureRow({ date: RUNTIME_TODAY, raw_value: "4.2", z_score: "-3.1", trembling: "1", direction: "down" }),
+    ],
+    cnh_cny: [fixtureRow({ date: RUNTIME_TODAY, raw_value: "10", z_score: "0.2", trembling: "0", direction: "up" })],
+    fed_srf_takeup: [fixtureRow({ date: RUNTIME_TODAY, raw_value: "0", z_score: "0.1", trembling: "0", direction: "up" })],
+  };
+  const summary = [{ date: RUNTIME_TODAY, trembling_count: "1", unusual_count: "2",
+    count_method: "either-direction-tier1-v1", dark_count: "0", blind_count: "0" }];
+  return { summary, dates: [PREV_DAY, RUNTIME_TODAY], lines,
+    annotations: [], annoMap: new Map(), stuck: [] };
+}
+
 // T27 (public-surface migration, item 2): the headline states a fraction of
 // comparable readings with a denominator, in one canonical template per
 // language, and the retired resonance framing is gone from the count block and
@@ -1374,6 +1398,48 @@ function buildHeadlineFixtureData() {
           + `heading and body: ${tier2Html}`);
       }
     } catch (e) { errors.push(`r12 render(${lang}): ${e.stack || e}`); }
+  }
+
+  // T35 (completion R2): the displayed count is direction-free. Two tier-1
+  // lines tremble for two consecutive days -- one in its recorded direction,
+  // one against it -- so the ledger's trembling_count is 1 while the headline
+  // must show 2 and name both lines, with a two-day run for each. A legacy
+  // summary row (no unusual_count) derives the SAME rule from the per-line
+  // rows; it must never fall back to trembling_count.
+  for (const lang of ["en", "zh"]) {
+    global.document.cookie = "tremor_lang=" + lang;
+    const Tl = T[lang];
+    try {
+      setDATA(buildEitherDirectionFixtureData());
+      render();
+      if (el("count-n").textContent !== "2") {
+        errors.push(`r2(${lang}): the headline shows ${JSON.stringify(el("count-n").textContent)}, `
+          + `expected the stored direction-free count 2`);
+      }
+      const labelHtml = el("count-label").innerHTML;
+      for (const id of ["flights", "credit_spread"]) {
+        const label = LINES.find(l => l.id === id).label[lang];
+        if (!labelHtml.includes(label)) {
+          errors.push(`r2(${lang}): ${id} is not named in the count qualifier`);
+        }
+      }
+      const runCore = Tl.runNote("", 2).replace(" · ", "");
+      const runCount = labelHtml.split(runCore).length - 1;
+      if (runCount !== 2) {
+        errors.push(`r2(${lang}): expected the 2-day run for both firing lines, `
+          + `found ${runCount}`);
+      }
+
+      const legacy = buildEitherDirectionFixtureData();
+      delete legacy.summary[0].unusual_count;
+      delete legacy.summary[0].count_method;
+      setDATA(legacy);
+      render();
+      if (el("count-n").textContent !== "2") {
+        errors.push(`r2(${lang}): a legacy row shows ${JSON.stringify(el("count-n").textContent)}, `
+          + `expected the derived direction-free 2 (the ledger's trembling_count is 1)`);
+      }
+    } catch (e) { errors.push(`r2 render(${lang}): ${e.stack || e}`); }
   }
 
   await new Promise(r => setTimeout(r, 50));

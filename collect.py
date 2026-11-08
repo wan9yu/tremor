@@ -98,7 +98,21 @@ LINE_HEADER = ["date", "raw_value", "z_score", "trembling", "direction", "source
                "obs_date", "status"]
 # Summary holds only the tier-1 aggregates; each line's own z lives in its CSV, so
 # the schema stays stable as indicators are added, promoted, or demoted.
-SUMMARY_HEADER = ["date", "trembling_count", "dark_count", "blind_count"]
+SUMMARY_HEADER = ["date", "trembling_count", "dark_count", "blind_count",
+                  "unusual_count", "count_method"]
+# `trembling_count` is the ledger's count: tier-1 readings in the line's DECLARED
+# direction (``counts_as_tremble``). `unusual_count` is the number the dashboard
+# displays: tier-1 readings outside the line's own threshold in EITHER
+# direction, factored by this token. The two are deliberately different
+# measurements; the legacy column keeps its former meaning and is never
+# rewritten. A commit is the method's identity, so a later rule change must ship
+# a new token rather than silently redefining old rows.
+COUNT_METHOD = "either-direction-tier1-v1"
+# First collection day whose summary row must carry the two cells above
+# (``tools/replay.py --check`` enforces this). Earlier rows may leave them
+# empty: they were written before the display rule existed, and forward-only is
+# the record's contract.
+UNUSUAL_SINCE = "2026-11-08"
 # Only what the dashboard actually reads is mirrored into docs/: the line CSVs,
 # the summary, and the annotations. Everything else under data/ — the intraday
 # sampler, components, archives, derived layers — is a measurement ABOUT the
@@ -445,6 +459,7 @@ def collect():
     today = clock.china_today()
     summary = {"date": today}
     trembling_count = 0
+    unusual_count = 0
     dark_count = 0
     blind_count = 0
 
@@ -516,6 +531,8 @@ def collect():
         if primary:
             if counts_as_tremble(row, mod):
                 trembling_count += 1
+            if row["trembling"] == "1":
+                unusual_count += 1
             if status == normalize.STATUS_DARK:
                 dark_count += 1
             elif status in normalize.BLIND_STATUSES:
@@ -539,6 +556,8 @@ def collect():
     summary["trembling_count"] = str(trembling_count)
     summary["dark_count"] = str(dark_count)
     summary["blind_count"] = str(blind_count)
+    summary["unusual_count"] = str(unusual_count)
+    summary["count_method"] = COUNT_METHOD
     summary_path = os.path.join(DATA, "summary.csv")
     srows = _upsert(_read_rows(summary_path), summary, today)
     for r in srows:  # keep every row schema-complete even across format changes
@@ -547,7 +566,8 @@ def collect():
     _write_rows(summary_path, SUMMARY_HEADER, srows)
     extra = ((f", {dark_count} dark" if dark_count else "")
              + (f", {blind_count} blind" if blind_count else ""))
-    print(f"\n== {today}: {trembling_count} line(s) trembling{extra} ==")
+    print(f"\n== {today}: {unusual_count} line(s) outside their recent range, "
+          f"{trembling_count} in their recorded direction{extra} ==")
 
     # Mirror the data into docs/ so the GitHub Pages dashboard is self-contained.
     os.makedirs(DOCS_DATA, exist_ok=True)
