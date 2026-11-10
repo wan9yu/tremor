@@ -140,3 +140,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-07,1697,-0.382,0,down,"ADS-B regions [W/C Europe=156, US East=703, US West=685, E Asia/Japan=153] via adsb.fi, adsb.lol [sampled 22:53:48Z]",,scoring
 2026-11-08,1505,0.359,0,up,"ADS-B regions [W/C Europe=129, US East=570, US West=684, E Asia/Japan=122] via adsb.fi, adsb.lol [sampled 22:30:00Z]",,scoring
 2026-11-09,1817,1.158,0,up,"ADS-B regions [W/C Europe=160, US East=793, US West=744, E Asia/Japan=120] via adsb.fi, adsb.lol [sampled 22:30:00Z]",,scoring
+2026-11-10,,,0,,"no reading: sampled +2.0h from the 22:30Z target (CI delayed past the sleep window) — a reading this far into the diurnal cycle measures the clock, not the world; not scored :: ADS-B regions [W/C Europe=55, US East=692, US West=631, E Asia/Japan=188] via adsb.fi, adsb.lol [sampled 00:31:15Z]",,dark

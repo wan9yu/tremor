@@ -140,3 +140,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-07,127,0.254,0,up,Fingrid dataset 177 max |dev| over 1433 points (24h) [sampled 22:54:06Z],,scoring
 2026-11-08,140,0.723,0,up,Fingrid dataset 177 max |dev| over 1438 points (24h) [sampled 22:30:22Z],,scoring
 2026-11-09,128,0.252,0,up,Fingrid dataset 177 max |dev| over 1437 points (24h) [sampled 22:30:27Z],,scoring
+2026-11-10,119,-0.098,0,down,Fingrid dataset 177 max |dev| over 1436 points (24h) [sampled 00:31:34Z],,scoring
