@@ -113,3 +113,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-11,-0.955,-3.052,1,down,dolarapi blue 1555 / oficial 1570 = -1.0% premium [sampled 22:30:42Z],2026-11-10,scoring
 2026-11-12,0,-1.783,0,down,dolarapi blue 1570 / oficial 1570 = +0.0% premium [sampled 23:15:47Z],2026-11-11,scoring
 2026-11-13,-0.318,-2.163,0,down,dolarapi blue 1565 / oficial 1570 = -0.3% premium [sampled 22:32:20Z],2026-11-12,scoring
+2026-11-14,0.318,-1.326,0,down,dolarapi blue 1575 / oficial 1570 = +0.3% premium [sampled 22:31:02Z],2026-11-13,scoring
