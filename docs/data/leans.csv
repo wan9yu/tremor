@@ -32,3 +32,5 @@ date,line,lean,evidence
 2026-11-10,credit_spread,unavailable,no machine classifier for this line
 2026-11-11,credit_spread,unavailable,no machine classifier for this line
 2026-11-13,credit_spread,unavailable,no machine classifier for this line
+2026-11-14,flights,unavailable,no machine classifier for this line
+2026-11-14,credit_spread,unavailable,no machine classifier for this line
