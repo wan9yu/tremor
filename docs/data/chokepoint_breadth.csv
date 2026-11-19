@@ -319,3 +319,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-17,1786,-0.674,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-11-07 [components: unavailable (PortWatch quota: HTTP 200 error 429)] [sampled 00:37:44Z]",2026-11-07,scoring
 2026-11-18,1748,-1.195,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-11-08 [sampled 23:43:07Z]",2026-11-08,scoring
 2026-11-19,1677,-2.235,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-11-09 [sampled 23:14:47Z]",2026-11-09,scoring
+2026-11-20,1752,-1.073,0,down,"IMF PortWatch 28 chokepoints, total transits 2026-11-10 [sampled 23:22:52Z]",2026-11-10,scoring

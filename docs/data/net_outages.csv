@@ -1753,3 +1753,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-17,0,-0.938,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-15 22:00Z) [sampled 00:37:31Z],2026-11-15,scoring
 2026-11-18,0,-0.938,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-16 22:00Z) [sampled 23:42:54Z],2026-11-16,scoring
 2026-11-19,0,-0.938,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-17 22:00Z) [sampled 23:14:37Z],2026-11-17,scoring
+2026-11-20,2,0.000,0,flat,"IODA 2 countries with ping-slash24 outages (24h to 2026-11-18 22:00Z) [Turkmenistan, Us Virgin Islands] [sampled 23:22:35Z]",2026-11-18,scoring
