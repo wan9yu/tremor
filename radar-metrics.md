@@ -12,30 +12,30 @@ days into runs (module docstring). `mature` marks scored >= 60 — the tier-1 pr
 
 | line | tier | rows | read | dark | scored | span (yrs) | alarm days | benign | episodes | longest run | lag-1 | mature | last obs |
 |---|:--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|:--:|---|
-| flights | 1 | 153 | 149 | 4 | 139 | 0.39 | 3 | 0 | 3 | 1 | 0.374 | yes | 2026-11-21 |
-| credit_spread | 1 | 910 | 908 | 2 | 850 | 3.27 | 103 | 0 | 9 | 37 | 0.986 | yes | 2026-11-19 |
-| cnh_cny | 1 | 153 | 135 | 18 | 97 | 0.39 | 0 | 5 | 0 | 0 | 0.371 | yes | 2026-11-20 |
-| fed_srf_takeup | 1 | 1356 | 1354 | 2 | 1323 | 5.32 | 3 | 0 | 3 | 1 | 0.406 | yes | 2026-11-19 |
-| net_outages | 2 | 1756 | 1741 | 15 | 1731 | 4.79 | 61 | 0 | 40 | 7 | 0.329 | yes | 2026-11-19 |
-| net_bgp_withdrawal | 2 | 1746 | 1743 | 3 | 1738 | 4.78 | 145 | 0 | 38 | 16 | 0.601 | yes | 2026-11-19 |
-| gnss_interference | 2 | 1576 | 1575 | 1 | 1554 | 4.29 | 49 | 1 | 28 | 10 | 0.894 | yes | 2026-11-19 |
-| capital_premium | 2 | 153 | 153 | 0 | 143 | 0.39 | 2 | 1 | 2 | 1 | 0.797 | yes | 2026-11-21 |
-| grid_frequency | 2 | 153 | 153 | 0 | 143 | 0.39 | 3 | 0 | 3 | 1 | 0.031 | yes | 2026-11-21 |
-| chokepoint_breadth | 2 | 322 | 316 | 6 | 305 | 0.85 | 5 | 2 | 4 | 2 | 0.380 | yes | 2026-11-11 |
-| sofr_iorb_spread | 2 | 153 | 151 | 2 | 100 | 0.39 | 4 | 3 | 4 | 1 | 0.853 | yes | 2026-11-19 |
-| em_corp_oas | 2 | 910 | 908 | 2 | 850 | 3.27 | 67 | 5 | 10 | 26 | 0.994 | yes | 2026-11-19 |
-| port_throughput | 2 | 322 | 321 | 1 | 291 | 0.85 | 16 | 1 | 5 | 8 | 0.531 | yes | 2026-11-11 |
-| euro_hy_spread | 2 | 901 | 900 | 1 | 851 | 3.27 | 75 | 4 | 7 | 36 | 0.993 | yes | 2026-11-19 |
-| fx_parallel_premium | 2 | 122 | 122 | 0 | 82 | 0.3 | 1 | 5 | 1 | 1 | 0.851 | yes | 2026-11-20 |
-| hkma_aggr_balance | 2 | 217 | 182 | 35 | 148 | 0.68 | 0 | 14 | 0 | 0 | 0.278 | yes | 2026-11-20 |
-| tga_days_cash | 2 | 109 | 107 | 2 | 66 | 0.26 | 1 | 0 | 1 | 1 | 0.778 | yes | 2026-11-19 |
-| stablecoin_peg | 2 | 2225 | 2224 | 1 | 2216 | 6.09 | 3 | 0 | 2 | 2 | 0.425 | yes | 2026-11-19 |
-| gdelt | 2 | 135 | 135 | 0 | 116 | 0.34 | 0 | 1 | 0 | 0 | 0.814 | yes | 2026-11-19 |
-| gdelt_tone | 2 | 135 | 135 | 0 | 116 | 0.34 | 2 | 1 | 2 | 1 | 0.715 | yes | 2026-11-19 |
-| vix | 2 | 315 | 314 | 1 | 261 | 1.03 | 21 | 0 | 7 | 6 | 0.874 | yes | 2026-11-19 |
-| polar_temp | 2 | 2850 | 2850 | 0 | 2830 | 7.86 | 432 | 4 | 39 | 58 | 0.964 | yes | 2026-11-19 |
-| space_weather | 2 | 1578 | 1578 | 0 | 1561 | 4.29 | 36 | 4 | 25 | 4 | 0.447 | yes | 2026-11-19 |
-| control_daylength | 2 | 116 | 116 | 0 | 98 | 0.28 | 0 | 0 | 0 | 0 | 0.976 | yes | 2026-11-20 |
+| flights | 1 | 154 | 150 | 4 | 140 | 0.39 | 3 | 0 | 3 | 1 | 0.374 | yes | 2026-11-22 |
+| credit_spread | 1 | 911 | 909 | 2 | 850 | 3.27 | 103 | 0 | 9 | 37 | 0.986 | yes | 2026-11-19 |
+| cnh_cny | 1 | 154 | 136 | 18 | 97 | 0.39 | 0 | 5 | 0 | 0 | 0.371 | yes | 2026-11-22 |
+| fed_srf_takeup | 1 | 1357 | 1355 | 2 | 1324 | 5.32 | 3 | 0 | 3 | 1 | 0.406 | yes | 2026-11-20 |
+| net_outages | 2 | 1757 | 1742 | 15 | 1732 | 4.79 | 61 | 0 | 40 | 7 | 0.329 | yes | 2026-11-20 |
+| net_bgp_withdrawal | 2 | 1747 | 1744 | 3 | 1739 | 4.78 | 145 | 0 | 38 | 16 | 0.601 | yes | 2026-11-20 |
+| gnss_interference | 2 | 1577 | 1576 | 1 | 1555 | 4.3 | 49 | 1 | 28 | 10 | 0.894 | yes | 2026-11-20 |
+| capital_premium | 2 | 154 | 154 | 0 | 144 | 0.39 | 2 | 1 | 2 | 1 | 0.809 | yes | 2026-11-22 |
+| grid_frequency | 2 | 154 | 154 | 0 | 144 | 0.39 | 3 | 0 | 3 | 1 | 0.029 | yes | 2026-11-22 |
+| chokepoint_breadth | 2 | 323 | 317 | 6 | 306 | 0.85 | 5 | 2 | 4 | 2 | 0.380 | yes | 2026-11-12 |
+| sofr_iorb_spread | 2 | 154 | 152 | 2 | 100 | 0.39 | 4 | 3 | 4 | 1 | 0.853 | yes | 2026-11-19 |
+| em_corp_oas | 2 | 911 | 909 | 2 | 850 | 3.27 | 67 | 5 | 10 | 26 | 0.994 | yes | 2026-11-19 |
+| port_throughput | 2 | 323 | 322 | 1 | 292 | 0.85 | 16 | 1 | 5 | 8 | 0.531 | yes | 2026-11-12 |
+| euro_hy_spread | 2 | 902 | 901 | 1 | 851 | 3.27 | 75 | 4 | 7 | 36 | 0.993 | yes | 2026-11-19 |
+| fx_parallel_premium | 2 | 123 | 123 | 0 | 82 | 0.3 | 1 | 5 | 1 | 1 | 0.864 | yes | 2026-11-20 |
+| hkma_aggr_balance | 2 | 218 | 183 | 35 | 148 | 0.68 | 0 | 14 | 0 | 0 | 0.278 | yes | 2026-11-20 |
+| tga_days_cash | 2 | 110 | 108 | 2 | 66 | 0.26 | 1 | 0 | 1 | 1 | 0.785 | yes | 2026-11-19 |
+| stablecoin_peg | 2 | 2226 | 2225 | 1 | 2217 | 6.09 | 3 | 0 | 2 | 2 | 0.425 | yes | 2026-11-20 |
+| gdelt | 2 | 136 | 136 | 0 | 117 | 0.34 | 0 | 1 | 0 | 0 | 0.822 | yes | 2026-11-20 |
+| gdelt_tone | 2 | 136 | 136 | 0 | 117 | 0.34 | 2 | 1 | 2 | 1 | 0.727 | yes | 2026-11-20 |
+| vix | 2 | 316 | 315 | 1 | 261 | 1.03 | 21 | 0 | 7 | 6 | 0.878 | yes | 2026-11-19 |
+| polar_temp | 2 | 2851 | 2851 | 0 | 2831 | 7.86 | 432 | 4 | 39 | 58 | 0.964 | yes | 2026-11-20 |
+| space_weather | 2 | 1579 | 1579 | 0 | 1562 | 4.3 | 36 | 4 | 25 | 4 | 0.446 | yes | 2026-11-20 |
+| control_daylength | 2 | 117 | 117 | 0 | 99 | 0.28 | 0 | 0 | 0 | 0 | 0.976 | yes | 2026-11-21 |
 
 ## Pending reviews
 
@@ -45,9 +45,9 @@ item in radar.md's Pending block that carries a `[opened R.. · owner R.. · fir
 predicate that is now true while the item is still open — `pending.py --check`
 fails on it.
 
-- **flights fixed-hour re-review** — opened R26 · owner R40 · fires: rows_since(flights, 2026-09-02) >= 90 · rows_since(flights, 2026-09-02) = 77 / 90
+- **flights fixed-hour re-review** — opened R26 · owner R40 · fires: rows_since(flights, 2026-09-02) >= 90 · rows_since(flights, 2026-09-02) = 78 / 90
 - **cnh_cny post-guard reach re-measurement** — opened R33 · owner R40 · fires: rows_since(cnh_cny, 2026-07-27) >= 90 · rows_since(cnh_cny, 2026-07-27) = 72 / 90
 - **flights weekend guard — extend to Saturday?** — opened R23 · owner R40 · fires: manual · manual — never auto-fires
-- **level-layer → flights** — opened R23.1 · owner R40 · fires: date >= 2027-08-02 · date = 2026-11-21 / 2027-08-02
+- **level-layer → flights** — opened R23.1 · owner R40 · fires: date >= 2027-08-02 · date = 2026-11-22 / 2027-08-02
 - **usd_xccy_basis parking review** — opened R20 · owner R26 · fires: round >= 40 · round = 34 / 40
-- **sofr_iorb_spread orthogonality deferral** — opened R29 · owner R40 · fires: date >= 2026-11-30 · date = 2026-11-21 / 2026-11-30
+- **sofr_iorb_spread orthogonality deferral** — opened R29 · owner R40 · fires: date >= 2026-11-30 · date = 2026-11-22 / 2026-11-30
