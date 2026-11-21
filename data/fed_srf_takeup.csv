@@ -1355,3 +1355,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-19,104,0.010,0,up,NY Fed SRF total accepted 104.0$m across 2 repo op(s) on 2026-11-17 [sampled 23:14:36Z],2026-11-17,scoring
 2026-11-20,,,0,,"NY Fed markets API unavailable: HTTP 200, text/html; charsetutf-8, 101331 bytes, not JSON [sampled 23:22:35Z]",,dark
 2026-11-21,3,0.000,0,up,NY Fed SRF total accepted 3.0$m across 2 repo op(s) on 2026-11-19 [sampled 22:54:40Z],2026-11-19,scoring
+2026-11-22,1,0.000,0,up,NY Fed SRF total accepted 1.0$m across 2 repo op(s) on 2026-11-20 [sampled 22:30:14Z],2026-11-20,scoring
