@@ -1759,3 +1759,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-23,0,-0.938,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-21 22:00Z) [sampled 22:30:16Z],2026-11-21,scoring
 2026-11-24,0,-0.938,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-22 22:00Z) [sampled 03:08:06Z],2026-11-22,scoring
 2026-11-25,1,-0.469,0,down,IODA 1 countries with ping-slash24 outages (24h to 2026-11-23 22:00Z) [Cote D Ivoire] [sampled 01:13:57Z],2026-11-23,scoring
+2026-11-26,0,-0.938,0,down,IODA 0 countries with ping-slash24 outages (24h to 2026-11-24 22:00Z) [sampled 00:49:10Z],2026-11-24,scoring
