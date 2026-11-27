@@ -126,3 +126,4 @@ date,raw_value,z_score,trembling,direction,source_note,obs_date,status
 2026-11-24,4.688,4.532,1,up,dolarapi blue 1675 / oficial 1600 = +4.7% premium [sampled 03:08:47Z],2026-11-23,scoring
 2026-11-25,5.263,4.858,1,up,dolarapi blue 1700 / oficial 1615 = +5.3% premium [sampled 01:14:50Z],2026-11-24,scoring
 2026-11-26,4.908,2.791,0,up,dolarapi blue 1710 / oficial 1630 = +4.9% premium [sampled 00:49:42Z],2026-11-25,scoring
+2026-11-27,5.231,2.902,0,up,dolarapi blue 1710 / oficial 1625 = +5.2% premium [sampled 02:08:01Z],2026-11-26,scoring
